@@ -226,28 +226,10 @@ class BusViajeApiController extends Controller
     {
         $hoy = Carbon::today();
 
-        BusViaje::where('estado', 'programado')
+        $viajes = BusViaje::whereIn('estado', ['en_curso', 'programado'])
             ->where(function ($q) use ($hoy) {
-                $q->whereDate('created_at', '<', $hoy)
-                ->where(function ($sub) use ($hoy) {
-                    $sub->whereNull('fecha_inicio')
-                        ->orWhereDate('fecha_inicio', '<', $hoy);
-                });
-            })
-            ->update([
-                'estado' => 'cancelado',
-                'motivo_cancelacion' => 'Cancelación automática: El viaje no fue iniciado en la fecha programada.',
-            ]);
-
-        $viajes = BusViaje::where(function ($query) use ($hoy) {
-                $query->where('estado', 'en_curso')
-                ->orWhere(function ($q) use ($hoy) {
-                    $q->where('estado', 'programado')
-                    ->where(function ($sub) use ($hoy) {
-                        $sub->whereDate('created_at', $hoy)
-                            ->orWhereDate('fecha_inicio', $hoy);
-                    });
-                });
+                $q->whereDate('created_at', $hoy)
+                  ->orWhereDate('fecha_inicio', $hoy);
             })
             ->with(['vehiculo', 'busRuta', 'conductor'])
             ->orderByRaw("FIELD(estado, 'en_curso', 'programado')")
