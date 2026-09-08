@@ -221,4 +221,24 @@ class BusViajeApiController extends Controller
             'data'    => $viajes,
         ]);
     }
+
+    public function cartelera(): JsonResponse
+    {
+        $hoy = Carbon::today();
+
+        $viajes = BusViaje::whereIn('estado', ['en_curso', 'programado'])
+            ->where(function ($q) use ($hoy) {
+                $q->whereDate('created_at', $hoy)
+                  ->orWhereDate('fecha_inicio', $hoy);
+            })
+            ->with(['vehiculo', 'busRuta', 'conductor'])
+            ->orderByRaw("FIELD(estado, 'en_curso', 'programado')")
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $viajes,
+        ]);
+    }
 }

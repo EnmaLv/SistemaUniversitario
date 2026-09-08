@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('paradas', [BusParadaApiController::class, 'index']);
 
+        Route::get('viajes/hoy', [BusViajeApiController::class, 'cartelera']);
         Route::get('mi-viaje-activo', [BusViajeApiController::class, 'miViajeActivo']);
         Route::post('viajes/{viaje}/iniciar', [BusViajeApiController::class, 'iniciar']);
         Route::post('viajes/{viaje}/finalizar', [BusViajeApiController::class, 'finalizar']);
