@@ -15,8 +15,14 @@ class BusViajeApiController extends Controller
 
     public function registrarGps(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
-            return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+        if ($viaje->estado !== 'en_curso') {
+            $this->eliminarBusDeFirebase((string)$viaje->id);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'El viaje ya no está en curso. Transmisión detenida.',
+                'code'    => 'VIAJE_NO_ACTIVO'
+            ], 422);
         }
 
         $validated = $request->validate([
@@ -26,23 +32,12 @@ class BusViajeApiController extends Controller
             'heading'   => 'nullable|numeric',
         ]);
 
-        $ultimoLog = $viaje->gpsLogs()->latest('id')->first();
-
-        if (!$ultimoLog || $ultimoLog->created_at->diffInSeconds(now()) >= 15) {
-            $viaje->gpsLogs()->create([
-                'lat'           => $validated['lat'],
-                'lng'           => $validated['lng'],
-                'velocidad'     => $validated['velocidad'] ?? 0,
-                'heading'       => $validated['heading'] ?? 0,
-                'registrado_en' => now(),
-                'origen'        => 'app_flutter',
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Coordenadas procesadas.',
+        $viaje->update([
+            'ultima_lat' => $validated['lat'],
+            'ultima_lng' => $validated['lng'],
         ]);
+
+        return response()->json(['success' => true]);
     }
 
     public function obtenerPosicion(BusViaje $viaje): JsonResponse
@@ -120,6 +115,22 @@ class BusViajeApiController extends Controller
         ]);
     }
 
+    private function eliminarBusDeFirebase(string $viajeId): void
+    {
+        try {
+            if (class_exists('\Kreait\Laravel\Firebase\Facades\Firebase')) {
+                \Kreait\Laravel\Firebase\Facades\Firebase::firestore()
+                    ->database()
+                    ->collection('buses_activos')
+                    ->document($viajeId)
+                    ->delete();
+            }
+        } catch (\Exception $e) {
+            Log::error("Error eliminando bus $viajeId de Firestore: " . $e->getMessage());
+        }
+    }
+    
+
     public function finalizar(Request $request, BusViaje $viaje): JsonResponse
     {
         if ($viaje->conductor_id !== $request->user()->id_usuario) {
@@ -143,7 +154,7 @@ class BusViajeApiController extends Controller
             'hubo_desvio'     => 'nullable|boolean',
             'motivo_desvio'   => 'nullable|required_if:hubo_desvio,true|string|max:255',
         ], [
-            'km_fin.gte'      => 'El kilometraje final no puede ser menor al kilometraje de inicio (' . $viaje->km_inicio . ' km).',
+            'km_fin.gte'                  => 'El kilometraje final no puede ser menor al de inicio (' . $viaje->km_inicio . ' km).',
             'motivo_desvio.required_if' => 'Debe indicar el motivo del desvío.',
         ]);
 
@@ -165,6 +176,8 @@ class BusViajeApiController extends Controller
                 'km_actual' => $kmFin,
             ]);
         }
+
+        $this->eliminarBusDeFirebase((string)$viaje->id);
 
         return response()->json([
             'success' => true,
@@ -200,6 +213,8 @@ class BusViajeApiController extends Controller
             'estado'             => 'cancelado',
             'motivo_cancelacion' => $validated['motivo_cancelacion'],
         ]);
+
+        $this->eliminarBusDeFirebase((string)$viaje->id);
 
         return response()->json([
             'success' => true,
