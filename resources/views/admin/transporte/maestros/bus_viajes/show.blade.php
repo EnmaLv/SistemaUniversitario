@@ -1,4 +1,23 @@
 <x-app-layout>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        .leaflet-stop-number {
+            background-color: #0ea5e9;
+            color: #fff;
+            font-weight: bold;
+            font-size: 11px;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+    </style>
+
     <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -23,12 +42,21 @@
                                 class="w-1.5 h-1.5 rounded-full {{ $busViaje->estado === 'en_curso' ? 'bg-emerald-500 animate-pulse' : 'bg-current' }}"></span>
                             <span id="badgeEstadoTexto">{{ ucfirst(str_replace('_', ' ', $busViaje->estado)) }}</span>
                         </span>
+                        @if ($busViaje->hubo_desvio)
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400">
+                                <i class="fas fa-exclamation-triangle"></i> Desvío reportado
+                            </span>
+                        @endif
                     </div>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        ID Firebase: <code
-                            class="font-bold text-sky-600 dark:text-sky-400">{{ $busViaje->firebase_id }}</code>
+                        ID Firebase: <code class="font-bold text-sky-600 dark:text-sky-400">{{ $busViaje->firebase_id }}</code>
                         &middot; Turno: <span class="font-bold capitalize">{{ $busViaje->turno }}</span>
                     </p>
+                    @if ($busViaje->hubo_desvio && $busViaje->motivo_desvio)
+                        <p class="mt-1 text-xs text-orange-600 dark:text-orange-400">
+                            <i class="fas fa-comment-dots mr-1"></i> Motivo reportado por el conductor: "{{ $busViaje->motivo_desvio }}"
+                        </p>
+                    @endif
                 </div>
                 <a href="{{ route('admin.transporte.maestros.bus_viajes.index') }}"
                     class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
@@ -69,14 +97,13 @@
                             style="border-bottom: 1px solid var(--border-color);">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-map-marked-alt text-sky-500"></i>
-                                <span class="font-bold text-sm" style="color: var(--text-main);">Geolocalización
-                                    GPS</span>
+                                <span class="font-bold text-sm" style="color: var(--text-main);">Geolocalización GPS</span>
                             </div>
                             <small id="lastUpdated" class="text-xs font-semibold text-gray-400">
                                 <i class="fas fa-sync-alt fa-spin mr-1"></i> Esperando señal GPS...
                             </small>
                         </div>
-                        <div id="mapaGPS" style="height: 480px; width: 100%; z-index:1;"></div>
+                        <div id="mapaGPS" style="height: 480px; width: 100%; z-index:1; background:#e5e7eb;"></div>
                     </div>
 
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -84,14 +111,13 @@
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-history text-sky-500"></i>
-                                <span class="font-bold text-sm" style="color: var(--text-main);">Reconstrucción del
-                                    recorrido</span>
+                                <span class="font-bold text-sm" style="color: var(--text-main);">Reconstrucción del recorrido</span>
                             </div>
                             <span id="playbackPuntos" class="text-[11px] font-bold text-gray-400"></span>
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <button id="btnPlayback"
+                            <button id="btnPlayback" type="button"
                                 class="w-10 h-10 flex items-center justify-center rounded-xl bg-sky-500 hover:bg-sky-600 text-white transition-all shrink-0">
                                 <i id="iconPlayback" class="fas fa-play text-sm"></i>
                             </button>
@@ -113,8 +139,7 @@
 
                         <div class="flex items-center gap-3 mb-3 p-3 rounded-xl"
                             style="background-color: rgba(0,0,0,0.02); border: 1px solid var(--border-color);">
-                            <div
-                                class="w-11 h-11 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 shrink-0">
+                            <div class="w-11 h-11 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 shrink-0">
                                 <i class="fas fa-user-tie"></i>
                             </div>
                             <div class="min-w-0">
@@ -132,13 +157,11 @@
                             style="background-color: rgba(0,0,0,0.02); border: 1px solid var(--border-color);">
                             <div class="flex justify-between">
                                 <span class="text-gray-400 font-semibold">Placa:</span>
-                                <span class="font-bold"
-                                    style="color: var(--text-main);">{{ $busViaje->vehiculo->placa ?? 'N/A' }}</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->placa ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-400 font-semibold">Combustible:</span>
-                                <span class="font-bold"
-                                    style="color: var(--text-main);">{{ $busViaje->vehiculo->tipoCombustible->nombre ?? 'N/A' }}</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->tipoCombustible->nombre ?? 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
@@ -149,16 +172,14 @@
                             <h3 class="text-sm font-bold" style="color: var(--text-main);">
                                 <i class="fas fa-map-pin text-sky-500 mr-1"></i> Paradas de la ruta
                             </h3>
-                            <span
-                                class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/5 text-gray-500">
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/5 text-gray-500">
                                 {{ $busViaje->ruta->paradas->count() }}
                             </span>
                         </div>
                         <div class="max-h-[260px] overflow-y-auto space-y-3 pr-1">
                             @forelse($busViaje->ruta->paradas as $index => $parada)
                                 <div class="flex items-start gap-3">
-                                    <div
-                                        class="w-6 h-6 rounded-full bg-sky-50 dark:bg-sky-500/10 border-2 border-sky-500 text-sky-600 dark:text-sky-400 text-[11px] font-bold flex items-center justify-center shrink-0">
+                                    <div class="w-6 h-6 rounded-full bg-sky-50 dark:bg-sky-500/10 border-2 border-sky-500 text-sky-600 dark:text-sky-400 text-[11px] font-bold flex items-center justify-center shrink-0">
                                         {{ $index + 1 }}
                                     </div>
                                     <div class="min-w-0">
@@ -167,8 +188,7 @@
                                         </div>
                                         @if ($parada->lat && $parada->lng)
                                             <small class="text-[11px] text-gray-400">
-                                                {{ number_format((float) $parada->lat, 4) }},
-                                                {{ number_format((float) $parada->lng, 4) }}
+                                                {{ number_format((float) $parada->lat, 4) }}, {{ number_format((float) $parada->lng, 4) }}
                                             </small>
                                         @else
                                             <small class="text-[11px] font-bold text-rose-500">
@@ -187,292 +207,265 @@
         </div>
     </div>
 
-    @section('css')
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-        <style>
-            .leaflet-stop-number {
-                background-color: #0ea5e9;
-                color: #fff;
-                font-weight: bold;
-                font-size: 11px;
-                border-radius: 50%;
-                width: 26px;
-                height: 26px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid #fff;
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            }
-        </style>
-    @endsection
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    @push('js')
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+    (function () {
+        const viajeId = "{{ $busViaje->id }}";
+        const gpsLogsUrl = "{{ route('admin.transporte.maestros.bus_viajes.gps-logs', $busViaje) }}";
+        let estadoActual = "{{ $busViaje->estado }}";
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const viajeId = "{{ $busViaje->id }}";
-                const gpsLogsUrl = "{{ route('admin.transporte.maestros.bus_viajes.gps-logs', $busViaje) }}";
-                let estadoActual = "{{ $busViaje->estado }}";
+        let currentBusLat = 9.5468743;
+        let currentBusLng = -69.1926348;
 
-                let currentBusLat = 9.5468743;
-                let currentBusLng = -69.1926348;
+        const map = L.map('mapaGPS').setView([currentBusLat, currentBusLng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-                const map = L.map('mapaGPS').setView([currentBusLat, currentBusLng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(map);
+        // Fuerza a Leaflet a recalcular el tamaño real del contenedor,
+        // necesario cuando el mapa se inicializa antes de que el layout
+        // termine de acomodar el CSS (causa típica de "mapa gris vacío").
+        setTimeout(() => map.invalidateSize(), 200);
+        window.addEventListener('resize', () => map.invalidateSize());
 
-                const busIcon = L.icon({
-                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-                    iconSize: [38, 38],
-                    iconAnchor: [19, 19],
-                    popupAnchor: [0, -19]
-                });
+        const busIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
+            iconSize: [38, 38],
+            iconAnchor: [19, 19],
+            popupAnchor: [0, -19]
+        });
 
-                let busMarker = L.marker([currentBusLat, currentBusLng], {
-                        icon: busIcon
-                    })
-                    .addTo(map)
-                    .bindPopup(`<b>{{ $busViaje->vehiculo->placa ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
+        let busMarker = L.marker([currentBusLat, currentBusLng], { icon: busIcon })
+            .addTo(map)
+            .bindPopup(`<b>{{ $busViaje->vehiculo->placa ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
 
-                const paradasData = @json($busViaje->ruta->paradas ?? []);
-                const routePoints = [];
+        const paradasData = @json($busViaje->ruta->paradas ?? []);
+        const routePoints = [];
 
-                if (Array.isArray(paradasData) && paradasData.length > 0) {
-                    paradasData.forEach((parada, idx) => {
-                        const lat = parseFloat(parada.lat);
-                        const lng = parseFloat(parada.lng);
-                        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-                            routePoints.push([lat, lng]);
-                            const stopNumberIcon = L.divIcon({
-                                className: 'leaflet-stop-number-container',
-                                html: `<div class="leaflet-stop-number">${idx + 1}</div>`,
-                                iconSize: [26, 26],
-                                iconAnchor: [13, 13]
-                            });
-                            L.marker([lat, lng], {
-                                    icon: stopNumberIcon
-                                })
-                                .addTo(map)
-                                .bindPopup(`<b>Parada ${idx + 1}: ${parada.nombre}</b>`);
-                        }
+        if (Array.isArray(paradasData) && paradasData.length > 0) {
+            paradasData.forEach((parada, idx) => {
+                const lat = parseFloat(parada.lat);
+                const lng = parseFloat(parada.lng);
+                if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                    routePoints.push([lat, lng]);
+                    const stopNumberIcon = L.divIcon({
+                        className: 'leaflet-stop-number-container',
+                        html: `<div class="leaflet-stop-number">${idx + 1}</div>`,
+                        iconSize: [26, 26],
+                        iconAnchor: [13, 13]
                     });
-
-                    if (routePoints.length >= 2) {
-                        const osrmCoords = routePoints.map(p => `${p[1]},${p[0]}`).join(';');
-                        fetch(
-                                `https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`
-                                )
-                            .then(r => r.json())
-                            .then(data => {
-                                if (data.routes && data.routes.length > 0) {
-                                    const latLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                                    const plannedPolyline = L.polyline(latLngs, {
-                                        color: '#0ea5e9',
-                                        weight: 5,
-                                        opacity: 0.75
-                                    }).addTo(map);
-                                    map.fitBounds(plannedPolyline.getBounds(), {
-                                        padding: [50, 50]
-                                    });
-                                }
-                            })
-                            .catch(err => console.error('Error trazando ruta OSRM:', err));
-                    }
+                    L.marker([lat, lng], { icon: stopNumberIcon })
+                        .addTo(map)
+                        .bindPopup(`<b>Parada ${idx + 1}: ${parada.nombre}</b>`);
                 }
+            });
 
-                function actualizarBadgeEstado(nuevoEstado) {
-                    if (nuevoEstado === estadoActual) return;
-                    estadoActual = nuevoEstado;
+            if (routePoints.length >= 2) {
+                const osrmCoords = routePoints.map(p => `${p[1]},${p[0]}`).join(';');
+                fetch(`https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.routes && data.routes.length > 0) {
+                            const latLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                            const plannedPolyline = L.polyline(latLngs, { color: '#0ea5e9', weight: 5, opacity: 0.6 }).addTo(map);
+                            map.fitBounds(plannedPolyline.getBounds(), { padding: [50, 50] });
+                            setTimeout(() => map.invalidateSize(), 50);
+                        }
+                    })
+                    .catch(err => console.error('Error trazando ruta OSRM:', err));
+            }
+        }
 
-                    const badge = document.getElementById('badgeEstado');
-                    const dot = document.getElementById('badgeEstadoDot');
-                    const texto = document.getElementById('badgeEstadoTexto');
-                    const metricTexto = document.getElementById('metricEstadoTexto');
+        function actualizarBadgeEstado(nuevoEstado) {
+            if (nuevoEstado === estadoActual) return;
+            estadoActual = nuevoEstado;
 
-                    const estilos = {
-                        programado: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
-                        en_curso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
-                        finalizado: 'bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400',
-                        cancelado: 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400',
-                    };
+            const badge = document.getElementById('badgeEstado');
+            const dot = document.getElementById('badgeEstadoDot');
+            const texto = document.getElementById('badgeEstadoTexto');
+            const metricTexto = document.getElementById('metricEstadoTexto');
 
-                    badge.className =
-                        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ' +
-                        (estilos[nuevoEstado] || 'bg-gray-100 text-gray-600');
-                    dot.className = nuevoEstado === 'en_curso' ?
-                        'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-current';
+            const estilos = {
+                programado: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+                en_curso:   'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
+                finalizado: 'bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400',
+                cancelado:  'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400',
+            };
 
-                    const textoLegible = nuevoEstado.charAt(0).toUpperCase() + nuevoEstado.slice(1).replace('_', ' ');
-                    texto.textContent = textoLegible;
-                    metricTexto.textContent = textoLegible;
+            badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ' + (estilos[nuevoEstado] || 'bg-gray-100 text-gray-600');
+            dot.className = nuevoEstado === 'en_curso' ? 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-current';
 
-                    if (nuevoEstado === 'finalizado' || nuevoEstado === 'cancelado') {
-                        document.getElementById('lastUpdated').innerHTML =
-                            `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${nuevoEstado === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
-                        clearInterval(pollingInterval);
-                    }
+            const textoLegible = nuevoEstado.charAt(0).toUpperCase() + nuevoEstado.slice(1).replace('_', ' ');
+            texto.textContent = textoLegible;
+            metricTexto.textContent = textoLegible;
+
+            if (nuevoEstado === 'finalizado' || nuevoEstado === 'cancelado') {
+                document.getElementById('lastUpdated').innerHTML =
+                    `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${nuevoEstado === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
+                clearInterval(pollingInterval);
+                cargarHistorico();
+            }
+        }
+
+        // Polyline que crece en vivo mientras el viaje está en curso,
+        // mostrando el trayecto real recorrido hasta ahora (no solo el punto actual).
+        let liveTrail = [];
+        let livePolyline = null;
+
+        function actualizarPosicionGPS(lat, lng, velocidad, fechaRegistro) {
+            busMarker.setLatLng([lat, lng]);
+
+            const esNuevoPunto = currentBusLat !== lat || currentBusLng !== lng;
+            currentBusLat = lat;
+            currentBusLng = lng;
+
+            if (esNuevoPunto) {
+                liveTrail.push([lat, lng]);
+                if (!livePolyline) {
+                    livePolyline = L.polyline(liveTrail, { color: '#22c55e', weight: 4, opacity: 0.85 }).addTo(map);
+                } else {
+                    livePolyline.setLatLngs(liveTrail);
                 }
+                map.panTo([lat, lng]);
+            }
 
-                function actualizarPosicionGPS(lat, lng, velocidad, fechaRegistro) {
-                    busMarker.setLatLng([lat, lng]);
-                    currentBusLat = lat;
-                    currentBusLng = lng;
-
-                    busMarker.getPopup().setContent(`
+            busMarker.getPopup().setContent(`
                 <div class="text-center">
                     <strong class="text-sky-600">{{ $busViaje->vehiculo->placa ?? 'Autobús' }}</strong><br>
                     Velocidad: <b>${parseFloat(velocidad).toFixed(1)} km/h</b>
                 </div>
             `);
 
-                    if (estadoActual !== 'en_curso') return;
+            if (estadoActual !== 'en_curso') return;
 
-                    const statusElement = document.getElementById('lastUpdated');
-                    if (fechaRegistro) {
-                        const ultimaTransmision = new Date(fechaRegistro);
-                        const segundosDiferencia = Math.floor((new Date() - ultimaTransmision) / 1000);
-                        if (segundosDiferencia > 60) {
-                            statusElement.innerHTML =
-                                `<span class="text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Sin señal (última: ${ultimaTransmision.toLocaleTimeString()})</span>`;
-                            return;
-                        }
+            const statusElement = document.getElementById('lastUpdated');
+            if (fechaRegistro) {
+                const ultimaTransmision = new Date(fechaRegistro);
+                const segundosDiferencia = Math.floor((new Date() - ultimaTransmision) / 1000);
+                if (segundosDiferencia > 60) {
+                    statusElement.innerHTML = `<span class="text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Sin señal (última: ${ultimaTransmision.toLocaleTimeString()})</span>`;
+                    return;
+                }
+            }
+            statusElement.innerHTML = `<span class="text-emerald-500 font-bold"><i class="fas fa-check-circle mr-1"></i> Transmitiendo en vivo (${new Date().toLocaleTimeString()})</span>`;
+        }
+
+        let pollingInterval;
+        function consultarGPS() {
+            fetch(`/api/viajes/${viajeId}/posicion`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) return;
+
+                if (data.estado) actualizarBadgeEstado(data.estado);
+
+                if (data.latitud && data.longitud) {
+                    actualizarPosicionGPS(data.latitud, data.longitud, data.velocidad, data.fecha_registro);
+                }
+                if (data.pasajeros !== undefined) {
+                    document.getElementById('metricPasajeros').innerText = data.pasajeros;
+                }
+            })
+            .catch(err => console.error('Error al consultar GPS:', err));
+        }
+
+        if (estadoActual === 'en_curso' || estadoActual === 'programado') {
+            pollingInterval = setInterval(consultarGPS, 3000);
+            consultarGPS();
+        } else {
+            document.getElementById('lastUpdated').innerHTML =
+                `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${estadoActual === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
+        }
+
+        // --- Reproducción del recorrido (histórico de bus_gps_logs) ---
+        let logs = [];
+        let playbackMarker = null;
+        let playbackTimer = null;
+        let playbackIndex = 0;
+        const slider = document.getElementById('sliderPlayback');
+        const btnPlayback = document.getElementById('btnPlayback');
+        const iconPlayback = document.getElementById('iconPlayback');
+
+        function cargarHistorico() {
+            fetch(gpsLogsUrl, { headers: { 'Accept': 'application/json' } })
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                        document.getElementById('playbackVacio').classList.remove('hidden');
+                        btnPlayback.disabled = true;
+                        btnPlayback.classList.add('opacity-40', 'cursor-not-allowed');
+                        return;
                     }
-                    statusElement.innerHTML =
-                        `<span class="text-emerald-500 font-bold"><i class="fas fa-check-circle mr-1"></i> Transmitiendo en vivo (${new Date().toLocaleTimeString()})</span>`;
-                }
 
-                let pollingInterval;
+                    logs = res.data;
+                    slider.max = logs.length - 1;
+                    slider.disabled = false;
+                    document.getElementById('playbackPuntos').textContent = `${logs.length} puntos registrados`;
 
-                function consultarGPS() {
-                    fetch(`/api/viajes/${viajeId}/posicion`, {
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (!data.success) return;
+                    const latLngs = logs.map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
+                    L.polyline(latLngs, { color: '#b91c1c', weight: 4, opacity: 0.5, dashArray: '6,6' }).addTo(map);
 
-                            if (data.estado) actualizarBadgeEstado(data.estado);
+                    if (playbackMarker) map.removeLayer(playbackMarker);
+                    playbackMarker = L.circleMarker(latLngs[0], {
+                        radius: 8, color: '#b91c1c', fillColor: '#ef4444', fillOpacity: 1, weight: 2
+                    }).addTo(map);
+                })
+                .catch(err => console.error('Error cargando histórico GPS:', err));
+        }
 
-                            if (data.latitud && data.longitud) {
-                                actualizarPosicionGPS(data.latitud, data.longitud, data.velocidad, data
-                                    .fecha_registro);
-                            }
-                            if (data.pasajeros !== undefined) {
-                                document.getElementById('metricPasajeros').innerText = data.pasajeros;
-                            }
-                        })
-                        .catch(err => console.error('Error al consultar GPS:', err));
-                }
+        if (estadoActual === 'finalizado' || estadoActual === 'cancelado') {
+            cargarHistorico();
+        }
 
-                if (estadoActual === 'en_curso' || estadoActual === 'programado') {
-                    pollingInterval = setInterval(consultarGPS, 3000);
-                    consultarGPS();
-                } else {
-                    document.getElementById('lastUpdated').innerHTML =
-                        `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${estadoActual === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
-                }
-
-                // --- Reproducción del recorrido (histórico de bus_gps_logs) ---
-                let logs = [];
-                let playbackMarker = null;
-                let playbackLine = null;
-                let playbackTimer = null;
-                let playbackIndex = 0;
-                const slider = document.getElementById('sliderPlayback');
-                const btnPlayback = document.getElementById('btnPlayback');
-                const iconPlayback = document.getElementById('iconPlayback');
-
-                fetch(gpsLogsUrl, {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                            document.getElementById('playbackVacio').classList.remove('hidden');
-                            btnPlayback.disabled = true;
-                            btnPlayback.classList.add('opacity-40', 'cursor-not-allowed');
-                            return;
-                        }
-
-                        logs = res.data;
-                        slider.max = logs.length - 1;
-                        slider.disabled = false;
-                        document.getElementById('playbackPuntos').textContent = `${logs.length} puntos registrados`;
-
-                        const latLngs = logs.map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
-                        playbackLine = L.polyline(latLngs, {
-                            color: '#b91c1c',
-                            weight: 4,
-                            opacity: 0.5,
-                            dashArray: '6,6'
-                        }).addTo(map);
-
-                        playbackMarker = L.circleMarker(latLngs[0], {
-                            radius: 8,
-                            color: '#b91c1c',
-                            fillColor: '#ef4444',
-                            fillOpacity: 1,
-                            weight: 2
-                        }).addTo(map);
-                    })
-                    .catch(err => console.error('Error cargando histórico GPS:', err));
-
-                function irAPunto(idx) {
-                    if (!logs[idx] || !playbackMarker) return;
-                    const punto = [parseFloat(logs[idx].lat), parseFloat(logs[idx].lng)];
-                    playbackMarker.setLatLng(punto);
-                    playbackMarker.bindPopup(`
+        function irAPunto(idx) {
+            if (!logs[idx] || !playbackMarker) return;
+            const punto = [parseFloat(logs[idx].lat), parseFloat(logs[idx].lng)];
+            playbackMarker.setLatLng(punto);
+            playbackMarker.bindPopup(`
                 <div class="text-center">
                     <b>${new Date(logs[idx].created_at).toLocaleTimeString()}</b><br>
                     ${parseFloat(logs[idx].velocidad || 0).toFixed(1)} km/h
                 </div>
             `);
-                    slider.value = idx;
-                }
+            slider.value = idx;
+        }
 
-                slider.addEventListener('input', () => {
+        slider.addEventListener('input', () => {
+            clearInterval(playbackTimer);
+            iconPlayback.className = 'fas fa-play text-sm';
+            playbackIndex = parseInt(slider.value, 10);
+            irAPunto(playbackIndex);
+        });
+
+        btnPlayback.addEventListener('click', () => {
+            if (logs.length === 0) return;
+
+            if (playbackTimer) {
+                clearInterval(playbackTimer);
+                playbackTimer = null;
+                iconPlayback.className = 'fas fa-play text-sm';
+                return;
+            }
+
+            if (playbackIndex >= logs.length - 1) playbackIndex = 0;
+            iconPlayback.className = 'fas fa-pause text-sm';
+
+            playbackTimer = setInterval(() => {
+                if (playbackIndex >= logs.length - 1) {
                     clearInterval(playbackTimer);
+                    playbackTimer = null;
                     iconPlayback.className = 'fas fa-play text-sm';
-                    playbackIndex = parseInt(slider.value, 10);
-                    irAPunto(playbackIndex);
-                });
-
-                btnPlayback.addEventListener('click', () => {
-                    if (logs.length === 0) return;
-
-                    if (playbackTimer) {
-                        clearInterval(playbackTimer);
-                        playbackTimer = null;
-                        iconPlayback.className = 'fas fa-play text-sm';
-                        return;
-                    }
-
-                    if (playbackIndex >= logs.length - 1) playbackIndex = 0;
-                    iconPlayback.className = 'fas fa-pause text-sm';
-
-                    playbackTimer = setInterval(() => {
-                        if (playbackIndex >= logs.length - 1) {
-                            clearInterval(playbackTimer);
-                            playbackTimer = null;
-                            iconPlayback.className = 'fas fa-play text-sm';
-                            return;
-                        }
-                        playbackIndex++;
-                        irAPunto(playbackIndex);
-                    }, 200);
-                });
-            });
-        </script>
-    @endpush
+                    return;
+                }
+                playbackIndex++;
+                irAPunto(playbackIndex);
+            }, 200);
+        });
+    })();
+    </script>
 </x-app-layout>
