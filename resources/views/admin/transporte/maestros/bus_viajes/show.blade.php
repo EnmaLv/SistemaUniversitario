@@ -225,17 +225,15 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Fuerza a Leaflet a recalcular el tamaño real del contenedor,
-        // necesario cuando el mapa se inicializa antes de que el layout
-        // termine de acomodar el CSS (causa típica de "mapa gris vacío").
         setTimeout(() => map.invalidateSize(), 200);
         window.addEventListener('resize', () => map.invalidateSize());
 
-        const busIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-            iconSize: [38, 38],
-            iconAnchor: [19, 19],
-            popupAnchor: [0, -19]
+        const busIcon = L.divIcon({
+            className: 'bus-live-icon',
+            html: `<img src="/img/Moove_Bus.svg" style="width:34px;height:34px;">`,
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+            popupAnchor: [0, -17]
         });
 
         let busMarker = L.marker([currentBusLat, currentBusLng], { icon: busIcon })
@@ -270,7 +268,7 @@
                     .then(data => {
                         if (data.routes && data.routes.length > 0) {
                             const latLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                            const plannedPolyline = L.polyline(latLngs, { color: '#0ea5e9', weight: 5, opacity: 0.6 }).addTo(map);
+                            const plannedPolyline = L.polyline(latLngs, { color: '#b91c1c', weight: 5, opacity: 0.6 }).addTo(map);
                             map.fitBounds(plannedPolyline.getBounds(), { padding: [50, 50] });
                             setTimeout(() => map.invalidateSize(), 50);
                         }
@@ -306,12 +304,11 @@
                 document.getElementById('lastUpdated').innerHTML =
                     `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${nuevoEstado === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
                 clearInterval(pollingInterval);
+                map.removeLayer(busMarker);
                 cargarHistorico();
             }
         }
 
-        // Polyline que crece en vivo mientras el viaje está en curso,
-        // mostrando el trayecto real recorrido hasta ahora (no solo el punto actual).
         let liveTrail = [];
         let livePolyline = null;
 
@@ -380,9 +377,9 @@
         } else {
             document.getElementById('lastUpdated').innerHTML =
                 `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${estadoActual === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
+            map.removeLayer(busMarker);
         }
-
-        // --- Reproducción del recorrido (histórico de bus_gps_logs) ---
+        
         let logs = [];
         let playbackMarker = null;
         let playbackTimer = null;
@@ -411,9 +408,7 @@
                     L.polyline(latLngs, { color: '#b91c1c', weight: 4, opacity: 0.5, dashArray: '6,6' }).addTo(map);
 
                     if (playbackMarker) map.removeLayer(playbackMarker);
-                    playbackMarker = L.circleMarker(latLngs[0], {
-                        radius: 8, color: '#b91c1c', fillColor: '#ef4444', fillOpacity: 1, weight: 2
-                    }).addTo(map);
+                    playbackMarker = L.marker(latLngs[0], { icon: busIcon }).addTo(map);
                 })
                 .catch(err => console.error('Error cargando histórico GPS:', err));
         }
