@@ -234,4 +234,16 @@ class BusViajeController extends Controller
 
         return redirect()->route('admin.transporte.maestros.bus_viajes.index')->with('success', 'El viaje ha sido cancelado exitosamente.');
     }
+
+    public function gpsLogs(BusViaje $busViaje)
+    {
+        $logs = $busViaje->gpsLogs()
+            ->orderBy('id')
+            ->get(['lat', 'lng', 'velocidad', 'heading', 'created_at']);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $logs,
+        ]);
+    }
 }
