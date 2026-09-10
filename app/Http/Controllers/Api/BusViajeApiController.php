@@ -159,13 +159,12 @@ class BusViajeApiController extends Controller
 
         $validated = $request->validate([
             'km_fin'          => 'required|numeric|gte:' . $viaje->km_inicio,
-            'pasajeros'       => 'required|integer|min:0',
             'litros_gastados' => 'nullable|numeric|min:0',
             'hubo_desvio'     => 'nullable|boolean',
             'motivo_desvio'   => 'nullable|required_if:hubo_desvio,true|string|max:255',
         ], [
-            'km_fin.gte'                  => 'El kilometraje final no puede ser menor al de inicio (' . $viaje->km_inicio . ' km).',
-            'motivo_desvio.required_if' => 'Debe indicar el motivo del desvío.',
+            'km_fin.gte'                 => 'El kilometraje final no puede ser menor al de inicio (' . $viaje->km_inicio . ' km).',
+            'motivo_desvio.required_if'  => 'Debe indicar el motivo del desvío.',
         ]);
 
         $kmFin = $validated['km_fin'];
@@ -175,19 +174,16 @@ class BusViajeApiController extends Controller
             'estado'          => 'finalizado',
             'km_fin'          => $kmFin,
             'distancia_km'    => $distanciaRecorrida,
-            'pasajeros'       => $validated['pasajeros'],
             'litros_gastados' => $validated['litros_gastados'] ?? 0,
             'hubo_desvio'     => $validated['hubo_desvio'] ?? false,
             'motivo_desvio'   => $validated['motivo_desvio'] ?? null,
         ]);
 
         if ($viaje->vehiculo) {
-            $viaje->vehiculo->update([
-                'km_actual' => $kmFin,
-            ]);
+            $viaje->vehiculo->update(['km_actual' => $kmFin]);
         }
 
-        $this->eliminarBusDeFirebase((string)$viaje->id);
+        $this->eliminarBusDeFirebase((string) $viaje->id);
 
         return response()->json([
             'success' => true,
