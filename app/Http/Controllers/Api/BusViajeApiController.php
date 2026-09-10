@@ -37,6 +37,16 @@ class BusViajeApiController extends Controller
             'ultima_lng' => $validated['lng'],
         ]);
 
+        BusGpsLog::create([
+            'bus_viaje_id'  => $viaje->id,
+            'lat'           => $validated['lat'],
+            'lng'           => $validated['lng'],
+            'velocidad'     => $validated['velocidad'] ?? 0,
+            'heading'       => $validated['heading'] ?? null,
+            'registrado_en' => Carbon::now()->format('H:i:s'),
+            'origen'        => 'app_conductor',
+        ]);
+
         return response()->json(['success' => true]);
     }
 
