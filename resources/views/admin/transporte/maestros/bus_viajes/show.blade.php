@@ -186,292 +186,293 @@
             </div>
         </div>
     </div>
-@endsection
 
-@section('css')
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <style>
-        .leaflet-stop-number {
-            background-color: #0ea5e9;
-            color: #fff;
-            font-weight: bold;
-            font-size: 11px;
-            border-radius: 50%;
-            width: 26px;
-            height: 26px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-    </style>
-@endsection
+    @section('css')
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+        <style>
+            .leaflet-stop-number {
+                background-color: #0ea5e9;
+                color: #fff;
+                font-weight: bold;
+                font-size: 11px;
+                border-radius: 50%;
+                width: 26px;
+                height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid #fff;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            }
+        </style>
+    @endsection
 
-@push('js')
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    @push('js')
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const viajeId = "{{ $busViaje->id }}";
-            const gpsLogsUrl = "{{ route('admin.transporte.maestros.bus_viajes.gps-logs', $busViaje) }}";
-            let estadoActual = "{{ $busViaje->estado }}";
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const viajeId = "{{ $busViaje->id }}";
+                const gpsLogsUrl = "{{ route('admin.transporte.maestros.bus_viajes.gps-logs', $busViaje) }}";
+                let estadoActual = "{{ $busViaje->estado }}";
 
-            let currentBusLat = 9.5468743;
-            let currentBusLng = -69.1926348;
+                let currentBusLat = 9.5468743;
+                let currentBusLng = -69.1926348;
 
-            const map = L.map('mapaGPS').setView([currentBusLat, currentBusLng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
+                const map = L.map('mapaGPS').setView([currentBusLat, currentBusLng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
 
-            const busIcon = L.icon({
-                iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
-                iconSize: [38, 38],
-                iconAnchor: [19, 19],
-                popupAnchor: [0, -19]
-            });
-
-            let busMarker = L.marker([currentBusLat, currentBusLng], {
-                    icon: busIcon
-                })
-                .addTo(map)
-                .bindPopup(`<b>{{ $busViaje->vehiculo->placa ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
-
-            const paradasData = @json($busViaje->ruta->paradas ?? []);
-            const routePoints = [];
-
-            if (Array.isArray(paradasData) && paradasData.length > 0) {
-                paradasData.forEach((parada, idx) => {
-                    const lat = parseFloat(parada.lat);
-                    const lng = parseFloat(parada.lng);
-                    if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-                        routePoints.push([lat, lng]);
-                        const stopNumberIcon = L.divIcon({
-                            className: 'leaflet-stop-number-container',
-                            html: `<div class="leaflet-stop-number">${idx + 1}</div>`,
-                            iconSize: [26, 26],
-                            iconAnchor: [13, 13]
-                        });
-                        L.marker([lat, lng], {
-                                icon: stopNumberIcon
-                            })
-                            .addTo(map)
-                            .bindPopup(`<b>Parada ${idx + 1}: ${parada.nombre}</b>`);
-                    }
+                const busIcon = L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448339.png',
+                    iconSize: [38, 38],
+                    iconAnchor: [19, 19],
+                    popupAnchor: [0, -19]
                 });
 
-                if (routePoints.length >= 2) {
-                    const osrmCoords = routePoints.map(p => `${p[1]},${p[0]}`).join(';');
-                    fetch(
-                            `https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`)
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.routes && data.routes.length > 0) {
-                                const latLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                                const plannedPolyline = L.polyline(latLngs, {
-                                    color: '#0ea5e9',
-                                    weight: 5,
-                                    opacity: 0.75
-                                }).addTo(map);
-                                map.fitBounds(plannedPolyline.getBounds(), {
-                                    padding: [50, 50]
-                                });
+                let busMarker = L.marker([currentBusLat, currentBusLng], {
+                        icon: busIcon
+                    })
+                    .addTo(map)
+                    .bindPopup(`<b>{{ $busViaje->vehiculo->placa ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
+
+                const paradasData = @json($busViaje->ruta->paradas ?? []);
+                const routePoints = [];
+
+                if (Array.isArray(paradasData) && paradasData.length > 0) {
+                    paradasData.forEach((parada, idx) => {
+                        const lat = parseFloat(parada.lat);
+                        const lng = parseFloat(parada.lng);
+                        if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                            routePoints.push([lat, lng]);
+                            const stopNumberIcon = L.divIcon({
+                                className: 'leaflet-stop-number-container',
+                                html: `<div class="leaflet-stop-number">${idx + 1}</div>`,
+                                iconSize: [26, 26],
+                                iconAnchor: [13, 13]
+                            });
+                            L.marker([lat, lng], {
+                                    icon: stopNumberIcon
+                                })
+                                .addTo(map)
+                                .bindPopup(`<b>Parada ${idx + 1}: ${parada.nombre}</b>`);
+                        }
+                    });
+
+                    if (routePoints.length >= 2) {
+                        const osrmCoords = routePoints.map(p => `${p[1]},${p[0]}`).join(';');
+                        fetch(
+                                `https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`
+                                )
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.routes && data.routes.length > 0) {
+                                    const latLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                                    const plannedPolyline = L.polyline(latLngs, {
+                                        color: '#0ea5e9',
+                                        weight: 5,
+                                        opacity: 0.75
+                                    }).addTo(map);
+                                    map.fitBounds(plannedPolyline.getBounds(), {
+                                        padding: [50, 50]
+                                    });
+                                }
+                            })
+                            .catch(err => console.error('Error trazando ruta OSRM:', err));
+                    }
+                }
+
+                function actualizarBadgeEstado(nuevoEstado) {
+                    if (nuevoEstado === estadoActual) return;
+                    estadoActual = nuevoEstado;
+
+                    const badge = document.getElementById('badgeEstado');
+                    const dot = document.getElementById('badgeEstadoDot');
+                    const texto = document.getElementById('badgeEstadoTexto');
+                    const metricTexto = document.getElementById('metricEstadoTexto');
+
+                    const estilos = {
+                        programado: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+                        en_curso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
+                        finalizado: 'bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400',
+                        cancelado: 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400',
+                    };
+
+                    badge.className =
+                        'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ' +
+                        (estilos[nuevoEstado] || 'bg-gray-100 text-gray-600');
+                    dot.className = nuevoEstado === 'en_curso' ?
+                        'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-current';
+
+                    const textoLegible = nuevoEstado.charAt(0).toUpperCase() + nuevoEstado.slice(1).replace('_', ' ');
+                    texto.textContent = textoLegible;
+                    metricTexto.textContent = textoLegible;
+
+                    if (nuevoEstado === 'finalizado' || nuevoEstado === 'cancelado') {
+                        document.getElementById('lastUpdated').innerHTML =
+                            `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${nuevoEstado === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
+                        clearInterval(pollingInterval);
+                    }
+                }
+
+                function actualizarPosicionGPS(lat, lng, velocidad, fechaRegistro) {
+                    busMarker.setLatLng([lat, lng]);
+                    currentBusLat = lat;
+                    currentBusLng = lng;
+
+                    busMarker.getPopup().setContent(`
+                <div class="text-center">
+                    <strong class="text-sky-600">{{ $busViaje->vehiculo->placa ?? 'Autobús' }}</strong><br>
+                    Velocidad: <b>${parseFloat(velocidad).toFixed(1)} km/h</b>
+                </div>
+            `);
+
+                    if (estadoActual !== 'en_curso') return;
+
+                    const statusElement = document.getElementById('lastUpdated');
+                    if (fechaRegistro) {
+                        const ultimaTransmision = new Date(fechaRegistro);
+                        const segundosDiferencia = Math.floor((new Date() - ultimaTransmision) / 1000);
+                        if (segundosDiferencia > 60) {
+                            statusElement.innerHTML =
+                                `<span class="text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Sin señal (última: ${ultimaTransmision.toLocaleTimeString()})</span>`;
+                            return;
+                        }
+                    }
+                    statusElement.innerHTML =
+                        `<span class="text-emerald-500 font-bold"><i class="fas fa-check-circle mr-1"></i> Transmitiendo en vivo (${new Date().toLocaleTimeString()})</span>`;
+                }
+
+                let pollingInterval;
+
+                function consultarGPS() {
+                    fetch(`/api/viajes/${viajeId}/posicion`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
                             }
                         })
-                        .catch(err => console.error('Error trazando ruta OSRM:', err));
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.success) return;
+
+                            if (data.estado) actualizarBadgeEstado(data.estado);
+
+                            if (data.latitud && data.longitud) {
+                                actualizarPosicionGPS(data.latitud, data.longitud, data.velocidad, data
+                                    .fecha_registro);
+                            }
+                            if (data.pasajeros !== undefined) {
+                                document.getElementById('metricPasajeros').innerText = data.pasajeros;
+                            }
+                        })
+                        .catch(err => console.error('Error al consultar GPS:', err));
                 }
-            }
 
-            function actualizarBadgeEstado(nuevoEstado) {
-                if (nuevoEstado === estadoActual) return;
-                estadoActual = nuevoEstado;
-
-                const badge = document.getElementById('badgeEstado');
-                const dot = document.getElementById('badgeEstadoDot');
-                const texto = document.getElementById('badgeEstadoTexto');
-                const metricTexto = document.getElementById('metricEstadoTexto');
-
-                const estilos = {
-                    programado: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
-                    en_curso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
-                    finalizado: 'bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400',
-                    cancelado: 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400',
-                };
-
-                badge.className =
-                    'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ' +
-                    (estilos[nuevoEstado] || 'bg-gray-100 text-gray-600');
-                dot.className = nuevoEstado === 'en_curso' ?
-                    'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-current';
-
-                const textoLegible = nuevoEstado.charAt(0).toUpperCase() + nuevoEstado.slice(1).replace('_', ' ');
-                texto.textContent = textoLegible;
-                metricTexto.textContent = textoLegible;
-
-                if (nuevoEstado === 'finalizado' || nuevoEstado === 'cancelado') {
+                if (estadoActual === 'en_curso' || estadoActual === 'programado') {
+                    pollingInterval = setInterval(consultarGPS, 3000);
+                    consultarGPS();
+                } else {
                     document.getElementById('lastUpdated').innerHTML =
-                        `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${nuevoEstado === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
-                    clearInterval(pollingInterval);
+                        `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${estadoActual === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
                 }
-            }
 
-            function actualizarPosicionGPS(lat, lng, velocidad, fechaRegistro) {
-                busMarker.setLatLng([lat, lng]);
-                currentBusLat = lat;
-                currentBusLng = lng;
+                // --- Reproducción del recorrido (histórico de bus_gps_logs) ---
+                let logs = [];
+                let playbackMarker = null;
+                let playbackLine = null;
+                let playbackTimer = null;
+                let playbackIndex = 0;
+                const slider = document.getElementById('sliderPlayback');
+                const btnPlayback = document.getElementById('btnPlayback');
+                const iconPlayback = document.getElementById('iconPlayback');
 
-                busMarker.getPopup().setContent(`
-            <div class="text-center">
-                <strong class="text-sky-600">{{ $busViaje->vehiculo->placa ?? 'Autobús' }}</strong><br>
-                Velocidad: <b>${parseFloat(velocidad).toFixed(1)} km/h</b>
-            </div>
-        `);
-
-                if (estadoActual !== 'en_curso') return;
-
-                const statusElement = document.getElementById('lastUpdated');
-                if (fechaRegistro) {
-                    const ultimaTransmision = new Date(fechaRegistro);
-                    const segundosDiferencia = Math.floor((new Date() - ultimaTransmision) / 1000);
-                    if (segundosDiferencia > 60) {
-                        statusElement.innerHTML =
-                            `<span class="text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Sin señal (última: ${ultimaTransmision.toLocaleTimeString()})</span>`;
-                        return;
-                    }
-                }
-                statusElement.innerHTML =
-                    `<span class="text-emerald-500 font-bold"><i class="fas fa-check-circle mr-1"></i> Transmitiendo en vivo (${new Date().toLocaleTimeString()})</span>`;
-            }
-
-            let pollingInterval;
-
-            function consultarGPS() {
-                fetch(`/api/viajes/${viajeId}/posicion`, {
+                fetch(gpsLogsUrl, {
                         headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'Accept': 'application/json'
                         }
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (!data.success) return;
-
-                        if (data.estado) actualizarBadgeEstado(data.estado);
-
-                        if (data.latitud && data.longitud) {
-                            actualizarPosicionGPS(data.latitud, data.longitud, data.velocidad, data
-                                .fecha_registro);
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                            document.getElementById('playbackVacio').classList.remove('hidden');
+                            btnPlayback.disabled = true;
+                            btnPlayback.classList.add('opacity-40', 'cursor-not-allowed');
+                            return;
                         }
-                        if (data.pasajeros !== undefined) {
-                            document.getElementById('metricPasajeros').innerText = data.pasajeros;
-                        }
+
+                        logs = res.data;
+                        slider.max = logs.length - 1;
+                        slider.disabled = false;
+                        document.getElementById('playbackPuntos').textContent = `${logs.length} puntos registrados`;
+
+                        const latLngs = logs.map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
+                        playbackLine = L.polyline(latLngs, {
+                            color: '#b91c1c',
+                            weight: 4,
+                            opacity: 0.5,
+                            dashArray: '6,6'
+                        }).addTo(map);
+
+                        playbackMarker = L.circleMarker(latLngs[0], {
+                            radius: 8,
+                            color: '#b91c1c',
+                            fillColor: '#ef4444',
+                            fillOpacity: 1,
+                            weight: 2
+                        }).addTo(map);
                     })
-                    .catch(err => console.error('Error al consultar GPS:', err));
-            }
+                    .catch(err => console.error('Error cargando histórico GPS:', err));
 
-            if (estadoActual === 'en_curso' || estadoActual === 'programado') {
-                pollingInterval = setInterval(consultarGPS, 3000);
-                consultarGPS();
-            } else {
-                document.getElementById('lastUpdated').innerHTML =
-                    `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${estadoActual === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
-            }
-
-            // --- Reproducción del recorrido (histórico de bus_gps_logs) ---
-            let logs = [];
-            let playbackMarker = null;
-            let playbackLine = null;
-            let playbackTimer = null;
-            let playbackIndex = 0;
-            const slider = document.getElementById('sliderPlayback');
-            const btnPlayback = document.getElementById('btnPlayback');
-            const iconPlayback = document.getElementById('iconPlayback');
-
-            fetch(gpsLogsUrl, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(r => r.json())
-                .then(res => {
-                    if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
-                        document.getElementById('playbackVacio').classList.remove('hidden');
-                        btnPlayback.disabled = true;
-                        btnPlayback.classList.add('opacity-40', 'cursor-not-allowed');
-                        return;
-                    }
-
-                    logs = res.data;
-                    slider.max = logs.length - 1;
-                    slider.disabled = false;
-                    document.getElementById('playbackPuntos').textContent = `${logs.length} puntos registrados`;
-
-                    const latLngs = logs.map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
-                    playbackLine = L.polyline(latLngs, {
-                        color: '#b91c1c',
-                        weight: 4,
-                        opacity: 0.5,
-                        dashArray: '6,6'
-                    }).addTo(map);
-
-                    playbackMarker = L.circleMarker(latLngs[0], {
-                        radius: 8,
-                        color: '#b91c1c',
-                        fillColor: '#ef4444',
-                        fillOpacity: 1,
-                        weight: 2
-                    }).addTo(map);
-                })
-                .catch(err => console.error('Error cargando histórico GPS:', err));
-
-            function irAPunto(idx) {
-                if (!logs[idx] || !playbackMarker) return;
-                const punto = [parseFloat(logs[idx].lat), parseFloat(logs[idx].lng)];
-                playbackMarker.setLatLng(punto);
-                playbackMarker.bindPopup(`
-            <div class="text-center">
-                <b>${new Date(logs[idx].created_at).toLocaleTimeString()}</b><br>
-                ${parseFloat(logs[idx].velocidad || 0).toFixed(1)} km/h
-            </div>
-        `);
-                slider.value = idx;
-            }
-
-            slider.addEventListener('input', () => {
-                clearInterval(playbackTimer);
-                iconPlayback.className = 'fas fa-play text-sm';
-                playbackIndex = parseInt(slider.value, 10);
-                irAPunto(playbackIndex);
-            });
-
-            btnPlayback.addEventListener('click', () => {
-                if (logs.length === 0) return;
-
-                if (playbackTimer) {
-                    clearInterval(playbackTimer);
-                    playbackTimer = null;
-                    iconPlayback.className = 'fas fa-play text-sm';
-                    return;
+                function irAPunto(idx) {
+                    if (!logs[idx] || !playbackMarker) return;
+                    const punto = [parseFloat(logs[idx].lat), parseFloat(logs[idx].lng)];
+                    playbackMarker.setLatLng(punto);
+                    playbackMarker.bindPopup(`
+                <div class="text-center">
+                    <b>${new Date(logs[idx].created_at).toLocaleTimeString()}</b><br>
+                    ${parseFloat(logs[idx].velocidad || 0).toFixed(1)} km/h
+                </div>
+            `);
+                    slider.value = idx;
                 }
 
-                if (playbackIndex >= logs.length - 1) playbackIndex = 0;
-                iconPlayback.className = 'fas fa-pause text-sm';
+                slider.addEventListener('input', () => {
+                    clearInterval(playbackTimer);
+                    iconPlayback.className = 'fas fa-play text-sm';
+                    playbackIndex = parseInt(slider.value, 10);
+                    irAPunto(playbackIndex);
+                });
 
-                playbackTimer = setInterval(() => {
-                    if (playbackIndex >= logs.length - 1) {
+                btnPlayback.addEventListener('click', () => {
+                    if (logs.length === 0) return;
+
+                    if (playbackTimer) {
                         clearInterval(playbackTimer);
                         playbackTimer = null;
                         iconPlayback.className = 'fas fa-play text-sm';
                         return;
                     }
-                    playbackIndex++;
-                    irAPunto(playbackIndex);
-                }, 200);
+
+                    if (playbackIndex >= logs.length - 1) playbackIndex = 0;
+                    iconPlayback.className = 'fas fa-pause text-sm';
+
+                    playbackTimer = setInterval(() => {
+                        if (playbackIndex >= logs.length - 1) {
+                            clearInterval(playbackTimer);
+                            playbackTimer = null;
+                            iconPlayback.className = 'fas fa-play text-sm';
+                            return;
+                        }
+                        playbackIndex++;
+                        irAPunto(playbackIndex);
+                    }, 200);
+                });
             });
-        });
-    </script>
-@endpush
+        </script>
+    @endpush
+</x-app-layout>
