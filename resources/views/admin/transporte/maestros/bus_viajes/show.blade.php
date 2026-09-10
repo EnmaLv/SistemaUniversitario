@@ -230,10 +230,10 @@
 
         const busIcon = L.divIcon({
             className: 'bus-live-icon',
-            html: `<img src="/img/Moove_Bus.svg" style="width:34px;height:34px;">`,
-            iconSize: [34, 34],
-            iconAnchor: [17, 17],
-            popupAnchor: [0, -17]
+            html: `<img src="/img/Moove_Bus.svg" style="width:68px;height:68px;">`,
+            iconSize: [68, 68],
+            iconAnchor: [34, 34],
+            popupAnchor: [0, -34]
         });
 
         let busMarker = L.marker([currentBusLat, currentBusLng], { icon: busIcon })
@@ -379,7 +379,7 @@
                 `<span class="text-gray-400 font-bold"><i class="fas fa-flag-checkered mr-1"></i> Viaje ${estadoActual === 'finalizado' ? 'concluido' : 'cancelado'}</span>`;
             map.removeLayer(busMarker);
         }
-        
+
         let logs = [];
         let playbackMarker = null;
         let playbackTimer = null;
