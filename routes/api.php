@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\BusTipoCombustibleApiController;
 use App\Http\Controllers\Api\BusVehiculoApiController;
 use App\Http\Controllers\Api\BusViajeApiController;
 use App\Http\Controllers\Api\BusParadaApiController;
+use App\Http\Controllers\Api\BusViajePasajeroApiController;
 
 Route::get('/ping', fn() => response()->json(['ok' => true]));
 
@@ -53,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('paradas', [BusParadaApiController::class, 'index']);
 
+        Route::post('viajes/{viaje}/pasajeros', [BusViajePasajeroApiController::class, 'registrar']);
         Route::get('viajes/hoy', [BusViajeApiController::class, 'cartelera']);
         Route::get('mi-viaje-activo', [BusViajeApiController::class, 'miViajeActivo']);
         Route::post('viajes/{viaje}/iniciar', [BusViajeApiController::class, 'iniciar']);
