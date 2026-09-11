@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('bus_gps_logs', function (Blueprint $table) {
             $table->id();
-            $table->uuid('local_id')->nullable()->unique()->after('id');
+            $table->uuid('local_id')->nullable()->unique();
             $table->foreignId('bus_viaje_id')->constrained('bus_viajes')->onDelete('cascade');
             $table->decimal('lat', 10, 7);
             $table->decimal('lng', 10, 7);
             $table->decimal('velocidad', 6, 2)->nullable();
             $table->decimal('heading', 6, 2)->nullable();
-            $table->dateTime('registrado_en')->nullable()->change();
+            $table->dateTime('registrado_en')->nullable();
             $table->string('origen', 50);
             $table->timestamps();
         });
