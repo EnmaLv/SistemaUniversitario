@@ -15,7 +15,7 @@
     <title>{{ config('app.name', 'Bienestar Estudiantil') }}</title>
 
     <script>
-        (function() {
+        (function () {
             const getStoredTheme = () => localStorage.getItem('theme');
             const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
@@ -45,6 +45,7 @@
     <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireScriptConfig
     @stack('styles')
     @stack('css')
 
@@ -330,7 +331,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const primaryColor = '{{ $primaryColorHex }}';
 
             window.Toast = Swal.mixin({
@@ -349,7 +350,7 @@
             });
 
             window.AppModal = {
-                show: function(title, text, options = {}) {
+                show: function (title, text, options = {}) {
                     const isDark = document.documentElement.classList.contains('dark');
                     return Swal.fire({
                         title: title || 'Aviso',
@@ -368,13 +369,13 @@
                         buttonsStyling: true
                     }).then((result) => result.isConfirmed);
                 },
-                confirm: function(title, text) {
+                confirm: function (title, text) {
                     return this.show(title, text, {
                         type: 'confirm',
                         icon: 'warning'
                     });
                 },
-                alert: function(title, text) {
+                alert: function (title, text) {
                     return this.show(title, text, {
                         type: 'alert',
                         icon: 'info'
@@ -473,7 +474,7 @@
                         }
                     });
                 @endif
-            });
+                    });
         </script>
     @endif
 </body>
