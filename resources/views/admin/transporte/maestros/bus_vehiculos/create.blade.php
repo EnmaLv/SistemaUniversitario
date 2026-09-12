@@ -492,7 +492,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        bus_marca_id: marca,
+                        marca_id: marca,
                         nombre,
                         descripcion
                     }),
@@ -513,8 +513,8 @@
                         $('#modalAddModelo').modal('hide');
                         toastExito(`Modelo "${res.modelo.nombre}" agregado y seleccionado.`);
                     } else {
-                        if (res.errors?.bus_marca_id) {
-                            errMarca.textContent = res.errors.bus_marca_id[0];
+                        if (res.errors?.marca_id) {
+                            errMarca.textContent = res.errors.marca_id[0];
                             errMarca.style.display = 'block';
                         }
                         if (res.errors?.nombre) {

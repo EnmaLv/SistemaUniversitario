@@ -15,39 +15,52 @@ class BusViajeApiController extends Controller
 
     public function registrarGps(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->estado !== 'en_curso') {
-            $this->eliminarBusDeFirebase((string)$viaje->id);
-
+        if ($viaje->conductor_id !== $request->user()->id_usuario) {
             return response()->json([
                 'success' => false,
-                'message' => 'El viaje ya no está en curso. Transmisión detenida.',
-                'code'    => 'VIAJE_NO_ACTIVO'
-            ], 422);
+                'message' => 'No tienes permiso para registrar GPS en este viaje.',
+            ], 403);
         }
 
         $validated = $request->validate([
+            'local_id'  => 'required|uuid',
             'lat'       => 'required|numeric',
             'lng'       => 'required|numeric',
             'velocidad' => 'nullable|numeric',
             'heading'   => 'nullable|numeric',
+            'timestamp' => 'required|date',
         ]);
 
-        $viaje->update([
-            'ultima_lat' => $validated['lat'],
-            'ultima_lng' => $validated['lng'],
-        ]);
+        $existente = BusGpsLog::where('local_id', $validated['local_id'])->first();
+
+        if ($existente) {
+            return response()->json([
+                'success' => true,
+                'duplicate' => true,
+            ]);
+        }
 
         BusGpsLog::create([
+            'local_id'      => $validated['local_id'],
             'bus_viaje_id'  => $viaje->id,
             'lat'           => $validated['lat'],
             'lng'           => $validated['lng'],
             'velocidad'     => $validated['velocidad'] ?? 0,
             'heading'       => $validated['heading'] ?? null,
-            'registrado_en' => Carbon::now()->format('H:i:s'),
+            'registrado_en' => Carbon::parse($validated['timestamp']),
             'origen'        => 'app_conductor',
         ]);
 
-        return response()->json(['success' => true]);
+        if ($viaje->estado === 'en_curso') {
+            $viaje->update([
+                'ultima_lat' => $validated['lat'],
+                'ultima_lng' => $validated['lng'],
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+        ]);
     }
 
     public function obtenerPosicion(BusViaje $viaje): JsonResponse
@@ -148,6 +161,15 @@ class BusViajeApiController extends Controller
                 'success' => false,
                 'message' => 'No tienes permiso para finalizar este viaje.',
             ], 403);
+        }
+
+        if ($viaje->estado === 'finalizado') {
+            return response()->json([
+                'success' => true,
+                'duplicate' => true,
+                'message' => 'El viaje ya estaba finalizado.',
+                'data' => $viaje,
+            ]);
         }
 
         if ($viaje->estado !== 'en_curso') {

@@ -18,7 +18,7 @@ class BusMarca extends Model
 
     public function modelos()
     {
-        return $this->hasMany(BusModelo::class);
+        return $this->hasMany(BusModelo::class, 'marca_id');
     }
 
     public static function listarMarcas($buscar = null, $estado = 1)
