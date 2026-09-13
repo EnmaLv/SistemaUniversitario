@@ -1,7 +1,7 @@
  <div class="rd-wrapper">
     @include('components.alert')
     <div class="rd-card rd-card-desayuno mb-4 col-md-12 text-center mx-auto">
-        <div class="rd-card-headerr">
+        <div class="rd-card-header">
             <h2 class="rd-title">Desayuno del día</h2>
             <p class="rd-sub">Selecciona el desayuno de hoy y registra la cantidad servida</p>
         </div>
@@ -13,10 +13,10 @@
                         <div class="col-12 fade-in">
                             <div class="row g-3 align-items-center">
                                 <div class="col-md-5">
-                                    <div class="rd-input-group">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <select
                                             wire:model.live="desayunos_agregados.{{ $index }}.receta_id"
-                                            class="rd-input @error('desayunos_agregados.' . $index . '.receta_id') rd-input-error @enderror"
+                                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 @error('desayunos_agregados.' . $index . '.receta_id') rd-input-error @enderror"
                                             @disabled($desayuno_registrado || !$horarioPermitido) @if ($desayuno_registrado || !$horarioPermitido) style="opacity: .8; cursor: not-allowed;" @endif>
                                             <option value="">Seleccione una opción</option>
                                             @foreach ($comidas as $comida)
@@ -28,10 +28,10 @@
                                 <div class="col-md-7">
                                     <div class="d-flex align-items-center">
                                         
-                                        <div class="rd-input-group mr-2">
+                                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group mr-2">
                                             <input type="number"
                                                 wire:model.live="desayunos_agregados.{{ $index }}.cantidad"
-                                                class="rd-input @error('desayunos_agregados.' . $index . '.cantidad') rd-input-error @enderror"
+                                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 @error('desayunos_agregados.' . $index . '.cantidad') rd-input-error @enderror"
                                                 placeholder="Cant." min="1" @disabled($desayuno_registrado || !$horarioPermitido) @if ($desayuno_registrado || !$horarioPermitido) style="opacity: .8; cursor: not-allowed;" @endif/>
                                         </div>
                                         {{-- Botón de Eliminar (Pequeño, solo visible si hay más de una entrada) --}}
@@ -150,7 +150,7 @@
                                 class="fas fa-search"></i></button>
                     </form>
 
-                    <button class="rd-icon-btn" data-toggle="collapse" data-target="#filters" aria-expanded="false"
+                    <button class="rd-icon-btn"   aria-expanded="false"
                         aria-controls="filters" title="Filtros">
                         <i class="fas fa-filter"></i>
                     </button>
@@ -162,11 +162,11 @@
                         class="rd-filters-form">
                         <div class="rd-filter-row">
                             <label>Desde</label>
-                            <input type="date" name="fecha_desde" id="fecha_desde" class="rd-filter-input" />
+                            <input type="date" name="fecha_desde" id="fecha_desde" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" />
                         </div>
                         <div class="rd-filter-row">
                             <label>Hasta</label>
-                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="rd-filter-input"
+                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                                 max="{{ date('Y-m-d') }}" />
                         </div>
                         <div class="rd-filter-actions">

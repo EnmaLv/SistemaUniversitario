@@ -1,184 +1,106 @@
-@extends('adminlte::page')
+@extends('layouts.app')
+
+@section('title', 'Sedes y Anexos')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
-         ">
+    <div class="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
-                Sedes
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">
+                Sedes y Anexos
             </h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
+            <p class="mt-1 text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
+                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
-        <div>
-            <a href="{{ route('admin.maestros.sedes.create') }}" class="rd-btn rd-btn-primary">
-                <i class="fas fa-plus"></i> Crear Nueva Sede
-            </a>
-        </div>
+        <a href="{{ route('admin.maestros.sedes.create') }}"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
+            <i class="fas fa-plus text-xs"></i>
+            <span>Nueva Sede</span>
+        </a>
     </div>
 @stop
 
 @section('content')
     @include('components.alert')
-    <div class="rd-card rd-card-full">
-        <div class="rd-card-body">
-            <div class="rd-card-header rd-header-space">
-                <div>
-                    <h3 class="rd-title-sm">Sedes Registradas</h3>
-                </div>
-                <div class="rd-actions">
-                    <div class="d-flex gap-3 align-items-center">
-                        <span class="font-weight-bold" style="margin-right:10px;">Filtrar por estado:</span>
-                        <div class="toggle-container">
-                            <input type="checkbox" id="estadoToggle" class="toggle-checkbox"
-                                {{ request('activo', 1) == 1 ? 'checked' : '' }}>
-                            <label for="estadoToggle" class="toggle-label">
-                                <span class="toggle-inner"></span>
-                                <span class="toggle-switch"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <form action="{{ route('admin.maestros.sedes.index') }}" method="GET" class="rd-search-inline"
-                        role="search">
-                        <input type="hidden" name="activo" value="{{ request('activo', 1) }}">
-                        <input type="text" name="buscar" value="{{ request('buscar') }}" class="rd-search-input"
-                            placeholder="Escriba la Sede/Anexo" />
-                        <button class="rd-icon-btn" type="submit" title="Buscar"><i class="fas fa-search"></i></button>
-                    </form>
-                </div>
+
+    <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center"
+        style="background-color: var(--bg-card); border-color: var(--border-color);">
+        <form action="{{ route('admin.maestros.sedes.index') }}" method="GET" class="relative w-full">
+            <input type="hidden" name="activo" value="{{ request('activo', 1) }}">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                <i class="fas fa-search text-sm"></i>
             </div>
-            <div id="printArea">
-                <table class="rd-table">
-                    <thead>
-                        <tr>
-                            <th style="width:60px">#</th>
-                            <th>Nombre</th>
-                            <th>Dirección</th>
-                            <th>Teléfono</th>
-                            <th style="width:120px">Estado</th>
-                            <th style="width:150px">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($sedes as $sede)
-                            <tr>
-                                <td class="text-center">
-                                    {{ ($sedes->currentPage() - 1) * $sedes->perPage() + $loop->iteration }}</td>
-                                <td>{{ $sede->nombre }}</td>
-                                <td>{{ $sede->direccion }}</td>
-                                <td>{{ $sede->telefono }}</td>
-                                <td class="text-center">
-                                    @if ($sede->activo)
-                                        <span class="rd-badge rd-badge-success">Activo</span>
-                                    @else
-                                        <span class="rd-badge rd-badge-danger">Inactivo</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    <div class="rd-action-group">
-                                        <a href="{{ route('admin.maestros.sedes.edit', $sede->id) }}"
-                                            class="rd-action" title="Editar"><i class="fas fa-edit"></i></a>
-                                        @if ($sede->activo)
-                                            <form action="{{ route('admin.maestros.sedes.destroy', $sede->id) }}"
-                                                method="POST" class="form-delete" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="rd-action rd-btn-danger"
-                                                    onclick="confirmDelete(event, this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        @else
-                                            <form
-                                                action="{{ url('admin/maestros/sedes/' . $sede->id . '/activar') }}"
-                                                method="POST" class="form-delete" style="display:inline;">
-                                                @csrf
-                                                @method('PUT')
-                                                <button type="submit" class="rd-action rd-action-success btn-delete"
-                                                    onclick="confirmActivate(event, this)">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-4">No hay Sedes</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-3 d-flex justify-content-center">
-                {{ $sedes->onEachSide(1)->links('components.pagination') }}
-            </div>
+            <input type="text" name="buscar" value="{{ request('buscar') }}"
+                placeholder="Buscar sede o anexo..."
+                class="w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-red-500"
+                style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);">
+        </form>
+        <div class="flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2"
+            style="border-color: var(--border-color);">
+            <span class="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Activas</span>
+            <label class="relative inline-flex cursor-pointer items-center">
+                <input type="checkbox" id="estadoToggle" class="peer sr-only"
+                    {{ request('activo', 1) == 1 ? 'checked' : '' }}>
+                <span class="h-6 w-10 rounded-full bg-gray-300 transition peer-checked:bg-red-700 dark:bg-gray-700"></span>
+                <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span>
+            </label>
         </div>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border shadow-sm"
+        style="background-color: var(--bg-card); border-color: var(--border-color);">
+        <div class="overflow-x-auto" id="printArea">
+            <table class="w-full border-collapse text-left">
+                <thead>
+                    <tr class="border-b text-[13px] font-black uppercase tracking-wider"
+                        style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);">
+                        <th class="px-6 py-4 text-center">#</th>
+                        <th class="px-6 py-4">Nombre</th>
+                        <th class="px-6 py-4">Direccion</th>
+                        <th class="px-6 py-4">Telefono</th>
+                        <th class="px-6 py-4 text-center">Estado</th>
+                        <th class="px-6 py-4 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-xs font-medium" style="divide-color: var(--border-color);">
+                    @forelse($sedes as $sede)
+                        <x-table-row :id="$sede->id">
+                            <td class="px-6 py-4 text-center font-bold" style="color: var(--text-muted);">
+                                {{ ($sedes->currentPage() - 1) * $sedes->perPage() + $loop->iteration }}
+                            </td>
+                            <td class="px-6 py-4 font-bold" style="color: var(--text-main);">{{ $sede->nombre }}</td>
+                            <td class="px-6 py-4" style="color: var(--text-muted);">{{ $sede->direccion }}</td>
+                            <td class="px-6 py-4" style="color: var(--text-muted);">{{ $sede->telefono }}</td>
+                            <td class="px-6 py-4 text-center">
+                                @if ($sede->activo)
+                                    <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activo</span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactivo</span>
+                                @endif
+                            </td>
+                            <x-table-actions :id="$sede->id" baseUrl="admin/maestros/sedes" :status="$sede->activo" :show="false" />
+                        </x-table-row>
+                    @empty
+                        <tr><td colspan="6" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">No hay sedes registradas</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if ($sedes->hasPages())
+            <div class="flex justify-center border-t p-4" style="border-color: var(--border-color);">
+                {{ $sedes->onEachSide(1)->appends(request()->query())->links('partials.pagination') }}
+            </div>
+        @endif
     </div>
 @stop
 
 @push('js')
-    @if (session('success'))
-        <script>
-            Swal.fire({
-                title: '¡Hecho!',
-                text: '{{ session('success') }}',
-                icon: '{{ session('icono', 'success') }}',
-                confirmButtonText: 'Aceptar'
-            });
-        </script>
-    @endif
-
     <script>
-        function confirmDelete(event, button) {
-            event.preventDefault();
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Desea inactivar la sede?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, inactivar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    button.closest('form').submit();
-                }
-            });
-        }
-
-        function confirmActivate(event, button) {
-            event.preventDefault();
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Desea activar la sede?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, activar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    button.closest('form').submit();
-                }
-            });
-        }
-
-        document.getElementById('estadoToggle').addEventListener('change', function() {
-            if (this.checked) {
-                window.location.href = "{!! route('admin.maestros.sedes.index', array_merge(request()->query(), ['activo' => 1])) !!}";
-            } else {
-                window.location.href = "{!! route('admin.maestros.sedes.index', array_merge(request()->query(), ['activo' => 0])) !!}";
-            }
+        document.getElementById('estadoToggle')?.addEventListener('change', function () {
+            const url = new URL(window.location.href);
+            url.searchParams.set('activo', this.checked ? '1' : '0');
+            window.location.href = url.toString();
         });
     </script>
 @endpush

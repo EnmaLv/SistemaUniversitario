@@ -1,6 +1,6 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
-@section('title', 'Verificación de Seguridad')
+@section('title', 'VerificaciÃ³n de Seguridad')
 
 @section('content')
     <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
@@ -21,7 +21,7 @@
                     Verificar Llave Maestra
                 </h1>
                 <p style="font-size: 0.9rem; color: #64748b; line-height: 1.4; margin: 0;">
-                    Para acceder a la configuración sensible, debes validar tu identidad.
+                    Para acceder a la configuraciÃ³n sensible, debes validar tu identidad.
                 </p>
             </div>
 
@@ -32,28 +32,28 @@
                         <label for="master_key" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
                             Llave Maestra
                         </label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-transparent border-right-0" style="border-radius: 8px 0 0 8px;">
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50">
+                            <div class="">
+                                <span class="px-3 text-slate-500 bg-transparent border-right-0" style="border-radius: 8px 0 0 8px;">
                                     <i class="fas fa-key text-muted"></i>
                                 </span>
                             </div>
                             <input type="password" 
                                 name="master_key" 
                                 id="master_key"
-                                class="form-control border-left-0 @error('master_key') is-invalid @enderror" 
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 border-left-0 @error('master_key') border-red-300 @enderror" 
                                 placeholder="Introduce tu clave..."
                                 style="border-radius: 0 8px 8px 0; height: 45px;"
                                 required 
                                 autofocus />
-                            <div class="input-group-append">
+                            <div class="">
                                 <button type="button" class="rd-btn rd-btn-primary" id="togglePassword" style="border-radius: 0 8px 8px 0; border-left: none;">
                                     <i class="fas fa-eye" id="eyeIcon"></i>
                                 </button>
                             </div>
                         </div>
                         @error('master_key') 
-                            <span class="invalid-feedback d-block mt-2" role="alert">
+                            <span class="text-red-600 d-block mt-2" role="alert">
                                 <strong>{{ $message }}</strong>
                             </span> 
                         @enderror
@@ -72,7 +72,7 @@
 
 @push('js')
 <script>
-    // Script para mostrar/ocultar contraseña
+    // Script para mostrar/ocultar contraseÃ±a
     document.getElementById('togglePassword').addEventListener('click', function (e) {
         const password = document.getElementById('master_key');
         const icon = document.getElementById('eyeIcon');
@@ -89,7 +89,7 @@
 
 @push('css')
     <style>
-        .input-group-text{
+        .px-3 text-slate-500{
             border: none !important;
         }
     </style>

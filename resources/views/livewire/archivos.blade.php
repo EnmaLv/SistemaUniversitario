@@ -68,7 +68,7 @@
                             x-on:livewire-upload-finish="isUploading = false"
                             x-on:livewire-upload-error="isUploading = false"
                             x-on:livewire-upload-progress="progress = $event.detail.progress">
-                            <input type="file" class="form-control rd-filter-input" wire:model="archivo"
+                            <input type="file" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" wire:model="archivo"
                                 wire:key="{{ $archivoKey }}" accept=".xlsx,.xls"
                                 style="padding: 20px; font-size: 1rem; height: auto;" id="archivo" hidden>
 

@@ -11,7 +11,7 @@
         @if(config('adminlte.iframe.buttons.close_all', true) || config('adminlte.iframe.buttons.close_all_other', true))
 
             <div class="nav-item dropdown">
-                <a class="nav-link bg-danger dropdown-toggle" data-toggle="dropdown" href="#"
+                <a class="nav-link bg-danger dropdown-toggle"  href="#"
                    role="button" aria-haspopup="true" aria-expanded="false">
                     {{ __('adminlte::iframe.btn_close') }}
                 </a>
@@ -58,7 +58,7 @@
                     <a href="#" class="btn-iframe-close" data-widget="iframe-close" data-type="only-this">
                         <i class="fas fa-times"></i>
                     </a>
-                    <a id="tab-default" class="nav-link active" data-toggle="row" href="#panel-default"
+                    <a id="tab-default" class="nav-link active"  href="#panel-default"
                        role="tab" aria-controls="panel-default" aria-selected="true">
                         {{-- TODO: How to translate the configured title? --}}
                         {{ config('adminlte.iframe.default_tab.title') ?: __('adminlte::iframe.tab_home') }}

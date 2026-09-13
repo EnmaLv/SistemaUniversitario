@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
     @include('components.alert')
@@ -53,3 +53,4 @@
         }
     </script>
 @stop
+

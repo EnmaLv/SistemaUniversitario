@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -95,18 +95,18 @@
                                                 <li class="ingrediente-item @if ($showMore && $index >= 3) d-none @endif"
                                                     style="margin-bottom:4px;">
                                                     {{ optional($ing->producto)->nombre ?? 'Producto eliminado' }}
-                                                    —
+                                                    â€”
                                                     <strong>{{ round($ing->cantidad_porcion) }}</strong>
                                                     {{ optional($ing->unidad)->nombre ?? '' }}
                                                 </li>
                                             @endforeach
                                         </ul>
                                         @if ($showMore)
-                                            <button type="button" class="btn btn-link p-0 ver-mas-btn"
+                                            <button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 link p-0 ver-mas-btn"
                                                 data-recipiente-id="{{ $receta->id }}" style="font-size: 0.9rem;">
-                                                Ver más...
+                                                Ver mÃ¡s...
                                             </button>
-                                            <button type="button" class="btn btn-link p-0 ver-menos-btn d-none"
+                                            <button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 link p-0 ver-menos-btn d-none"
                                                 data-recipiente-id="{{ $receta->id }}" style="font-size: 0.9rem;">
                                                 Ver menos
                                             </button>
@@ -164,13 +164,13 @@
                                             function confirmDelete(event, button) {
                                                 event.preventDefault();
                                                 Swal.fire({
-                                                    title: '¿Estás seguro?',
+                                                    title: 'Â¿EstÃ¡s seguro?',
                                                     text: "Desea eliminar los ingredientes asociados a esta receta?",
                                                     icon: 'warning',
                                                     showCancelButton: true,
                                                     confirmButtonColor: '#3085d6',
                                                     cancelButtonColor: '#d33',
-                                                    confirmButtonText: 'Sí, eliminar',
+                                                    confirmButtonText: 'SÃ­, eliminar',
                                                     cancelButtonText: 'Cancelar'
                                                 }).then((result) => {
                                                     if (result.isConfirmed) {
@@ -208,3 +208,4 @@
         });
     </script>
 @stop
+

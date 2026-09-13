@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -29,7 +29,7 @@
 
                     <div class="rd-card-body border-bottom bg-light py-3">
                         <h3 class="rd-title-sm">
-                            <i class="fas fa-id-badge mr-2" style="color: var(--color-secondary)"></i> Información de Cuenta
+                            <i class="fas fa-id-badge mr-2" style="color: var(--color-secondary)"></i> InformaciÃ³n de Cuenta
                         </h3>
                     </div>
 
@@ -37,15 +37,15 @@
                         <div class="row">
                             <div class="col-md-6 form-group mb-4">
                                 <label class="rd-label mb-2">Correo de Usuario (Login / Gmail)</label>
-                                <div class="rd-input-group @error('username') border-danger @enderror">
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group @error('username') border-danger @enderror">
                                     <span><i class="fas fa-envelope"></i></span>
-                                    <input type="email" name="username" class="rd-input w-100" value="{{ old('username', $usuario->username) }}" required placeholder="ejemplo@gmail.com">
+                                    <input type="email" name="username" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" value="{{ old('username', $usuario->username) }}" required placeholder="ejemplo@gmail.com">
                                 </div>
                                 @error('username') <div class="rd-error">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="col-md-6 form-group mb-4">
-                                <label class="rd-label mb-2">Asignación de Rol</label>
+                                <label class="rd-label mb-2">AsignaciÃ³n de Rol</label>
                                 @php
                                     $isAdminUsuario = $usuario->roles->contains('nombre', 'Administrador');
                                     $authUser = auth()->user();
@@ -55,9 +55,9 @@
                                 @endphp
 
                                 @if(!$hideRoleSelectForSelfAdmin)
-                                    <div class="rd-input-group @error('role') border-danger @enderror">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group @error('role') border-danger @enderror">
                                         <span><i class="fas fa-shield-alt"></i></span>
-                                        <select name="role" id="roleSelect" class="rd-input w-100">
+                                        <select name="role" id="roleSelect" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100">
                                             @foreach($roles as $r)
                                                 <option value="{{ $r->id_rol }}" {{ old('role', $currentRole ? $currentRole->id_rol : '') == $r->id_rol ? 'selected' : '' }}>
                                                     {{ $r->nombre }}
@@ -66,9 +66,9 @@
                                         </select>
                                     </div>
                                 @else
-                                    <div class="rd-input-group" style="background: #f8fafc; border-style: dashed;">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group" style="background: #f8fafc; border-style: dashed;">
                                         <span><i class="fas fa-user-check text-success"></i></span>
-                                        <div class="rd-input w-100 py-2">{{ $currentRole ? $currentRole->nombre : '—' }}</div>
+                                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100 py-2">{{ $currentRole ? $currentRole->nombre : 'â€”' }}</div>
                                     </div>
                                     <input type="hidden" name="role" id="roleSelectHidden" data-text="{{ $currentRole ? $currentRole->nombre : '' }}" value="{{ $currentRole ? $currentRole->id_rol : '' }}">
                                     <small class="text-danger mt-1 d-block">No puedes cambiar tu propio rol de Administrador.</small>
@@ -78,7 +78,7 @@
 
                                 @if(!($otherAdminExists ?? true) && !$hideRoleSelectForSelfAdmin && $isAdminUsuario)
                                     <div class="alert alert-warning mt-3 border-0 shadow-sm" style="border-radius: 10px; font-size: 0.9rem;">
-                                        <i class="fas fa-exclamation-triangle mr-2"></i> No puedes cambiar el rol: Este es el único <strong>Administrador</strong> del sistema.
+                                        <i class="fas fa-exclamation-triangle mr-2"></i> No puedes cambiar el rol: Este es el Ãºnico <strong>Administrador</strong> del sistema.
                                     </div>
                                 @endif
                             </div>
@@ -98,29 +98,29 @@
                     <div id="securityFieldsWrapper" class="rd-card-body p-4 border-bottom" style="display: none; background-color: #fafbfc;">
                         <div class="row">
                             <div class="col-md-6 form-group mb-4">
-                                <label class="rd-label mb-2">Nueva Contraseña</label>
-                                <div class="rd-input-group @error('password') border-danger @enderror">
+                                <label class="rd-label mb-2">Nueva ContraseÃ±a</label>
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group @error('password') border-danger @enderror">
                                     <span><i class="fas fa-key"></i></span>
-                                    <input type="password" name="password" class="rd-input w-100" placeholder="Escriba la nueva contraseña">
+                                    <input type="password" name="password" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" placeholder="Escriba la nueva contraseÃ±a">
                                 </div>
                                 @error('password') <div class="rd-error">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="col-md-6 form-group mb-4">
-                                <label class="rd-label mb-2">Confirmar Nueva Contraseña</label>
-                                <div class="rd-input-group">
+                                <label class="rd-label mb-2">Confirmar Nueva ContraseÃ±a</label>
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                     <span><i class="fas fa-check-double"></i></span>
-                                    <input type="password" name="password_confirmation" class="rd-input w-100" placeholder="Repita la nueva contraseña">
+                                    <input type="password" name="password_confirmation" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" placeholder="Repita la nueva contraseÃ±a">
                                 </div>
                             </div>
 
                             <div id="newAdminKeyWrap" class="col-12 form-group mb-4 p-3" style="display:none; background: #fffcf0; border: 1px dashed #fcd34d; border-radius: 12px;">
                                 <label class="rd-label text-warning mb-2" style="font-size: 0.9rem;">
-                                    <i class="fas fa-star mr-1"></i> Llave Maestra de Autorización (Solo Administradores)
+                                    <i class="fas fa-star mr-1"></i> Llave Maestra de AutorizaciÃ³n (Solo Administradores)
                                 </label>
-                                <div class="rd-input-group bg-white" style="border-color: #fbbf24;">
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group bg-white" style="border-color: #fbbf24;">
                                     <span><i class="fas fa-shield-alt text-warning"></i></span>
-                                    <input type="password" name="master_key" id="newAdminKey" class="rd-input w-100" 
+                                    <input type="password" name="master_key" id="newAdminKey" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" 
                                            placeholder="{{ $isAdminUsuario ? 'Escriba una nueva llave maestra o deje en blanco para mantener la actual' : 'Defina la llave maestra para el nuevo Administrador...' }}">
                                 </div>
                                 @error('master_key') <div class="rd-error">{{ $message }}</div> @enderror
@@ -134,25 +134,25 @@
                             $q2 = $sq['pregunta_2'] ?? '';
 
                             $questionsList = [
-                                '¿Cuál es el nombre de tu primera mascota?',
-                                '¿Cuál es el nombre de tu madre?',
-                                '¿En qué ciudad naciste?',
-                                '¿Cuál es tu comida favorita?',
-                                '¿Cuál fue tu primer colegio?',
-                                '¿Cuál es el segundo nombre de tu padre?',
+                                'Â¿CuÃ¡l es el nombre de tu primera mascota?',
+                                'Â¿CuÃ¡l es el nombre de tu madre?',
+                                'Â¿En quÃ© ciudad naciste?',
+                                'Â¿CuÃ¡l es tu comida favorita?',
+                                'Â¿CuÃ¡l fue tu primer colegio?',
+                                'Â¿CuÃ¡l es el segundo nombre de tu padre?',
                             ];
                         @endphp
                         
                         <div class="p-3 rounded mt-2" style="background: #ffffff; border: 1px solid #e2e8f0;">
                             <h5 class="rd-title-sm mb-3" style="font-size: 0.95rem; color: #475569;">
-                                <i class="fas fa-question-circle mr-1"></i> Preguntas de Recuperación (Opcionales)
+                                <i class="fas fa-question-circle mr-1"></i> Preguntas de RecuperaciÃ³n (Opcionales)
                             </h5>
                             <div class="row">
                                 <div class="col-md-6 form-group mb-3">
                                     <label class="rd-label small mb-1">Pregunta de Seguridad #1</label>
-                                    <div class="rd-input-group bg-white">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group bg-white">
                                         <span><i class="fas fa-list text-muted"></i></span>
-                                        <select name="security_questions[pregunta_1]" class="rd-input w-100">
+                                        <select name="security_questions[pregunta_1]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100">
                                             <option value="" {{ empty(old('security_questions.pregunta_1', $q1)) ? 'selected' : '' }}>-- Selecciona pregunta 1 --</option>
                                             @foreach ($questionsList as $q)
                                                 <option value="{{ $q }}" {{ old('security_questions.pregunta_1', $q1) == $q ? 'selected' : '' }}>
@@ -164,17 +164,17 @@
                                 </div>
                                 <div class="col-md-6 form-group mb-3">
                                     <label class="rd-label small mb-1">Respuesta #1</label>
-                                    <div class="rd-input-group bg-white">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group bg-white">
                                         <span><i class="fas fa-comment-dots text-muted"></i></span>
-                                        <input type="password" name="security_questions[respuesta_1]" class="rd-input w-100" placeholder="Escriba la nueva respuesta...">
+                                        <input type="password" name="security_questions[respuesta_1]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" placeholder="Escriba la nueva respuesta...">
                                     </div>
                                 </div>
 
                                 <div class="col-md-6 form-group mb-3 mb-md-0">
                                     <label class="rd-label small mb-1">Pregunta de Seguridad #2</label>
-                                    <div class="rd-input-group bg-white">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group bg-white">
                                         <span><i class="fas fa-list text-muted"></i></span>
-                                        <select name="security_questions[pregunta_2]" class="rd-input w-100">
+                                        <select name="security_questions[pregunta_2]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100">
                                             <option value="" {{ empty(old('security_questions.pregunta_2', $q2)) ? 'selected' : '' }}>-- Selecciona pregunta 2 --</option>
                                             @foreach ($questionsList as $q)
                                                 <option value="{{ $q }}" {{ old('security_questions.pregunta_2', $q2) == $q ? 'selected' : '' }}>
@@ -186,9 +186,9 @@
                                 </div>
                                 <div class="col-md-6 form-group mb-0">
                                     <label class="rd-label small mb-1">Respuesta #2</label>
-                                    <div class="rd-input-group bg-white">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group bg-white">
                                         <span><i class="fas fa-comment-dots text-muted"></i></span>
-                                        <input type="password" name="security_questions[respuesta_2]" class="rd-input w-100" placeholder="Escriba la nueva respuesta...">
+                                        <input type="password" name="security_questions[respuesta_2]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" placeholder="Escriba la nueva respuesta...">
                                     </div>
                                 </div>
                             </div>
@@ -197,27 +197,27 @@
 
                     <div class="rd-card-body border-bottom bg-light py-3 border-top">
                         <h3 class="rd-title-sm">
-                            <i class="fas fa-info-circle mr-2" style="color: var(--color-secondary)"></i> Información Personal
+                            <i class="fas fa-info-circle mr-2" style="color: var(--color-secondary)"></i> InformaciÃ³n Personal
                         </h3>
                     </div>
 
                     <div class="rd-card-body p-4">
                         <div class="row">
                             <div class="col-md-6 form-group mb-4">
-                                <label class="rd-label mb-2">Cédula de Identidad</label>
-                                <div class="rd-input-group @error('cedula_persona') border-danger @enderror">
+                                <label class="rd-label mb-2">CÃ©dula de Identidad</label>
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group @error('cedula_persona') border-danger @enderror">
                                     <span><i class="fas fa-id-card"></i></span>
-                                    <input type="text" name="cedula_persona" class="rd-input w-100" 
+                                    <input type="text" name="cedula_persona" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" 
                                            value="{{ old('cedula_persona', optional($usuario->persona)->cedula_persona) }}" placeholder="Ej: V-12345678">
                                 </div>
                                 @error('cedula_persona') <div class="rd-error">{{ $message }}</div> @enderror
                             </div>
 
                             <div class="col-md-6 form-group mb-4">
-                                <label class="rd-label mb-2">Teléfono de Contacto</label>
-                                <div class="rd-input-group @error('telefono_persona') border-danger @enderror">
+                                <label class="rd-label mb-2">TelÃ©fono de Contacto</label>
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group @error('telefono_persona') border-danger @enderror">
                                     <span><i class="fas fa-phone"></i></span>
-                                    <input type="text" name="telefono_persona" class="rd-input w-100" 
+                                    <input type="text" name="telefono_persona" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" 
                                            value="{{ old('telefono_persona', optional($usuario->persona)->telefono_persona) }}" placeholder="Ej: 0412-1234567">
                                 </div>
                                 @error('telefono_persona') <div class="rd-error">{{ $message }}</div> @enderror
@@ -225,9 +225,9 @@
 
                             <div class="col-md-6 form-group mb-4">
                                 <label class="rd-label mb-2">Nombres</label>
-                                <div class="rd-input-group @error('nombre_persona') border-danger @enderror">
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group @error('nombre_persona') border-danger @enderror">
                                     <span><i class="fas fa-user"></i></span>
-                                    <input type="text" name="nombre_persona" class="rd-input w-100" 
+                                    <input type="text" name="nombre_persona" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" 
                                            value="{{ old('nombre_persona', optional($usuario->persona)->nombre_persona) }}" placeholder="Nombres del empleado">
                                 </div>
                                 @error('nombre_persona') <div class="rd-error">{{ $message }}</div> @enderror
@@ -235,9 +235,9 @@
 
                             <div class="col-md-6 form-group mb-4">
                                 <label class="rd-label mb-2">Apellidos</label>
-                                <div class="rd-input-group @error('apellido_persona') border-danger @enderror">
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group @error('apellido_persona') border-danger @enderror">
                                     <span><i class="fas fa-user"></i></span>
-                                    <input type="text" name="apellido_persona" class="rd-input w-100" 
+                                    <input type="text" name="apellido_persona" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" 
                                            value="{{ old('apellido_persona', optional($usuario->persona)->apellido_persona) }}" placeholder="Apellidos del empleado">
                                 </div>
                                 @error('apellido_persona') <div class="rd-error">{{ $message }}</div> @enderror
@@ -274,14 +274,14 @@
                 securityWrapper.querySelectorAll('input, select').forEach(el => el.disabled = false);
             } else {
                 securityWrapper.style.display = 'none';
-                // Deshabilitar inputs internos para evitar envíos incidentales
+                // Deshabilitar inputs internos para evitar envÃ­os incidentales
                 securityWrapper.querySelectorAll('input, select').forEach(el => el.disabled = true);
             }
         }
 
         if (toggleSecurity && securityWrapper) {
             toggleSecurity.addEventListener('change', toggleSecurityFields);
-            toggleSecurityFields(); // Ejecución inicial (por si hay errores de validación redireccionados)
+            toggleSecurityFields(); // EjecuciÃ³n inicial (por si hay errores de validaciÃ³n redireccionados)
         }
 
         // --- CONTROL DE ROL ADMINISTRADOR (MASTER KEY) ---

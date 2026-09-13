@@ -1,77 +1,55 @@
-@extends('adminlte::page')
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            @include('components.alert')
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center">
-        <div>
-            <h1 class="m-0 rd-title-sm" style="font-size:1.4rem;">Crear Nueva Receta</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600; font-size:0.95rem;">
-                    {{ \Carbon\Carbon::now()->format('d/m/Y') }}
-                </span>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">Nueva Receta</h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Registra un plato para el catálogo del comedor.
+                    </p>
+                </div>
+                <a href="{{ route('admin.maestros.recetas.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-bold text-gray-600 transition hover:border-red-500 hover:text-red-600 dark:border-gray-700 dark:text-gray-300">
+                    <i class="fas fa-arrow-left text-xs"></i> Volver
+                </a>
             </div>
 
-            <div
-                style="width:46px;height:46px;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,42,0.08);">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%; height:100%; object-fit:cover;">
-            </div>
-        </div>
-    </div>
-@stop
-
-@section('content')
-    <div class="row">
-        <div class="col-md-12 m-auto">
-            <div class="rd-card p-4">
-                <div class="rd-card-header mb-3">
-                    <h3 class="rd-title-sm">Llenar los campos del formulario</h3>
-                    <div>
-                        <a href="{{ url('admin/maestros/recetas') }}" class="rd-btn rd-btn-default">
-                            <i class="fas fa-arrow-left"></i> Volver
-                        </a>
-                    </div>
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);" class="rounded-2xl border shadow-sm overflow-hidden">
+                <div class="border-b border-gray-100 px-6 py-5 dark:border-gray-800">
+                    <h2 class="text-lg font-extrabold" style="color: var(--text-main);">Datos de la receta</h2>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Completa la información del plato.</p>
                 </div>
 
-                <form action="{{ route('admin.maestros.recetas.store') }}" method="POST" class="rd-prevent-double-submit">
+                <form action="{{ route('admin.maestros.recetas.store') }}" method="POST" class="space-y-6 p-6">
                     @csrf
                     <input type="hidden" name="from" value="{{ request('from') }}">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Nombre</label>
-                        <div class="input-group mb-2">
-                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                            <input type="text" class="form-control rd-filter-input" id="nombre" name="nombre"
-                                placeholder="Ingrese el nombre de la receta" value="{{ old('nombre') }}">
+
+                    <div>
+                        <label for="nombre" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Nombre de la receta</label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400"><i class="fas fa-utensils"></i></span>
+                            <input id="nombre" name="nombre" type="text" value="{{ old('nombre') }}" required autofocus maxlength="255" placeholder="Ej. Arepa con pollo"
+                                class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                         </div>
-                        @error('nombre')
-                            <div class="text-danger"><b>{{ $message }}</b></div>
-                        @enderror
+                        @error('nombre') <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p> @enderror
                     </div>
-                    <div class="form-group mt-3">
-                        <label class="font-weight-bold">Descripción</label>
-                        <textarea class="form-control rd-filter-input" id="descripcion" name="descripcion" rows="3"
-                            placeholder="Ingrese la descripción de la receta" style="resize:none;">{{ old('descripcion') }}</textarea>
+
+                    <div>
+                        <label for="descripcion" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Descripción <span class="font-normal text-gray-400">(opcional)</span></label>
+                        <textarea id="descripcion" name="descripcion" rows="5" placeholder="Describe brevemente la receta"
+                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">{{ old('descripcion') }}</textarea>
+                        @error('descripcion') <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p> @enderror
                     </div>
-                    <div class="mt-4 d-flex justify-content-end gap-2">
-                        <a href="{{ url('admin/maestros/recetas') }}" class="rd-btn rd-btn-default">
-                            Cancelar
-                        </a>
-                        <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn rd-submit-btn">
-                            <i class="fas fa-check"></i> Guardar
+
+                    <div class="flex justify-end gap-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <a href="{{ route('admin.maestros.recetas.index') }}" class="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-600 transition hover:border-red-500 hover:text-red-600 dark:border-gray-700 dark:text-gray-300">Cancelar</a>
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:bg-red-900 active:scale-95">
+                            <i class="fas fa-save text-xs"></i> Guardar receta
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-@stop
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
-@stop
+</x-app-layout>

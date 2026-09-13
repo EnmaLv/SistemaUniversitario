@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -72,7 +72,7 @@
                     <thead>
                         <tr>
                             <th style="width:60px">#</th>
-                            <th>Código de Lote</th>
+                            <th>CÃ³digo de Lote</th>
                             <th>Producto</th>
                             <th>Cantidad (U)</th>
                             <th>Cantidad (g)</th>
@@ -104,7 +104,7 @@
                 </table>
             </div>
 
-            {{-- Paginación del servidor --}}
+            {{-- PaginaciÃ³n del servidor --}}
             <div class="mt-3 d-flex justify-content-center">
                 {{ $sede->onEachSide(1)->links('components.pagination') }}
             </div>

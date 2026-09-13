@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -50,33 +50,33 @@
             <div class="rd-card shadow-sm border-0 overflow-hidden">
                 <div class="rd-card-body border-bottom bg-light py-3">
                     <h3 class="rd-title-sm">
-                        <i class="fas fa-info-circle mr-2" style="color: var(--color-secondary)"></i>Información Personal
+                        <i class="fas fa-info-circle mr-2" style="color: var(--color-secondary)"></i>InformaciÃ³n Personal
                     </h3>
                 </div>
                 
                 <div class="rd-card-body p-0">
                     <div class="row p-4">
                         <div class="col-sm-6 mb-4">
-                            <label class="rd-label text-muted small">Cédula de Identidad</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->cedula_persona ?? '—' }}</div>
+                            <label class="rd-label text-muted small">CÃ©dula de Identidad</label>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->cedula_persona ?? 'â€”' }}</div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
-                            <label class="rd-label text-muted small">Teléfono de Contacto</label>
+                            <label class="rd-label text-muted small">TelÃ©fono de Contacto</label>
                             <div class="h6 font-weight-bold">
                                 <i class="fas fa-phone mr-1 text-success small"></i>
-                                {{ optional($usuario->persona)->telefono_persona ?? '—' }}
+                                {{ optional($usuario->persona)->telefono_persona ?? 'â€”' }}
                             </div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Nombres</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->nombre_persona ?? '—' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->nombre_persona ?? 'â€”' }}</div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Apellidos</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->apellido_persona ?? '—' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->apellido_persona ?? 'â€”' }}</div>
                         </div>
                     </div>
 
@@ -93,7 +93,7 @@
                                 <label class="rd-label text-muted small">Fecha de Registro</label>
                                 <div class="p-2 text-muted">
                                     <i class="far fa-calendar-alt mr-1"></i>
-                                    {{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '—' }}
+                                    {{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : 'â€”' }}
                                 </div>
                             </div>
                         </div>

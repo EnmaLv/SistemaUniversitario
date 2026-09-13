@@ -40,11 +40,6 @@ class EstadoIndex extends Component
         return view('livewire.admin.estado-index', compact('estados'));
     }
 
-    public function paginationView()
-    {
-        return 'vendor.livewire.bootstrap-custom';
-    }
-
     public function buscar()
     {
         $this->resetPage();

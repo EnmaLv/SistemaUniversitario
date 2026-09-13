@@ -1,63 +1,65 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('title', 'Preguntas de seguridad')
 
 @section('content')
-<div class="container" style="padding:40px;max-width:720px;">
-    <h3>Preguntas de seguridad</h3>
-    <p>Por seguridad, por favor seleccione dos preguntas personales fáciles de recordar y sus respuestas.</p>
+<div class="mx-auto max-w-3xl px-4 py-10">
+    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 class="text-2xl font-bold text-slate-900">Preguntas de seguridad</h3>
+        <p class="mt-2 text-sm text-slate-600">Por seguridad, por favor seleccione dos preguntas personales fáciles de recordar y sus respuestas.</p>
 
-    <form method="POST" action="{{ route('security.questions.save') }}" id="sq-form">
-        @csrf
+        <form method="POST" action="{{ route('security.questions.save') }}" id="sq-form" class="mt-6 space-y-5">
+            @csrf
 
-        @php
-            $questions = [
-                '¿Cuál es el nombre de tu primera mascota?',
-                '¿Cuál es el nombre de tu madre?',
-                '¿En qué ciudad naciste?',
-                '¿Cuál es tu comida favorita?',
-                '¿Cuál fue tu primer colegio?',
-                '¿Cuál es el segundo nombre de tu padre?',
-                'Otro',
-            ];
-        @endphp
+            @php
+                $questions = [
+                    '¿Cuál es el nombre de tu primera mascota?',
+                    '¿Cuál es el nombre de tu madre?',
+                    '¿En qué ciudad naciste?',
+                    '¿Cuál es tu comida favorita?',
+                    '¿Cuál fue tu primer colegio?',
+                    '¿Cuál es el segundo nombre de tu padre?',
+                    'Otro',
+                ];
+            @endphp
 
-        <div class="form-group">
-            <label>Pregunta 1</label>
-            <select name="security_questions[0][question_type]" class="form-control" id="q0_type" required>
-                <option value="">-- Seleccione una pregunta --</option>
-                @foreach($questions as $q)
-                    <option value="{{ $q }}">{{ $q }}</option>
-                @endforeach
-            </select>
-            <input type="text" name="security_questions[0][question]" id="q0_custom" class="form-control mt-2" placeholder="Escribe tu pregunta personal" style="display:none">
-        </div>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700">Pregunta 1</label>
+                <select name="security_questions[0][question_type]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="q0_type" required>
+                    <option value="">-- Seleccione una pregunta --</option>
+                    @foreach($questions as $q)
+                        <option value="{{ $q }}">{{ $q }}</option>
+                    @endforeach
+                </select>
+                <input type="text" name="security_questions[0][question]" id="q0_custom" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" placeholder="Escribe tu pregunta personal" style="display:none">
+            </div>
 
-        <div class="form-group">
-            <label>Respuesta 1</label>
-            <input class="form-control" name="security_questions[0][answer]" required>
-        </div>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700">Respuesta 1</label>
+                <input class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" name="security_questions[0][answer]" required>
+            </div>
 
-        <hr>
+            <hr class="border-slate-200">
 
-        <div class="form-group">
-            <label>Pregunta 2</label>
-            <select name="security_questions[1][question_type]" class="form-control" id="q1_type" required>
-                <option value="">-- Seleccione una pregunta --</option>
-                @foreach($questions as $q)
-                    <option value="{{ $q }}">{{ $q }}</option>
-                @endforeach
-            </select>
-            <input type="text" name="security_questions[1][question]" id="q1_custom" class="form-control mt-2" placeholder="Escribe tu pregunta personal" style="display:none">
-        </div>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700">Pregunta 2</label>
+                <select name="security_questions[1][question_type]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="q1_type" required>
+                    <option value="">-- Seleccione una pregunta --</option>
+                    @foreach($questions as $q)
+                        <option value="{{ $q }}">{{ $q }}</option>
+                    @endforeach
+                </select>
+                <input type="text" name="security_questions[1][question]" id="q1_custom" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" placeholder="Escribe tu pregunta personal" style="display:none">
+            </div>
 
-        <div class="form-group">
-            <label>Respuesta 2</label>
-            <input class="form-control" name="security_questions[1][answer]" required>
-        </div>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700">Respuesta 2</label>
+                <input class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" name="security_questions[1][answer]" required>
+            </div>
 
-        <button class="btn btn-primary">Guardar preguntas</button>
-    </form>
+            <button class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700">Guardar preguntas</button>
+        </form>
+    </div>
 </div>
 @endsection
 
@@ -82,18 +84,15 @@
         q0.addEventListener('change', function(){ toggleCustom(q0, 'q0_custom'); });
         q1.addEventListener('change', function(){ toggleCustom(q1, 'q1_custom'); });
 
-        // When submitting, if a custom question field is visible, move its value to the question key
         document.getElementById('sq-form').addEventListener('submit', function(e){
             var q0Type = q0.value;
             var q1Type = q1.value;
             var q0Custom = document.getElementById('q0_custom');
             var q1Custom = document.getElementById('q1_custom');
 
-            // set hidden inputs for actual questions
             var q0Actual = q0Type === 'Otro' ? q0Custom.value : q0Type;
             var q1Actual = q1Type === 'Otro' ? q1Custom.value : q1Type;
 
-            // create or set the question fields
             var existing0 = document.querySelector('input[name="security_questions[0][question]"]');
             if(!existing0){
                 var i0 = document.createElement('input');
@@ -115,3 +114,4 @@
     });
 </script>
 @endsection
+

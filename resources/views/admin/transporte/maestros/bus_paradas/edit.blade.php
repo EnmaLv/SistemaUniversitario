@@ -1,11 +1,11 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4"
         style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
         <h1 class="m-0" style="font-size:1.45rem;color:#0f172a;font-weight:700;">Modificar Parada</h1>
         <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">Modifique los datos o arrastre el marcador en el mapa
-            para actualizar la ubicación.</p>
+            para actualizar la ubicaciÃ³n.</p>
     </div>
 @stop
 
@@ -21,11 +21,11 @@
 
                     <div class="form-group">
                         <label class="rd-label">Nombre de la Parada</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-map-pin"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-map-pin"></i></span>
                             <input type="text" name="nombre" id="crearNombre"
                                 value="{{ old('nombre', $busParada->nombre) }}"
-                                class="form-control rd-filter-input @error('nombre') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('nombre') border-red-300 @enderror"
                                 placeholder="Ej: Hiper Sol Acarigua" maxlength="100" required autofocus>
                         </div>
                         <div id="errorNombreUnico" class="text-danger mt-1" style="display:none;"></div>
@@ -35,12 +35,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="rd-label">Dirección descriptiva</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                        <label class="rd-label">DirecciÃ³n descriptiva</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-map-marker-alt"></i></span>
                             <input type="text" name="direccion" value="{{ old('direccion', $busParada->direccion) }}"
-                                class="form-control rd-filter-input @error('direccion') is-invalid @enderror"
-                                placeholder="Ej: Av. Circunvalación, frente al centro comercial">
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('direccion') border-red-300 @enderror"
+                                placeholder="Ej: Av. CircunvalaciÃ³n, frente al centro comercial">
                         </div>
                         @error('direccion')
                             <div class="text-danger font-weight-bold mt-1">{{ $message }}</div>
@@ -53,7 +53,7 @@
                                 <label class="rd-label">Latitud</label>
                                 <input type="text" id="latInput" name="lat"
                                     value="{{ old('lat', $busParada->lat) }}"
-                                    class="form-control rd-filter-input @error('lat') is-invalid @enderror" readonly
+                                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('lat') border-red-300 @enderror" readonly
                                     placeholder="Haga clic en el mapa" required>
                                 @error('lat')
                                     <div class="text-danger font-weight-bold mt-1">{{ $message }}</div>
@@ -65,7 +65,7 @@
                                 <label class="rd-label">Longitud</label>
                                 <input type="text" id="lngInput" name="lng"
                                     value="{{ old('lng', $busParada->lng) }}"
-                                    class="form-control rd-filter-input @error('lng') is-invalid @enderror" readonly
+                                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('lng') border-red-300 @enderror" readonly
                                     placeholder="Haga clic en el mapa" required>
                                 @error('lng')
                                     <div class="text-danger font-weight-bold mt-1">{{ $message }}</div>
@@ -123,7 +123,7 @@
         });
 
         function initMap() {
-            // Prioriza las coordenadas del "old" por si falló la validación; si no, toma las de la BD
+            // Prioriza las coordenadas del "old" por si fallÃ³ la validaciÃ³n; si no, toma las de la BD
             const oldLat = "{{ old('lat') }}";
             const oldLng = "{{ old('lng') }}";
             const dbLat = "{{ $busParada->lat }}";
@@ -134,7 +134,7 @@
 
             const posicionInicial = L.latLng(initialLat, initialLng);
 
-            // Centrar mapa en la ubicación de la parada
+            // Centrar mapa en la ubicaciÃ³n de la parada
             map = L.map('map').setView(posicionInicial, 15);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -144,7 +144,7 @@
             // Inicializar el marcador directamente en la parada actual
             colocarMarcador(posicionInicial);
 
-            // Permitir cambiar la ubicación haciendo clic en otra zona del mapa
+            // Permitir cambiar la ubicaciÃ³n haciendo clic en otra zona del mapa
             map.on("click", (event) => {
                 colocarMarcador(event.latlng);
             });
@@ -171,7 +171,7 @@
             document.getElementById("lngInput").value = location.lng.toFixed(7);
         }
 
-        // Validación ajax enviando el id actual para que el backend ignore esta misma parada al validar
+        // ValidaciÃ³n ajax enviando el id actual para que el backend ignore esta misma parada al validar
         let timerNombre = null;
         document.getElementById('crearNombre').addEventListener('input', function() {
             const errorDiv = document.getElementById('errorNombreUnico');
@@ -201,3 +201,4 @@
         });
     </script>
 @endpush
+

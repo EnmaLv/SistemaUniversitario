@@ -1,10 +1,10 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
         style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Nueva Composición de Receta</h1>
+            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Nueva ComposiciÃ³n de Receta</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
                 <i class="fas fa-mortar-pestle mr-1" style="color: var(--color-secondary)"></i>
                 Bienvenido: <strong>{{ auth()->user()->persona->nombre_persona }}</strong>
@@ -50,9 +50,9 @@
                             <div class="col-md-4 border-right pr-md-4">
                                 <div class="form-group">
                                     <label class="rd-label mb-2">Seleccionar Receta</label>
-                                    <div class="rd-input-group">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <span><i class="fas fa-concierge-bell"></i></span>
-                                        <select class="rd-input w-100" name="recetas_id" required>
+                                        <select class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" name="recetas_id" required>
                                             <option value="">Seleccione una receta...</option>
                                             @foreach ($recetas as $receta)
                                                 <option value="{{ $receta->id }}"
@@ -64,12 +64,12 @@
                                     </div>
                                     <div class="mt-2 pt-2" style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
                                         <small style="color: #64748b; font-size: 0.85rem;">
-                                            ¿No encuentras lo que buscas?
+                                            Â¿No encuentras lo que buscas?
                                             <a style="color: #a84348; text-decoration: none; font-weight: 600; transition: color 0.2s;"
                                                 href="{{ route('admin.maestros.recetas.create', [
                                                     'from' => url()->current(),
                                                 ]) }}">
-                                                Créala aquí
+                                                CrÃ©ala aquÃ­
                                             </a>
                                         </small>
                                     </div>
@@ -86,9 +86,9 @@
                                 <label class="rd-label mb-2">Agregar Insumos</label>
                                 <div class="d-flex gap-2 align-items-start mb-4">
                                     <div style="flex-grow:1">
-                                        <div class="rd-input-group">
+                                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                             <span><i class="fas fa-search"></i></span>
-                                            <select class="rd-input w-100" id="producto_select">
+                                            <select class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" id="producto_select">
                                                 <option value="">Buscar producto...</option>
                                                 @foreach ($productos as $producto)
                                                     <option value="{{ $producto->id }}"
@@ -100,16 +100,16 @@
                                         </div>
                                     </div>
                                     <div style="width:120px">
-                                        <div class="rd-input-group">
+                                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                             <span><i class="fas fa-hashtag"></i></span>
                                             <input type="number" step="any" min="0" id="cantidad_input"
-                                                class="rd-input w-100" placeholder="0.00">
+                                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" placeholder="0.00">
                                         </div>
                                     </div>
                                     <div style="width:150px">
-                                        <div class="rd-input-group">
+                                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                             <span><i class="fas fa-balance-scale"></i></span>
-                                            <select class="rd-input w-100" id="unidad_select">
+                                            <select class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" id="unidad_select">
                                                 <option value="">Unidad</option>
                                                 @foreach ($unidades as $unidad)
                                                     <option value="{{ $unidad->id }}"
@@ -125,7 +125,7 @@
                                         <i class="fas fa-plus"></i>
                                     </button>
                                 </div>
-                                <h5 class="rd-title-sm mb-3" style="font-size: 0.9rem; color: #64748b;">Lista de Preparación
+                                <h5 class="rd-title-sm mb-3" style="font-size: 0.9rem; color: #64748b;">Lista de PreparaciÃ³n
                                 </h5>
                                 <div class="border rounded-lg overflow-hidden"
                                     style="background: #fbfdff; border-color: #eef2f6 !important;">
@@ -159,7 +159,7 @@
 
 @section('css')
     <style>
-        /* Estilización del Scroll */
+        /* EstilizaciÃ³n del Scroll */
         #listaProductos::-webkit-scrollbar {
             width: 5px;
         }
@@ -169,7 +169,7 @@
             border-radius: 10px;
         }
 
-        /* Efectos de Interacción */
+        /* Efectos de InteracciÃ³n */
         .list-group-item {
             border-color: #f1f5f9 !important;
         }
@@ -179,11 +179,10 @@
             transition: var(--trans-default);
         }
 
-        /* Eliminación de bordes de foco solicitados */
+        /* EliminaciÃ³n de bordes de foco solicitados */
         .rd-input:focus,
         .rd-btn:focus,
-        select:focus,
-        .form-control:focus {
+        select:focus {
             outline: none !important;
             box-shadow: none !important;
             border-color: var(--color-tertiary) !important;
@@ -274,7 +273,7 @@
                 if (!unidadId) return Swal.fire('Error', 'Seleccione unidad.', 'error');
 
                 if (document.getElementById('prod_' + prodId)) {
-                    return Swal.fire('Aviso', 'Ya está en la lista.', 'info');
+                    return Swal.fire('Aviso', 'Ya estÃ¡ en la lista.', 'info');
                 }
 
                 const item = crearItem(prodId, prodNombre, cantidad, unidadId, unidadNombre);
@@ -287,3 +286,4 @@
         });
     </script>
 @endsection
+

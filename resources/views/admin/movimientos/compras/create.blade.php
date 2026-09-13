@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -9,7 +9,7 @@
             box-shadow:0 4px 14px rgba(0,0,0,0.06);
         ">
 
-        {{-- Título --}}
+        {{-- TÃ­tulo --}}
         <div>
             <h1 class="m-0" style="font-size:1.5rem; color:#0f172a; font-weight:700;">
                 Crear Nueva Requisicion
@@ -70,9 +70,9 @@
                         {{-- Proveedor --}}
                         <div class="col-md-4 mb-3">
                             <label class="rd-label">Proveedor</label>
-                            <div class="rd-input-group">
+                            <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                 <span><i class="fas fa-user-tie"></i></span>
-                                <select name="proveedor_id" id="proveedor_id" class="form-control rd-input">
+                                <select name="proveedor_id" id="proveedor_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input">
                                     <option value="">Seleccione un proveedor</option>
                                     @foreach ($proveedores as $proveedor)
                                         <option value="{{ $proveedor->id }}"
@@ -87,12 +87,12 @@
                             @enderror
                             <div class="mt-2 pt-2" style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
                                 <small style="color: #64748b; font-size: 0.85rem;">
-                                    ¿No encuentras lo que buscas?
+                                    Â¿No encuentras lo que buscas?
                                     <a style="color: #a84348; text-decoration: none; font-weight: 600; transition: color 0.2s;"
                                         href="{{ route('admin.maestros.proveedores.create', [
                                             'from' => url()->current(),
                                         ]) }}">
-                                        Créalo aquí
+                                        CrÃ©alo aquÃ­
                                     </a>
                                 </small>
                             </div>
@@ -101,9 +101,9 @@
                         {{-- Fecha --}}
                         <div class="col-md-4 mb-3">
                             <label class="rd-label">Fecha de la Requisicion</label>
-                            <div class="rd-input-group">
+                            <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                 <span><i class="fas fa-calendar-alt"></i></span>
-                                <input type="datetime-local" id="fecha" name="fecha" class="form-control rd-input"
+                                <input type="datetime-local" id="fecha" name="fecha" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input"
                                     value="{{ \Carbon\Carbon::now('America/Caracas')->format('Y-m-d\TH:i') }}" readonly>
                             </div>
                             @error('fecha')
@@ -114,10 +114,10 @@
                         {{-- Observaciones --}}
                         <div class="col-md-4 mb-3">
                             <label class="rd-label">Observaciones</label>
-                            <div class="rd-input-group">
+                            <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                 <span><i class="fas fa-sticky-note"></i></span>
                                 <input type="text" id="observaciones" name="observaciones"
-                                    placeholder="Ingrese observaciones" class="form-control rd-input"
+                                    placeholder="Ingrese observaciones" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input"
                                     value="{{ old('observaciones') }}">
                             </div>
                             @error('observaciones')
@@ -153,3 +153,4 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
 @stop
+

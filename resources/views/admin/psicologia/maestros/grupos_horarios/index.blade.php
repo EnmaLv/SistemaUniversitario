@@ -131,7 +131,7 @@
 
                             <div class="flex items-center gap-1.5">
                                 <!-- Ver Modal -->
-                                <button type="button" data-target="grupoModal-{{ $grupo->id }}"
+                                <button type="button" 
                                     onclick="openGrupoModal(this)"
                                     class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-{{ $themeColor }}-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
                                     title="Ver detalle del grupo">

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -7,7 +7,7 @@
             <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Editar Rol: {{ $rol->nombre }}</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
                 <i class="fas fa-user-shield mr-1" style="color: var(--color-secondary)"></i>
-                Modifica los accesos y descripción del perfil.
+                Modifica los accesos y descripciÃ³n del perfil.
             </p>
         </div>
         <a href="{{ route('admin.configuracion.roles.index') }}" class="rd-btn rd-btn-default">
@@ -28,13 +28,13 @@
                         @csrf
                         @method('PUT')
 
-                        {{-- 1. Datos Básicos del Rol --}}
+                        {{-- 1. Datos BÃ¡sicos del Rol --}}
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="rd-label mb-2">Nombre del Rol</label>
-                                <div class="rd-input-group {{ $isProtected ?? false ? 'bg-light' : '' }}">
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group {{ $isProtected ?? false ? 'bg-light' : '' }}">
                                     <span><i class="fas fa-tag"></i></span>
-                                    <input type="text" name="nombre" class="rd-input w-100"
+                                    <input type="text" name="nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100"
                                         value="{{ old('nombre', $rol->nombre) }}"
                                         {{ $isProtected ?? false ? 'readonly' : 'required' }}
                                         placeholder="Nombre del rol">
@@ -46,8 +46,8 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="rd-label mb-2">Descripción</label>
-                                <input type="text" name="descripcion" class="form-control"
+                                <label class="rd-label mb-2">DescripciÃ³n</label>
+                                <input type="text" name="descripcion" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                                     style="border: 1px solid #d8dee9; border-radius: 10px; height: 45px; padding: 0 12px;"
                                     value="{{ old('descripcion', $rol->descripcion) }}" placeholder="Descripcion del rol"
                                     {{ $isProtected ?? false ? 'readonly' : '' }}>
@@ -56,16 +56,16 @@
 
                         @php $isAdminRole = (strtolower($rol->nombre ?? '') === 'administrador'); @endphp
 
-                        {{-- 2. Asignación de Módulos de la Base de Datos --}}
+                        {{-- 2. AsignaciÃ³n de MÃ³dulos de la Base de Datos --}}
                         <div class="form-group mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-cubes mr-2 text-success"></i> Acceso a Módulos Globales del Sistema
+                                    <i class="fas fa-cubes mr-2 text-success"></i> Acceso a MÃ³dulos Globales del Sistema
                                 </label>
                                 @if (!$isAdminRole && !($isProtected ?? false))
-                                    <button type="button" id="selectAllModules" class="btn btn-xs btn-outline-secondary"
+                                    <button type="button" id="selectAllModules" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 xs btn-outline-secondary"
                                         style="border-radius: 6px;">
-                                        Alternar Módulos
+                                        Alternar MÃ³dulos
                                     </button>
                                 @endif
                             </div>
@@ -98,7 +98,7 @@
                                         </div>
                                     @empty
                                         <div class="col-12 text-center text-muted py-2">
-                                            <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> No hay módulos
+                                            <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> No hay mÃ³dulos
                                             activos registrados en la base de datos.
                                         </div>
                                     @endforelse
@@ -109,14 +109,14 @@
                             @enderror
                         </div>
 
-                        {{-- 3. Permisos de Menú y Navegación con Grilla Tipo Masonry --}}
+                        {{-- 3. Permisos de MenÃº y NavegaciÃ³n con Grilla Tipo Masonry --}}
                         <div class="form-group mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-list-check mr-2 text-primary"></i> Permisos de Menú y Navegación
+                                    <i class="fas fa-list-check mr-2 text-primary"></i> Permisos de MenÃº y NavegaciÃ³n
                                 </label>
                                 @if (!$isAdminRole && !($isProtected ?? false))
-                                    <button type="button" id="selectAll" class="btn btn-xs btn-outline-secondary"
+                                    <button type="button" id="selectAll" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 xs btn-outline-secondary"
                                         style="border-radius:6px;">
                                         Alternar Todos
                                     </button>
@@ -125,7 +125,7 @@
 
                             <div class="permissions-grid {{ $isAdminRole ? 'bg-light opacity-75 p-3 rounded' : '' }}">
                                 @php
-                                    // 1. Clasificación en la raíz
+                                    // 1. ClasificaciÃ³n en la raÃ­z
                                     $submenus = [];
                                     $directLinks = [];
 
@@ -137,7 +137,7 @@
                                         }
                                     }
 
-                                    // 2. Función interna recursiva para submenús anidados (> 0)
+                                    // 2. FunciÃ³n interna recursiva para submenÃºs anidados (> 0)
                                     if (!function_exists('renderEditChildrenItems')) {
                                         function renderEditChildrenItems($items, $rol, $isAdminRole, $depth = 1)
                                         {
@@ -216,7 +216,7 @@
                                         echo '</div>';
                                     }
 
-                                    // 4. Renderizado Unificado de Enlaces Huérfanos Raíz
+                                    // 4. Renderizado Unificado de Enlaces HuÃ©rfanos RaÃ­z
                                     if (count($directLinks) > 0) {
                                         echo '<div class="permission-group-block">';
                                         echo '<div class="permission-group-title mt-1 mb-3">
@@ -269,8 +269,8 @@
 
                             @if ($isAdminRole)
                                 <div class="alert alert-info mt-3 border-0 shadow-sm" style="border-radius: 10px;">
-                                    <i class="fas fa-info-circle mr-2"></i> Los módulos y permisos del rol
-                                    <strong>Administrador</strong> son totales por diseño del sistema y no requieren
+                                    <i class="fas fa-info-circle mr-2"></i> Los mÃ³dulos y permisos del rol
+                                    <strong>Administrador</strong> son totales por diseÃ±o del sistema y no requieren
                                     modificarse.
                                 </div>
                             @endif
@@ -337,8 +337,7 @@
         }
 
         .rd-input:focus,
-        .perm-check:focus,
-        .form-control:focus {
+        .perm-check:focus {
             outline: none !important;
             box-shadow: none !important;
         }
@@ -369,7 +368,7 @@
 
 @section('js')
     <script>
-        // Manejo de Selección para Permisos de Menú
+        // Manejo de SelecciÃ³n para Permisos de MenÃº
         const selectBtn = document.getElementById('selectAll');
         if (selectBtn) {
             selectBtn.addEventListener('click', function() {
@@ -380,7 +379,7 @@
             });
         }
 
-        // Manejo de Selección para Módulos Globales
+        // Manejo de SelecciÃ³n para MÃ³dulos Globales
         const selectModulesBtn = document.getElementById('selectAllModules');
         if (selectModulesBtn) {
             selectModulesBtn.addEventListener('click', function() {
@@ -392,3 +391,4 @@
         }
     </script>
 @stop
+

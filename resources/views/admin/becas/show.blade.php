@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center">
@@ -53,12 +53,12 @@
                 @forelse($beca->preguntas as $pregunta)
                     <tr>
                         <td>{{ $pregunta->texto }}</td>
-                        <td>{{ $pregunta->tipo === 'number' ? 'Número' : 'Texto' }}</td>
+                        <td>{{ $pregunta->tipo === 'number' ? 'NÃºmero' : 'Texto' }}</td>
                         <td>
                             @if($pregunta->tipo === 'number')
-                                {{ $pregunta->min !== null || $pregunta->max !== null ? 'Min: ' . ($pregunta->min ?? '-') . ' / Max: ' . ($pregunta->max ?? '-') : 'Sin límite' }}
+                                {{ $pregunta->min !== null || $pregunta->max !== null ? 'Min: ' . ($pregunta->min ?? '-') . ' / Max: ' . ($pregunta->max ?? '-') : 'Sin lÃ­mite' }}
                             @else
-                                —
+                                â€”
                             @endif
                         </td>
                     </tr>
@@ -79,16 +79,16 @@
             <thead>
                 <tr>
                     <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Observación</th>
+                    <th>DescripciÃ³n</th>
+                    <th>ObservaciÃ³n</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($beca->beneficios as $beneficio)
                     <tr>
                         <td>{{ $beneficio->nombre_beneficio }}</td>
-                        <td>{{ $beneficio->descripcion ?: 'Sin descripción' }}</td>
-                        <td>{{ $beneficio->pivot->observacion ?: 'Sin observación' }}</td>
+                        <td>{{ $beneficio->descripcion ?: 'Sin descripciÃ³n' }}</td>
+                        <td>{{ $beneficio->pivot->observacion ?: 'Sin observaciÃ³n' }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -108,7 +108,7 @@
                 <tr>
                     <th>Rol</th>
                     <th>Tutor</th>
-                    <th>Descripción</th>
+                    <th>DescripciÃ³n</th>
                 </tr>
             </thead>
             <tbody>
@@ -116,7 +116,7 @@
                     <tr>
                         <td>{{ optional($tutor->rol)->nombre ?? 'Sin rol' }}</td>
                         <td>{{ $tutor->tutor ? trim($tutor->tutor->nombre_persona . ' ' . $tutor->tutor->apellido_persona) : 'Sin tutor asignado' }}</td>
-                        <td>{{ $tutor->descripcion ?: 'Sin descripción' }}</td>
+                        <td>{{ $tutor->descripcion ?: 'Sin descripciÃ³n' }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -127,3 +127,4 @@
         </table>
     </div>
 @stop
+

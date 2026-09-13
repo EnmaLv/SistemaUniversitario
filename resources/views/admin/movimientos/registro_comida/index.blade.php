@@ -1,21 +1,21 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
         style="
-            background: #ffffff;
+            background: var(--bg-card);
             border-radius: 14px;
             box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-color);
          ">
 
         <!-- Texto principal -->
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
+            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
                 Registro De Comida
             </h1>
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
+            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.8;">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
@@ -54,7 +54,7 @@
             <div class="rd-card-header rd-header-space">
                 <div>
                     <h3 class="rd-title-sm">Registros De Sobrantes</h3>
-                    <p class="rd-sub-sm">Últimos movimientos del día</p>
+                    <p class="rd-sub-sm">Ãšltimos movimientos del dÃ­a</p>
                 </div>
             </div>
             <div class="rd-card-body rd-list-body">
@@ -87,7 +87,7 @@
                     </table>
                 </div>
 
-                <!-- Paginación (si aplica) -->
+                <!-- PaginaciÃ³n (si aplica) -->
                 <div class="rd-pagination">
                     {{ $sobrantes->appends(request()->query())->links() }}
                 </div>
@@ -99,3 +99,4 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('css/registro-comida.css') }}">
 @endsection
+

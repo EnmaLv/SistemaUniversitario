@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -29,7 +29,7 @@
                 <div class="rd-actions">
                     <form action="{{ route('admin.transporte.maestros.bus_mantenimientos.index') }}" method="GET"
                         class="d-flex gap-3 align-items-center">
-                        <select name="estado" class="form-control rd-filter-input" style="width:160px;"
+                        <select name="estado" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" style="width:160px;"
                             onchange="this.form.submit()">
                             <option value="">Todos los estados</option>
                             <option value="pendiente"  {{ request('estado') == 'pendiente'  ? 'selected' : '' }}>Pendiente</option>
@@ -38,7 +38,7 @@
                         </select>
                         <div class="rd-search-inline">
                             <input type="text" name="buscar" value="{{ request('buscar') }}"
-                                class="rd-search-input" placeholder="Buscar título o placa..." />
+                                class="rd-search-input" placeholder="Buscar tÃ­tulo o placa..." />
                             <button class="rd-icon-btn" type="submit"><i class="fas fa-search"></i></button>
                         </div>
                     </form>
@@ -49,8 +49,8 @@
                 <thead>
                     <tr>
                         <th style="width:60px">#</th>
-                        <th class="text-center">Vehículo</th>
-                        <th class="text-center">Título</th>
+                        <th class="text-center">VehÃ­culo</th>
+                        <th class="text-center">TÃ­tulo</th>
                         <th class="text-center">Tipo</th>
                         <th class="text-center">Fecha</th>
                         <th class="text-center">Costo</th>
@@ -119,13 +119,13 @@
 function confirmEliminar(event, button) {
     event.preventDefault();
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¿Desea eliminar este mantenimiento? Esta acción no se puede deshacer.',
+        title: 'Â¿EstÃ¡s seguro?',
+        text: 'Â¿Desea eliminar este mantenimiento? Esta acciÃ³n no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonText: 'SÃ­, eliminar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) button.closest('form').submit();

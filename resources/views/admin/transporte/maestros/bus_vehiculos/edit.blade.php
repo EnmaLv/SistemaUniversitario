@@ -1,9 +1,9 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="m-0 rd-title-sm" style="font-size:1.4rem;">Editar Vehículo</h1>
+            <h1 class="m-0 rd-title-sm" style="font-size:1.4rem;">Editar VehÃ­culo</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
@@ -27,7 +27,7 @@
 
     <div class="rd-card p-4">
         <div class="rd-card-header mb-3">
-            <h3 class="rd-title-sm">Datos del Vehículo</h3>
+            <h3 class="rd-title-sm">Datos del VehÃ­culo</h3>
         </div>
         <form action="{{ route('admin.transporte.maestros.bus_vehiculos.update', $busVehiculo) }}" method="POST"
             class="rd-prevent-double-submit">
@@ -37,10 +37,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Placa</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-id-card"></i></span>
                             <input type="text" name="placa"
-                                class="form-control rd-filter-input @error('placa') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('placa') border-red-300 @enderror"
                                 value="{{ old('placa', $busVehiculo->placa) }}" maxlength="20">
                         </div>
                         @error('placa')
@@ -52,10 +52,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Modelo</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-car"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-car"></i></span>
                             <select id="selectModelo" name="modelo_id"
-                                class="form-control rd-filter-input @error('modelo_id') is-invalid @enderror">
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('modelo_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione --</option>
                                 @foreach ($modelos as $modelo)
                                     <option value="{{ $modelo->id }}"
@@ -70,10 +70,10 @@
                         @enderror
                         <div class="mt-2">
                             <small style="color:#64748b;font-size:0.85rem;">
-                                ¿No encuentras?
-                                <button type="button" data-toggle="modal" data-target="#modalAddModelo"
+                                Â¿No encuentras?
+                                <button type="button"  
                                     style="background:none;border:none;padding:0;color:#a84348;font-weight:600;font-size:0.85rem;cursor:pointer;">
-                                    <i class="fas fa-plus-circle"></i> Añádelo aquí
+                                    <i class="fas fa-plus-circle"></i> AÃ±Ã¡delo aquÃ­
                                 </button>
                             </small>
                         </div>
@@ -82,11 +82,11 @@
 
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">Año</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                        <label class="font-weight-bold">AÃ±o</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-calendar"></i></span>
                             <input type="number" name="anio"
-                                class="form-control rd-filter-input @error('anio') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('anio') border-red-300 @enderror"
                                 value="{{ old('anio', $busVehiculo->anio) }}" min="1990" max="{{ date('Y') }}"
                                 placeholder="Ej: 2026" maxlength="4"
                                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
@@ -100,10 +100,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Color</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-palette"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-palette"></i></span>
                             <input type="text" name="color"
-                                class="form-control rd-filter-input @error('color') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('color') border-red-300 @enderror"
                                 value="{{ old('color', $busVehiculo->color) }}" placeholder="Ej: Blanco" maxlength="50">
                         </div>
                         @error('color')
@@ -116,11 +116,11 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">Peso del Vehículo</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-weight-hanging"></i></span>
+                        <label class="font-weight-bold">Peso del VehÃ­culo</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-weight-hanging"></i></span>
                             <input type="text" inputmode="decimal" name="peso"
-                                class="form-control rd-filter-input @error('peso') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('peso') border-red-300 @enderror"
                                 value="{{ old('peso', $busVehiculo->peso) }}" placeholder="Ej: 3.5 Ton / 3500 kg"
                                 maxlength="50">
                         </div>
@@ -133,10 +133,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Cantidad de Pasajeros</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-users"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-users"></i></span>
                             <input type="number" name="cantidad_pasajeros"
-                                class="form-control rd-filter-input @error('cantidad_pasajeros') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('cantidad_pasajeros') border-red-300 @enderror"
                                 value="{{ old('cantidad_pasajeros', $busVehiculo->cantidad_pasajeros) }}" min="1"
                                 placeholder="Ej: 40" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
                         </div>
@@ -149,10 +149,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Cantidad de Cilindros</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-plug"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-plug"></i></span>
                             <input type="number" name="cantidad_cilindros"
-                                class="form-control rd-filter-input @error('cantidad_cilindros') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('cantidad_cilindros') border-red-300 @enderror"
                                 value="{{ old('cantidad_cilindros', $busVehiculo->cantidad_cilindros) }}" min="1"
                                 placeholder="Ej: 1" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,2)">
                         </div>
@@ -165,10 +165,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Sede</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-building"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-building"></i></span>
                             <select name="sede_id"
-                                class="form-control rd-filter-input @error('sede_id') is-invalid @enderror">
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('sede_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione --</option>
                                 @foreach ($sedes as $sede)
                                     <option value="{{ $sede->id }}"
@@ -189,10 +189,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Tipo de Combustible</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-gas-pump"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-gas-pump"></i></span>
                             <select id="selectCombustible" name="tipo_combustible_id"
-                                class="form-control rd-filter-input @error('tipo_combustible_id') is-invalid @enderror">
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('tipo_combustible_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione --</option>
                                 @foreach ($tipos as $tipo)
                                     <option value="{{ $tipo->id }}"
@@ -207,10 +207,10 @@
                         @enderror
                         <div class="mt-2">
                             <small style="color:#64748b;font-size:0.85rem;">
-                                ¿No encuentras?
-                                <button type="button" data-toggle="modal" data-target="#modalAddCombustible"
+                                Â¿No encuentras?
+                                <button type="button"  
                                     style="background:none;border:none;padding:0;color:#a84348;font-weight:600;font-size:0.85rem;cursor:pointer;">
-                                    <i class="fas fa-plus-circle"></i> Añádelo aquí
+                                    <i class="fas fa-plus-circle"></i> AÃ±Ã¡delo aquÃ­
                                 </button>
                             </small>
                         </div>
@@ -220,10 +220,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Capacidad Tanque (L)</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-fill-drip"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-fill-drip"></i></span>
                             <input type="text" inputmode="decimal" name="capacidad_tanque_litros" step="0.01"
-                                class="form-control rd-filter-input @error('capacidad_tanque_litros') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('capacidad_tanque_litros') border-red-300 @enderror"
                                 value="{{ old('capacidad_tanque_litros', $busVehiculo->capacidad_tanque_litros) }}"
                                 placeholder="Ej: 120.00" min="0"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,6)">
@@ -237,10 +237,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">KM Actual</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-road"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-road"></i></span>
                             <input type="text" inputmode="decimal" name="km_actual" step="0.01"
-                                class="form-control rd-filter-input @error('km_actual') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('km_actual') border-red-300 @enderror"
                                 value="{{ old('km_actual', $busVehiculo->km_actual) }}" placeholder="Ej: 50000.00"
                                 min="0" oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,9)">
                         </div>
@@ -252,11 +252,11 @@
 
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">KM Próx. Mantenimiento</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-wrench"></i></span>
+                        <label class="font-weight-bold">KM PrÃ³x. Mantenimiento</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-wrench"></i></span>
                             <input type="text" inputmode="decimal" name="km_proximo_mantenimiento" step="0.01"
-                                class="form-control rd-filter-input @error('km_proximo_mantenimiento') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('km_proximo_mantenimiento') border-red-300 @enderror"
                                 value="{{ old('km_proximo_mantenimiento', $busVehiculo->km_proximo_mantenimiento) }}"
                                 placeholder="Ej: 55000.00" min="0"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,9)">
@@ -272,10 +272,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Consumo Urbano (L/km)</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-city"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-city"></i></span>
                             <input type="text" inputmode="decimal" name="consumo_urbano" step="0.001"
-                                class="form-control rd-filter-input @error('consumo_urbano') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('consumo_urbano') border-red-300 @enderror"
                                 value="{{ old('consumo_urbano', $busVehiculo->consumo_urbano) }}" placeholder="Ej: 0.350"
                                 min="0" oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,6)">
                         </div>
@@ -288,10 +288,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Consumo Carretera (L/km)</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-route"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-route"></i></span>
                             <input type="text" inputmode="decimal" name="consumo_carretera" step="0.001"
-                                class="form-control rd-filter-input @error('consumo_carretera') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('consumo_carretera') border-red-300 @enderror"
                                 value="{{ old('consumo_carretera', $busVehiculo->consumo_carretera) }}"
                                 placeholder="Ej: 0.280" min="0"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,6)">
@@ -304,11 +304,11 @@
 
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">Consumo Ralentí (L/h)</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                        <label class="font-weight-bold">Consumo RalentÃ­ (L/h)</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-clock"></i></span>
                             <input type="text" inputmode="decimal" name="consumo_relenti" step="0.001"
-                                class="form-control rd-filter-input @error('consumo_relenti') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('consumo_relenti') border-red-300 @enderror"
                                 value="{{ old('consumo_relenti', $busVehiculo->consumo_relenti) }}"
                                 placeholder="Ej: 1.500" min="0"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,6)">
@@ -322,10 +322,10 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label class="font-weight-bold">Estado Operativo</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-info-circle"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-info-circle"></i></span>
                             <select name="estado"
-                                class="form-control rd-filter-input @error('estado') is-invalid @enderror">
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('estado') border-red-300 @enderror">
                                 <option value="disponible"
                                     {{ old('estado', $busVehiculo->estado) == 'disponible' ? 'selected' : '' }}>Disponible
                                 </option>
@@ -360,21 +360,21 @@
     </div>
 
     <!-- MODAL NUEVO MODELO -->
-    <div class="modal fade" id="modalAddModelo" tabindex="-1" aria-hidden="true">
+    <div class="hidden" id="modalAddModelo" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content rd-card" style="border-radius:12px;border:1px solid #e5e7eb;">
                 <div class="modal-header" style="border-bottom:1px solid #e5e7eb;">
                     <h5 class="modal-title rd-title-sm">
                         <i class="fas fa-car mr-2" style="color:var(--color-primary)"></i>Nuevo Modelo
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <button type="button" class="text-slate-500 hover:text-slate-700" ><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="font-weight-bold">Marca</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-industry"></i></span>
-                            <select id="newModeloMarca" class="form-control rd-filter-input">
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-industry"></i></span>
+                            <select id="newModeloMarca" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input">
                                 <option value="">-- Seleccione una marca --</option>
                                 @foreach ($marcas as $marca)
                                     <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
@@ -385,25 +385,25 @@
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Nombre del Modelo</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                            <input type="text" id="newModeloNombre" class="form-control rd-filter-input"
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-tag"></i></span>
+                            <input type="text" id="newModeloNombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
                                 placeholder="Ej: Corolla" maxlength="100">
                         </div>
                         <div id="errorModeloNombre" class="text-danger mt-1" style="display:none;"></div>
                     </div>
                     <div class="form-group mb-0">
-                        <label class="font-weight-bold">Descripción <span
+                        <label class="font-weight-bold">DescripciÃ³n <span
                                 class="text-muted font-weight-normal">(opcional)</span></label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                            <input type="text" id="newModeloDescripcion" class="form-control rd-filter-input"
-                                placeholder="Ej: Sedán compacto" maxlength="255">
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-align-left"></i></span>
+                            <input type="text" id="newModeloDescripcion" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
+                                placeholder="Ej: SedÃ¡n compacto" maxlength="255">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid #e5e7eb;">
-                    <button type="button" class="rd-btn rd-btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="rd-btn rd-btn-default" >Cancelar</button>
                     <button type="button" id="btnGuardarModelo" class="rd-btn rd-btn-primary">
                         <i class="fas fa-check"></i> Guardar y Seleccionar
                     </button>
@@ -413,37 +413,37 @@
     </div>
 
     <!-- MODAL NUEVO COMBUSTIBLE -->
-    <div class="modal fade" id="modalAddCombustible" tabindex="-1" aria-hidden="true">
+    <div class="hidden" id="modalAddCombustible" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content rd-card" style="border-radius:12px;border:1px solid #e5e7eb;">
                 <div class="modal-header" style="border-bottom:1px solid #e5e7eb;">
                     <h5 class="modal-title rd-title-sm">
                         <i class="fas fa-gas-pump mr-2" style="color:var(--color-primary)"></i>Nuevo Tipo de Combustible
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <button type="button" class="text-slate-500 hover:text-slate-700" ><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="font-weight-bold">Nombre</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-gas-pump"></i></span>
-                            <input type="text" id="newCombustibleNombre" class="form-control rd-filter-input"
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-gas-pump"></i></span>
+                            <input type="text" id="newCombustibleNombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
                                 placeholder="Ej: Gasolina" maxlength="100">
                         </div>
                         <div id="errorCombustibleNombre" class="text-danger mt-1" style="display:none;"></div>
                     </div>
                     <div class="form-group mb-0">
-                        <label class="font-weight-bold">Descripción <span
+                        <label class="font-weight-bold">DescripciÃ³n <span
                                 class="text-muted font-weight-normal">(opcional)</span></label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                            <input type="text" id="newCombustibleDescripcion" class="form-control rd-filter-input"
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-align-left"></i></span>
+                            <input type="text" id="newCombustibleDescripcion" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
                                 placeholder="Ej: Combustible de 95 octanos" maxlength="255">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid #e5e7eb;">
-                    <button type="button" class="rd-btn rd-btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="rd-btn rd-btn-default" >Cancelar</button>
                     <button type="button" id="btnGuardarCombustible" class="rd-btn rd-btn-primary">
                         <i class="fas fa-check"></i> Guardar y Seleccionar
                     </button>
@@ -474,7 +474,7 @@
             });
         }
 
-        // --- Registro Dinámico de Modelo via Modal ---
+        // --- Registro DinÃ¡mico de Modelo via Modal ---
         document.getElementById('btnGuardarModelo').addEventListener('click', function() {
             const marca = document.getElementById('newModeloMarca').value;
             const nombre = document.getElementById('newModeloNombre').value.trim();
@@ -542,7 +542,7 @@
                 });
         });
 
-        // --- Registro Dinámico de Tipo de Combustible via Modal ---
+        // --- Registro DinÃ¡mico de Tipo de Combustible via Modal ---
         document.getElementById('btnGuardarCombustible').addEventListener('click', function() {
             const nombre = document.getElementById('newCombustibleNombre').value.trim();
             const descripcion = document.getElementById('newCombustibleDescripcion').value.trim();
@@ -590,24 +590,24 @@
                 });
         });
 
-        // --- Reglas y Validación en Tiempo Real (Inline) ---
+        // --- Reglas y ValidaciÃ³n en Tiempo Real (Inline) ---
         const reglasInput = {
             placa: {
                 max: 20,
-                msg: 'Máximo 20 caracteres.'
+                msg: 'MÃ¡ximo 20 caracteres.'
             },
             anio: {
                 min: 1990,
                 max: {{ date('Y') }},
-                msg: 'Año entre 1990 y {{ date('Y') }}.'
+                msg: 'AÃ±o entre 1990 y {{ date('Y') }}.'
             },
             color: {
                 max: 50,
-                msg: 'Máximo 50 caracteres.'
+                msg: 'MÃ¡ximo 50 caracteres.'
             },
             peso: {
                 max: 50,
-                msg: 'Máximo 50 caracteres.'
+                msg: 'MÃ¡ximo 50 caracteres.'
             },
             cantidad_pasajeros: {
                 min: 1,
@@ -642,18 +642,18 @@
             km_actual: {
                 min: 0,
                 max: 9999999,
-                msg: 'Máximo 9,999,999 km.'
+                msg: 'MÃ¡ximo 9,999,999 km.'
             },
             km_proximo_mantenimiento: {
                 min: 0,
                 max: 9999999,
-                msg: 'Máximo 9,999,999 km.'
+                msg: 'MÃ¡ximo 9,999,999 km.'
             },
         };
 
         function mostrarErrorInline(input, msg) {
             limpiarErrorInline(input);
-            input.classList.add('is-invalid');
+            input.classList.add('border-red-300');
             const div = document.createElement('div');
             div.className = 'text-danger mt-1 error-inline';
             div.innerHTML = `<b>${msg}</b>`;
@@ -661,7 +661,7 @@
         }
 
         function limpiarErrorInline(input) {
-            input.classList.remove('is-invalid');
+            input.classList.remove('border-red-300');
             const prev = input.closest('.form-group').querySelector('.error-inline');
             if (prev) prev.remove();
         }
@@ -689,7 +689,7 @@
             });
         });
 
-        // --- Verificación Asíncrona de Placa Única (Excluyendo ID Actual) ---
+        // --- VerificaciÃ³n AsÃ­ncrona de Placa Ãšnica (Excluyendo ID Actual) ---
         let placaTimer = null;
         const inputPlaca = document.querySelector('[name="placa"]');
         if (inputPlaca) {
@@ -709,7 +709,7 @@
                         .then(r => r.json())
                         .then(res => {
                             if (res.existe) {
-                                mostrarErrorInline(inputPlaca, 'Esta placa ya está registrada.');
+                                mostrarErrorInline(inputPlaca, 'Esta placa ya estÃ¡ registrada.');
                             }
                         });
                 }, 500);

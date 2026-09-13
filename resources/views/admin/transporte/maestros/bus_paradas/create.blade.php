@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4"
@@ -18,10 +18,10 @@
                     @csrf
                     <div class="form-group">
                         <label class="rd-label">Nombre de la Parada</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-map-pin"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-map-pin"></i></span>
                             <input type="text" name="nombre" id="crearNombre" value="{{ old('nombre') }}"
-                                class="form-control rd-filter-input @error('nombre') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('nombre') border-red-300 @enderror"
                                 placeholder="Ej: Hiper Sol Acarigua" maxlength="100" required autofocus>
                         </div>
                         <div id="errorNombreUnico" class="text-danger mt-1" style="display:none;"></div>
@@ -31,12 +31,12 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="rd-label">Dirección descriptiva</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                        <label class="rd-label">DirecciÃ³n descriptiva</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-map-marker-alt"></i></span>
                             <input type="text" name="direccion" value="{{ old('direccion') }}"
-                                class="form-control rd-filter-input @error('direccion') is-invalid @enderror"
-                                placeholder="Ej: Av. Circunvalación, frente al centro comercial">
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('direccion') border-red-300 @enderror"
+                                placeholder="Ej: Av. CircunvalaciÃ³n, frente al centro comercial">
                         </div>
                         @error('direccion')
                             <div class="text-danger font-weight-bold mt-1">{{ $message }}</div>
@@ -48,7 +48,7 @@
                             <div class="form-group">
                                 <label class="rd-label">Latitud</label>
                                 <input type="text" id="latInput" name="lat" value="{{ old('lat') }}"
-                                    class="form-control rd-filter-input @error('lat') is-invalid @enderror" readonly
+                                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('lat') border-red-300 @enderror" readonly
                                     placeholder="Haga clic en el mapa" required>
                                 @error('lat')
                                     <div class="text-danger font-weight-bold mt-1">{{ $message }}</div>
@@ -59,7 +59,7 @@
                             <div class="form-group">
                                 <label class="rd-label">Longitud</label>
                                 <input type="text" id="lngInput" name="lng" value="{{ old('lng') }}"
-                                    class="form-control rd-filter-input @error('lng') is-invalid @enderror" readonly
+                                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('lng') border-red-300 @enderror" readonly
                                     placeholder="Haga clic en el mapa" required>
                                 @error('lng')
                                     <div class="text-danger font-weight-bold mt-1">{{ $message }}</div>
@@ -188,3 +188,4 @@
         });
     </script>
 @endpush
+

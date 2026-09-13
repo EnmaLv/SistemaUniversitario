@@ -1,89 +1,36 @@
-@extends('adminlte::master')
+@extends('layouts.app')
 
-@section('adminlte_css')
-    @yield('css')
-@stop
-
-@section('classes_body', 'lockscreen')
-
-@php
-    $passResetUrl = View::getSection('password_reset_url') ?? config('adminlte.password_reset_url', 'password/reset');
-    $dashboardUrl = View::getSection('dashboard_url') ?? config('adminlte.dashboard_url', 'home');
-
-    if (config('adminlte.use_route_url', false)) {
-        $passResetUrl = $passResetUrl ? route($passResetUrl) : '';
-        $dashboardUrl = $dashboardUrl ? route($dashboardUrl) : '';
-    } else {
-        $passResetUrl = $passResetUrl ? url($passResetUrl) : '';
-        $dashboardUrl = $dashboardUrl ? url($dashboardUrl) : '';
-    }
-@endphp
-
-@section('body')
-    <div class="lockscreen-wrapper">
-
-        {{-- Lockscreen logo --}}
-        <div class="lockscreen-logo">
-            <a href="{{ $dashboardUrl }}">
-                <img src="{{ asset(config('adminlte.logo_img')) }}" height="50">
-                {!! config('adminlte.logo', '<b>Admin</b>LTE') !!}
-            </a>
-        </div>
-
-        {{-- Lockscreen user name --}}
-        <div class="lockscreen-name">
-            {{ isset(Auth::user()->name) ? Auth::user()->name : Auth::user()->email }}
-        </div>
-
-        {{-- Lockscreen item --}}
-        <div class="lockscreen-item">
-            @if(config('adminlte.usermenu_image'))
-                <div class="lockscreen-image">
-                    <img src="{{ Auth::user()->adminlte_image() }}" alt="{{ Auth::user()->name }}">
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('password.confirm') }}"
-                class="lockscreen-credentials @if(! config('adminlte.usermenu_image')) ml-0 @endif">
-                @csrf
-
-                <div class="input-group">
-                    <input id="password" type="password" name="password"
-                        class="form-control @error('password') is-invalid @enderror"
-                        placeholder="{{ __('adminlte::adminlte.password') }}" required autofocus>
-
-                    <div class="input-group-append">
-                        <button type="submit" class="btn">
-                            <i class="fas fa-arrow-right text-muted"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        {{-- Password error alert --}}
-        @error('password')
-            <div class="lockscreen-subitem text-center" role="alert">
-                <b class="text-danger">{{ $message }}</b>
+@section('content')
+    <div class="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
+        <div class="mb-6 text-center">
+            <div class="mb-3 flex justify-center">
+                <i class="fas fa-shield-alt text-4xl text-slate-500"></i>
             </div>
-        @enderror
-
-        {{-- Help block --}}
-        <div class="help-block text-center">
-            {{ __('adminlte::adminlte.confirm_password_message') }}
+            <h2 class="text-2xl font-bold text-slate-900">Confirmar contraseña</h2>
         </div>
 
-        {{-- Additional links --}}
-        <div class="text-center">
-            <a href="{{ $passResetUrl }}">
-                {{ __('adminlte::adminlte.i_forgot_my_password') }}
-            </a>
-        </div>
+        <form method="POST" action="{{ route('password.confirm') }}" class="space-y-4">
+            @csrf
 
+            <div>
+                <label for="password" class="mb-1 block text-sm font-medium text-slate-700">Contraseña</label>
+                <div class="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20">
+                    <span class="px-3 text-slate-500"><i class="fas fa-lock"></i></span>
+                    <input id="password" type="password" name="password" class="w-full border-0 bg-transparent px-0 py-2.5 text-sm text-slate-700 outline-none @error('password') border-red-300 @enderror" placeholder="Tu contraseña" required autofocus>
+                    <button type="submit" class="border-l border-slate-200 bg-white px-3 py-2.5 text-slate-600 hover:bg-slate-50">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                @error('password')
+                    <div class="mt-2 text-sm font-medium text-red-600" role="alert"><b>{{ $message }}</b></div>
+                @enderror
+            </div>
+
+            <p class="text-center text-sm text-slate-600">Confirma tu contraseña para continuar.</p>
+
+            <div class="text-center">
+                <a href="{{ route('password.request') }}" class="text-sm font-medium text-red-600 hover:text-red-700">¿Olvidaste tu contraseña?</a>
+            </div>
+        </form>
     </div>
-@stop
-
-@section('adminlte_js')
-    @stack('js')
-    @yield('js')
 @stop

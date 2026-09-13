@@ -1,16 +1,15 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem;color:#0f172a;font-weight:700;">Paradas</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Paradas</h1>
+            <p class="mt-1 text-sm text-gray-500">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
         <div>
-            <a href="{{ route('admin.transporte.maestros.bus_paradas.create') }}" class="rd-btn rd-btn-primary">
+            <a href="{{ route('admin.transporte.maestros.bus_paradas.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white transition-colors hover:bg-red-900">
                 <i class="fas fa-plus"></i> Nueva Parada
             </a>
         </div>
@@ -20,48 +19,43 @@
 @section('content')
     @include('components.alert')
 
-    <div class="rd-card rd-card-full">
-        <div class="rd-card-body">
-            <div class="rd-card-header rd-header-space">
+    <div class="overflow-hidden rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
+        <div class="p-4">
+            <div class="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h3 class="rd-title-sm">Paradas Registradas</h3>
+                    <h3 class="text-lg font-black" style="color:var(--text-main);">Paradas Registradas</h3>
                 </div>
-                <div class="rd-actions">
-                    <div class="d-flex gap-3 align-items-center">
-                        <span class="font-weight-bold" style="margin-right:10px;">Filtrar por estado:</span>
-                        <div class="toggle-container">
-                            <input type="checkbox" id="estadoToggle" class="toggle-checkbox"
+                <div class="flex flex-col gap-3 md:flex-row md:items-center">
+                    <div class="flex items-center gap-3">
+                        <span class="text-[11px] font-black uppercase tracking-wider text-gray-500">Activas</span>
+                            <input type="checkbox" id="estadoToggle" class="peer sr-only"
                                 {{ request('estado', 1) == 1 ? 'checked' : '' }}>
-                            <label for="estadoToggle" class="toggle-label">
-                                <span class="toggle-inner"></span>
-                                <span class="toggle-switch"></span>
-                            </label>
-                        </div>
+                            <label for="estadoToggle" class="relative h-6 w-10 cursor-pointer rounded-full bg-gray-300 peer-checked:bg-red-700 dark:bg-gray-700"><span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span></label>
                     </div>
                     <form action="{{ route('admin.transporte.maestros.bus_paradas.index') }}" method="GET"
-                        class="rd-search-inline" role="search">
+                        class="relative w-full md:w-64" role="search">
                         <input type="hidden" name="estado" value="{{ request('estado', 1) }}">
                         <input type="text" name="buscar" value="{{ request('buscar') }}"
-                            class="rd-search-input" placeholder="Buscar parada..." />
-                        <button class="rd-icon-btn" type="submit"><i class="fas fa-search"></i></button>
+                            class="w-full rounded-xl border py-2.5 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" style="background-color:var(--input-bg);border-color:var(--border-color);color:var(--text-main);" placeholder="Buscar parada..." />
+                        <button class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400" type="submit"><i class="fas fa-search"></i></button>
                     </form>
                 </div>
             </div>
 
-            <table class="rd-table">
+            <table class="w-full border-collapse text-left">
                 <thead>
-                    <tr>
-                        <th style="width:60px">#</th>
-                        <th class="text-center">Nombre</th>
-                        <th class="text-center">Dirección</th>
-                        <th class="text-center">Coordenadas</th>
-                        <th style="width:120px" class="text-center">Estado</th>
-                        <th style="width:150px" class="text-center">Acciones</th>
+                    <tr class="border-b text-[13px] font-black uppercase tracking-wider" style="border-color:var(--border-color);color:var(--text-main);">
+                        <th class="px-6 py-4 text-center">#</th>
+                        <th class="px-6 py-4 text-center">Nombre</th>
+                        <th class="px-6 py-4 text-center">Dirección</th>
+                        <th class="px-6 py-4 text-center">Coordenadas</th>
+                        <th class="px-6 py-4 text-center">Estado</th>
+                        <th class="px-6 py-4 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($paradas as $parada)
-                        <tr>
+                        <x-table-row :id="$parada->id">
                             <td class="text-center">
                                 {{ ($paradas->currentPage() - 1) * $paradas->perPage() + $loop->iteration }}
                             </td>
@@ -70,42 +64,45 @@
                             <td class="text-center">
                                 <small class="text-muted">{{ $parada->lat }}, {{ $parada->lng }}</small>
                             </td>
-                            <td class="text-center">
+                            <td class="whitespace-nowrap px-6 py-4 text-center">
                                 @if ($parada->estado)
-                                    <span class="rd-badge rd-badge-success">Activa</span>
+                                    <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activa</span>
                                 @else
-                                    <span class="rd-badge rd-badge-danger">Inactiva</span>
+                                    <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactiva</span>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                <div class="rd-action-group">
+                            <td class="whitespace-nowrap px-6 py-4">
+                                <div class="acciones-wrap relative flex h-8 items-center justify-center">
+                                    <div class="acciones-trigger flex h-8 w-8 items-center justify-center rounded-xl border text-gray-500 shadow-sm transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-gray-600/50 dark:text-gray-400 dark:hover:bg-rose-950/50"><i class="fas fa-ellipsis-vertical text-xs"></i></div>
+                                    <div class="acciones-panel">
                                     <a href="{{ route('admin.transporte.maestros.bus_paradas.edit', $parada) }}" 
-                                       class="rd-action" title="Editar">
-                                        <i class="fas fa-edit"></i>
+                                       onclick="event.stopPropagation()" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50" title="Editar">
+                                        <i class="fas fa-edit text-xs"></i>
                                     </a>
 
                                     @if ($parada->estado)
                                         <form action="{{ route('admin.transporte.maestros.bus_paradas.destroy', $parada) }}"
                                             method="POST" style="display:inline;">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="rd-action rd-btn-danger"
-                                                onclick="confirmAccion(event, this, 'inactivar', 'parada')">
-                                                <i class="fas fa-trash"></i>
+                                            <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-rose-100 hover:text-rose-500 dark:hover:bg-rose-950/50"
+                                                onclick="event.stopPropagation(); confirmAccion(event, this, 'inactivar', 'parada')" title="Inactivar">
+                                                <i class="fas fa-trash-alt text-xs"></i>
                                             </button>
                                         </form>
                                     @else
                                         <form action="{{ route('admin.transporte.maestros.bus_paradas.activar', $parada) }}"
                                             method="POST" style="display:inline;">
                                             @csrf @method('PUT')
-                                            <button type="submit" class="rd-action rd-btn-success"
-                                                onclick="confirmAccion(event, this, 'activar', 'parada')">
-                                                <i class="fas fa-check"></i>
+                                            <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500 dark:hover:bg-emerald-950/50"
+                                                onclick="event.stopPropagation(); confirmAccion(event, this, 'activar', 'parada')" title="Activar">
+                                                <i class="fas fa-check text-xs"></i>
                                             </button>
                                         </form>
                                     @endif
+                                    </div>
                                 </div>
                             </td>
-                        </tr>
+                        </x-table-row>
                     @empty
                         <tr>
                             <td colspan="6" class="text-center py-4">No hay paradas registradas.</td>
@@ -114,15 +111,11 @@
                 </tbody>
             </table>
 
-            <div class="mt-3 d-flex justify-content-center">
+            <div class="flex justify-center border-t p-4" style="border-color:var(--border-color);">
                 {{ $paradas->onEachSide(1)->links('components.pagination') }}
             </div>
         </div>
     </div>
-@stop
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
 @stop
 
 @push('js')
@@ -140,13 +133,13 @@ function toastExito(mensaje) {
 function confirmAccion(event, button, accion, entidad) {
     event.preventDefault();
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: `¿Desea ${accion} la ${entidad}?`,
+        title: 'Â¿EstÃ¡s seguro?',
+        text: `Â¿Desea ${accion} la ${entidad}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: `Sí, ${accion}`,
+        confirmButtonText: `SÃ­, ${accion}`,
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (!result.isConfirmed) return;

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     @include('components.alert')
@@ -10,7 +10,7 @@
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <button type="button" class="text-slate-500 hover:text-slate-700" >&times;</button>
         </div>
     @endif
 
@@ -83,13 +83,13 @@
                                 function confirmDelete(event, button) {
                                     event.preventDefault();
                                     Swal.fire({
-                                        title: '¿Estás seguro?',
-                                        text: "Se perderán todos los productos agregados.",
+                                        title: 'Â¿EstÃ¡s seguro?',
+                                        text: "Se perderÃ¡n todos los productos agregados.",
                                         icon: 'warning',
                                         showCancelButton: true,
                                         confirmButtonColor: '#3085d6',
                                         cancelButtonColor: '#d33',
-                                        confirmButtonText: 'Sí',
+                                        confirmButtonText: 'SÃ­',
                                         cancelButtonText: 'Cancelar'
                                     }).then((result) => {
                                         if (result.isConfirmed) {
@@ -108,9 +108,9 @@
                             <div class="row">
                                 <div class="col-md-3 display: inline-block;">
                                     <label for="nombre" class="rd-label">Proveedor</label>
-                                    <div class="rd-input-group">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <span><i class="fas fa-user-tie"></i></span>
-                                        <select class="form-control rd-input" id="proveedor_id" name="proveedor_id"
+                                        <select class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" id="proveedor_id" name="proveedor_id"
                                             disabled>
                                             <option value="">Seleccione un proveedor</option>
                                             @foreach ($proveedores as $proveedor)
@@ -128,11 +128,11 @@
                                 </div>
                                 <div class="col-md-3" style="display: inline-block;">
                                     <label for="codigo">Fecha de la Requisicion</label>
-                                    <div class="rd-input-group">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <span><i class="fas fa-calendar-alt"></i></span>
                                         <input type="datetime-local"
                                             value="{{ \Carbon\Carbon::now('America/Caracas')->format('Y-m-d\TH:i') }}"
-                                            class="form-control" id="fecha" name="fecha"
+                                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="fecha" name="fecha"
                                             value="{{ old('fecha', $compra->fecha) }}" disabled>
                                     </div>
                                     @error('fecha')
@@ -143,14 +143,14 @@
                                 </div>
                                 <div class="col-md-4" style="display: inline-block;">
                                     <label for="codigo">Observaciones</label>
-                                    <div class="rd-input-group">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <span><i class="fas fa-sticky-note"></i></span>
                                         @if ($compra->observaciones == !null)
-                                            <input type="text" class="form-control" id="observaciones"
+                                            <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="observaciones"
                                                 name="observaciones" placeholder="Ingrese observaciones"
                                                 value="{{ old('observaciones', $compra->observaciones) }}" disabled>
                                         @else
-                                            <input type="text" class="form-control" id="observaciones"
+                                            <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="observaciones"
                                                 name="observaciones" placeholder="Ingrese observaciones"
                                                 value="Sin observaciones" disabled>
                                         @endif
@@ -163,9 +163,9 @@
                                 </div>
                                 <div class="col-md-2" style="display: inline-block;">
                                     <label for="codigo">Requisicion</label>
-                                    <div class="rd-input-group">
+                                    <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <span><i class="fas fa-sticky-note"></i></span>
-                                        <input type="text" class="form-control" id="estado" name="estado"
+                                        <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="estado" name="estado"
                                             placeholder="Ingrese estado" value="{{ old('estado', $compra->estado) }}"
                                             disabled>
                                     </div>
@@ -249,3 +249,4 @@
 @section('js')
     @livewireScripts
 @stop
+

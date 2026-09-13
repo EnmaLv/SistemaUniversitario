@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -46,10 +46,10 @@
 
                     <div class="form-group">
                         <label class="rd-label">Nombre de la Ruta</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-route"></i></span>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-route"></i></span>
                             <input type="text" name="nombre" id="inputNombre"
-                                class="form-control rd-input @error('nombre') is-invalid @enderror"
+                                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input @error('nombre') border-red-300 @enderror"
                                 placeholder="Ej: Zona Sur - Directo" value="{{ old('nombre', $busRuta->nombre) }}"
                                 maxlength="100" required>
                         </div>
@@ -60,10 +60,10 @@
                         <div class="col-6">
                             <div class="form-group mb-3">
                                 <label class="rd-label">Distancia (km)</label>
-                                <div class="input-group mt-1">
-                                    <span class="input-group-text"><i class="fas fa-road"></i></span>
+                                <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                                    <span class="px-3 text-slate-500"><i class="fas fa-road"></i></span>
                                     <input type="number" name="distancia_km" id="inputDistancia" step="0.01"
-                                        class="form-control rd-input" placeholder="Calculando..."
+                                        class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" placeholder="Calculando..."
                                         value="{{ old('distancia_km', $busRuta->distancia_km) }}" min="0.1" required
                                         readonly>
                                 </div>
@@ -72,9 +72,9 @@
                         <div class="col-6">
                             <div class="form-group mb-3">
                                 <label class="rd-label">Sede</label>
-                                <div class="input-group mt-1">
-                                    <span class="input-group-text"><i class="fas fa-building"></i></span>
-                                    <select name="sede_id" class="form-control rd-input" required>
+                                <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                                    <span class="px-3 text-slate-500"><i class="fas fa-building"></i></span>
+                                    <select name="sede_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" required>
                                         <option value="">-- Seleccione --</option>
                                         @foreach ($sedes as $sede)
                                             <option value="{{ $sede->id }}"
@@ -93,7 +93,7 @@
                     style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="m-0 font-weight-bold" style="font-size:1rem; color:#0f172a;"><i
-                                class="fas fa-clock mr-2 text-primary"></i>Planificación Horarios</h4>
+                                class="fas fa-clock mr-2 text-primary"></i>PlanificaciÃ³n Horarios</h4>
                         <button type="button" id="btn-add-horario" class="rd-btn rd-btn-success btn-sm"><i
                                 class="fas fa-plus"></i></button>
                     </div>
@@ -105,10 +105,10 @@
                 <div class="rd-card p-4 mb-4"
                     style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
                     <div class="form-group mb-0">
-                        <label class="rd-label">Descripción</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-sticky-note"></i></span>
-                            <input name="descripcion" class="form-control rd-input" style="resize:none; height: auto;"
+                        <label class="rd-label">DescripciÃ³n</label>
+                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
+                            <span class="px-3 text-slate-500"><i class="fas fa-sticky-note"></i></span>
+                            <input name="descripcion" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" style="resize:none; height: auto;"
                                 placeholder="Transporte a la zona sur"
                                 value="{{ old('descripcion', $busRuta->descripcion) }}">
                         </div>
@@ -141,7 +141,7 @@
                         </div>
                     </div>
                     @error('paradas')
-                        <div class="text-danger mt-2"><b>Debe añadir al menos 2 paradas al trazado en el mapa.</b></div>
+                        <div class="text-danger mt-2"><b>Debe aÃ±adir al menos 2 paradas al trazado en el mapa.</b></div>
                     @enderror
                     <div class="d-flex justify-content-end" style="gap:12px;">
                         <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn"
@@ -154,7 +154,7 @@
 @stop
 
 @section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/diseÃ±o.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .parada-item {
@@ -298,7 +298,7 @@
                             <span class="badge-orden">${index + 1}</span>
                             <span>${parada.nombre}</span>
                         </div>
-                        <button type="button" class="btn btn-xs text-danger" onclick="eliminarPuntoSecuencia(${index})"><i class="fas fa-times"></i></button>
+                        <button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 xs text-danger" onclick="eliminarPuntoSecuencia(${index})"><i class="fas fa-times"></i></button>
                     </div>
                 `;
 
@@ -317,7 +317,7 @@
 
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error('Respuesta errónea OSRM');
+                if (!response.ok) throw new Error('Respuesta errÃ³nea OSRM');
 
                 const data = await response.json();
                 if (data.code === 'Ok' && data.routes.length > 0) {
@@ -365,14 +365,14 @@
             const fila = document.createElement('tr');
             fila.setAttribute('id', `fila-horario-${indiceHorario}`);
             fila.innerHTML = `
-                <td><input type="time" name="horarios[${indiceHorario}][hora_salida]" value="${hora}" class="form-control form-control-sm" required></td>
+                <td><input type="time" name="horarios[${indiceHorario}][hora_salida]" value="${hora}" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input-sm" required></td>
                 <td>
-                    <select name="horarios[${indiceHorario}][tipo_viaje]" class="form-control form-control-sm" required>
-                        <option value="entrada" ${tipo === 'entrada' ? 'selected' : ''}>Entrada ☀️</option>
-                        <option value="salida" ${tipo === 'salida' ? 'selected' : ''}>Salida 🏠</option>
+                    <select name="horarios[${indiceHorario}][tipo_viaje]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input-sm" required>
+                        <option value="entrada" ${tipo === 'entrada' ? 'selected' : ''}>Entrada â˜€ï¸</option>
+                        <option value="salida" ${tipo === 'salida' ? 'selected' : ''}>Salida ðŸ </option>
                     </select>
                 </td>
-                <td class="text-center"><button type="button" class="btn btn-xs btn-danger" onclick="document.getElementById('fila-horario-${indiceHorario}').remove()"><i class="fas fa-trash"></i></button></td>
+                <td class="text-center"><button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 xs btn-danger" onclick="document.getElementById('fila-horario-${indiceHorario}').remove()"><i class="fas fa-trash"></i></button></td>
             `;
             document.getElementById('contenedor-horarios').appendChild(fila);
             indiceHorario++;
@@ -400,3 +400,4 @@
         });
     </script>
 @endpush
+

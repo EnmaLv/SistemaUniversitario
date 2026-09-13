@@ -189,7 +189,7 @@
                             <div class="space-y-2">
                                 <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">
                                     Cupos Máximos <span class="text-rose-500">*</span>
-                                    <span class="ml-1" data-toggle="tooltip" data-placement="top"
+                                    <span class="ml-1"  
                                         title="El número de cupos máximos de la jornada no puede superar los cupos disponibles del beneficio seleccionado.">
                                         <i class="fas fa-info-circle text-gray-400" style="cursor: help;"></i>
                                     </span>
@@ -260,7 +260,7 @@
     @push('scripts')
         <script>
             $(document).ready(function () {
-                $('[data-toggle="tooltip"]').tooltip();
+                $('[]').tooltip();
 
                 const fechaInicio = $('input[name="fecha_inicio_solicitud"]');
                 const fechaFin = $('input[name="fecha_fin_solicitud"]');

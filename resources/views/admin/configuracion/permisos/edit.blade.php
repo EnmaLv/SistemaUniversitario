@@ -1,10 +1,10 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
         style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Gestión de Permisos Especiales</h1>
+            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">GestiÃ³n de Permisos Especiales</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
                 <i class="fas fa-user-shield mr-1" style="color: var(--color-secondary)"></i>
                 Usuario: <strong>{{ $usuario->username }}</strong>
@@ -30,11 +30,11 @@
                         <div class="mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-cubes mr-2 text-success"></i> Módulos Especiales para este Usuario
+                                    <i class="fas fa-cubes mr-2 text-success"></i> MÃ³dulos Especiales para este Usuario
                                 </label>
                                 <span class="badge badge-light border text-muted"
                                     style="border-radius: 6px; padding: 5px 10px;">
-                                    <i class="fas fa-info-circle mr-1"></i> Los módulos marcados en verde vienen heredados
+                                    <i class="fas fa-info-circle mr-1"></i> Los mÃ³dulos marcados en verde vienen heredados
                                     de su Rol base
                                 </span>
                             </div>
@@ -70,7 +70,7 @@
                                         </div>
                                     @empty
                                         <div class="col-12 text-center text-muted py-2">
-                                            <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> No hay módulos
+                                            <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> No hay mÃ³dulos
                                             activos registrados en la base de datos.
                                         </div>
                                     @endforelse
@@ -86,7 +86,7 @@
                                 </label>
                                 <span class="badge badge-light border text-muted"
                                     style="border-radius: 6px; padding: 5px 10px;">
-                                    <i class="fas fa-info-circle mr-1"></i> Los cambios aquí sobrescriben el rol base
+                                    <i class="fas fa-info-circle mr-1"></i> Los cambios aquÃ­ sobrescriben el rol base
                                 </span>
                             </div>
 
@@ -191,12 +191,12 @@
                     if (!this.checked) {
                         e.preventDefault();
                         Swal.fire({
-                            title: '¿Deshabilitar permiso de rol?',
-                            text: 'Este permiso es heredado del rol del usuario. Al desmarcarlo, estarás restringiendo explícitamente esta función.',
+                            title: 'Â¿Deshabilitar permiso de rol?',
+                            text: 'Este permiso es heredado del rol del usuario. Al desmarcarlo, estarÃ¡s restringiendo explÃ­citamente esta funciÃ³n.',
                             icon: 'warning',
                             showCancelButton: true,
                             confirmButtonColor: 'var(--color-primary)',
-                            confirmButtonText: 'Sí, restringir',
+                            confirmButtonText: 'SÃ­, restringir',
                             cancelButtonText: 'Mantener'
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -258,3 +258,4 @@
         })();
     </script>
 @stop
+

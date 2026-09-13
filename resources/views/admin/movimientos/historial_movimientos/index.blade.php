@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -59,7 +59,7 @@
                         <button class="rd-icon-btn" type="submit" title="Buscar"><i class="fas fa-search"></i></button>
                     </form>
 
-                    <button class="rd-icon-btn" data-toggle="collapse" data-target="#filters" aria-expanded="false"
+                    <button class="rd-icon-btn"   aria-expanded="false"
                         aria-controls="filters" title="Filtros">
                         <i class="fas fa-filter"></i>
                     </button>
@@ -78,17 +78,17 @@
                         class="rd-filters-form">
                         <div class="rd-filter-row">
                             <label for="fecha_desde">Desde</label>
-                            <input type="date" name="fecha_desde" id="fecha_desde" class="rd-filter-input"
+                            <input type="date" name="fecha_desde" id="fecha_desde" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                                 value="{{ request('fecha_desde') }}" />
                         </div>
                         <div class="rd-filter-row">
                             <label for="fecha_hasta">Hasta</label>
-                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="rd-filter-input"
+                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                                 value="{{ request('fecha_hasta') }}" />
                         </div>
                         <div class="rd-filter-row">
                             <label for="tipo_movimiento">Tipo de Movimiento</label>
-                            <select name="tipo_movimiento" id="tipo_movimiento" class="rd-filter-input"
+                            <select name="tipo_movimiento" id="tipo_movimiento" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                                 style="width:100px; background-color: white;">
                                 <option value="">Todos</option>
                                 <option value="ENTRADA" {{ request('tipo_movimiento') === 'ENTRADA' ? 'selected' : '' }}>
@@ -118,7 +118,7 @@
                             <th>Unidad</th>
                             <th>Sede</th>
                             <th>Fecha</th>
-                            <th>Observación</th>
+                            <th>ObservaciÃ³n</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -161,7 +161,7 @@
                                 @if ($movimientos->observacion)
                                     <td>{{ $movimientos->observacion }}</td>
                                 @else
-                                    <td>Sin observación</td>
+                                    <td>Sin observaciÃ³n</td>
                                 @endif
                             </tr>
                         @empty

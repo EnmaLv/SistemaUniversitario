@@ -2,12 +2,13 @@
 .rd-card-desayuno .rd-title {
     margin: 0;
     font-size: 20px;
-    color: #0f172a;
+    color: var(--text-main, #0f172a);
 }
 
 .rd-card-desayuno .rd-sub {
     margin: 4px 0 0;
-    color: #6b7280;
+    color: var(--text-main, #6b7280);
+    opacity: .7;
     font-size: 13px;
 }
 
@@ -33,27 +34,56 @@
 }
 
 
-.rd-card-headerr {
+.rd-card-header {
     padding: 18px 20px;
-    border-bottom: 1px solid #f2f6f9;
+    border-bottom: 1px solid var(--border-color, #f2f6f9);
 }
 
 .rd-card-footer {
     padding: 12px 20px;
-    border-top: 1px solid #f2f6f9;
-    background: #fafbfd;
+    border-top: 1px solid var(--border-color, #f2f6f9);
+    background: var(--bg-card, #fafbfd);
+}
+
+.rd-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-main, #374151);
+}
+
+.rd-table thead th {
+    background: var(--input-bg, #fbfdff);
+    border-bottom: 1px solid var(--border-color, #eef2f6);
+    color: var(--text-main, #374151);
+    padding: 12px 10px;
+    text-align: left;
+}
+
+.rd-table tbody td {
+    border-bottom: 1px solid var(--border-color, #f6f8fb);
+    color: var(--text-main, #374151);
+    padding: 12px 10px;
+}
+
+.rd-card input:not([type="radio"]):not([type="checkbox"]):not([type="file"]),
+.rd-card select,
+.rd-card textarea {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-main) !important;
 }
 
 /* Search card */
 .rd-card-search .rd-title {
     margin: 0;
     font-size: 20px;
-    color: #0f172a;
+    color: var(--text-main, #0f172a);
 }
 
 .rd-card-search .rd-sub {
     margin: 4px 0 0;
-    color: #6b7280;
+    color: var(--text-main, #6b7280);
+    opacity: .7;
     font-size: 13px;
 }
 
@@ -119,7 +149,8 @@
 
 .rd-sub-sm {
     margin: 0;
-    color: #6b7280;
+    color: var(--text-main, #6b7280);
+    opacity: .7;
     font-size: 13px;
 }
 
@@ -143,7 +174,7 @@
     border: 1px solid transparent;
     padding: 7px 9px;
     border-radius: 8px;
-    color: #374151;
+    color: var(--text-main, #374151);
 }
 
 

@@ -1,11 +1,11 @@
 <!-- Empleados index (migrated from empleos) -->
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
         style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Gestión de Empleados</h1>
+            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">GestiÃ³n de Empleados</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
                 <i class="fas fa-user-circle mr-1" style="color: var(--color-secondary)"></i> 
                 Usuario: <strong>{{ auth()->user()->username }}</strong>
@@ -28,9 +28,9 @@
                     </div>
                     
                     <div class="col-md-8 d-flex justify-content-end gap-2">
-                        <div class="rd-input-group" style="min-width: 250px;">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group" style="min-width: 250px;">
                             <span><i class="fas fa-filter"></i></span>
-                            <select name="rol" class="rd-input w-100">
+                            <select name="rol" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100">
                                 <option value="">Todos los Roles</option>
                                 @foreach($roles as $r)
                                     <option value="{{ $r->id_rol }}" {{ request('rol') == $r->id_rol ? 'selected' : '' }}>
@@ -75,7 +75,7 @@
                 <thead>
                     <tr>
                         <th class="text-center" style="width:70px">ID</th>
-                        <th>Información del Empleado</th>
+                        <th>InformaciÃ³n del Empleado</th>
                         <th>Usuario de Sistema</th>
                         <th>Rol / Perfil</th>
                         <th class="text-center" style="width:180px">Acciones</th>
@@ -100,7 +100,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <span class="badge" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px;">
-                                        {{ $usuario->roles->pluck('nombre')->first() ?: ($usuario->perfil->nombre_perfil ?? '—') }}
+                                        {{ $usuario->roles->pluck('nombre')->first() ?: ($usuario->perfil->nombre_perfil ?? 'â€”') }}
                                     </span>
                                 </div>
                             </td>
@@ -121,14 +121,14 @@
                                     @endphp
 
                                     @if(!$isSelf)
-                                        <form action="{{ route('admin.configuracion.empleados.destroy', $usuario->id_usuario) }}" method="POST" onsubmit="return confirm('¿Eliminar empleado?');" class="d-inline">
+                                        <form action="{{ route('admin.configuracion.empleados.destroy', $usuario->id_usuario) }}" method="POST" onsubmit="return confirm('Â¿Eliminar empleado?');" class="d-inline">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="rd-action rd-btn-danger">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
                                     @else
-                                        <button class="rd-action disabled" style="opacity: 0.4; cursor: not-allowed;" title="Acción no permitida">
+                                        <button class="rd-action disabled" style="opacity: 0.4; cursor: not-allowed;" title="AcciÃ³n no permitida">
                                             <i class="fas fa-ban"></i>
                                         </button>
                                     @endif
@@ -140,7 +140,7 @@
                             <td colspan="5" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="fas fa-folder-open fa-3x mb-3" style="opacity: 0.2"></i>
-                                    <p class="mb-0">No se encontraron empleados con los criterios de búsqueda.</p>
+                                    <p class="mb-0">No se encontraron empleados con los criterios de bÃºsqueda.</p>
                                 </div>
                             </td>
                         </tr>
@@ -163,7 +163,7 @@
         transition: var(--trans-default);
     }
     
-    /* Estilo adicional para los iconos de acción */
+    /* Estilo adicional para los iconos de acciÃ³n */
     .rd-action {
         width: 35px;
         height: 35px;

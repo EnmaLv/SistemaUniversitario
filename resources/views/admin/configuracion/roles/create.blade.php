@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -29,9 +29,9 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="rd-label mb-2">Nombre del Rol</label>
-                                <div class="rd-input-group">
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                     <span><i class="fas fa-tag"></i></span>
-                                    <input type="text" name="nombre" class="rd-input w-100" 
+                                    <input type="text" name="nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" 
                                            placeholder="Ej: Supervisor" required value="{{ old('nombre') }}">
                                 </div>
                                 @error('nombre')
@@ -42,9 +42,9 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="rd-label mb-2">Descripción Corta</label>
-                                <input type="text" name="descripcion" class="form-control" 
-                                       placeholder="Propósito del rol" value="{{ old('descripcion') }}"
+                                <label class="rd-label mb-2">DescripciÃ³n Corta</label>
+                                <input type="text" name="descripcion" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" 
+                                       placeholder="PropÃ³sito del rol" value="{{ old('descripcion') }}"
                                        style="border: 1px solid #d8dee9; border-radius: 10px; padding: 8px 12px; height: 45px;">
                             </div>
                         </div>
@@ -52,10 +52,10 @@
                         <div class="form-group mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-cubes mr-2 text-success"></i> Acceso a Módulos Globales del Sistema
+                                    <i class="fas fa-cubes mr-2 text-success"></i> Acceso a MÃ³dulos Globales del Sistema
                                 </label>
-                                <button type="button" id="selectAllModules" class="btn btn-xs btn-outline-secondary" style="border-radius: 6px;">
-                                    Seleccionar Todos los Módulos
+                                <button type="button" id="selectAllModules" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 xs btn-outline-secondary" style="border-radius: 6px;">
+                                    Seleccionar Todos los MÃ³dulos
                                 </button>
                             </div>
                             
@@ -75,7 +75,7 @@
                                         </div>
                                     @empty
                                         <div class="col-12 text-center text-muted py-2">
-                                            <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> No hay módulos activos registrados en la base de datos.
+                                            <i class="fas fa-exclamation-triangle mr-1 text-warning"></i> No hay mÃ³dulos activos registrados en la base de datos.
                                         </div>
                                     @endforelse
                                 </div>
@@ -88,16 +88,16 @@
                         <div class="form-group mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-list-check mr-2 text-primary"></i> Visibilidad de Ítems del Menú Lateral
+                                    <i class="fas fa-list-check mr-2 text-primary"></i> Visibilidad de Ãtems del MenÃº Lateral
                                 </label>
-                                <button type="button" id="selectAll" class="btn btn-xs btn-outline-secondary" style="border-radius: 6px;">
-                                    Seleccionar Todos los Menús
+                                <button type="button" id="selectAll" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 xs btn-outline-secondary" style="border-radius: 6px;">
+                                    Seleccionar Todos los MenÃºs
                                 </button>
                             </div>
                             
                             <div class="permissions-grid">
                                 @php
-                                    // 1. Separamos los elementos de la raíz en submenús y links directos
+                                    // 1. Separamos los elementos de la raÃ­z en submenÃºs y links directos
                                     $submenus = [];
                                     $directLinks = [];
                                     
@@ -109,7 +109,7 @@
                                         }
                                     }
 
-                                    // 2. Función interna recursiva para renderizar los niveles internos (> 0)
+                                    // 2. FunciÃ³n interna recursiva para renderizar los niveles internos (> 0)
                                     if (!function_exists('renderChildrenItems')) {
                                         function renderChildrenItems($items, $depth = 1) {
                                             $margin = $depth * 15;
@@ -150,7 +150,7 @@
                                         echo '</div>';
                                     }
 
-                                    // 4. Renderizar Links Huérfanos Agrupados en una sola tarjeta al final
+                                    // 4. Renderizar Links HuÃ©rfanos Agrupados en una sola tarjeta al final
                                     if (count($directLinks) > 0) {
                                         echo '<div class="permission-group-block">';
                                         echo '<div class="permission-group-title mt-1 mb-3">
@@ -178,7 +178,7 @@
                             </div>
                         </div>
 
-                        {{-- Botones de Acción --}}
+                        {{-- Botones de AcciÃ³n --}}
                         <div class="d-flex mt-5 justify-content-end" style="gap: 10px">
                             <a href="{{ route('admin.configuracion.roles.index') }}" class="rd-btn rd-btn-default px-4" style="height: 48px; justify-content: center;">
                                 Cancelar
@@ -232,7 +232,7 @@
             }
         }
 
-        /* Pequeño efecto hover para los módulos superiores */
+        /* PequeÃ±o efecto hover para los mÃ³dulos superiores */
         .item-modulo {
             padding: 6px;
             border-radius: 6px;
@@ -246,20 +246,20 @@
 
 @section('js')
 <script>
-    // Manejo de Selección para Permisos de Menú
+    // Manejo de SelecciÃ³n para Permisos de MenÃº
     document.getElementById('selectAll').addEventListener('click', function() {
         const checks = document.querySelectorAll('.perm-check');
         const allChecked = Array.from(checks).every(c => c.checked);
         checks.forEach(c => c.checked = !allChecked);
-        this.textContent = allChecked ? 'Seleccionar Todos los Menús' : 'Desmarcar Todos los Menús';
+        this.textContent = allChecked ? 'Seleccionar Todos los MenÃºs' : 'Desmarcar Todos los MenÃºs';
     });
 
-    // Manejo de Selección para Módulos Globales
+    // Manejo de SelecciÃ³n para MÃ³dulos Globales
     document.getElementById('selectAllModules').addEventListener('click', function() {
         const checks = document.querySelectorAll('.modulo-check');
         const allChecked = Array.from(checks).every(c => c.checked);
         checks.forEach(c => c.checked = !allChecked);
-        this.textContent = allChecked ? 'Seleccionar Todos los Módulos' : 'Desmarcar Todos los Módulos';
+        this.textContent = allChecked ? 'Seleccionar Todos los MÃ³dulos' : 'Desmarcar Todos los MÃ³dulos';
     });
 </script>
 @stop

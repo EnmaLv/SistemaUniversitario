@@ -15,7 +15,7 @@
         @endif
 
         {{-- Navbar toggler button --}}
-        <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+        <button class="navbar-toggler order-1" type="button"  
             aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>

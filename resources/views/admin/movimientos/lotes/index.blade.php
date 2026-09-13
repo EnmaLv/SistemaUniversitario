@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -57,14 +57,14 @@
                             Productos vencidos detectados
                         </h3>
                         <p class="mb-0 text-muted" style="font-size:0.95rem;">
-                            Existen lotes vencidos que aún se encuentran en el inventario.
+                            Existen lotes vencidos que aÃºn se encuentran en el inventario.
                             Se recomienda realizar la <strong>merma</strong> para mantener el stock correcto.
                         </p>
                     </div>
 
                     <form action="{{ route('admin.movimientos.lotes.mermar') }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn btn-danger px-4" onclick="confirmarMerma(event, this)">
+                        <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 danger px-4" onclick="confirmarMerma(event, this)">
                             <i class="fas fa-trash-alt mr-1"></i>
                             Mermar productos vencidos
                         </button>
@@ -97,16 +97,16 @@
                     <form action="{{ route('admin.movimientos.lotes.index') }}" method="GET" class="rd-filters-form">
                         <div class="rd-filter-row" style="display: inline-block;">
                             <label>Desde</label>
-                            <input type="date" name="fecha_desde" id="fecha_desde" class="rd-filter-input" />
+                            <input type="date" name="fecha_desde" id="fecha_desde" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" />
                         </div>
                         <div class="rd-filter-row" style="display: inline-block;">
                             <label>Hasta</label>
-                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="rd-filter-input"
+                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                                 max="{{ now()->format('Y-m-d') }}" />
                         </div>
                         <div class="rd-filter-row" style="display: inline-block;">
-                            <select name="estado" class="rd-filter-input">
-                                <option value="">Seleccione una opción</option>
+                            <select name="estado" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                <option value="">Seleccione una opciÃ³n</option>
                                 <option value="1" {{ request('estado') === '1' ? 'selected' : '' }}>Activos</option>
                                 <option value="0" {{ request('estado') === '0' ? 'selected' : '' }}>Merma</option>
                             </select>
@@ -127,12 +127,12 @@
                     <thead>
                         <tr>
                             <th style="width:60px">#</th>
-                            <th>Código Lote</th>
+                            <th>CÃ³digo Lote</th>
                             <th>Producto</th>
                             <th>Proveedor</th>
                             <th>Fecha Entrada</th>
                             <th>Fecha Vencimiento</th>
-                            <th>Días Restantes</th>
+                            <th>DÃ­as Restantes</th>
                             <th>Cantidad (U)</th>
                             <th>Cantidad (g)</th>
                             <th>Estado</th>
@@ -150,7 +150,7 @@
                                 <td>{{ $lote->fecha_entrada }}</td>
                                 <td>{{ $lote->fecha_vencimiento }}</td>
                                 <td>
-                                    {{ round($lote->days_to_expire) }} días
+                                    {{ round($lote->days_to_expire) }} dÃ­as
                                 </td>
                                 <td>{{ round($lote->cantidad_sede) }}</td>
                                 <td>{{ round($lote->cantidad_gramos_sede) }}g</td>
@@ -175,7 +175,7 @@
                 </table>
             </div>
 
-            {{-- Paginación del servidor --}}
+            {{-- PaginaciÃ³n del servidor --}}
             <div class="mt-3 d-flex justify-content-center">
                 {{ $lotes->onEachSide(1)->links('components.pagination') }}
             </div>

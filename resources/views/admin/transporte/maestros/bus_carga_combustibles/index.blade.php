@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -29,9 +29,9 @@
                 <div class="rd-actions">
                     <form action="{{ route('admin.transporte.maestros.bus_carga_combustibles.index') }}" method="GET"
                         class="d-flex gap-3 align-items-center">
-                        <select name="vehiculo_id" class="form-control rd-filter-input" style="width:180px;"
+                        <select name="vehiculo_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" style="width:180px;"
                             onchange="this.form.submit()">
-                            <option value="">Todos los vehículos</option>
+                            <option value="">Todos los vehÃ­culos</option>
                             @foreach($vehiculos as $v)
                                 <option value="{{ $v->id }}" {{ request('vehiculo_id') == $v->id ? 'selected' : '' }}>
                                     {{ $v->placa }}
@@ -52,13 +52,13 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th class="text-center">Fecha</th>
-                        <th class="text-center">Vehículo</th>
+                        <th class="text-center">VehÃ­culo</th>
                         <th class="text-center">Tipo Combustible</th>
                         <th class="text-center">Boca #</th>
                         <th class="text-center">Litros</th>
                         <th class="text-center">Precio / L</th>
                         <th class="text-center">Total</th>
-                        <th class="text-center">KM Odómetro</th>
+                        <th class="text-center">KM OdÃ³metro</th>
                         <th style="width:140px" class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -121,13 +121,13 @@
 function confirmEliminar(event, button) {
     event.preventDefault();
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¿Desea eliminar este registro de carga? Esta acción no se puede deshacer.',
+        title: 'Â¿EstÃ¡s seguro?',
+        text: 'Â¿Desea eliminar este registro de carga? Esta acciÃ³n no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonText: 'SÃ­, eliminar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) button.closest('form').submit();
@@ -135,3 +135,4 @@ function confirmEliminar(event, button) {
 }
 </script>
 @endpush
+

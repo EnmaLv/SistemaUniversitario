@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -54,13 +54,13 @@
     <div class="registro-layout">
         <section class="profile-hero rd-card">
             <div class="profile-hero__content">
-                <p class="hero-eyebrow">Registro diario · {{ $registro->nombre_pnf }}</p>
+                <p class="hero-eyebrow">Registro diario Â· {{ $registro->nombre_pnf }}</p>
                 <h2 class="hero-title">Ficha del estudiante</h2>
                 <p class="hero-text">
                     <strong>
                         {{ $registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona }}
                     </strong>
-                    fue registrado en el sistema con la información detallada a continuación.
+                    fue registrado en el sistema con la informaciÃ³n detallada a continuaciÃ³n.
                 </p>
 
             </div>
@@ -86,11 +86,11 @@
                         </p>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Cédula</span>
+                        <span class="info-label">CÃ©dula</span>
                         <p class="info-value">{{ $registro->cedula_persona }}</p>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Género</span>
+                        <span class="info-label">GÃ©nero</span>
                         <p class="info-value">{{ $registro->genero_persona }}</p>
                     </div>
                     <div class="info-item info-item-inline">
@@ -101,7 +101,7 @@
                         </div>
                         <div>
                             <span class="info-label">Edad</span>
-                            <p class="info-value">{{ $edad }} años</p>
+                            <p class="info-value">{{ $edad }} aÃ±os</p>
                         </div>
                     </div>
                 </div>
@@ -114,11 +114,11 @@
                 </header>
                 <div class="info-list">
                     <div class="info-item">
-                        <span class="info-label">Teléfono</span>
+                        <span class="info-label">TelÃ©fono</span>
                         <p class="info-value">{{ $registro->telefono_persona }}</p>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Correo electrónico</span>
+                        <span class="info-label">Correo electrÃ³nico</span>
                         <p class="info-value">{{ $registro->email_persona }}</p>
                     </div>
                     <div class="info-item">
@@ -142,12 +142,12 @@
                         <span class="info-label">Fecha de registro</span>
                         <p class="info-value">{{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
                         </p>
-                        <small class="info-helper">Información tomada del formulario enviado.</small>
+                        <small class="info-helper">InformaciÃ³n tomada del formulario enviado.</small>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Hora registrada</span>
                         <p class="info-value">{{ $registro->hora }}</p>
-                        <small class="info-helper">Corresponde a la hora exacta de creación.</small>
+                        <small class="info-helper">Corresponde a la hora exacta de creaciÃ³n.</small>
                     </div>
                 </div>
             </article>
@@ -158,3 +158,4 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('css/show-noti-register.css') }}">
 @endsection
+

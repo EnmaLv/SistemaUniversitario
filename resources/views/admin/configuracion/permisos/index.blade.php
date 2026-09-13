@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -7,11 +7,11 @@
             <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Permisos Especiales</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
                 <i class="fas fa-user-shield mr-1" style="color: var(--color-secondary)"></i> 
-                Asignación de permisos granulares por usuario.
+                AsignaciÃ³n de permisos granulares por usuario.
             </p>
         </div>
         <div>
-            <i class="fas fa-info-circle text-muted" title="Los permisos asignados aquí se suman a los del rol base."></i>
+            <i class="fas fa-info-circle text-muted" title="Los permisos asignados aquÃ­ se suman a los del rol base."></i>
         </div>
     </div>
 @stop
@@ -27,9 +27,9 @@
                         <h3 class="rd-title-sm">Usuarios del Sistema</h3>
                     </div>
                     <div class="col-md-6 d-flex justify-content-end">
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-search"></i></span>
-                            <input type="text" name="q" value="{{ request('q') }}" class="rd-input w-100" placeholder="Buscar por nombre o usuario...">
+                            <input type="text" name="q" value="{{ request('q') }}" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" placeholder="Buscar por nombre o usuario...">
                         </div>
                         <button type="submit" class="rd-btn rd-btn-primary ml-2" style="padding: 5px 15px;">
                             Buscar
@@ -44,10 +44,10 @@
                 <thead>
                     <tr>
                         <th class="text-center" style="width:60px">#</th>
-                        <th>Identificación</th>
+                        <th>IdentificaciÃ³n</th>
                         <th>Nombre y Apellido</th>
                         <th>Rol Asignado</th>
-                        <th class="text-center" style="width:180px">Gestión</th>
+                        <th class="text-center" style="width:180px">GestiÃ³n</th>
                     </tr>
                 </thead>
                 <tbody class="fade-in">
@@ -62,7 +62,7 @@
                                 </span>
                             </td>
                             <td class="font-weight-bold" style="color: #1e293b;">
-                                {{$usuario->persona->nombre_persona . ' ' . $usuario->persona->apellido_persona ?? "—" }}
+                                {{$usuario->persona->nombre_persona . ' ' . $usuario->persona->apellido_persona ?? "â€”" }}
                             </td>
                             <td>
                                 @php
@@ -96,7 +96,7 @@
                             <td colspan="5" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="fas fa-users-slash fa-3x mb-3" style="opacity: 0.1"></i>
-                                    <p>No se encontraron usuarios para la búsqueda.</p>
+                                    <p>No se encontraron usuarios para la bÃºsqueda.</p>
                                 </div>
                             </td>
                         </tr>
