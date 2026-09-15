@@ -735,7 +735,7 @@ Table enfermedades {
   nombre         varchar(100)   [not null]
   esPsicologica  tinyint [not null]
   activo         bool [not null, default: 1]
-}
+} 
 
 //salud 
 Table consulta {

@@ -57,7 +57,7 @@ return new class extends Migration
 
             $administradorSaludData = [
                 'descripcion' => 'Rol por defecto Administrador de Salud',
-                'menu_permissions' => json_encode(['envases_primarios', 'categorias_medicamentos', 'medicamentos', 'enfermedades_salud']),
+                'menu_permissions' => json_encode(['envases_primarios', 'categorias_medicamentos', 'medicamentos', 'enfermedades_salud', 'horarios', 'consultorios', 'consultas']),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -69,9 +69,23 @@ return new class extends Migration
                 $administradorSaludData
             );
 
+            $doctorSaludData = [
+                'descripcion' => 'Rol por defecto Doctor de Salud',
+                'menu_permissions' => json_encode(['horarios', 'consultas']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+            if ($hasSlug) {
+                $doctorSaludData['slug'] = 'doctor-de-salud';
+            }
+            DB::table('rol')->updateOrInsert(
+                ['nombre' => 'Doctor(a)'],
+                $doctorSaludData
+            );
+
             $secretariaSaludData = [
                 'descripcion' => 'Rol por defecto Secretaria de Salud',
-                'menu_permissions' => json_encode(['envases_primarios', 'categorias_medicamentos', 'medicamentos', 'enfermedades_salud']),
+                'menu_permissions' => json_encode(['horarios', 'consultas']),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -79,7 +93,7 @@ return new class extends Migration
                 $secretariaSaludData['slug'] = 'secretaria-de-salud';
             }
             DB::table('rol')->updateOrInsert(
-                ['nombre' => 'Secretaria de Salud'],
+                ['nombre' => 'Enfermero(a)'],
                 $secretariaSaludData
             );
             $administradorBecas = [
@@ -117,9 +131,9 @@ return new class extends Migration
         if (DB::getSchemaBuilder()->hasTable('rol')) {
             DB::table('rol')->where('nombre', 'Administrador')->delete();
             DB::table('rol')->where('nombre', 'Obrero')->delete();
-            DB::table('rol')->where('nombre', 'Administrador de Salud')->delete();
+            DB::table('rol')->where('nombre', 'Doctor(a)')->delete();
             DB::table('rol')->where('nombre', 'Secretaria')->delete();
-            DB::table('rol')->where('nombre', 'Secretaria de Salud')->delete();
+            DB::table('rol')->where('nombre', 'Enfermero(a)')->delete();
             DB::table('rol')->where('nombre', 'Administrador de Beca')->delete();
             DB::table('rol')->where('nombre', 'Paciente')->delete();
         }

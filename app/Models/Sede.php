@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\salud\Consultorio;
 use App\Observers\SedeObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Traits\ConvierteAMayusculasNoEloquent;
@@ -35,6 +36,11 @@ class Sede extends Model
     public function movimientos()
     {
         return $this->hasMany(MovimientoInventario::class, 'sede_id');
+    }
+
+    public function consultorios()
+    {
+        return $this->hasMany(Consultorio::class, 'sede_id');
     }
 
     public static function listarSedes($buscar = null, $activo = null)

@@ -64,7 +64,7 @@
                     <a href="{{ route('admin.salud.movimientos.horarios.pdf', ['consultorio_id' => $consultorioSeleccionado ?? $consultorioId]) }}"
                         target="_blank"
                         class="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-center flex-shrink-0"
-                        title="Imprimir Agenda en PDF">
+                        title="Imprimir Horarios en PDF">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -190,7 +190,7 @@
                                                                     <span class="block text-[10px] font-medium text-sky-600 dark:text-sky-400 truncate">
                                                                         {{ $nombreRolAsignado }}
                                                                     </span>
-                                                                </div>
+                                                                </div> 
                                                             </div>
 
                                                             <form id="form-delete-{{ $registro->id }}"
@@ -198,8 +198,7 @@
                                                                 method="POST">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="button"
-                                                                    onclick="confirmToggleEstado('{{ $registro->id }}', 'inactivar', 'form-delete-')"
+                                                                <button type="submit"
                                                                     title="Eliminar Horario"
                                                                     class="w-4 h-4 flex items-center justify-center rounded text-sky-400 hover:text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-all active:scale-90 flex-shrink-0">
                                                                     <i class="fas fa-times text-[9px]"></i>
@@ -243,5 +242,6 @@
                 siguienteBloque.classList.remove('hidden');
             }
         }
+        
     </script>
 </x-app-layout>

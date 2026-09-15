@@ -126,10 +126,23 @@ class HorarioConsultorio extends Model
             ->whereIn('id_rol', $rolesPermitidos)
             ->get()
             ->map(function ($ru) {
+                // Obtenemos la relación persona desde el usuario
+                $persona = $ru->usuario->persona ?? null;
+
+                // Consultar el consultorio asignado a este rol en los horarios
+                $horario = self::with('consultorio')
+                    ->where('id_rol_usuario', $ru->id)
+                    ->where('activo', true)
+                    ->first();
+
                 return (object) [
+                    'id_persona'      => $persona?->id_persona ?? $persona?->id, // ID necesario para la validación
+                    'id_usuario'      => $ru->usuario?->id,
                     'id_rol_usuario'  => $ru->id,
                     'nombre_completo' => $ru->nombre_completo,
                     'nombre_rol'      => $ru->nombre_rol,
+                    'consultorio_id'     => $horario?->consultorio_id ?? '',
+                    'consultorio_nombre' => $horario?->consultorio?->nombre ?? 'Sin consultorio asignado',
                 ];
             })
             ->values();

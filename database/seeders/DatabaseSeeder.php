@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             PrioridadesSeeder::class,
             MedicamentoSeeder::class,
             ConsultorioSeeder::class,
+            HorarioConsultoriosSeeder::class,
         ]);
         \App\Models\Proveedor::factory(1)->create();
     }

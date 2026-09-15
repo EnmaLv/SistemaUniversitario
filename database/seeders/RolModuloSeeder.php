@@ -19,6 +19,7 @@ class RolModuloSeeder extends Seeder
             ['rol_id' => 5, 'modulo_id' => 1],
             ['rol_id' => 6, 'modulo_id' => 4],
             ['rol_id' => 7, 'modulo_id' => 6],
+            ['rol_id' => 8, 'modulo_id' => 1],
         ]);
     }
 }

@@ -4,8 +4,9 @@ namespace App\Models\salud;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
-class Enfermedad
+class Enfermedad extends Model
 {
     protected $table = 'enfermedades';
 
