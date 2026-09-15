@@ -796,17 +796,6 @@ Table dispensacion {
   Note: 'Genera movimiento_inventarios tipo=salida, modulo_origen=salud'
 }
 
-Table psicologia_seguimiento {
-  id            bigint   [pk, increment]
-  id_persona    bigint   [not null, ref: > persona.id_persona]
-  cita_id       bigint   [ref: > cita.id]
-  enfermedad_id bigint   [not null, ref: > enfermedades.id]
-  notas         text
-  fecha         datetime [not null]
-  realizado     tinyint  [not null, default: 0]
-  creado_por    bigint   [not null, ref: > usuario.id_usuario]
-  created_at    timestamp
-}
 
 // ============================================================
 // MÓDULO: DEPORTES

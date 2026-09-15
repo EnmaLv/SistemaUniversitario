@@ -16,32 +16,50 @@ class BusViajeApiController extends Controller
     public function registrarGps(Request $request, BusViaje $viaje): JsonResponse
     {
         if ($viaje->conductor_id !== $request->user()->id_usuario) {
-            return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permiso para registrar GPS en este viaje.',
+            ], 403);
         }
 
         $validated = $request->validate([
+            'local_id'  => 'required|uuid',
             'lat'       => 'required|numeric',
             'lng'       => 'required|numeric',
             'velocidad' => 'nullable|numeric',
             'heading'   => 'nullable|numeric',
+            'timestamp' => 'required|date',
         ]);
 
-        $ultimoLog = $viaje->gpsLogs()->latest('id')->first();
+        $existente = BusGpsLog::where('local_id', $validated['local_id'])->first();
 
-        if (!$ultimoLog || $ultimoLog->created_at->diffInSeconds(now()) >= 15) {
-            $viaje->gpsLogs()->create([
-                'lat'           => $validated['lat'],
-                'lng'           => $validated['lng'],
-                'velocidad'     => $validated['velocidad'] ?? 0,
-                'heading'       => $validated['heading'] ?? 0,
-                'registrado_en' => now(),
-                'origen'        => 'app_flutter',
+        if ($existente) {
+            return response()->json([
+                'success' => true,
+                'duplicate' => true,
+            ]);
+        }
+
+        BusGpsLog::create([
+            'local_id'      => $validated['local_id'],
+            'bus_viaje_id'  => $viaje->id,
+            'lat'           => $validated['lat'],
+            'lng'           => $validated['lng'],
+            'velocidad'     => $validated['velocidad'] ?? 0,
+            'heading'       => $validated['heading'] ?? null,
+            'registrado_en' => Carbon::parse($validated['timestamp']),
+            'origen'        => 'app_conductor',
+        ]);
+
+        if ($viaje->estado === 'en_curso') {
+            $viaje->update([
+                'ultima_lat' => $validated['lat'],
+                'ultima_lng' => $validated['lng'],
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Coordenadas procesadas.',
         ]);
     }
 
@@ -120,6 +138,22 @@ class BusViajeApiController extends Controller
         ]);
     }
 
+    private function eliminarBusDeFirebase(string $viajeId): void
+    {
+        try {
+            if (class_exists('\Kreait\Laravel\Firebase\Facades\Firebase')) {
+                \Kreait\Laravel\Firebase\Facades\Firebase::firestore()
+                    ->database()
+                    ->collection('buses_activos')
+                    ->document($viajeId)
+                    ->delete();
+            }
+        } catch (\Exception $e) {
+            Log::error("Error eliminando bus $viajeId de Firestore: " . $e->getMessage());
+        }
+    }
+    
+
     public function finalizar(Request $request, BusViaje $viaje): JsonResponse
     {
         if ($viaje->conductor_id !== $request->user()->id_usuario) {
@@ -127,6 +161,15 @@ class BusViajeApiController extends Controller
                 'success' => false,
                 'message' => 'No tienes permiso para finalizar este viaje.',
             ], 403);
+        }
+
+        if ($viaje->estado === 'finalizado') {
+            return response()->json([
+                'success' => true,
+                'duplicate' => true,
+                'message' => 'El viaje ya estaba finalizado.',
+                'data' => $viaje,
+            ]);
         }
 
         if ($viaje->estado !== 'en_curso') {
@@ -138,13 +181,12 @@ class BusViajeApiController extends Controller
 
         $validated = $request->validate([
             'km_fin'          => 'required|numeric|gte:' . $viaje->km_inicio,
-            'pasajeros'       => 'required|integer|min:0',
             'litros_gastados' => 'nullable|numeric|min:0',
             'hubo_desvio'     => 'nullable|boolean',
             'motivo_desvio'   => 'nullable|required_if:hubo_desvio,true|string|max:255',
         ], [
-            'km_fin.gte'      => 'El kilometraje final no puede ser menor al kilometraje de inicio (' . $viaje->km_inicio . ' km).',
-            'motivo_desvio.required_if' => 'Debe indicar el motivo del desvío.',
+            'km_fin.gte'                 => 'El kilometraje final no puede ser menor al de inicio (' . $viaje->km_inicio . ' km).',
+            'motivo_desvio.required_if'  => 'Debe indicar el motivo del desvío.',
         ]);
 
         $kmFin = $validated['km_fin'];
@@ -154,17 +196,16 @@ class BusViajeApiController extends Controller
             'estado'          => 'finalizado',
             'km_fin'          => $kmFin,
             'distancia_km'    => $distanciaRecorrida,
-            'pasajeros'       => $validated['pasajeros'],
             'litros_gastados' => $validated['litros_gastados'] ?? 0,
             'hubo_desvio'     => $validated['hubo_desvio'] ?? false,
             'motivo_desvio'   => $validated['motivo_desvio'] ?? null,
         ]);
 
         if ($viaje->vehiculo) {
-            $viaje->vehiculo->update([
-                'km_actual' => $kmFin,
-            ]);
+            $viaje->vehiculo->update(['km_actual' => $kmFin]);
         }
+
+        $this->eliminarBusDeFirebase((string) $viaje->id);
 
         return response()->json([
             'success' => true,
@@ -201,6 +242,8 @@ class BusViajeApiController extends Controller
             'motivo_cancelacion' => $validated['motivo_cancelacion'],
         ]);
 
+        $this->eliminarBusDeFirebase((string)$viaje->id);
+
         return response()->json([
             'success' => true,
             'message' => 'El viaje ha sido cancelado exitosamente.',
@@ -215,6 +258,26 @@ class BusViajeApiController extends Controller
             ->with(['vehiculo', 'busRuta'])
             ->orderBy('updated_at', 'desc')
             ->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $viajes,
+        ]);
+    }
+
+    public function cartelera(): JsonResponse
+    {
+        $hoy = Carbon::today();
+
+        $viajes = BusViaje::whereIn('estado', ['en_curso', 'programado'])
+            ->where(function ($q) use ($hoy) {
+                $q->whereDate('created_at', $hoy)
+                  ->orWhereDate('fecha_inicio', $hoy);
+            })
+            ->with(['vehiculo', 'busRuta', 'conductor'])
+            ->orderByRaw("FIELD(estado, 'en_curso', 'programado')")
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         return response()->json([
             'success' => true,

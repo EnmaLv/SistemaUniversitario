@@ -54,7 +54,7 @@ class BusMarcaApiController extends Controller
     public function update(Request $request, BusMarca $marca): JsonResponse
     {
         $validated = $request->validate([
-            'nombre' => "required|string|max:100|unique:bus_marcas,nombre,{$marca->id}",
+            'nombre' => "required|string|max:100|unique:marcas,nombre,{$marca->id}",
         ]);
 
         $marca->update([

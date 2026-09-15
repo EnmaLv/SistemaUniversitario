@@ -72,6 +72,7 @@ Route::put('/transporte/maestros/bus_mantenimientos/{busMantenimiento}', [BusMan
 Route::delete('/transporte/maestros/bus_mantenimientos/{busMantenimiento}', [BusMantenimientoController::class, 'destroy'])->name('admin.transporte.maestros.bus_mantenimientos.destroy');
 
 /* Viajes */
+Route::get('bus-viajes/{busViaje}/gps-logs', [BusViajeController::class, 'gpsLogs'])->name('admin.transporte.maestros.bus_viajes.gps-logs');
 Route::get('/transporte/maestros/bus_viajes', [BusViajeController::class, 'index'])->name('admin.transporte.maestros.bus_viajes.index');
 Route::get('/transporte/maestros/bus_viajes/create', [BusViajeController::class, 'create'])->name('admin.transporte.maestros.bus_viajes.create');
 Route::post('/transporte/maestros/bus_viajes/store', [BusViajeController::class, 'store'])->name('admin.transporte.maestros.bus_viajes.store');
