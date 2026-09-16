@@ -25,6 +25,9 @@ Route::prefix('/admin/becas')->group(function () {
         Route::put('/{jornada}/activar', [\App\Http\Controllers\beca\JornadaBecaController::class, 'activar'])->name('admin.becas.jornada.activar');
     });
 
+    // Rutas exclusivas para el becario/estudiante
+    Route::get('/solicitar', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'solicitarEstudiante'])->name('admin.becas.solicitar');
+
     // Rutas de solicitudes de beca
     Route::prefix('/solicitudes')->group(function () {
         Route::get('/', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'index'])->name('admin.becas.solicitudes.index');

@@ -698,6 +698,15 @@ return [
             'icon' => 'fas fa-user-clock',
             'active' => ['admin/becas/jornada*'],
         ],
+        //Opciones para becarios(Estudiantes y Pacientes)
+        [
+            'text' => 'Solicitar Beca',
+            'key' => 'solicitar_beca',
+            'module' => 'beca',
+            'url' => 'admin/becas/solicitar',
+            'icon' => 'fas fa-file-alt',
+            'active' => ['admin/becas/solicitar*'],
+        ],
 
         /* ---------------------------------------------------
         | GESTIÓN DE TRANSPORTE

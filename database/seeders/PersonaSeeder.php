@@ -244,5 +244,38 @@ class PersonaSeeder extends Seeder
             'id_rol' => 5,
             'id_usuario' => 7,
         ]);
+
+        // Becario (Paciente + Becario)
+        DB::table('persona')->insert([
+            'nombre_persona' => 'Estudiante',
+            'segundo_nombre_persona' => null,
+            'apellido_persona' => 'Becario',
+            'segundo_apellido_persona' => null,
+            'cedula_persona' => '1234567890',
+            'telefono_persona' => 04120000000,
+            'genero_persona' => 'Masculino',
+            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
+            'fecha_nacimiento_persona' => now()->toDateString(),
+            'email_persona' => 'estudiantebecario@example.com',
+            'semestre_persona' => 4,
+            'id_perfil' => 2,
+            'id_sede' => 1,
+        ]);
+
+        DB::table('usuario')->insert([
+            'id_persona' => 8,
+            'id_perfil' => 1,
+            'username' => 'estudiantebecario@example.com',
+            'password' => bcrypt('12345678'),
+            'master_key' => bcrypt('masterkey123'),
+            'security_questions' => null,
+            'extra_permissions' => null,
+        ]);
+
+        // Se le asigna Paciente (7) y Becario (9)
+        DB::table('rol_usuario')->insert([
+            ['id_rol' => 7, 'id_usuario' => 8], // Paciente
+            ['id_rol' => 9, 'id_usuario' => 8], // Becario
+        ]);
     }
 }

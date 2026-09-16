@@ -65,11 +65,12 @@ class SolicitudBecasService
             }
 
             // 3. Validar duplicados para el estudiante en esta jornada
-            $existeSolicitud = SolicitudBeca::where('id_persona', $personaId)
+            $existeSolicitudActiva = SolicitudBeca::where('id_persona', $personaId)
                 ->where('jornada_id', $jornadaId)
+                ->whereIn('estado', [0, 1]) // 0: Pendiente, 1: Aprobada
                 ->exists();
-            if ($existeSolicitud) {
-                throw new Exception("Ya existe una solicitud registrada para este estudiante en la jornada seleccionada.");
+            if ($existeSolicitudActiva) {
+                throw new Exception("Ya tienes una solicitud en proceso o aprobada para esta jornada.");
             }
 
             // 4. Validar cupos máximos de la jornada
