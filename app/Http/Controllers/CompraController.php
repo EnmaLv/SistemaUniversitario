@@ -54,6 +54,7 @@ class CompraController extends Controller
     {
         $id = Compra::crearCompra($request->validate([
             'proveedor_id'  => 'required|exists:proveedors,id',
+            'modulo_id'     => 'required|exists:modulos,id',
             'fecha'         => 'required|date',
             'observaciones' => 'nullable|string'
         ]));
