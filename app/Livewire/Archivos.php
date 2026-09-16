@@ -8,6 +8,7 @@ use App\Models\Archivo;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use App\Models\Persona;
 use App\Models\PersonaPnf;
 
@@ -35,32 +36,33 @@ class Archivos extends Component
         foreach ($headerRow as $colLetter => $title) {
             if (!$title) continue;
 
-            $slug = strtolower(trim((string)$title));
-            $slug = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $slug);
+            // Convertir a ASCII seguro con Laravel (CÉDULA -> CEDULA, N° -> N DEG)
+            $slug = Str::ascii((string)$title);
+            $slug = strtolower(trim($slug));
             $slug = preg_replace('/[^a-z0-9]/', '_', $slug);
             $slug = preg_replace('/_+/', '_', trim($slug, '_'));
 
-            if (preg_match('/cedula|c_i|dni|identificacion/', $slug)) {
+            if (preg_match('/cedula|c_i|dni|identificacion/', $slug) && !isset($map['cedula'])) {
                 $map['cedula'] = $colLetter;
-            } elseif (preg_match('/segundo_nombre|nombre_2|nombre2/', $slug)) {
+            } elseif (preg_match('/segundo_nombre|nombre_2|nombre2/', $slug) && !isset($map['segundo_nombre'])) {
                 $map['segundo_nombre'] = $colLetter;
             } elseif (preg_match('/nombre/', $slug) && !isset($map['nombre'])) {
                 $map['nombre'] = $colLetter;
-            } elseif (preg_match('/segundo_apellido|apellido_2|apellido2/', $slug)) {
+            } elseif (preg_match('/segundo_apellido|apellido_2|apellido2/', $slug) && !isset($map['segundo_apellido'])) {
                 $map['segundo_apellido'] = $colLetter;
             } elseif (preg_match('/apellido/', $slug) && !isset($map['apellido'])) {
                 $map['apellido'] = $colLetter;
-            } elseif (preg_match('/telefono|celular|movil|tlf/', $slug)) {
+            } elseif (preg_match('/telefono|celular|movil|tlf/', $slug) && !preg_match('/otro/', $slug) && !isset($map['telefono'])) {
                 $map['telefono'] = $colLetter;
-            } elseif (preg_match('/genero|sexo/', $slug)) {
+            } elseif (preg_match('/genero|sexo/', $slug) && !isset($map['genero'])) {
                 $map['genero'] = $colLetter;
-            } elseif (preg_match('/nacimiento|fecha_nac|fec_nac|a_nacimiento/', $slug)) {
+            } elseif (preg_match('/nacimiento|fecha_nac|fec_nac|a_nacimiento/', $slug) && !isset($map['fecha_nacimiento'])) {
                 $map['fecha_nacimiento'] = $colLetter;
-            } elseif (preg_match('/email|correo/', $slug)) {
+            } elseif (preg_match('/email|correo/', $slug) && !isset($map['email'])) {
                 $map['email'] = $colLetter;
-            } elseif (preg_match('/semestre|trayecto|nivel/', $slug)) {
+            } elseif (preg_match('/semestre|trayecto|nivel/', $slug) && !isset($map['semestre'])) {
                 $map['semestre'] = $colLetter;
-            } elseif (preg_match('/pnf|carrera|programa|especialidad/', $slug)) {
+            } elseif (preg_match('/pnf|carrera|programa|especialidad|pfg/', $slug) && !isset($map['pnf'])) {
                 $map['pnf'] = $colLetter;
             }
         }
@@ -72,8 +74,7 @@ class Archivos extends Component
     {
         if (empty($pnfExcel)) return 1;
 
-        $pnfExcel = strtoupper(trim($pnfExcel));
-        $pnfExcel = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $pnfExcel);
+        $pnfExcel = strtoupper(trim(Str::ascii($pnfExcel)));
         $pnfExcel = preg_replace('/\s+/', ' ', $pnfExcel);
 
         $pnfs = DB::table('pnf')
@@ -84,8 +85,7 @@ class Archivos extends Component
         $mejorSimilitud = 0;
 
         foreach ($pnfs as $pnf) {
-            $nombreBD = strtoupper($pnf->nombre_pnf);
-            $nombreBD = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nombreBD);
+            $nombreBD = strtoupper(Str::ascii($pnf->nombre_pnf));
 
             similar_text($pnfExcel, $nombreBD, $porcentaje);
 
@@ -108,7 +108,7 @@ class Archivos extends Component
 
     private function parseFechaNacimiento($fecha)
     {
-        if ($fecha === null || $fecha === '' || trim($fecha) === '') {
+        if ($fecha === null || $fecha === '' || trim((string)$fecha) === '') {
             return null;
         }
 
@@ -134,7 +134,7 @@ class Archivos extends Component
 
         try {
             $fechaCreada = Carbon::createFromFormat('d/m/Y', $fechaLimpia);
-            if ($fechaCreada && $fechaCreada->year > 1920 && $fechaCreada->year < now()->year) {
+            if ($fechaCreada && $fechaCreada->year > 1920 && $fechaCreada->year <= now()->year) {
                 return $fechaCreada->format('Y-m-d');
             }
         } catch (\Exception $e) {
@@ -161,16 +161,30 @@ class Archivos extends Component
                 throw new \Exception('El archivo cargado está vacío.');
             }
 
-            $headerRow = array_shift($rows);
+            // Buscar dinámicamente la fila de encabezados en las primeras 10 filas
+            $headerRow = null;
+            foreach ($rows as $index => $row) {
+                $rowString = Str::ascii(implode(' ', array_values($row)));
+                if (preg_match('/cedula|c_i|dni|nombre|apellido/i', $rowString)) {
+                    $headerRow = $row;
+                    $rows = array_slice($rows, $index + 1);
+                    break;
+                }
+            }
+
+            if (!$headerRow) {
+                throw new \Exception('No se encontró la fila de encabezados en el archivo Excel.');
+            }
+
             $map = $this->getColumnMapping($headerRow);
 
             if (!isset($map['cedula'])) {
-                throw new \Exception('No se encontró la columna de "Cédula" en la primera fila del Excel.');
+                throw new \Exception('No se detectó la columna de "Cédula" en la tabla cargada.');
             }
 
             $getValue = function ($key, $row) use ($map) {
                 $col = $map[$key] ?? null;
-                return $col ? trim($row[$col] ?? '') : '';
+                return $col ? trim((string)($row[$col] ?? '')) : '';
             };
 
             $cedulasProcesadas = [];
@@ -186,7 +200,9 @@ class Archivos extends Component
             foreach ($rows as $row) {
                 $stats['total']++;
 
-                $cedula = $getValue('cedula', $row);
+                // Extraer solo dígitos numéricos de la cédula
+                $cedulaRaw = $getValue('cedula', $row);
+                $cedula = preg_replace('/\D/', '', $cedulaRaw);
 
                 if (!$cedula) {
                     $stats['omitidos_cedula']++;
@@ -223,11 +239,11 @@ class Archivos extends Component
                         'segundo_nombre_persona'    => $getValue('segundo_nombre', $row) ?: null,
                         'apellido_persona'          => $getValue('apellido', $row),
                         'segundo_apellido_persona'  => $getValue('segundo_apellido', $row) ?: null,
-                        'telefono_persona'          => $telefono,
+                        'telefono_persona'          => $telefono ?: null,
                         'genero_persona'            => $sexo,
                         'edad_persona'              => $edad,
                         'fecha_nacimiento_persona'  => $fechaNacimiento,
-                        'email_persona'             => $getValue('email', $row),
+                        'email_persona'             => $getValue('email', $row) ?: null,
                         'semestre_persona'          => $getValue('semestre', $row) ?: null,
                         'id_perfil'                 => 2,
                         'id_sede'                   => 1,

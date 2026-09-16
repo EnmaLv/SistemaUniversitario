@@ -16,10 +16,11 @@ return new class extends Migration
             ['nombre' => 'Administrador', 'descripcion' => 'Rol con todos los permisos'],
             ['nombre' => 'Secretaria De Bienestar', 'descripcion' => 'Rol administrativo'],
             ['nombre' => 'Obrero', 'descripcion' => 'Rol operativo'],
-            ['nombre' => 'Administrador de Salud', 'descripcion' => 'Rol operativo'],
-            ['nombre' => 'Secretaria de Salud', 'descripcion' => 'Rol operativo'],
+            ['nombre' => 'Doctor(a)', 'descripcion' => 'Rol operativo'],
+            ['nombre' => 'Enfermero(a)', 'descripcion' => 'Rol operativo'],
             ['nombre' => 'Administrador de Beca', 'descripcion' => 'Rol operativo'],
             ['nombre' => 'Paciente', 'descripcion' => 'Rol estudiantil'],
+            ['nombre' => 'Administrador de Salud', 'descripcion' => 'Rol operativo']
         ];
 
         foreach ($defaults as $d) {

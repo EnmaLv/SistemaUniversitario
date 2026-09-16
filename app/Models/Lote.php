@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\salud\Dispensacion;
 use Illuminate\Database\Eloquent\Model;
 
 class Lote extends Model
@@ -43,5 +44,25 @@ class Lote extends Model
     public function detalleCompras()
     {
         return $this->hasMany(DetalleCompra::class);
+    }
+
+    public function dispensaciones()
+    {
+        return $this->hasMany(Dispensacion::class);
+    }
+
+    /**
+     * Obtiene los lotes disponibles (con stock y no vencidos) para un producto.
+     */
+    public static function disponiblesParaProducto($productoId)
+    {
+        return self::where('producto_id', $productoId)
+            ->where('cantidad_actual', '>', 0)
+            ->where(function ($query) {
+                $query->whereNull('fecha_vencimiento')
+                    ->orWhere('fecha_vencimiento', '>=', now()->toDateString());
+            })
+            ->orderBy('fecha_vencimiento', 'asc')
+            ->get();
     }
 }

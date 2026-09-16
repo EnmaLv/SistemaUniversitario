@@ -28,6 +28,7 @@ use App\Http\Controllers\MovimientoInventarioController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ArchivoController;
+use App\Http\Controllers\salud\ConsultaController;
 use App\Http\Controllers\salud\CategoriaMedicamentoController;
 use App\Http\Controllers\salud\EnvasePrimarioController;
 use App\Http\Controllers\salud\MedicamentoController;
@@ -331,7 +332,39 @@ Route::middleware(['auth', 'tasa.actualizada'])->group(function () {
         Route::get('/salud/movimientos/horarios/create', [HorarioConsultorioController::class, 'create'])->name('admin.salud.movimientos.horarios.create');
         Route::post('/salud/movimientos/horarios', [HorarioConsultorioController::class, 'store'])->name('admin.salud.movimientos.horarios.store');
         Route::delete('/salud/movimientos/horarios/{horario}', [HorarioConsultorioController::class, 'destroy'])->name('admin.salud.movimientos.horarios.destroy');
-        Route::get('/movimientos/horarios/pdf', [HorarioConsultorioController::class, 'exportarPdf'])->name('admin.salud.movimientos.horarios.pdf');
+        Route::get('/salud/movimientos/horarios/pdf', [HorarioConsultorioController::class, 'exportarPdf'])->name('admin.salud.movimientos.horarios.pdf');
+
+
+        // Consultas
+        Route::prefix('/salud/movimientos/consultas')
+            ->name('admin.salud.movimientos.consultas.')
+            ->middleware(['auth'])
+            ->group(function () {
+                Route::get('/', [ConsultaController::class, 'index'])->name('index');
+
+                // Paso 1: Crear / Editar Consulta
+                Route::get('/crear/{consulta?}', [ConsultaController::class, 'create'])->name('create');
+                Route::post('/', [ConsultaController::class, 'store'])->name('store');
+                Route::put('/{consulta}', [ConsultaController::class, 'update'])->name('update');
+
+                // Búsquedas AJAX
+                Route::get('/buscar-enfermedades', [ConsultaController::class, 'buscarEnfermedades'])->name('buscar-enfermedades');
+                Route::get('/buscar-personas', [ConsultaController::class, 'buscarPersonas'])->name('buscar-personas');
+
+                // Paso 2: Recetación (Cargar Vista y Guardar/Actualizar)
+                Route::get('/{consulta}/recetacion', [ConsultaController::class, 'recetacion'])->name('recetacion');
+                Route::post('/{consulta}/receta', [ConsultaController::class, 'storeReceta'])->name('receta.store');
+
+                // Paso 3: Dispensación
+                Route::get('/{consulta}/dispensacion', [ConsultaController::class, 'dispensacion'])->name('dispensacion');
+                Route::post('/{consulta}/dispensacion', [ConsultaController::class, 'storeDispensacion'])->name('dispensacion.store');
+
+                // Ver detalle
+                Route::get('/{consulta}', [ConsultaController::class, 'show'])->name('show');
+
+                //Generar Recipe
+                Route::get('/{consulta}/recipe', [ConsultaController::class, 'generarRecipePdf'])->name('recipe_pdf');
+            });
 
         // TRANSPORTE
         require __DIR__ . '/transporte.php';

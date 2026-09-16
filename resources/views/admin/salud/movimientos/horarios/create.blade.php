@@ -5,18 +5,22 @@
             @include('components.alert')
 
             {{-- Encabezado Principal --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1 border-b border-gray-200/50 dark:border-gray-800/50">
+            <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1 border-b border-gray-200/50 dark:border-gray-800/50">
                 <div>
                     <div class="flex items-center gap-3 flex-wrap">
                         <h1 class="text-2xl sm:text-3xl font-black tracking-tight" style="color: var(--text-main);">
                             Asignar Horario
                         </h1>
-                        <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
+                        <span
+                            class="px-2.5 py-1 text-xs font-bold rounded-full bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
                             Gestión Múltiple
                         </span>
                     </div>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold text-gray-700 dark:text-gray-200">{{ auth()->user()->nombre_completo }}</span> · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        Bienvenido <span
+                            class="font-bold text-gray-700 dark:text-gray-200">{{ auth()->user()->nombre_completo }}</span>
+                        · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
 
@@ -28,7 +32,8 @@
                 </a>
             </div>
 
-            <form action="{{ route('admin.salud.movimientos.horarios.store') }}" method="POST" class="rd-prevent-double-submit space-y-6">
+            <form action="{{ route('admin.salud.movimientos.horarios.store') }}" method="POST"
+                class="rd-prevent-double-submit space-y-6">
                 @csrf
 
                 {{-- Card de Selección de Consultorio y Barra de Estado --}}
@@ -42,7 +47,8 @@
                         </label>
                         <div class="flex items-center rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all shadow-sm"
                             style="border-color: var(--border-color);">
-                            <span class="flex items-center justify-center px-3.5 py-2.5 bg-gray-50 dark:bg-black/20 text-sky-600 dark:text-sky-400 border-r"
+                            <span
+                                class="flex items-center justify-center px-3.5 py-2.5 bg-gray-50 dark:bg-black/20 text-sky-600 dark:text-sky-400 border-r"
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-door-open text-sm"></i>
                             </span>
@@ -66,8 +72,10 @@
                     </div>
 
                     {{-- Contador y Limpieza de Selección --}}
-                    <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 dark:border-gray-800">
-                        <div class="px-3.5 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900/50 flex items-center gap-2">
+                    <div
+                        class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 dark:border-gray-800">
+                        <div
+                            class="px-3.5 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900/50 flex items-center gap-2">
                             <i class="fas fa-check-circle text-sky-600 dark:text-sky-400 text-xs"></i>
                             <span class="text-xs font-extrabold text-sky-700 dark:text-sky-300">
                                 <span id="contadorSeleccion">0</span> asignación(es) realizada(s)
@@ -83,7 +91,8 @@
                 </div>
 
                 @error('horarios')
-                    <div class="px-4 py-3 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                    <div
+                        class="px-4 py-3 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                         <i class="fas fa-exclamation-circle text-sm"></i>
                         <span>{{ $message }}</span>
                     </div>
@@ -97,12 +106,15 @@
                         <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                             class="p-4 rounded-2xl border shadow-sm flex flex-col max-h-[calc(100vh-8rem)]">
 
-                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-800">
-                                <h3 class="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                            <div
+                                class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-800">
+                                <h3
+                                    class="text-xs font-black uppercase tracking-wider text-gray-700 dark:text-gray-200 flex items-center gap-2">
                                     <i class="fas fa-user-md text-sky-500"></i>
                                     <span>Personal Disponible</span>
                                 </h3>
-                                <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                                <span
+                                    class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
                                     {{ count($usuariosElegibles) }}
                                 </span>
                             </div>
@@ -126,12 +138,14 @@
                                         data-id="{{ $usr->id_rol_usuario }}" data-nombre="{{ $usr->nombre_completo }}"
                                         data-rol="{{ $usr->nombre_rol }}">
 
-                                        <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/50 text-sky-600 flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                                        <div
+                                            class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/50 text-sky-600 flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-sky-500 group-hover:text-white transition-colors">
                                             <i class="fas fa-user text-[11px]"></i>
                                         </div>
 
                                         <div class="overflow-hidden min-w-0 flex-1">
-                                            <p class="user-card-name text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                                            <p
+                                                class="user-card-name text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
                                                 {{ $usr->nombre_completo }}
                                             </p>
                                             <p class="text-[10px] font-medium text-sky-600 dark:text-sky-400 truncate">
@@ -139,7 +153,8 @@
                                             </p>
                                         </div>
 
-                                        <i class="fas fa-grip-vertical text-gray-300 dark:text-gray-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        <i
+                                            class="fas fa-grip-vertical text-gray-300 dark:text-gray-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                     </div>
                                 @empty
                                     <div class="text-center py-6 text-xs text-gray-400">
@@ -162,7 +177,8 @@
                                 $jornadaIndex = $loop->index;
                             @endphp
 
-                            <div id="jornada-block-{{ $jornadaIndex }}" class="jornada-block {{ $jornadaIndex !== 0 ? 'hidden' : '' }}">
+                            <div id="jornada-block-{{ $jornadaIndex }}"
+                                class="jornada-block {{ $jornadaIndex !== 0 ? 'hidden' : '' }}">
 
                                 {{-- Header Unificado de Jornada --}}
                                 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -171,28 +187,35 @@
                                     <div class="flex items-center gap-3">
                                         <div class="w-2.5 h-7 rounded-full bg-sky-500"></div>
                                         <div>
-                                            <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                                            <h3
+                                                class="text-xs sm:text-sm font-black uppercase tracking-wider text-gray-800 dark:text-gray-200">
                                                 Jornada {{ $jornada }}
                                             </h3>
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-1.5 bg-gray-50 dark:bg-black/20 p-1 rounded-xl border border-gray-200/60 dark:border-gray-700/60">
+                                    <div
+                                        class="flex items-center gap-1.5 bg-gray-50 dark:bg-black/20 p-1 rounded-xl border border-gray-200/60 dark:border-gray-700/60">
                                         <button type="button" onclick="cambiarJornada(-1)" title="Jornada Anterior"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 19l-7-7 7-7" />
                                             </svg>
                                         </button>
 
-                                        <span class="px-3 text-[11px] font-black text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                                        <span
+                                            class="px-3 text-[11px] font-black text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                                             {{ $loop->iteration }} / {{ $totalJornadas }}
                                         </span>
 
                                         <button type="button" onclick="cambiarJornada(1)" title="Siguiente Jornada"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all shadow-sm">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5l7 7-7 7" />
                                             </svg>
                                         </button>
                                     </div>
@@ -201,7 +224,8 @@
                                 {{-- Tabla Grid --}}
                                 <div style="border-color: var(--border-color); background-color: var(--bg-card);"
                                     class="rounded-2xl border shadow-sm overflow-x-auto">
-                                    <div class="grid min-w-[720px]" style="grid-template-columns: 110px repeat(5, minmax(0, 1fr));">
+                                    <div class="grid min-w-[720px]"
+                                        style="grid-template-columns: 110px repeat(5, minmax(0, 1fr));">
 
                                         {{-- Header --}}
                                         <div class="p-3 border-b border-r bg-gray-50/80 dark:bg-black/30 flex items-center justify-center font-extrabold text-[11px] text-gray-400 uppercase tracking-wider"
@@ -220,7 +244,8 @@
                                         @foreach ($bloques as $bloque)
                                             <div class="p-3 flex items-center justify-center text-center text-[11px] font-extrabold text-gray-700 dark:text-gray-200 whitespace-nowrap border-r bg-gray-50/30 dark:bg-black/10 {{ !$loop->last ? 'border-b' : '' }}"
                                                 style="border-color: var(--border-color);">
-                                                {{ \Carbon\Carbon::parse($bloque['inicio'])->format('g:i') }} - {{ \Carbon\Carbon::parse($bloque['fin'])->format('g:i') }}
+                                                {{ \Carbon\Carbon::parse($bloque['inicio'])->format('g:i') }} -
+                                                {{ \Carbon\Carbon::parse($bloque['fin'])->format('g:i') }}
                                             </div>
 
                                             @foreach (\App\Models\salud\HorarioConsultorio::DIAS as $diaKey => $diaLabel)
@@ -239,7 +264,8 @@
                                                         ondragleave="handleDragLeave(event)"
                                                         ondrop="handleDrop(event)">
 
-                                                        <div class="empty-placeholder flex flex-col items-center justify-center my-auto py-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 gap-1 pointer-events-none transition-opacity">
+                                                        <div
+                                                            class="empty-placeholder flex flex-col items-center justify-center my-auto py-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 gap-1 pointer-events-none transition-opacity">
                                                             <i class="fas fa-plus-circle text-xs opacity-40"></i>
                                                             <span>Arrastrar aquí</span>
                                                         </div>
@@ -259,23 +285,33 @@
 
                 </div>
 
-                {{-- Botones de Acción --}}
-                <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-                    class="p-4 rounded-2xl border shadow-sm flex items-center justify-between sm:justify-end gap-3">
-                    <a href="{{ route('admin.salud.movimientos.horarios.index', ['consultorio_id' => $consultorioSeleccionado]) }}"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
-                        style="border-color: var(--border-color); color: var(--text-main);">
-                        Cancelar
-                    </a>
-                    <button type="submit"
-                        class="rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition-all">
-                        <i class="fas fa-save text-xs"></i>
-                        <span>Guardar Horarios</span>
-                    </button>
-                </div>
-            </form>
+                {{-- Botón Flotante --}}
+                <div class="fixed bottom-6 right-6 sm:bottom-6 sm:right-8 z-50">
+                    <div
+                        class="flex items-center gap-1.5 p-2 px-4 rounded-full bg-white/90 dark:bg-[#111322]/95 border border-gray-200 dark:border-[#222744] shadow-2xl backdrop-blur-md transition-all">
 
+                        {{-- Botón Cancelar / Volver --}}
+                        <a href="{{ route('admin.salud.movimientos.horarios.index', ['consultorio_id' => $consultorioSeleccionado]) }}"
+                            title="Cancelar y Volver"
+                            class="rd-submit-btn flex items-center gap-2 px-6 py-3 rounded-full bg-gray-100 hover:bg-gray-200/80 text-gray-700 dark:bg-[#1b1e3d] dark:hover:bg-[#252a54] dark:text-[#a5b4fc] font-bold text-xs transition-all active:scale-95 border border-gray-300/70 dark:border-[#2d335c]">
+                            <i class="fas fa-arrow-left text-[12px]"></i>
+                            <span>Cancelar</span>
+                        </a>
+
+                        {{-- Separador Vertical --}}
+                        <div class="h-5 w-[1px] bg-gray-200 dark:bg-[#222744] mx-1"></div>
+
+                        {{-- Botón Circular con Tilde --}}
+                        <button type="submit" title="Confirmar y Guardar"
+                            class="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white dark:bg-[#0a2720] dark:hover:bg-[#0f3d32] border border-emerald-600 dark:border-[#135343] dark:text-[#34d399] flex items-center justify-center transition-all active:scale-90 shadow-md">
+                            <i class="fas fa-check text-[16px]"></i>
+                        </button>
+                    </div>
+                </div>
         </div>
+        </form>
+
+    </div>
     </div>
 
     <script>
