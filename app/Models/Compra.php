@@ -6,6 +6,7 @@ use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Traits\FiltroPorSede;
 
 class Compra extends Model
 {

@@ -1,5 +1,4 @@
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
-import Alpine from 'alpinejs';
 import Collapse from '@alpinejs/collapse'
 
 Alpine.plugin(Collapse)
