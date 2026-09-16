@@ -17,7 +17,7 @@
             color: #1a1a1a;
         }
 
-        /* ===================== HEADER INSTITUCIONAL (CORREGIDO) ===================== */
+        /* ===================== HEADER ===================== */
         .institutional-header {
             text-align: center;
             margin-bottom: 5px;
@@ -25,10 +25,9 @@
         }
 
         .header-image {
-            max-height: 110px; 
+            max-height: 110px;
             object-fit: contain;
         }
-
 
         /* ===================== TÍTULO DEL DOCUMENTO ===================== */
         .document-header {
@@ -96,14 +95,13 @@
 
         .info-cell {
             display: table-cell;
-            padding: 11px 16px;
+            padding: 6px 16px;
             font-size: 11px;
             width: 50%;
             vertical-align: top;
             line-height: 1.7;
             color: #222;
         }
-
 
         .info-cell strong.label {
             color: #111;
@@ -150,7 +148,7 @@
         /* ===================== MEDICAMENTOS ===================== */
         .medication-list {
             width: 100%;
-            margin: 16px 0 40px 0;
+            margin: 16px 0 120px 0;
         }
 
         .medication-item {
@@ -161,26 +159,6 @@
             border-bottom: 1px dashed #999;
         }
 
-        .med-number {
-            display: table-cell;
-            width: 26px;
-            vertical-align: top;
-            padding-top: 1px;
-        }
-
-        .med-number span {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            line-height: 17px;
-            text-align: center;
-            border: 1.3px solid #111;
-            border-radius: 50%;
-            color: #111;
-            font-size: 10px;
-            font-weight: bold;
-        }
-
         .med-body {
             display: table-cell;
             vertical-align: top;
@@ -188,7 +166,7 @@
 
         .med-name {
             font-weight: bold;
-            font-size: 13.5px;
+            font-size: 12px;
             margin-bottom: 4px;
             color: #111;
         }
@@ -196,7 +174,6 @@
         .med-name .med-qty {
             font-weight: normal;
             font-size: 11px;
-            color: #555;
         }
 
         .med-instructions {
@@ -226,58 +203,44 @@
             border: 1px dashed #999;
         }
 
-        /* ===================== FIRMA ===================== */
+        /* ===================== FIRMA  ===================== */
         .signature-area {
-            margin-top: 55px;
-            display: table;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
             width: 100%;
+            text-align: center;
             page-break-inside: avoid;
         }
 
-        .signature-cell {
-            display: table-cell;
-            width: 50%;
-            text-align: center;
-            vertical-align: bottom;
-        }
-
         .signature-line {
-            width: 210px;
+            width: 250px;
             border-top: 1px solid #111;
             margin: 0 auto 6px auto;
         }
 
         .signature-text {
-            font-size: 10.5px;
+            font-size: 9px;
             color: #222;
             line-height: 1.5;
         }
 
         .signature-text strong {
             color: #111;
-            font-size: 11.5px;
+            font-size: 10px;
         }
 
-        .stamp-hint {
-            display: inline-block;
-            margin-top: 8px;
-            padding: 3px 10px;
-            border: 1px dashed #999;
-            font-size: 8.5px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
 
         /* ===================== FOOTER ===================== */
         .footer {
             position: fixed;
-            bottom: -25px;
+            bottom: -40px;
             left: 0px;
             right: 0px;
-            height: 40px;
+            height: 30px;
             text-align: center;
-            font-size: 8.5px;
+            font-size: 8px;
             color: #666;
             border-top: 1px solid #ccc;
             padding-top: 8px;
@@ -297,10 +260,9 @@
 <body>
     <!-- Header Institucional -->
     <div class="institutional-header">
-        <!-- El atributo width="100%" asegura que se extienda de margen a margen -->
-        <img src="{{ public_path('img/encabezado.png') }}" class="header-image" width="100%" alt="Encabezado Institucional">
+        <img src="{{ public_path('img/CintilloUPTP.png') }}" class="header-image" width="100%"
+            alt="Encabezado Institucional">
     </div>
-
 
     <!-- Título del Documento -->
     <div class="document-header">
@@ -348,7 +310,6 @@
         </div>
     </div>
 
-    <!-- Símbolo Rx -->
     <div class="rx-header">
         <div class="rx-header-right">
             <h2>Prescripción</h2>
@@ -360,11 +321,10 @@
         @if ($consulta->receta && $consulta->receta->detalles->count() > 0)
             @foreach ($consulta->receta->detalles as $detalle)
                 <div class="medication-item">
-                    <div class="med-number"><span>{{ $loop->iteration }}</span></div>
                     <div class="med-body">
                         <div class="med-name">
-                            {{ optional($detalle->producto)->nombre ?? 'Producto no especificado' }}
-                            <span class="med-qty">&mdash; {{ floatval($detalle->cantidad) }}
+                            &mdash; {{ optional($detalle->producto)->nombre ?? 'Producto no especificado' }}
+                            <span class="med-qty">- {{ floatval($detalle->cantidad) }}
                                 {{ optional($detalle->unidad)->nombre ?? 'Und' }}</span>
                         </div>
                         <div class="med-instructions">
@@ -385,22 +345,18 @@
 
     <!-- Firma del Médico -->
     <div class="signature-area">
-        <div class="signature-cell"></div>
-        <div class="signature-cell">
-            <div class="signature-line"></div>
-            <div class="signature-text">
-                <strong>Dr(a). {{ $consulta->medico->nombre_persona }}
-                    {{ $consulta->medico->apellido_persona }}</strong><br>
-                Firma y sello médico
-            </div>
-            <div class="stamp-hint">Sello</div>
+        <div class="signature-line"></div>
+        <div class="signature-text">
+            <strong>Dr(a). {{ $consulta->medico->nombre_persona }}
+                {{ $consulta->medico->apellido_persona }}</strong><br>
+            Firma y sello médico
         </div>
     </div>
 
-    <!-- Footer Institucional -->
+    <!-- Footer -->
     <div class="footer">
-        <p><span class="footer-brand">Servicio Médico Universitario</span> &middot; UPTP Juan Jesús Montilla</p>
-        <p>Sistema de Bienestar Estudiantil | Documento generado automáticamente</p>
+        <p><span class="footer-brand">Servicio Médico Universitario</span> &middot; UPTP Juan Jesús Montilla Sistema de
+            Bienestar Estudiantil | Documento generado automáticamente</p>
     </div>
 
     <!-- Script de Paginación -->
