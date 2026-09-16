@@ -596,9 +596,8 @@ Table movimiento_inventarios {
 Table compras {
   id           bigint        [pk, increment]
   proveedor_id bigint        [not null, ref: > proveedors.id]
-  sede_id  bigint        [not null, ref: > sede.id]
   creado_por   bigint        [not null, ref: > usuario.id_usuario]
-  modulo       varchar(20)   [not null, note: 'enum: comedor | salud | deporte']
+  modulo_id    bigint        [not null, ref: > modulos.id]
   fecha        timestamp     [not null, default: `current_timestamp()`]
   total        decimal(12,2) [not null]
   estado       varchar(20)   [not null, note: 'enum: pendiente | recibida | anulada']
