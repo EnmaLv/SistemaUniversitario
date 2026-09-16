@@ -9,9 +9,12 @@ use App\Models\Sede;
 use App\Models\Unidad;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\FiltroPorSede;
 
 class Dispensacion extends Model
 {
+    use FiltroPorSede;
+
     protected $table = 'dispensacions';
 
     protected $fillable = [
@@ -35,12 +38,12 @@ class Dispensacion extends Model
 
     public function receta()
     {
-        return $this->belongsTo(RecetaMedica::class, 'receta_medica_id');
+        return $this->belongsTo(RecetasMedica::class, 'receta_medica_id');
     }
 
     public function detalle()
     {
-        return $this->belongsTo(DetalleRecetaMedica::class, 'detalle_receta_medica_id');
+        return $this->belongsTo(DetalleRecetasMedica::class, 'detalle_receta_medica_id');
     }
 
     public function producto()

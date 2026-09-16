@@ -332,13 +332,12 @@ class ConsultaController extends Controller
         ]);
 
         $creados = 0;
-        $sede = 1; // Sede Acarigua por defecto
 
         // Obtenemos los items
         $itemsRequest = $request->input('items', []);
 
         try {
-            DB::transaction(function () use ($itemsRequest, $consulta, $receta, &$creados, $sede) {
+            DB::transaction(function () use ($itemsRequest, $consulta, $receta, &$creados) {
                 $detallesActuales = DetalleRecetasMedica::where('receta_id', $receta->id)->get();
 
                 foreach ($detallesActuales as $detalle) {
@@ -360,7 +359,6 @@ class ConsultaController extends Controller
                             'lote_id'                  => $itemData['lote_id'] ?? null,
                             'cantidad'                 => $cantidadAEntregar,
                             'unidad_id'                => $detalle->unidad_id,
-                            'sede_id'                  => $sede,
                             'usuario_id'               => auth()->id(),
                             'fecha'                    => now()->toDateString(),
                             'observaciones'            => $itemData['observaciones'] ?? null,

@@ -9,7 +9,7 @@ use App\Models\salud\RecetasMedica;
 use Illuminate\Database\Eloquent\Model;
 
 class Consulta extends Model
-{
+{    
     protected $table = 'consultas';
 
     protected $fillable = [
