@@ -33,6 +33,7 @@ class CompraController extends Controller
     public function create()
     {
         $datos = (new Compra())->getDatosFormulario();
+        $datos['modulos'] = $datos['modulos']->whereIn('nombre', ['Comedor', 'Salud', 'Deporte']);
 
         return view('admin.movimientos.compras.create', $datos);
     }
@@ -44,6 +45,7 @@ class CompraController extends Controller
         }, 'proveedor'])->findOrFail($id);
 
         $datos = $compra->getDatosFormulario();
+        $datos['modulos'] = $datos['modulos']->whereIn('nombre', ['Comedor', 'Salud', 'Deporte']);
 
         return view('admin.movimientos.compras.edit', array_merge($datos, [
             'compra' => $compra

@@ -18,14 +18,21 @@
                     <i class="fas fa-arrow-left text-[10px]"></i> Volver
                 </a>
             </div>
+
+            @php
+                $pasoActual = match (null) {
+                    'Pendiente' => 2,
+                    'Enviado al proveedor' => 3,
+                    default => 1,
+                };
+            @endphp
+            <x-compra-stepper :step="$pasoActual" />
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm p-4 sm:p-6 mb-8">
                 <form action="{{ route('admin.movimientos.compras.store') }}" method="POST"
                     class="rd-prevent-double-submit">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-
-                        {{-- Proveedor --}}
                         <div class="md:col-span-3">
                             <div class="flex justify-between items-end mb-1.5">
                                 <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400">
@@ -38,7 +45,8 @@
                             </div>
                             <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                                 style="border-color: var(--border-color);">
-                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
                                     style="border-color: var(--border-color);">
                                     <i class="fas fa-user-tie text-sm"></i>
                                 </span>
@@ -55,18 +63,19 @@
                                 </select>
                             </div>
                             @error('proveedor_id')
-                                <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                                <p class="mt-1.5 text-xs font-semibold text-rose-500">
+                                    {{ 'El campo proveedor es obligatorio' }}</p>
                             @enderror
                         </div>
-
-                        {{-- Módulo / Área --}}
                         <div class="md:col-span-3">
-                            <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
+                            <label
+                                class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
                                 Módulo / Área
                             </label>
                             <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                                 style="border-color: var(--border-color);">
-                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
                                     style="border-color: var(--border-color);">
                                     <i class="fas fa-cubes text-sm"></i>
                                 </span>
@@ -87,14 +96,15 @@
                             @enderror
                         </div>
 
-                        {{-- Fecha de la Requisición --}}
                         <div class="md:col-span-3">
-                            <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
+                            <label
+                                class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
                                 Fecha Requisición
                             </label>
                             <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
                                 style="border-color: var(--border-color);">
-                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
                                     style="border-color: var(--border-color);">
                                     <i class="fas fa-calendar-alt text-sm"></i>
                                 </span>
@@ -108,19 +118,20 @@
                             @enderror
                         </div>
 
-                        {{-- Observaciones --}}
                         <div class="md:col-span-3">
-                            <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
+                            <label
+                                class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
                                 Observaciones
                             </label>
                             <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                                 style="border-color: var(--border-color);">
-                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
                                     style="border-color: var(--border-color);">
                                     <i class="fas fa-sticky-note text-sm"></i>
                                 </span>
-                                <input type="text" id="observaciones" name="observaciones" placeholder="Ingrese observaciones"
-                                    value="{{ old('observaciones') }}"
+                                <input type="text" id="observaciones" name="observaciones"
+                                    placeholder="Ingrese observaciones" value="{{ old('observaciones') }}"
                                     style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                     class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                             </div>
@@ -128,10 +139,8 @@
                                 <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                             @enderror
                         </div>
-
                     </div>
 
-                    {{-- Botones de Acción --}}
                     <div class="mt-8 pt-6 border-t flex items-center justify-end gap-3"
                         style="border-color: var(--border-color);">
                         <a href="{{ url('admin/movimientos/compras') }}"

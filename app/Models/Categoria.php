@@ -155,4 +155,9 @@ class Categoria extends Model
             ->orderBy('nombre', 'asc')
             ->get();
     }
+
+    public function tipoProducto()
+    {
+        return $this->belongsTo(TipoProducto::class, 'tipo_producto_id');
+    }
 }
