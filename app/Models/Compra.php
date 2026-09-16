@@ -108,6 +108,7 @@ class Compra extends Model
 
         return DB::table('compras')->insertGetId([
             'proveedor_id'  => $data['proveedor_id'],
+            'modulos'        => $data['modulo_id'],
             'fecha'         => $data['fecha'],
             'observaciones' => $data['observaciones'] ?? null,
             'total'         => 0,
