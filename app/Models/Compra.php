@@ -6,7 +6,6 @@ use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Traits\FiltroPorSede;
 
 class Compra extends Model
 {
@@ -16,6 +15,7 @@ class Compra extends Model
     protected $fillable = [
         'proveedor_id',
         'fecha',
+        'modulo_id',
         'total',
         'estado',
         'observaciones',
@@ -31,6 +31,11 @@ class Compra extends Model
         return $this->belongsTo(Proveedor::class);
     }
 
+    public function modulo()
+    {
+        return $this->belongsTo(Modulo::class);
+    }
+
     public function detalleCompras()
     {
         return $this->hasMany(DetalleCompra::class);
@@ -42,6 +47,12 @@ class Compra extends Model
             'proveedores' => DB::table('proveedors')
                 ->select('id', 'nombre', 'email')
                 ->where('estado', 1)
+                ->orderBy('nombre')
+                ->get(),
+
+            'modulos' => DB::table('modulos')
+                ->select('id', 'nombre')
+                ->where('activo', 1)
                 ->orderBy('nombre')
                 ->get(),
 
@@ -97,6 +108,7 @@ class Compra extends Model
 
         return DB::table('compras')->insertGetId([
             'proveedor_id'  => $data['proveedor_id'],
+            'modulo_id'     => $data['modulo_id'],
             'fecha'         => $data['fecha'],
             'observaciones' => $data['observaciones'] ?? null,
             'total'         => 0,

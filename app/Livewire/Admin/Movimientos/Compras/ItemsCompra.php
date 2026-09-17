@@ -32,8 +32,20 @@ class ItemsCompra extends Component
     public function mount(Compra $compra)
     {
         $this->compra = $compra;
-        $this->productos = Producto::all()->where('estado', 1);
+        $this->obtenerProductosPorModulo();
         $this->cargarDatos();
+    }
+
+    public function obtenerProductosPorModulo()
+    {
+        $moduloId = $this->compra->modulo_id;
+
+        $this->productos = Producto::where('estado', 1)
+            ->whereHas('categoria.tipoProducto', function ($q) use ($moduloId) {
+                $q->where('modulo_id', $moduloId);
+            })
+            ->orderBy('nombre')
+            ->get();
     }
 
     public function cargarDatos()
@@ -160,9 +172,8 @@ class ItemsCompra extends Component
         $this->dispatch(
             'mostrar-alerta',
             icono: 'success',
-            mensaje: 'Producto agregado Exitosamente'
+            mensaje: 'Producto agregado exitosamente'
         );
-        $this->cantidad = $this->cantidad;
     }
 
     public function eliminarItem($detalleId)
@@ -173,7 +184,9 @@ class ItemsCompra extends Component
 
             $lote_id = $detalle->lote_id;
             $lote = Lote::find($lote_id);
-            $lote->delete();
+            if ($lote) {
+                $lote->delete();
+            }
             $detalle->delete();
 
             $this->compra->total = $this->compra->detalleCompras->sum('subtotal');
@@ -184,7 +197,7 @@ class ItemsCompra extends Component
             $this->dispatch(
                 'mostrar-alerta',
                 icono: 'success',
-                mensaje: 'Producto eliminado Exitosamente'
+                mensaje: 'Producto eliminado exitosamente'
             );
         } catch (\Exception $e) {
             DB::rollBack();

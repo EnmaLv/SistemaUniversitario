@@ -34,11 +34,10 @@ class SolicitudBecaController extends Controller
     }
 
     /**
-     * Muestra el formulario para registrar una nueva solicitud.
+     * Muestra el formulario para registrar una nueva solicitud (Vista Admin).
      */
     public function create()
     {
-        // Solo jornadas activas actualmente vigentes
         $hoy = now()->toDateString();
         $jornadas = JornadaBeca::where('activa', 1)
             ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
@@ -46,7 +45,6 @@ class SolicitudBecaController extends Controller
             ->with(['beneficio', 'lapso'])
             ->get();
 
-        // Estudiantes registrados en el sistema (perfil id 2 = estudiante/paciente)
         $estudiantes = Persona::where('id_perfil', 2)
             ->orderBy('nombre_persona')
             ->orderBy('apellido_persona')
@@ -56,12 +54,32 @@ class SolicitudBecaController extends Controller
     }
 
     /**
+     * Muestra el formulario de solicitud exclusivo para el estudiante (Becario).
+     */
+    public function solicitarEstudiante()
+    {
+        $hoy = now()->toDateString();
+        $jornadas = JornadaBeca::where('activa', 1)
+            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+            ->with(['beneficio', 'lapso'])
+            ->get();
+
+        return view('admin.becas.solicitudes.create_estudiante', compact('jornadas'));
+    }
+
+    /**
      * Almacena una nueva solicitud.
      */
     public function store(GuardarSolicitudRequest $request)
     {
         try {
             $this->solicitudService->crearSolicitud($request->validated());
+            if(auth()->user()->tieneRol(['paciente', 'becario', 'estudiante'])){
+                return redirect()
+                ->route('home')
+                ->with('success', 'Solicitud de beca registrada exitosamente.');
+            }
             return redirect()
                 ->route('admin.becas.solicitudes.index')
                 ->with('success', 'Solicitud de beca registrada exitosamente.');

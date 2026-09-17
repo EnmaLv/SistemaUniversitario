@@ -1,79 +1,59 @@
-@extends('adminlte::page')
-
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background:#ffffff;
-            border-radius:16px;
-            border:1px solid #e5e7eb;
-            box-shadow:0 4px 14px rgba(0,0,0,0.06);
-        ">
-
-        {{-- Título --}}
-        <div>
-            <h1 class="m-0" style="font-size:1.5rem; color:#0f172a; font-weight:700;">
-                Crear Nueva Requisicion
-            </h1>
-
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-
-        {{-- Fecha + Imagen --}}
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small style="font-size:0.75rem; color:#94a3b8;">Hoy</small>
-                <div style="font-weight:600; font-size:0.95rem; color:#0f172a;">
-                    {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            @include('components.alert')
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                        Crear Nueva Requisición
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
                 </div>
+                <a href="{{ url('admin/movimientos/compras') }}"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                    style="border-color: var(--border-color); color: var(--text-main);">
+                    <i class="fas fa-arrow-left text-[10px]"></i> Volver
+                </a>
             </div>
 
-            <div
-                style="
-                width:46px;
-                height:46px;
-                border-radius:12px;
-                overflow:hidden;
-                box-shadow:0 4px 12px rgba(15,23,42,0.08);
-            ">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%; height:100%; object-fit:cover;">
-            </div>
-        </div>
-
-    </div>
-@stop
-
-
-@section('content')
-    <div class="row">
-        <div class="col-md-12 m-auto">
-
-            <div class="rd-card p-4">
-
-                {{-- Header interno --}}
-                <div class="rd-card-header mb-3">
-                    <h3 class="rd-title-sm">Datos de la Requisicion</h3>
-
-                    <a href="{{ url('admin/movimientos/compras') }}" class="rd-btn rd-btn-default">
-                        <i class="fas fa-arrow-left"></i> Volver
-                    </a>
-                </div>
-
+            @php
+                $pasoActual = match (null) {
+                    'Pendiente' => 2,
+                    'Enviado al proveedor' => 3,
+                    default => 1,
+                };
+            @endphp
+            <x-compra-stepper :step="$pasoActual" />
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="rounded-2xl border shadow-sm p-4 sm:p-6 mb-8">
                 <form action="{{ route('admin.movimientos.compras.store') }}" method="POST"
                     class="rd-prevent-double-submit">
                     @csrf
-
-                    <div class="row">
-
-                        {{-- Proveedor --}}
-                        <div class="col-md-4 mb-3">
-                            <label class="rd-label">Proveedor</label>
-                            <div class="rd-input-group">
-                                <span><i class="fas fa-user-tie"></i></span>
-                                <select name="proveedor_id" id="proveedor_id" class="form-control rd-input">
-                                    <option value="">Seleccione un proveedor</option>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-3">
+                            <div class="flex justify-between items-end mb-1.5">
+                                <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400">
+                                    Proveedor
+                                </label>
+                                <a href="{{ route('admin.maestros.proveedores.create', ['from' => url()->current()]) }}"
+                                    class="text-[10px] font-bold text-rose-700 hover:text-rose-800 transition-colors">
+                                    + Nuevo
+                                </a>
+                            </div>
+                            <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
+                                style="border-color: var(--border-color);">
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    style="border-color: var(--border-color);">
+                                    <i class="fas fa-user-tie text-sm"></i>
+                                </span>
+                                <select name="proveedor_id" id="proveedor_id"
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
+                                    <option value="" selected disabled>Seleccione proveedor</option>
                                     @foreach ($proveedores as $proveedor)
                                         <option value="{{ $proveedor->id }}"
                                             {{ old('proveedor_id', request('proveedor_id')) == $proveedor->id ? 'selected' : '' }}>
@@ -83,73 +63,99 @@
                                 </select>
                             </div>
                             @error('proveedor_id')
-                                <div class="rd-error">Este campo es obligatorio.</div>
+                                <p class="mt-1.5 text-xs font-semibold text-rose-500">
+                                    {{ 'El campo proveedor es obligatorio' }}</p>
                             @enderror
-                            <div class="mt-2 pt-2" style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
-                                <small style="color: #64748b; font-size: 0.85rem;">
-                                    ¿No encuentras lo que buscas?
-                                    <a style="color: #a84348; text-decoration: none; font-weight: 600; transition: color 0.2s;"
-                                        href="{{ route('admin.maestros.proveedores.create', [
-                                            'from' => url()->current(),
-                                        ]) }}">
-                                        Créalo aquí
-                                    </a>
-                                </small>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label
+                                class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
+                                Módulo / Área
+                            </label>
+                            <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
+                                style="border-color: var(--border-color);">
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    style="border-color: var(--border-color);">
+                                    <i class="fas fa-cubes text-sm"></i>
+                                </span>
+                                <select name="modulo_id" id="modulo_id"
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
+                                    <option value="" selected disabled>Seleccione módulo</option>
+                                    @foreach ($modulos as $modulo)
+                                        <option value="{{ $modulo->id }}"
+                                            {{ old('modulo_id') == $modulo->id ? 'selected' : '' }}>
+                                            {{ $modulo->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
+                            @error('modulo_id')
+                                <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                            @enderror
                         </div>
 
-                        {{-- Fecha --}}
-                        <div class="col-md-4 mb-3">
-                            <label class="rd-label">Fecha de la Requisicion</label>
-                            <div class="rd-input-group">
-                                <span><i class="fas fa-calendar-alt"></i></span>
-                                <input type="datetime-local" id="fecha" name="fecha" class="form-control rd-input"
-                                    value="{{ \Carbon\Carbon::now('America/Caracas')->format('Y-m-d\TH:i') }}" readonly>
+                        <div class="md:col-span-3">
+                            <label
+                                class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
+                                Fecha Requisición
+                            </label>
+                            <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
+                                style="border-color: var(--border-color);">
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    style="border-color: var(--border-color);">
+                                    <i class="fas fa-calendar-alt text-sm"></i>
+                                </span>
+                                <input type="datetime-local" id="fecha" name="fecha"
+                                    value="{{ \Carbon\Carbon::now('America/Caracas')->format('Y-m-d\TH:i') }}" readonly
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none cursor-not-allowed">
                             </div>
                             @error('fecha')
-                                <div class="rd-error">Este campo es obligatorio.</div>
+                                <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        {{-- Observaciones --}}
-                        <div class="col-md-4 mb-3">
-                            <label class="rd-label">Observaciones</label>
-                            <div class="rd-input-group">
-                                <span><i class="fas fa-sticky-note"></i></span>
+                        <div class="md:col-span-3">
+                            <label
+                                class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
+                                Observaciones
+                            </label>
+                            <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
+                                style="border-color: var(--border-color);">
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    style="border-color: var(--border-color);">
+                                    <i class="fas fa-sticky-note text-sm"></i>
+                                </span>
                                 <input type="text" id="observaciones" name="observaciones"
-                                    placeholder="Ingrese observaciones" class="form-control rd-input"
-                                    value="{{ old('observaciones') }}">
+                                    placeholder="Ingrese observaciones" value="{{ old('observaciones') }}"
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                             </div>
                             @error('observaciones')
-                                <div class="rd-error">Este campo es obligatorio.</div>
+                                <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                             @enderror
                         </div>
-
                     </div>
 
-                    <hr>
-
-                    <div class="d-flex justify-content-end" style="gap:10px;">
-                        <a href="{{ url('admin/movimientos/compras') }}" class="rd-btn rd-btn-default">
+                    <div class="mt-8 pt-6 border-t flex items-center justify-end gap-3"
+                        style="border-color: var(--border-color);">
+                        <a href="{{ url('admin/movimientos/compras') }}"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                            style="border-color: var(--border-color); color: var(--text-main);">
                             Cancelar
                         </a>
 
-                        <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn" @disabled($proveedores->isEmpty())
-                            style="@if ($proveedores->isEmpty()) opacity: 0.5!important; cursor: not-allowed; @endif">
-                            Crear Requisicion
+                        <button type="submit" @disabled($proveedores->isEmpty())
+                            class="rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-white font-bold text-sm shadow-md active:scale-95 transition-all bg-red-800 hover:bg-red-900 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-plus text-xs"></i> Crear Requisición
                         </button>
                     </div>
-
                 </form>
-
             </div>
-
         </div>
     </div>
-@stop
-
-
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
-@stop
+</x-app-layout>
