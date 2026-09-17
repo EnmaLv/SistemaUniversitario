@@ -421,10 +421,7 @@
 
     @stack('scripts')
 
-    <form id="form-actualizar-tasa" action="{{ route('productos.actualizar.tasa') }}" method="POST"
-        style="display:none;">
-        @csrf
-    </form>
+    
 </body>
 
 </html>

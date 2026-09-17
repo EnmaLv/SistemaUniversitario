@@ -7,6 +7,7 @@
 @endphp
 
 <x-app-layout>
+    
     <x-slot name="header">
         @include('components.alert')
         @if (!auth()->user()->tieneRol('paciente'))
