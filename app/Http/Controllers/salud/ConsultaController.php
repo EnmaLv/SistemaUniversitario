@@ -30,8 +30,7 @@ class ConsultaController extends Controller
             $request->input('buscar'),
             $request->input('consultorio_id'),
             $request->input('medico_id'),
-            $request->input('fecha_desde'),
-            $request->input('fecha_hasta'),
+            $request->input('rango_fechas'),
             $request->input('estado')
         );
 

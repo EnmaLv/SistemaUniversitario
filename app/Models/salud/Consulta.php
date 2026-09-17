@@ -9,7 +9,7 @@ use App\Models\salud\RecetasMedica;
 use Illuminate\Database\Eloquent\Model;
 
 class Consulta extends Model
-{    
+{
     protected $table = 'consultas';
 
     protected $fillable = [
@@ -53,9 +53,6 @@ class Consulta extends Model
         return $this->belongsTo(Usuario::class, 'creado_por', 'id_usuario');
     }
 
-    /**
-     * Una consulta tiene una única receta médica (paso 2).
-     */
     public function receta()
     {
         return $this->hasOne(RecetasMedica::class, 'consulta_id');
@@ -87,15 +84,14 @@ class Consulta extends Model
         ?string $buscar = null,
         ?int $consultorioId = null,
         ?int $medicoId = null,
-        ?string $fechaDesde = null,
-        ?string $fechaHasta = null,
+        ?string $rangoFechas = null, 
         ?string $estado = null
     ) {
         $query = self::with(['paciente', 'medico', 'consultorio', 'receta.detalles.dispensaciones'])
             ->latest('fecha')
             ->latest('id');
 
-        // Búsqueda por nombre, apellido o cédula del paciente
+        // Búsqueda
         if ($buscar) {
             $query->whereHas('paciente', function ($q) use ($buscar) {
                 $q->where('nombre_persona', 'like', "%{$buscar}%")
@@ -104,26 +100,30 @@ class Consulta extends Model
             });
         }
 
-        // Filtro por consultorio
+        // Consultorio
         if ($consultorioId) {
             $query->where('consultorio_id', $consultorioId);
         }
 
-        // Filtro por médico
+        // Médico
         if ($medicoId) {
             $query->where('medico_id', $medicoId);
         }
 
-        // Filtro por rango de fechas (Desde / Hasta)
-        if ($fechaDesde && $fechaHasta) {
-            $query->whereBetween('fecha', [$fechaDesde, $fechaHasta]);
-        } elseif ($fechaDesde) {
-            $query->whereDate('fecha', '>=', $fechaDesde);
-        } elseif ($fechaHasta) {
-            $query->whereDate('fecha', '<=', $fechaHasta);
+        //LÓGICA DE RANGO DE FECHAS
+        if ($rangoFechas) {
+            $fechas = explode(' to ', $rangoFechas);
+
+            if (count($fechas) === 2) {
+                // Seleccionó dos fechas (Rango completo)
+                $query->whereBetween('fecha', [$fechas[0], $fechas[1]]);
+            } else {
+                // Seleccionó una sola fecha (hizo doble clic en el mismo día)
+                $query->whereDate('fecha', $fechas[0]);
+            }
         }
 
-        // Filtro por estado del proceso / wizard
+        // Estado
         if ($estado) {
             if ($estado === 'pendiente') {
                 $query->where(function ($sub) {

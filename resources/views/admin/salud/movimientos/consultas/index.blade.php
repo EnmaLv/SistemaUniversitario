@@ -56,50 +56,49 @@
                     </div>
                 </div>
 
+                {{-- Estilos y Librerías de Flatpickr --}}
+                <!-- Tema Claro Base -->
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+                <!-- Tema Oscuro (Deshabilitado por defecto) -->
+                <link rel="stylesheet" id="flatpickr-dark-theme"
+                    href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css" disabled>
+
+                <!-- Scripts de Flatpickr -->
+                <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+                <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
                 {{-- Filtros colapsables --}}
                 <div id="filters" style="background-color: var(--bg-card); border-color: var(--border-color);"
-                    class="{{ request('fecha') || request('medico_id') || request('consultorio_id') || request('estado') ? '' : 'hidden' }} p-4 rounded-2xl border shadow-sm mb-3">
+                    class="{{ request('rango_fechas') || request('medico_id') || request('consultorio_id') || request('estado') ? '' : 'hidden' }} p-4 rounded-2xl border shadow-sm mb-3">
                     <form action="{{ route('admin.salud.movimientos.consultas.index') }}" method="GET"
                         class="flex flex-col gap-4">
                         <input type="hidden" name="buscar" value="{{ request('buscar') }}">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-                            {{-- Fecha Desde --}}
+                            {{-- Rango de Fechas --}}
                             <div>
                                 <label
                                     class="block text-[13px] font-black uppercase tracking-wider mb-2 ml-1 text-gray-500 dark:text-gray-400">
-                                    Fecha Desde
+                                    Fecha de Consulta
                                 </label>
                                 <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                                     style="border-color: var(--border-color);">
-                                    <span
-                                        class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    <select id="atajos_fecha"
+                                        class="px-2 py-2 text-xs font-medium border-r bg-gray-50 dark:bg-black/20 text-gray-600 dark:text-gray-400 focus:outline-none cursor-pointer"
                                         style="border-color: var(--border-color);">
-                                        <i class="fas fa-calendar-alt text-xs"></i>
-                                    </span>
-                                    <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
+                                        <option value="">Fechas...</option>
+                                        <option value="hoy">Hoy</option>
+                                        <option value="semana">Últ. 7 días</option>
+                                        <option value="quincena">Últ. 15 días</option>
+                                        <option value="mes">Último mes</option>
+                                    </select>
+                                    {{-- Campo input único --}}
+                                    <input type="text" name="rango_fechas" id="rango_fechas"
+                                        value="{{ request('rango_fechas') }}" placeholder="Seleccione fecha(s)..."
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
-                                        class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
-                                </div>
-                            </div>
-
-                            {{-- Fecha Hasta --}}
-                            <div>
-                                <label
-                                    class="block text-[13px] font-black uppercase tracking-wider mb-2 ml-1 text-gray-500 dark:text-gray-400">
-                                    Fecha Hasta
-                                </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
-                                    style="border-color: var(--border-color);">
-                                    <span
-                                        class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
-                                        style="border-color: var(--border-color);">
-                                        <i class="fas fa-calendar-alt text-xs"></i>
-                                    </span>
-                                    <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
-                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
-                                        class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
+                                        class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all cursor-pointer">
                                 </div>
                             </div>
 
@@ -216,26 +215,26 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
-                                @forelse ($consultas as $consulta)
-                                    <tr class="hover:bg-gray-50/60 dark:hover:bg-white/[0.02] transition-colors">
+                                @forelse ($consultas as $data)
+                                    <x-table-row :id="$data->id">
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ optional($consulta->fecha)->format('d/m/Y') }}
+                                            {{ optional($data->fecha)->format('d/m/Y') }}
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                             style="color: var(--text-main);">
-                                            {{ trim(optional($consulta->paciente)->nombre_persona . ' ' . optional($consulta->paciente)->apellido_persona) ?: '—' }}
+                                            {{ trim(optional($data->paciente)->nombre_persona . ' ' . optional($data->paciente)->apellido_persona) ?: '—' }}
                                         </td>
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ trim(optional($consulta->medico)->nombre_persona . ' ' . optional($consulta->medico)->apellido_persona) ?: '—' }}
+                                            {{ trim(optional($data->medico)->nombre_persona . ' ' . optional($data->medico)->apellido_persona) ?: '—' }}
                                         </td>
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ optional($consulta->consultorio)->nombre ?? '—' }}
+                                            {{ optional($data->consultorio)->nombre ?? '—' }}
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            @php $paso = $consulta->paso_actual; @endphp
+                                            @php $paso = $data->paso_actual; @endphp
                                             @if ($paso === 'receta')
                                                 <span
                                                     class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
@@ -248,25 +247,15 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            @if ($paso === 'receta' || $paso === 'dispensacion')
-                                                <a href="{{ route('admin.salud.movimientos.consultas.dispensacion', $consulta) }}"
-                                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors">
-                                                    <i class="fas fa-arrow-right"></i> Pendiente
-                                                </a>
-                                            @else
-                                                <a href="{{ route('admin.salud.movimientos.consultas.show', $consulta) }}"
-                                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/30 transition-colors">
-                                                    <i class="fas fa-eye"></i> Ver
-                                                </a>
 
-                                                <a href="{{ route('admin.salud.movimientos.consultas.recipe_pdf', $consulta) }}"
-                                                    target="_blank" class="btn btn-primary">
-                                                    Imprimir Récipe
-                                                </a>
-                                            @endif
-                                        </td>
-                                    </tr>
+                                        <x-table-actions :id="$data->id" :base-url="route('admin.salud.movimientos.consultas.index')" :show="!in_array($paso, ['receta', 'dispensacion'])"
+                                            :edit="false" :toggle="false" :pending-url="in_array($paso, ['receta', 'dispensacion'])
+                                                ? route('admin.salud.movimientos.consultas.dispensacion', $data)
+                                                : null" :pdf-url="!in_array($paso, ['receta', 'dispensacion'])
+                                                ? route('admin.salud.movimientos.consultas.recipe_pdf', $data)
+                                                : null"
+                                            pdf-title="Imprimir Récipe" />
+                                    </x-table-row>
                                 @empty
                                     <tr>
                                         <td colspan="6"
@@ -292,14 +281,67 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                // Toggle del acordeón (el que ya tenías)
                 const btnToggle = document.getElementById('filtersToggle');
                 const filtersDiv = document.getElementById('filters');
-
                 if (btnToggle && filtersDiv) {
                     btnToggle.addEventListener('click', function() {
                         filtersDiv.classList.toggle('hidden');
                     });
                 }
+
+                // Inicializar Flatpickr
+                const fp = flatpickr("#rango_fechas", {
+                    mode: "range",
+                    dateFormat: "Y-m-d",
+                    locale: "es",
+                });
+
+                // Atajos (Hoy, Semana, Quincena, Mes)
+                const selectAtajos = document.getElementById('atajos_fecha');
+                selectAtajos.addEventListener('change', function() {
+                    const val = this.value;
+                    const hoy = new Date();
+                    let inicio = new Date();
+
+                    if (val === 'hoy') {
+                        fp.setDate([hoy, hoy]);
+                    } else if (val === 'semana') {
+                        inicio.setDate(hoy.getDate() - 6); // Hace 7 días
+                        fp.setDate([inicio, hoy]);
+                    } else if (val === 'quincena') {
+                        inicio.setDate(hoy.getDate() - 14); // Hace 15 días
+                        fp.setDate([inicio, hoy]);
+                    } else if (val === 'mes') {
+                        inicio.setMonth(hoy.getMonth() - 1); // Hace 1 mes
+                        fp.setDate([inicio, hoy]);
+                    }
+
+                    this.value = "";
+                });
+            });
+
+
+            //Script para sincronizar el tema de Flatpickr con la clase.dark de tu app
+            function sincronizarTemaFlatpickr() {
+                const esModoOscuro = document.documentElement.classList.contains('dark') || document.body.classList
+                    .contains(
+                        'dark');
+                const linkTemaOscuro = document.getElementById('flatpickr-dark-theme');
+
+                if (linkTemaOscuro) {
+                    linkTemaOscuro.disabled = !esModoOscuro;
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                sincronizarTemaFlatpickr();
+
+                const observer = new MutationObserver(sincronizarTemaFlatpickr);
+                observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
             });
         </script>
     </x-app-layout>
