@@ -80,8 +80,8 @@
                 @endif
             @break
 
-            @case('becas')
-                @if (auth()->user()->tieneRol('paciente'))
+            @case('beca')
+                @if (auth()->user()->tieneRol(['paciente', 'becario', 'estudiante']))
                     @include('components.estudiante.becas-home')
                 @else
                     @include('components.becas-home')

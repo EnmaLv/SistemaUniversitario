@@ -123,6 +123,20 @@ return new class extends Migration
                 ['nombre' => 'Paciente'],
                 $pacienteData
             );
+
+            $becarioData = [
+                'descripcion' => 'Rol por defecto becario',
+                'menu_permissions' => json_encode(['becas', 'solicitar_beca']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+            if ($hasSlug) {
+                $becarioData['slug'] = 'becario';
+            }
+            DB::table('rol')->updateOrInsert(
+                ['nombre' => 'Becario'],
+                $becarioData
+            );
         }
     }
 
@@ -136,6 +150,7 @@ return new class extends Migration
             DB::table('rol')->where('nombre', 'Enfermero(a)')->delete();
             DB::table('rol')->where('nombre', 'Administrador de Beca')->delete();
             DB::table('rol')->where('nombre', 'Paciente')->delete();
+            DB::table('rol')->where('nombre', 'Becario')->delete();
         }
     }
 };
