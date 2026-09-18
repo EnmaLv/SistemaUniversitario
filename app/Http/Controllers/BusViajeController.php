@@ -5,21 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\BusRuta;
 use App\Models\BusVehiculo;
 use App\Models\BusViaje;
-use App\Models\BusGpsLog;
 use App\Models\Usuario;
-use App\Services\Transporte\CalculoCombustibleService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class BusViajeController extends Controller
 {
-    protected CalculoCombustibleService $calculoCombustible;
-
-    public function __construct(CalculoCombustibleService $calculoCombustible)
-    {
-        $this->calculoCombustible = $calculoCombustible;
-    }
-
     public function index(Request $request)
     {
         $query = BusViaje::with([
@@ -253,117 +244,6 @@ class BusViajeController extends Controller
         return response()->json([
             'success' => true,
             'data'    => $logs,
-        ]);
-    }
-
-    public function storeGps(Request $request, BusViaje $busViaje)
-    {
-        if ($busViaje->estado !== 'en_curso') {
-            return response()->json([
-                'success' => false,
-                'message' => 'El viaje no está en curso; no se aceptan puntos GPS.',
-            ], 409);
-        }
-
-        $validado = $request->validate([
-            'local_id'  => ['nullable', 'string', 'max:64'],
-            'lat'       => ['required', 'numeric', 'between:-90,90'],
-            'lng'       => ['required', 'numeric', 'between:-180,180'],
-            'velocidad' => ['nullable', 'numeric', 'min:0'],
-            'heading'   => ['nullable', 'numeric'],
-            'timestamp' => ['nullable', 'date'],
-            'origen'    => ['nullable', 'string', 'max:50'],
-        ]);
-
-        $registradoEn = $validado['timestamp'] ?? now();
-
-        if (!empty($validado['local_id'])) {
-            $yaExiste = BusGpsLog::where('local_id', $validado['local_id'])->exists();
-            if ($yaExiste) {
-                return response()->json(['success' => true, 'message' => 'Punto ya registrado.']);
-            }
-        }
-
-        BusGpsLog::create([
-            'local_id'      => $validado['local_id'] ?? null,
-            'bus_viaje_id'  => $busViaje->id,
-            'lat'           => $validado['lat'],
-            'lng'           => $validado['lng'],
-            'velocidad'     => $validado['velocidad'] ?? 0,
-            'heading'       => $validado['heading'] ?? null,
-            'registrado_en' => $registradoEn,
-            'origen'        => $validado['origen'] ?? config('transporte.origen_gps_por_defecto', 'app_movil'),
-        ]);
-
-        return response()->json(['success' => true]);
-    }
-
-    public function iniciar(Request $request, BusViaje $busViaje)
-    {
-        if ($busViaje->estado !== 'programado') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo se puede iniciar un viaje que esté en estado "programado".',
-            ], 409);
-        }
-
-        $request->validate([
-            'pasajeros' => ['nullable', 'integer', 'min:0'],
-        ]);
-
-        $vehiculo = $busViaje->vehiculo;
-
-        $busViaje->update([
-            'estado'       => 'en_curso',
-            'fecha_inicio' => now(),
-            'km_inicio'    => $vehiculo->km_actual,
-            'pasajeros'    => $request->input('pasajeros', $busViaje->pasajeros),
-        ]);
-
-        $vehiculo->update(['estado' => 'en_ruta']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Viaje iniciado.',
-            'data'    => $busViaje->fresh(),
-        ]);
-    }
-
-    public function finalizar(Request $request, BusViaje $busViaje)
-    {
-        if ($busViaje->estado !== 'en_curso') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo se puede finalizar un viaje que esté "en_curso".',
-            ], 409);
-        }
-
-        $request->validate([
-            'hubo_desvio'    => ['nullable', 'boolean'],
-            'motivo_desvio'  => ['nullable', 'string', 'max:100', 'required_if:hubo_desvio,true'],
-        ]);
-
-        $busViaje->loadMissing('vehiculo', 'ruta');
-
-        $resultado = $this->calculoCombustible->calcularParaViaje($busViaje);
-
-        $this->calculoCombustible->aplicarYGuardar($busViaje, $resultado);
-
-        $busViaje->update([
-            'estado'         => 'finalizado',
-            'hubo_desvio'    => $request->boolean('hubo_desvio'),
-            'motivo_desvio'  => $request->input('motivo_desvio'),
-        ]);
-
-        $busViaje->vehiculo->update(['estado' => 'disponible']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Viaje finalizado y combustible calculado.',
-            'data'    => array_merge($resultado, [
-                'viaje'    => $busViaje->fresh(),
-                'vehiculo' => $busViaje->vehiculo->fresh(),
-            ]),
         ]);
     }
 }
