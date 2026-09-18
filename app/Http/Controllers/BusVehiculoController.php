@@ -28,14 +28,13 @@ class BusVehiculoController extends Controller
             'consumo_relenti'          => 'required|numeric|min:0.001|max:50',
             'km_actual'                => 'required|numeric|min:0|max:9999999',
             'km_proximo_mantenimiento' => 'required|numeric|min:0|max:9999999',
-            'sede_id'                  => 'required|exists:sede,id',
             'estado'                   => 'required|in:disponible,en_ruta,mantenimiento,inactivo',
         ];
     }
 
     public function index(Request $request)
     {
-        $vehiculos = BusVehiculo::listarVehiculos($request->buscar, $request->input('activo', 1));
+        $vehiculos = BusVehiculo::listarVehiculos($request->buscar, $request->estado, $request->input('activo', 1));
         return view('admin.transporte.maestros.bus_vehiculos.index', compact('vehiculos'));
     }
 
