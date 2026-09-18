@@ -5,25 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\BusVehiculo;
 use App\Models\BusViaje;
-use App\Models\BusTipoCombustible;
+use Illuminate\Support\Facades\DB;
 
 class BusCargaCombustible extends Model
 {
     protected $table = 'carga_combustibles';
-    
+
     protected $fillable = [
-        'bus_vehiculo_id',
+        'vehiculo_id',
         'bus_viaje_id',
-        'bus_tipo_combustible_id',
         'fecha',
         'litros',
         'precio_litros',
         'total',
         'km_al_cargar',
-        'boca_numero',
         'observaciones',
     ];
-    
+
     protected $casts = [
         'fecha'         => 'date',
         'litros'        => 'decimal:2',
@@ -31,31 +29,25 @@ class BusCargaCombustible extends Model
         'total'         => 'decimal:2',
         'km_al_cargar'  => 'decimal:2',
     ];
-    
+
     public function vehiculo()
     {
-        return $this->belongsTo(BusVehiculo::class, 'bus_vehiculo_id');
+        return $this->belongsTo(BusVehiculo::class, 'vehiculo_id');
     }
-    
+
     public function viaje()
     {
         return $this->belongsTo(BusViaje::class, 'bus_viaje_id');
-    }
-    
-    public function tipoCombustible()
-    {
-        return $this->belongsTo(BusTipoCombustible::class, 'bus_tipo_combustible_id');
     }
 
     public static function listarCargas($buscar = null, $vehiculoId = null)
     {
         return self::query()
-            ->with(['vehiculo', 'viaje.ruta', 'tipoCombustible'])
+            ->with(['vehiculo', 'viaje.ruta'])
             ->when($buscar, fn ($q) => $q
                 ->whereHas('vehiculo', fn ($q2) => $q2->where('placa', 'like', "%{$buscar}%"))
-                ->orWhereHas('tipoCombustible', fn ($q2) => $q2->where('nombre', 'like', "%{$buscar}%"))
                 ->orWhere('observaciones', 'like', "%{$buscar}%"))
-            ->when($vehiculoId, fn ($q) => $q->where('bus_vehiculo_id', $vehiculoId))
+            ->when($vehiculoId, fn ($q) => $q->where('vehiculo_id', $vehiculoId))
             ->orderBy('fecha', 'desc')
             ->paginate(10)
             ->withQueryString();
@@ -64,13 +56,45 @@ class BusCargaCombustible extends Model
     public static function crearCarga(array $datos): self
     {
         $datos['total'] = $datos['litros'] * $datos['precio_litros'];
-        return self::create($datos);
+
+        return DB::transaction(function () use ($datos) {
+            $carga = self::create($datos);
+
+            $vehiculo = $carga->vehiculo()->lockForUpdate()->first();
+
+            if ($vehiculo) {
+                $nuevoNivel = (float) $vehiculo->nivel_combustible_actual + (float) $carga->litros;
+                $nuevoNivel = min($nuevoNivel, (float) $vehiculo->capacidad_tanque_litros);
+
+                $vehiculo->update([
+                    'nivel_combustible_actual' => $nuevoNivel,
+                    'km_actual'                => max((float) $vehiculo->km_actual, (float) $carga->km_al_cargar),
+                ]);
+            }
+
+            return $carga;
+        });
     }
 
     public static function actualizarCarga(self $carga, array $datos): self
     {
+        $litrosAnteriores = (float) $carga->litros;
         $datos['total'] = $datos['litros'] * $datos['precio_litros'];
-        $carga->update($datos);
-        return $carga;
+
+        return DB::transaction(function () use ($carga, $datos, $litrosAnteriores) {
+            $carga->update($datos);
+
+            $vehiculo = $carga->vehiculo()->lockForUpdate()->first();
+
+            if ($vehiculo) {
+                $diferenciaLitros = (float) $datos['litros'] - $litrosAnteriores;
+                $nuevoNivel = (float) $vehiculo->nivel_combustible_actual + $diferenciaLitros;
+                $nuevoNivel = max(0, min($nuevoNivel, (float) $vehiculo->capacidad_tanque_litros));
+
+                $vehiculo->update(['nivel_combustible_actual' => $nuevoNivel]);
+            }
+
+            return $carga;
+        });
     }
 }

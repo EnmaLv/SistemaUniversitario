@@ -15,13 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vehiculo_id')->constrained('vehiculos')->onDelete('cascade');
             $table->foreignId('bus_viaje_id')->constrained('bus_viajes')->onDelete('cascade');
-            $table->foreignId('tipo_combustible_id')->constrained('tipo_combustibles')->onDelete('cascade');
             $table->date('fecha');
             $table->decimal('litros', 8, 2);
             $table->decimal('precio_litros', 10, 2);
             $table->decimal('total', 12, 2); 
             $table->decimal('km_al_cargar', 10, 2);
-            $table->integer('boca_numero');
             $table->text('observaciones')->nullable();
             $table->timestamps();
         });

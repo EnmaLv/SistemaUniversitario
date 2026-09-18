@@ -17,11 +17,12 @@ return new class extends Migration
             $table->foreignId('modelo_id')->constrained('modelos')->onDelete('cascade');
             $table->integer('anio');
             $table->string('color', 50);
-            $table->string('peso', 50);
+            $table->decimal('peso', 8, 2)->default(0);
             $table->integer('cantidad_pasajeros')->default(0);
             $table->foreignId('tipo_combustible_id')->constrained('tipo_combustibles')->onDelete('cascade');
             $table->integer('cantidad_cilindros')->default(1);
             $table->decimal('capacidad_tanque_litros', 8, 2)->default(0);
+            $table->decimal('nivel_combustible_actual', 8, 2)->default(0);
             $table->decimal('consumo_urbano', 6, 3)->default(0);
             $table->decimal('consumo_carretera', 6, 3)->default(0);
             $table->decimal('consumo_relenti', 6, 3)->default(0);

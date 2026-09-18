@@ -24,6 +24,7 @@ class BusVehiculo extends Model
         'tipo_combustible_id',
         'cantidad_cilindros',
         'capacidad_tanque_litros',
+        'nivel_combustible_actual',
         'consumo_urbano',
         'consumo_carretera',
         'consumo_relenti',

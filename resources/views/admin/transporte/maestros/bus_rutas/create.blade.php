@@ -194,7 +194,6 @@
 
 @push('js')
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <!-- Librería JavaScript de Leaflet -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
@@ -205,22 +204,18 @@
         let marcadoresMap = {};
 
         function initMap() {
-            // Inicializar mapa de Leaflet
             map = L.map('mapa-constructor').setView([9.56, -69.20], 13);
 
-            // Capa gratuita de OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            // Inicializar la polilínea del recorrido
             polyline = L.polyline([], {
                 color: '#B71C1C',
                 opacity: 0.85,
                 weight: 5
             }).addTo(map);
 
-            // Dibujar marcadores circulares nativos
             paradasDisponibles.forEach(parada => {
                 if (!parada.lat || !parada.lng) return;
 
@@ -249,7 +244,6 @@
                 });
             });
 
-            // Cargar paradas previas en caso de fallos de validación (old inputs)
             const oldParadas = @json(old('paradas'));
             if (oldParadas && oldParadas.length > 0) {
                 oldParadas.forEach(id => {
@@ -274,14 +268,12 @@
             listaHTML.innerHTML = '';
             inputsHidden.innerHTML = '';
 
-            // Reset color gris base
             paradasDisponibles.forEach(p => {
                 if (marcadoresMap[p.id]) marcadoresMap[p.id].setStyle({
                     fillColor: '#64748b'
                 });
             });
 
-            // Pintar de azul las seleccionadas y armar lista HTML
             secuenciaRuta.forEach((parada, index) => {
                 if (marcadoresMap[parada.id]) {
                     marcadoresMap[parada.id].setStyle({
@@ -308,7 +300,6 @@
                 return;
             }
 
-            // Integración OSRM (Ruteo real por calles)
             const coordenadasOSRM = secuenciaRuta.map(p => `${p.lng},${p.lat}`).join(';');
             const url =
                 `https://router.project-osrm.org/route/v1/driving/${coordenadasOSRM}?overview=full&geometries=geojson`;
@@ -341,7 +332,6 @@
             actualizarInterfazYPolilinea();
         }
 
-        // SortableJS para reordenar la lista arrastrando
         const elLista = document.getElementById('lista-secuencia-paradas');
         Sortable.create(elLista, {
             animation: 150,
@@ -358,7 +348,6 @@
             }
         });
 
-        // Manejo dinámico de Horarios
         let indiceHorario = 0;
 
         function agregarFilaHorario(hora = '', tipo = 'entrada') {
@@ -380,7 +369,6 @@
 
         document.getElementById('btn-add-horario').addEventListener('click', () => agregarFilaHorario());
 
-        // Cargar viejos horarios si hubo error de validación
         const oldHorarios = @json(old('horarios'));
         if (oldHorarios && Object.keys(oldHorarios).length > 0) {
             Object.values(oldHorarios).forEach(h => {
