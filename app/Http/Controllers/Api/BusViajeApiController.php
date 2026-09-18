@@ -219,24 +219,6 @@ class BusViajeApiController extends Controller
             ], 422);
         }
 
-        $kmFin = (float) ($viaje->vehiculo->km_actual ?? 0);
-
-        if ($kmFin < (float) $viaje->km_inicio) {
-            return response()->json([
-                'success' => false,
-                'message' => 'El kilometraje actual del vehículo no puede ser menor al kilometraje de inicio del viaje.',
-            ], 422);
-        }
-
-        $distanciaRecorrida = $kmFin - (float) $viaje->km_inicio;
-
-        $viaje->update([
-            'km_fin' => $kmFin,
-            'distancia_km' => $distanciaRecorrida,
-        ]);
-
-        $viaje->refresh();
-
         $resultado = $this->calculoCombustible->calcularParaViaje($viaje);
 
         $this->calculoCombustible->aplicarYGuardar(
@@ -250,7 +232,6 @@ class BusViajeApiController extends Controller
 
         $viaje->vehiculo->update([
             'estado' => 'disponible',
-            'km_actual' => $kmFin,
         ]);
 
         $this->eliminarBusDeFirebase((string) $viaje->id);
@@ -299,6 +280,10 @@ class BusViajeApiController extends Controller
         ]);
 
         $this->eliminarBusDeFirebase((string) $viaje->id);
+
+        if ($viaje->wasChanged() && $viaje->vehiculo) {
+            $viaje->vehiculo->update(['estado' => 'disponible']);
+        }
 
         return response()->json([
             'success' => true,
