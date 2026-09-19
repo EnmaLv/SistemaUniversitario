@@ -335,28 +335,20 @@
 
                                                     $dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
-                                                    $intervalos = collect([
-                                                        ['inicio' => '07:00', 'fin' => '08:15'],
-                                                        ['inicio' => '08:15', 'fin' => '09:20'],
-                                                        ['inicio' => '09:20', 'fin' => '10:00'],
-                                                        ['inicio' => '10:00', 'fin' => '10:45'],
-                                                        ['inicio' => '10:45', 'fin' => '11:30'],
-                                                        ['inicio' => '11:30', 'fin' => '12:20'],
-                                                        ['inicio' => '12:20', 'fin' => '13:00'],
-                                                        ['inicio' => '13:00', 'fin' => '13:45'],
-                                                        ['inicio' => '13:45', 'fin' => '14:25'],
-                                                        ['inicio' => '14:25', 'fin' => '15:05'],
-                                                        ['inicio' => '15:05', 'fin' => '15:45'],
-                                                        ['inicio' => '16:00', 'fin' => '16:40'],
-                                                        ['inicio' => '16:40', 'fin' => '17:20'],
-                                                        ['inicio' => '17:20', 'fin' => '18:00'],
-                                                        ['inicio' => '18:00', 'fin' => '18:35'],
-                                                        ['inicio' => '18:35', 'fin' => '19:10'],
-                                                        ['inicio' => '19:10', 'fin' => '19:45'],
-                                                        ['inicio' => '19:45', 'fin' => '20:20'],
-                                                        ['inicio' => '20:20', 'fin' => '20:55'],
-                                                        ['inicio' => '20:55', 'fin' => '21:30'],
-                                                    ])->sortBy(fn($i) => \Carbon\Carbon::parse($i['inicio'])->timestamp)->values()->all();
+                                                    // === BLOQUES UNIFICADOS (idénticos a los del formulario de horarios) ===
+                                                    $intervalos = collect(\App\Models\salud\HorarioConsultorio::BLOQUES)
+                                                        ->flatMap(function ($bloques, $jornada) {
+                                                            return collect($bloques)->map(function ($b) use ($jornada) {
+                                                                return [
+                                                                    'inicio'  => $b['inicio'],
+                                                                    'fin'     => $b['fin'],
+                                                                    'seccion' => $jornada,
+                                                                ];
+                                                            });
+                                                        })
+                                                        ->sortBy(fn($i) => \Carbon\Carbon::parse($i['inicio'])->timestamp)
+                                                        ->values()
+                                                        ->all();
                                                 @endphp
 
                                                 <div style="background-color: var(--bg-card); border-color: var(--border-color);" class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] rounded-3xl border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-gray-800 shadow-sm invisible-scrollbar relative">
@@ -384,8 +376,7 @@
                                                             @php $sectionActual = null; @endphp
                                                             @foreach ($intervalos as $intervalo)
                                                                 @php
-                                                                    $t       = \Carbon\Carbon::parse($intervalo['inicio']);
-                                                                    $seccion = $t->lt(\Carbon\Carbon::parse('12:30')) ? 'Matutino' : ($t->lt(\Carbon\Carbon::parse('18:00')) ? 'Vespertino' : 'Nocturno');
+                                                                    $seccion = $intervalo['seccion'];
                                                                 @endphp
 
                                                                 @if ($sectionActual !== $seccion)

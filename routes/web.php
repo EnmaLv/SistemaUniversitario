@@ -48,7 +48,7 @@ Route::get('/', function () {
     return view('landing_uptp', compact('hasEmployees'));
 });
 
-Route::middleware(['auth', 'tasa.actualizada'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 

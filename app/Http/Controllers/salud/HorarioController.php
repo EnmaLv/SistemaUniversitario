@@ -46,10 +46,40 @@ class HorarioController extends Controller
     public function create(Request $request)
     {
         $dias = Horario::diasSemana();
-        $tieneCitasPendientes = false;
         $grupoRetorno = $request->query('grupo');
+        $userId = Auth::id();
 
-        return view('admin.psicologia.maestros.horarios.create', compact('dias', 'tieneCitasPendientes', 'grupoRetorno'));
+        $tieneCitasPendientes = Horario::hasPendingCitas($userId);
+
+        $grupoActivo = GrupoHorario::obtenerActivoPorPsicologo($userId);
+
+        $grupoSeleccionado = null;
+        if ($grupoRetorno) {
+            $grupoSeleccionado = GrupoHorario::obtenerPorIdYUsuario($grupoRetorno, $userId);
+        }
+
+        $currentGrupoId = $grupoSeleccionado
+            ? $grupoSeleccionado->id
+            : ($grupoActivo ? $grupoActivo->id : null);
+
+        // Bloques existentes para el contexto actual
+        $horariosExistentes = Horario::obtenerPorFiltros($userId, $currentGrupoId, null);
+
+        $horariosSeleccionadosIniciales = [];
+        foreach ($horariosExistentes as $h) {
+            $inicio = \Carbon\Carbon::parse($h->hora_inicio)->format('H:i');
+            $fin    = \Carbon\Carbon::parse($h->hora_fin)->format('H:i');
+            $horariosSeleccionadosIniciales[] = "{$h->dia}|{$inicio}|{$fin}";
+        }
+
+        return view('admin.psicologia.maestros.horarios.create', compact(
+            'dias',
+            'grupoRetorno',
+            'tieneCitasPendientes',
+            'grupoSeleccionado',
+            'grupoActivo',
+            'horariosSeleccionadosIniciales'
+        ));
     }
 
     public function edit(Request $request, $id)
@@ -69,62 +99,95 @@ class HorarioController extends Controller
 
     public function store(Request $request)
     {
-        $horaInicio = $this->parseTimeInput(
-            $request->input('hora_inicio_hora'),
-            $request->input('hora_inicio_minuto'),
-            $request->input('hora_inicio_periodo')
-        );
-        $horaFin = $this->parseTimeInput(
-            $request->input('hora_fin_hora'),
-            $request->input('hora_fin_minuto'),
-            $request->input('hora_fin_periodo')
-        );
+        if (Horario::hasPendingCitas(Auth::id())) {
+            return redirect()
+                ->route('admin.psicologia.maestros.horarios.index')
+                ->with('error', 'No puedes modificar bloques de horario mientras tengas citas pendientes o confirmadas.');
+        }
 
-        $request->merge([
-            'hora_inicio' => $horaInicio,
-            'hora_fin' => $horaFin,
+        $validated = $request->validate([
+            'grupo_id'   => 'nullable|exists:grupos_horarios,id',
+            'horarios'   => 'nullable|array',
+            'horarios.*' => 'string',
         ]);
 
-        $grupoEspecificoId = $request->input('grupo_id');
+        $userId = Auth::id();
+        $grupoEspecificoId = $validated['grupo_id'] ?? null;
 
         if ($grupoEspecificoId) {
-            $grupoAModificar = GrupoHorario::obtenerPorIdYUsuario($grupoEspecificoId, Auth::id());
-
-            $activoPorDefecto = ($grupoAModificar && $grupoAModificar->activo == GrupoHorario::STATUS_ACTIVE) ? Horario::STATUS_ACTIVE : Horario::STATUS_INACTIVE;
+            $grupoAModificar = GrupoHorario::obtenerPorIdYUsuario($grupoEspecificoId, $userId);
+            $activoPorDefecto = ($grupoAModificar && $grupoAModificar->activo == GrupoHorario::STATUS_ACTIVE)
+                ? Horario::STATUS_ACTIVE
+                : Horario::STATUS_INACTIVE;
             $grupoAsignarId = $grupoAModificar ? $grupoAModificar->id : null;
         } else {
-            $grupoActivo = GrupoHorario::obtenerActivoPorPsicologo(Auth::id());
-
+            $grupoActivo = GrupoHorario::obtenerActivoPorPsicologo($userId);
             $activoPorDefecto = $grupoActivo ? Horario::STATUS_ACTIVE : Horario::STATUS_INACTIVE;
             $grupoAsignarId = $grupoActivo ? $grupoActivo->id : null;
         }
 
-        $validated = $request->validate([
-            'dia' => 'required|string|in:' . implode(',', Horario::diasSemana()),
-            'hora_inicio' => 'required|date_format:H:i',
-            'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
-            'descripcion' => 'nullable|string',
-        ]);
+        // Normalizar seleccionados
+        $seleccionados = $request->input('horarios', []);
+        $clavesSeleccionadas = [];
+        foreach ($seleccionados as $item) {
+            $partes = explode('|', $item);
+            if (count($partes) < 3) continue;
 
-        if (Horario::overlaps(Auth::id(), $validated['dia'], $validated['hora_inicio'], $validated['hora_fin'], null, $grupoAsignarId)) {
-            return back()
-                ->withErrors(['hora_inicio' => 'El bloque de horario se superpone con otro existente.'])
-                ->withInput();
+            [$dia, $horaInicio, $horaFin] = $partes;
+
+            if (!in_array($dia, Horario::diasSemana())) continue;
+
+            $clavesSeleccionadas["{$dia}|{$horaInicio}|{$horaFin}"] = [
+                'dia'    => $dia,
+                'inicio' => $horaInicio,
+                'fin'    => $horaFin,
+            ];
         }
 
-        Horario::crear([
-            'user_id' => Auth::id(),
-            'dia' => $validated['dia'],
-            'hora_inicio' => $validated['hora_inicio'],
-            'hora_fin' => $validated['hora_fin'],
-            'descripcion' => $validated['descripcion'],
-            'activo' => $activoPorDefecto,
-            'grupo_horario_id' => $grupoAsignarId,
-        ]);
+        // Mapa de bloques existentes
+        $existentes = Horario::obtenerPorFiltros($userId, $grupoAsignarId, null);
+        $clavesExistentes = [];
+        foreach ($existentes as $h) {
+            $inicio = \Carbon\Carbon::parse($h->hora_inicio)->format('H:i');
+            $fin    = \Carbon\Carbon::parse($h->hora_fin)->format('H:i');
+            $clavesExistentes["{$h->dia}|{$inicio}|{$fin}"] = $h;
+        }
+
+        $creados = 0;
+        $eliminados = 0;
+
+        // Eliminar los que ya no están seleccionados
+        foreach ($clavesExistentes as $clave => $h) {
+            if (!isset($clavesSeleccionadas[$clave])) {
+                Horario::eliminar($h->id);
+                $eliminados++;
+            }
+        }
+
+        // Crear los nuevos
+        foreach ($clavesSeleccionadas as $clave => $data) {
+            if (!isset($clavesExistentes[$clave])) {
+                Horario::crear([
+                    'user_id'          => $userId,
+                    'dia'              => $data['dia'],
+                    'hora_inicio'      => $data['inicio'],
+                    'hora_fin'         => $data['fin'],
+                    'descripcion'      => null,
+                    'activo'           => $activoPorDefecto,
+                    'grupo_horario_id' => $grupoAsignarId,
+                ]);
+                $creados++;
+            }
+        }
+
+        $msg = 'Horario actualizado correctamente.';
+        if ($creados > 0 || $eliminados > 0) {
+            $msg = "Se agregaron {$creados} bloque(s) y se eliminaron {$eliminados} bloque(s).";
+        }
 
         return redirect()
             ->route('admin.psicologia.maestros.horarios.index', $grupoAsignarId ? ['grupo' => $grupoAsignarId] : [])
-            ->with('success', 'Bloque de tiempo creado correctamente.');
+            ->with('success', $msg);
     }
 
     public function show(Request $request, $id)

@@ -1,4 +1,6 @@
 @php
+    use Carbon\Carbon;
+
     $moduloActivo = strtolower(session('modulo_activo', 'general'));
     $esPsicologia = in_array($moduloActivo, ['psicologia', 'psicología', 'mental']);
 
@@ -7,13 +9,101 @@
     $focusRingClass = $esPsicologia
         ? 'focus:ring-indigo-500/20 focus:border-indigo-500'
         : 'focus:ring-red-500/20 focus:border-red-500';
+
+    $BLOQUES = [
+        'Matutino' => [
+            ['inicio' => '07:00', 'fin' => '08:15'],
+            ['inicio' => '08:15', 'fin' => '09:00'],
+            ['inicio' => '09:20', 'fin' => '10:00'],
+            ['inicio' => '10:00', 'fin' => '10:45'],
+            ['inicio' => '10:45', 'fin' => '11:30'],
+            ['inicio' => '11:30', 'fin' => '12:00'],
+        ],
+        'Vespertino' => [
+            ['inicio' => '13:45', 'fin' => '14:25'],
+            ['inicio' => '14:25', 'fin' => '15:05'],
+            ['inicio' => '15:05', 'fin' => '15:45'],
+            ['inicio' => '15:45', 'fin' => '16:40'],
+            ['inicio' => '16:40', 'fin' => '17:20'],
+            ['inicio' => '17:20', 'fin' => '18:00'],
+        ],
+        'Nocturno' => [
+            ['inicio' => '18:00', 'fin' => '18:35'],
+            ['inicio' => '18:35', 'fin' => '19:10'],
+            ['inicio' => '19:10', 'fin' => '19:45'],
+            ['inicio' => '19:45', 'fin' => '20:20'],
+            ['inicio' => '20:20', 'fin' => '20:55'],
+            ['inicio' => '20:55', 'fin' => '21:30'],
+        ],
+    ];
+
+    $DIAS = $dias;
+    $totalJornadas = count($BLOQUES);
+
+    // Mapa de bloques existentes para búsqueda rápida
+    $horariosMap = [];
+    foreach ($horarios as $h) {
+        $key = $h->dia . '|' . Carbon::parse($h->hora_inicio)->format('H:i') . '|' . Carbon::parse($h->hora_fin)->format('H:i');
+        $horariosMap[$key] = $h;
+    }
 @endphp
 
 <x-app-layout>
-    <div class="pt-8 pb-12 min-h-[calc(100vh-4rem)]">
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             @include('components.alert')
+
+            {{-- Header --}}
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3"
+                        style="color: var(--text-main);">
+                        <span>Horarios de Salud Mental</span>
+                        <span
+                            class="px-2.5 py-1 text-xs font-bold rounded-full bg-{{ $themeColor }}-100 text-{{ $themeColor }}-700 dark:bg-{{ $themeColor }}-950/60 dark:text-{{ $themeColor }}-300">
+                            Gestión Semanal
+                        </span>
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Bienvenido <span
+                            class="font-bold text-gray-700 dark:text-gray-200">{{ auth()->user()->nombre_completo ?? (auth()->user()->name ?? 'Usuario') }}</span>
+                        · {{ Carbon::now()->format('d/m/Y') }}
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    {{-- PDF --}}
+                    <a href="{{ route('admin.psicologia.maestros.horarios.exportarPdf', isset($grupoActivo) ? ['grupo' => $grupoActivo->id] : []) }}"
+                        target="_blank"
+                        class="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center"
+                        title="Descargar PDF">
+                        <i class="fas fa-file-pdf text-sm"></i>
+                    </a>
+
+                    {{-- Guardar como grupo --}}
+                    <button id="openGroupModal" type="button"
+                        {{ isset($grupoActivo) || !empty($tieneCitasPendientes) ? 'disabled' : '' }}
+                        class="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Guardar como grupo de horarios">
+                        <i class="fas fa-save text-sm"></i>
+                    </button>
+
+                    {{-- Ver grupos --}}
+                    <a href="{{ route('admin.psicologia.maestros.grupos_horarios.index') }}"
+                        class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all">
+                        <i class="fas fa-layer-group text-xs"></i>
+                        <span>Ver Grupos</span>
+                    </a>
+
+                    {{-- Gestionar Horarios (Crear / Editar) --}}
+                    <a href="{{ route('admin.psicologia.maestros.horarios.create', isset($grupoSeleccionado) ? ['grupo' => $grupoSeleccionado->id] : []) }}"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
+                        <i class="fas fa-calendar-plus text-xs"></i>
+                        <span>Gestionar Horarios</span>
+                    </a>
+                </div>
+            </div>
 
             @if (session('error'))
                 <div
@@ -24,105 +114,50 @@
                 </div>
             @endif
 
-            <!-- Encabezado de la Página -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
-                            @isset($grupoSeleccionado)
-                                Editar grupo: <span
-                                    class="text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $grupoSeleccionado->nombre }}</span>
-                            @else
-                                Bloques de Horario
-                            @endisset
-                        </h1>
-
-                        @if (isset($grupoActivo) && !isset($grupoSeleccionado))
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider">
-                                <i class="fas fa-check-circle me-1 text-[9px]"></i> Horario activo:
-                                {{ $grupoActivo->nombre }}
-                            </span>
-                        @elseif(!isset($grupoActivo) && !isset($grupoSeleccionado))
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 uppercase tracking-wider">
-                                <i class="fas fa-exclamation-triangle me-1 text-[9px]"></i> Sin horario activo
-                            </span>
-                        @endif
-                    </div>
-                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Gestiona la disponibilidad y los bloques de atención para <strong
-                            class="text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">Salud
-                            Mental</strong>.
-                    </p>
-                </div>
-
-                <!-- Botones de Acción Superiores -->
-                <div class="flex flex-wrap items-center gap-2">
-                    @if (!isset($grupoSeleccionado))
-                        <!-- Descargar PDF -->
-                        <a href="{{ route('admin.psicologia.maestros.horarios.exportarPdf', isset($grupoActivo) ? ['grupo' => $grupoActivo->id] : []) }}"
-                            target="_blank"
-                            class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-xs font-bold flex items-center justify-center shadow-xs"
-                            title="Descargar horario en PDF">
-                            <i class="fas fa-file-pdf text-sm"></i>
-                        </a>
-
-                        <!-- Guardar Grupo de Horarios -->
-                        <button id="openGroupModal" type="button"
-                            {{ isset($grupoActivo) || !empty($tieneCitasPendientes) ? 'disabled' : '' }}
-                            class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-xs font-bold flex items-center justify-center shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Guardar como grupo de horarios"
-                            aria-disabled="{{ isset($grupoActivo) || !empty($tieneCitasPendientes) ? 'true' : 'false' }}">
-                            <i class="fas fa-save text-sm"></i>
-                        </button>
-
-                        <!-- Ver Grupos -->
-                        <a href="{{ route('admin.psicologia.maestros.grupos_horarios.index') }}"
-                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all shadow-xs">
-                            <i class="fas fa-layer-group text-xs"></i>
-                            <span>Ver Grupos</span>
-                        </a>
-                    @endif
-
-                    <!-- Crear Bloque -->
-                    <a href="{{ route('admin.psicologia.maestros.horarios.create', isset($grupoSeleccionado) ? ['grupo' => $grupoSeleccionado->id] : []) }}"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-xs shadow-md active:scale-95 transition-all">
-                        <i class="fas fa-plus text-xs"></i>
-                        <span>Nuevo Bloque</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Banner Informativo de Grupo Seleccionado -->
+            {{-- Banner de grupo seleccionado --}}
             @isset($grupoSeleccionado)
                 <div
-                    class="mb-6 p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                    class="mb-6 p-4 rounded-2xl bg-{{ $themeColor }}-50 dark:bg-{{ $themeColor }}-950/40 border border-{{ $themeColor }}-200 dark:border-{{ $themeColor }}-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                     <div class="flex items-center gap-3 min-w-0">
                         <div
-                            class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                            class="w-10 h-10 rounded-xl bg-{{ $themeColor }}-100 dark:bg-{{ $themeColor }}-900/50 text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400 flex items-center justify-center shrink-0">
                             <i class="fas fa-calendar-week text-base"></i>
                         </div>
-                        <span class="text-xs sm:text-sm font-medium text-indigo-900 dark:text-indigo-300">
-                            Estás editando los bloques del grupo <strong
+                        <span class="text-xs sm:text-sm font-medium text-{{ $themeColor }}-900 dark:text-{{ $themeColor }}-300">
+                            Estás viendo los bloques del grupo <strong
                                 class="font-bold uppercase">{{ $grupoSeleccionado->nombre }}</strong>.
-                            Los cambios afectarán únicamente a este grupo.
                         </span>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <a href="{{ route('admin.psicologia.maestros.horarios.index') }}"
                             class="px-3 py-1.5 text-xs font-bold bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-                            Cancelar
-                        </a>
-                        <a href="{{ route('admin.psicologia.maestros.grupos_horarios.index') }}"
-                            class="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all">
-                            Volver a Grupos
+                            Ver horario activo
                         </a>
                     </div>
                 </div>
             @endisset
 
-            <!-- Alerta de Citas Pendientes -->
+            {{-- Badge activo / sin activo --}}
+            @if (!isset($grupoSeleccionado))
+                @if (isset($grupoActivo))
+                    <div class="mb-6 flex items-center gap-2">
+                        <span
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider">
+                            <i class="fas fa-check-circle me-1 text-[10px]"></i> Horario activo:
+                            {{ $grupoActivo->nombre }}
+                        </span>
+                    </div>
+                @else
+                    <div class="mb-6 flex items-center gap-2">
+                        <span
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 uppercase tracking-wider">
+                            <i class="fas fa-exclamation-triangle me-1 text-[10px]"></i> Sin horario activo
+                        </span>
+                    </div>
+                @endif
+            @endif
+
+            {{-- Alerta citas pendientes --}}
             @if (!empty($tieneCitasPendientes))
                 <div
                     class="mb-6 p-4 text-xs sm:text-sm text-amber-800 dark:text-amber-400 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center gap-3 shadow-xs">
@@ -132,204 +167,121 @@
                 </div>
             @endif
 
-            <!-- Filtro por Día -->
-            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-                class="p-4 rounded-2xl border shadow-sm mb-6 flex items-center justify-between gap-4">
-                <form method="GET" class="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
-                    @isset($grupoSeleccionado)
-                        <input type="hidden" name="grupo" value="{{ $grupoSeleccionado->id }}">
-                    @endisset
-                    <label
-                        class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                        <i class="fas fa-filter text-xs"></i> Filtrar por día:
-                    </label>
-                    <select name="dia" onchange="this.form.submit()"
-                        style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
-                        class="px-3 py-2 rounded-xl border text-xs font-bold focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all">
-                        <option value="">Todos los días</option>
-                        @foreach ($dias as $dia)
-                            <option value="{{ $dia }}" {{ $filtroDia === $dia ? 'selected' : '' }}>
-                                {{ $dia }}</option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
+            {{-- Cuadrícula semanal por jornada --}}
+            @foreach ($BLOQUES as $jornada => $bloques)
+                @php $jornadaIndex = $loop->index; @endphp
 
-            <!-- Grilla de Bloques por Día -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-                @foreach ($horariosPorDia as $dia => $horariosDia)
-                    <div
-                        class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-200/60 dark:border-gray-700/60 flex flex-col">
-                        <h4
-                            class="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 text-center">
-                            {{ $dia }}
-                        </h4>
+                <div id="jornada-block-{{ $jornadaIndex }}"
+                    class="jornada-block mb-8 {{ $jornadaIndex !== 0 ? 'hidden' : '' }}">
 
-                        @if ($horariosDia->isEmpty())
-                            <p
-                                class="text-[11px] text-gray-400 dark:text-gray-500 text-center my-auto py-6 font-medium italic">
-                                Sin bloques</p>
-                        @else
-                            <div class="space-y-2">
-                                @foreach ($horariosDia as $horario)
-                                    <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-                                        class="relative p-3 rounded-xl border shadow-2xs text-center transition-all duration-300 {{ $horario->activo == \App\Models\salud\Horario::STATUS_INACTIVE ? 'opacity-50' : '' }}">
+                    {{-- Encabezado --}}
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+                        <div class="hidden sm:block sm:w-44"></div>
 
-                                        <!-- Hora -->
-                                        <div class="mb-2">
-                                            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 block">
-                                                {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('g:i A') }} -
-                                                {{ \Carbon\Carbon::parse($horario->hora_fin)->format('g:i A') }}
-                                            </span>
-                                        </div>
+                        <div
+                            class="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gray-100 dark:bg-gray-800/70 border border-gray-200/80 dark:border-gray-700/60 shadow-sm text-center">
+                            <h3
+                                class="text-xs sm:text-sm font-black uppercase tracking-wider text-gray-700 dark:text-gray-200">
+                                Jornada {{ $jornada }}
+                            </h3>
+                        </div>
 
-                                        <div
-                                            class="flex items-center justify-center gap-1.5 flex-wrap pt-2 border-t border-gray-100 dark:border-gray-800">
-                                            <button type="button"
-                                                onclick="openBlockModal('blockModal-{{ $horario->id }}')"
-                                                class="p-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
-                                                title="Ver detalle">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
+                        <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
+                            class="flex items-center justify-between md:justify-center gap-1 border border-gray-200 dark:border-gray-700/60 p-1 h-12 rounded-2xl shadow-sm flex-shrink-0 w-full sm:w-auto">
+                            <button type="button" onclick="cambiarJornada(-1)" title="Jornada Anterior"
+                                class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all flex-shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
 
-                                            <!-- Editar -->
-                                            @if (!empty($tieneCitasPendientes))
-                                                <span
-                                                    class="p-2 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 rounded-lg text-xs font-bold flex items-center justify-center cursor-not-allowed"
-                                                    title="No puedes editar mientras tengas citas pendientes">
-                                                    <i class="fas fa-pen"></i>
-                                                </span>
-                                            @else
-                                                <a href="{{ route('admin.psicologia.maestros.horarios.edit', ['horario' => $horario->id] + (isset($grupoSeleccionado) ? ['grupo' => $grupoSeleccionado->id] : [])) }}"
-                                                    class="p-2 bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 rounded-lg hover:bg-sky-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
-                                                    title="Editar bloque">
-                                                    <i class="fas fa-pen"></i>
-                                                </a>
-                                            @endif
+                            <span
+                                class="px-2 sm:px-4 text-[10px] sm:text-[11px] font-black text-gray-800 dark:text-gray-200 min-w-[90px] text-center uppercase tracking-wider leading-none whitespace-nowrap">
+                                {{ $loop->iteration }} / {{ $totalJornadas }}
+                            </span>
 
-                                            @if (!empty($tieneCitasPendientes))
-                                                <span
-                                                    class="p-2 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 rounded-lg text-xs font-bold flex items-center justify-center cursor-not-allowed"
-                                                    title="No puedes eliminar mientras tengas citas pendientes">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </span>
-                                            @else
-                                                <form
-                                                    action="{{ route('admin.psicologia.maestros.horarios.destroy', $horario->id) }}"
-                                                    method="POST" data-ajax-delete-block="true" class="m-0 p-0 inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        class="p-2 bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 rounded-lg hover:bg-rose-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
-                                                        title="Eliminar bloque">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
+                            <button type="button" onclick="cambiarJornada(1)" title="Siguiente Jornada"
+                                class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all flex-shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
 
-                                        <div id="blockModal-{{ $horario->id }}"
-                                            class="block-modal fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-xs p-4"
-                                            onclick="if(event.target === this) closeBlockModal('blockModal-{{ $horario->id }}')">
-                                            <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
-                                                class="rounded-2xl border shadow-2xl w-full max-w-md p-6 overflow-y-auto text-left transition-all">
+                    {{-- Tabla --}}
+                    <div style="border-color: var(--border-color); background-color: var(--bg-card);"
+                        class="rounded-2xl border shadow-sm overflow-x-auto">
+                        <div class="grid min-w-[750px]" style="grid-template-columns: 130px repeat(5, 1fr);">
 
-                                                <div
-                                                    class="flex justify-between items-center pb-4 mb-4 border-b border-gray-100 dark:border-gray-800">
-                                                    <h3 class="text-lg font-extrabold tracking-tight"
-                                                        style="color: var(--text-main);">
-                                                        Detalle del Bloque
-                                                    </h3>
-                                                    <button type="button"
-                                                        onclick="closeBlockModal('blockModal-{{ $horario->id }}')"
-                                                        class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white text-lg rounded-xl transition-all">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
+                            {{-- Header --}}
+                            <div class="p-3 border-b border-r bg-gray-50/70 dark:bg-black/30 flex items-center justify-center font-bold text-[11px] text-gray-400 uppercase tracking-wider"
+                                style="border-color: var(--border-color);">
+                                <i class="far fa-clock mr-1.5"></i> Bloque
+                            </div>
+                            @foreach ($DIAS as $diaLabel)
+                                <div class="p-3 text-center text-[11px] font-black uppercase tracking-wider text-gray-600 dark:text-gray-300 border-b bg-gray-50/70 dark:bg-black/30 {{ !$loop->last ? 'border-r' : '' }}"
+                                    style="border-color: var(--border-color);">
+                                    {{ $diaLabel }}
+                                </div>
+                            @endforeach
 
-                                                <div
-                                                    class="space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200/60 dark:border-gray-700/60 text-xs">
-                                                    @php
-                                                        $statusLabel = 'Eliminado';
-                                                        $statusBadge = 'bg-gray-100 text-gray-600 border-gray-200';
-                                                        if (
-                                                            $horario->activo == \App\Models\salud\Horario::STATUS_ACTIVE
-                                                        ) {
-                                                            $statusLabel = 'Activo';
-                                                            $statusBadge =
-                                                                'bg-emerald-50 text-emerald-600 border-emerald-200';
-                                                        } elseif (
-                                                            $horario->activo ==
-                                                            \App\Models\salud\Horario::STATUS_INACTIVE
-                                                        ) {
-                                                            $statusLabel = 'Inactivo';
-                                                            $statusBadge = 'bg-rose-50 text-rose-600 border-rose-200';
-                                                        }
-                                                    @endphp
+                            {{-- Filas --}}
+                            @foreach ($bloques as $bloque)
+                                <div class="p-4 flex items-center justify-center text-center text-xs font-extrabold text-gray-700 dark:text-gray-200 whitespace-nowrap border-r bg-gray-50/30 dark:bg-black/10 {{ !$loop->last ? 'border-b' : '' }}"
+                                    style="border-color: var(--border-color);">
+                                    {{ Carbon::parse($bloque['inicio'])->format('g:i') }} -
+                                    {{ Carbon::parse($bloque['fin'])->format('g:i') }}
+                                </div>
 
-                                                    <div class="flex justify-between items-center">
+                                @foreach ($DIAS as $diaLabel)
+                                    @php
+                                        $key = "{$diaLabel}|{$bloque['inicio']}|{$bloque['fin']}";
+                                        $registro = $horariosMap[$key] ?? null;
+                                    @endphp
+
+                                    <div class="p-4 flex flex-col gap-1 items-center justify-center min-h-[68px] {{ !$loop->last ? 'border-r' : '' }} {{ !$loop->parent->last ? 'border-b' : '' }}"
+                                        style="border-color: var(--border-color);">
+
+                                        @if ($registro)
+                                            <div class="w-full rounded-xl bg-{{ $themeColor }}-300/20 hover:bg-{{ $themeColor }}-300/30 dark:bg-{{ $themeColor }}-800/30 dark:hover:bg-{{ $themeColor }}-800/50 border border-{{ $themeColor }}-200 dark:border-{{ $themeColor }}-800 p-2 flex items-center justify-between gap-2 shadow-sm transition-all">
+                                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                                    <i
+                                                        class="fas fa-user-md text-[12px] text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400 flex-shrink-0"></i>
+                                                    <div class="min-w-0 leading-tight">
                                                         <span
-                                                            class="font-bold text-gray-500 uppercase tracking-wider">Día:</span>
+                                                            class="block text-[12px] font-bold text-{{ $themeColor }}-900 dark:text-{{ $themeColor }}-100 truncate">
+                                                            Ocupado
+                                                        </span>
                                                         <span
-                                                            class="font-extrabold text-gray-800 dark:text-gray-200 uppercase">{{ $horario->dia }}</span>
-                                                    </div>
-
-                                                    <div class="flex justify-between items-center">
-                                                        <span
-                                                            class="font-bold text-gray-500 uppercase tracking-wider">Hora
-                                                            Inicio:</span>
-                                                        <span
-                                                            class="font-bold text-gray-800 dark:text-gray-200">{{ \Carbon\Carbon::parse($horario->hora_inicio)->format('g:i A') }}</span>
-                                                    </div>
-
-                                                    <div class="flex justify-between items-center">
-                                                        <span
-                                                            class="font-bold text-gray-500 uppercase tracking-wider">Hora
-                                                            Fin:</span>
-                                                        <span
-                                                            class="font-bold text-gray-800 dark:text-gray-200">{{ \Carbon\Carbon::parse($horario->hora_fin)->format('g:i A') }}</span>
-                                                    </div>
-
-                                                    <div class="flex justify-between items-center">
-                                                        <span
-                                                            class="font-bold text-gray-500 uppercase tracking-wider">Estado:</span>
-                                                        <span
-                                                            class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase {{ $statusBadge }}">
-                                                            {{ $statusLabel }}
+                                                            class="block text-[10px] font-medium text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400 truncate">
+                                                            {{ \Carbon\Carbon::parse($registro->hora_inicio)->format('g:i A') }}
+                                                            -
+                                                            {{ \Carbon\Carbon::parse($registro->hora_fin)->format('g:i A') }}
                                                         </span>
                                                     </div>
-
-                                                    @if ($horario->descripcion)
-                                                        <div
-                                                            class="pt-2 border-t border-gray-200/60 dark:border-gray-700/60">
-                                                            <span
-                                                                class="font-bold text-gray-500 uppercase tracking-wider block mb-1">Descripción:</span>
-                                                            <p
-                                                                class="text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
-                                                                {{ $horario->descripcion }}</p>
-                                                        </div>
-                                                    @endif
                                                 </div>
-
-                                                <div class="mt-6 flex justify-end">
-                                                    <button type="button"
-                                                        onclick="closeBlockModal('blockModal-{{ $horario->id }}')"
-                                                        class="px-5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all">
-                                                        Cerrar
-                                                    </button>
-                                                </div>
+                                                <span
+                                                    class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] flex-shrink-0"></span>
                                             </div>
-                                        </div>
+                                        @else
+                                            <div
+                                                class="w-full h-full min-h-[58px] rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-black/10 flex items-center justify-center text-[10px] font-semibold text-gray-500 dark:text-gray-500 select-none">
+                                                Disponible
+                                            </div>
+                                        @endif
 
                                     </div>
                                 @endforeach
-                            </div>
-                        @endif
+                            @endforeach
+                        </div>
                     </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
 
-            <!-- Modal para Guardar Grupo de Horarios -->
+            {{-- Modal Guardar Grupo --}}
             <div id="groupModal"
                 class="fixed inset-0 hidden items-center justify-center bg-black/60 backdrop-blur-xs z-50 p-4">
                 <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
@@ -357,13 +309,11 @@
                                 <p class="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
                                     Existe un grupo activo llamado <strong
                                         class="text-gray-800 dark:text-gray-200 font-bold">"{{ $grupoActivo->nombre }}"</strong>.
-                                    Los cambios se aplicarán directamente ahí. Si deseas crear uno nuevo, ingresa un
-                                    nombre.
+                                    Los cambios se aplicarán directamente ahí.
                                 </p>
                             @else
                                 <p class="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                                    No hay un grupo activo seleccionado. Ingresa un nombre para crear un grupo nuevo con
-                                    los bloques actuales.
+                                    No hay un grupo activo. Ingresa un nombre para crear uno nuevo.
                                 </p>
                             @endif
                         </div>
@@ -375,7 +325,7 @@
                                 Nombre del nuevo grupo
                             </label>
                             <input id="nombre_grupo" name="nombre" type="text"
-                                placeholder="Ej. Semestre 2026-I / Ocupado"
+                                placeholder="Ej. Semestre 2026-I"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all"
                                 {{ !isset($grupoActivo) ? 'required' : 'disabled' }} />
@@ -399,30 +349,24 @@
         </div>
     </div>
 
-    <!-- Scripts de Interacción -->
     <script>
-        function openBlockModal(id) {
-            var modal = document.getElementById(id);
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
-        }
+        let jornadaActual = 0;
+        const totalJornadas = {{ $totalJornadas }};
 
-        function closeBlockModal(id) {
-            var modal = document.getElementById(id);
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
+        function cambiarJornada(direccion) {
+            const bloqueActual = document.getElementById(`jornada-block-${jornadaActual}`);
+            if (bloqueActual) bloqueActual.classList.add('hidden');
+
+            jornadaActual = (jornadaActual + direccion + totalJornadas) % totalJornadas;
+
+            const siguienteBloque = document.getElementById(`jornada-block-${jornadaActual}`);
+            if (siguienteBloque) siguienteBloque.classList.remove('hidden');
         }
 
         var openGroupBtn = document.getElementById('openGroupModal');
         if (openGroupBtn) {
             openGroupBtn.addEventListener('click', function() {
-                if (this.disabled) {
-                    return;
-                }
+                if (this.disabled) return;
                 var groupModal = document.getElementById('groupModal');
                 if (groupModal) {
                     groupModal.classList.remove('hidden');
@@ -448,9 +392,7 @@
         var groupModalEl = document.getElementById('groupModal');
         if (groupModalEl) {
             groupModalEl.addEventListener('click', function(event) {
-                if (event.target.id === 'groupModal') {
-                    hideGroupModal();
-                }
+                if (event.target.id === 'groupModal') hideGroupModal();
             });
         }
 
@@ -458,14 +400,9 @@
             var nombreField = document.getElementById('nombreField');
             var nombreInput = document.getElementById('nombre_grupo');
             var actionInput = document.querySelector('input[name="action"]');
+            if (!actionInput) return;
 
-            if (!actionInput) {
-                return;
-            }
-
-            var action = actionInput.value;
-
-            if (action === 'create') {
+            if (actionInput.value === 'create') {
                 if (nombreField) nombreField.style.display = 'block';
                 if (nombreInput) {
                     nombreInput.required = true;
@@ -479,86 +416,6 @@
                 }
             }
         }
-
         updateNombreField();
-
-        function handleAjaxDeleteBlock(form) {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                var performDelete = function() {
-                    var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                    if (!token) {
-                        if (window.AppModal) {
-                            AppModal.alert('Error',
-                                'No se pudo obtener CSRF token. Recarga la página e inténtalo de nuevo.');
-                        } else {
-                            alert('No se pudo obtener el token CSRF.');
-                        }
-                        return;
-                    }
-
-                    var formData = new FormData(form);
-                    formData.append('_method', 'DELETE');
-
-                    fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': token,
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    }).then(function(response) {
-                        if (!response.ok) {
-                            return response.json().then(function(body) {
-                                throw new Error(body.message ||
-                                    'No se pudo eliminar el bloque.');
-                            }).catch(function() {
-                                throw new Error('No se pudo eliminar el bloque.');
-                            });
-                        }
-                        return response.json();
-                    }).then(function(result) {
-                        if (result && result.status === 'success') {
-                            var blockEl = form.closest('.relative');
-                            if (blockEl) {
-                                blockEl.style.transition = 'opacity 0.3s, transform 0.3s';
-                                blockEl.style.opacity = '0';
-                                blockEl.style.transform = 'scale(0.95)';
-                                setTimeout(function() {
-                                    blockEl.remove();
-                                }, 300);
-                            }
-                            if (window.showToast) {
-                                window.showToast(result.message || 'Bloque eliminado correctamente.',
-                                    'success');
-                            }
-                        } else {
-                            throw new Error(result.message || 'No se pudo eliminar el bloque.');
-                        }
-                    }).catch(function(error) {
-                        console.error('Error al eliminar el bloque:', error);
-                        if (window.AppModal) {
-                            AppModal.alert('Error', error.message ||
-                                'Error al eliminar el bloque. Recarga la página e inténtalo nuevamente.'
-                            );
-                        } else {
-                            alert(error.message || 'Error al eliminar el bloque.');
-                        }
-                    });
-                };
-
-                if (window.AppModal) {
-                    AppModal.confirm('Eliminar Bloque', '¿Estás seguro de eliminar este bloque de horario?').then(
-                        function(confirmed) {
-                            if (confirmed) performDelete();
-                        });
-                } else {
-                    if (confirm('¿Estás seguro de eliminar este bloque de horario?')) performDelete();
-                }
-            });
-        }
-
-        document.querySelectorAll('form[data-ajax-delete-block="true"]').forEach(handleAjaxDeleteBlock);
     </script>
 </x-app-layout>
