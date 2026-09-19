@@ -80,6 +80,8 @@ class Usuario extends Authenticatable
         return false;
     }
 
+
+
     public function paciente()
     {
         return $this->belongsTo(Usuario::class, 'user_id', 'id_usuario');
@@ -219,6 +221,57 @@ class Usuario extends Authenticatable
         }
 
         return null;
+    }
+
+    public static function obtenerPacientesSinCita($busqueda = '')
+    {
+        $query = DB::table('usuario')
+            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
+            ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
+            ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
+            ->select(
+                'usuario.*',
+                'persona.nombre_persona as nombres',
+                'persona.apellido_persona as apellidos',
+                'persona.cedula_persona as cedula',
+                'persona.email_persona as email',
+                DB::raw("TRIM(CONCAT(COALESCE(persona.nombre_persona, ''), ' ', COALESCE(persona.apellido_persona, ''))) as name")
+            )
+            ->where(function ($q) {
+                $q->where('rol.slug', 'paciente')
+                    ->orWhere('rol.nombre', 'Paciente');
+            })
+            ->where('persona.estado', 1)
+            ->whereNotExists(function ($subquery) {
+                $subquery->select(DB::raw(1))
+                    ->from('citas')
+                    ->whereColumn('citas.user_id', 'usuario.id_usuario')
+                    ->whereIn('citas.estado', ['pendiente', 'confirmada']);
+            })
+            ->distinct();
+
+        if ($busqueda) {
+            $buscarNormalized = mb_strtolower($busqueda, 'UTF-8');
+            $query->where(function ($q) use ($buscarNormalized) {
+                $q->whereRaw("LOWER(COALESCE(persona.nombre_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                    ->orWhereRaw("LOWER(COALESCE(persona.apellido_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                    ->orWhereRaw("LOWER(TRIM(CONCAT(COALESCE(persona.nombre_persona, ''), ' ', COALESCE(persona.apellido_persona, '')))) LIKE ?", ["%{$buscarNormalized}%"])
+                    ->orWhereRaw("LOWER(COALESCE(persona.email_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                    ->orWhereRaw("LOWER(COALESCE(persona.cedula_persona, '')) LIKE ?", ["{$buscarNormalized}%"]);
+            });
+        }
+
+        $usuariosRaw = $query->orderBy('persona.nombre_persona', 'asc')->limit(20)->get();
+
+        return $usuariosRaw->map(function ($u) {
+            $u->id = $u->id_usuario;
+
+            $user = new self();
+            $user->setRawAttributes((array) $u, true);
+            $user->exists = true;
+
+            return $user;
+        });
     }
 
     public static function contarMensajesNoLeidos($userId)
