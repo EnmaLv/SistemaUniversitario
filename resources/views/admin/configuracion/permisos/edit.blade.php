@@ -1,16 +1,16 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
+    <div class="rounded-2xl border p-5 mb-6 shadow-sm d-flex justify-content-between align-items-center"
+        style="background-color:var(--bg-card);border-color:var(--border-color);">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Gestión de Permisos Especiales</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                <i class="fas fa-user-shield mr-1" style="color: var(--color-secondary)"></i>
-                Usuario: <strong>{{ $usuario->username }}</strong>
+            <h1 class="m-0 text-2xl sm:text-3xl font-extrabold" style="color:var(--text-main);">Gestionar permisos especiales</h1>
+            <p class="mt-1 mb-0 text-sm text-gray-500 dark:text-gray-400">
+                <i class="fas fa-user-shield mr-1" style="color:var(--color-primary)"></i>
+                Usuario: <strong>{{ $usuario->username }}</strong> · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
-        <a href="{{ route('admin.configuracion.permisos.index') }}" class="rd-btn rd-btn-default">
+        <a href="{{ route('admin.configuracion.permisos.index') }}" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
@@ -21,8 +21,8 @@
 
     <div class="row justify-content-center fade-in">
         <div class="col-md-11">
-            <div class="rd-card shadow-sm border-0">
-                <div class="rd-card-body p-4">
+            <div class="rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
+                <div class="p-5">
                     <form action="{{ route('admin.configuracion.permisos.update', $usuario->id_usuario) }}" method="POST"
                         class="rd-prevent-double-submit">
                         @csrf
@@ -30,17 +30,17 @@
                         <div class="mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-cubes mr-2 text-success"></i> Módulos Especiales para este Usuario
+                                    <i class="fas fa-cubes mr-2" style="color:var(--color-primary);"></i> Módulos especiales para este usuario
                                 </label>
-                                <span class="badge badge-light border text-muted"
-                                    style="border-radius: 6px; padding: 5px 10px;">
+                                <span class="inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400"
+                                    style="border-color:var(--border-color);">
                                     <i class="fas fa-info-circle mr-1"></i> Los módulos marcados en verde vienen heredados
                                     de su Rol base
                                 </span>
                             </div>
 
                             <div class="modules-container p-4"
-                                style="border: 1px solid #eef2f6; border-radius: 12px; background: #fafbfc;">
+                                style="border:1px solid var(--border-color);border-radius:12px;background-color:var(--input-bg);">
                                 <div class="row">
                                     @forelse($modulos as $modulo)
                                         @php
@@ -48,8 +48,8 @@
                                             $loTieneAsignadoExtra = in_array($modulo->id, $modulosExtra);
                                         @endphp
                                         <div class="col-md-4 mb-2">
-                                            <div class="item-modulo p-2 rounded {{ $loTienePorRol ? 'bg-success-light border border-success' : '' }}"
-                                                style="{{ $loTienePorRol ? 'background-color: #f0fdf4; border-radius: 8px;' : '' }}">
+                                            <div class="item-modulo rounded-lg border p-2"
+                                                style="background-color:var(--input-bg);border-color:{{ $loTienePorRol ? 'var(--color-primary)' : 'var(--border-color)' }};">
                                                 <div class="custom-control custom-checkbox">
                                                     <input type="checkbox" name="modulos[]" value="{{ $modulo->id }}"
                                                         class="custom-control-input modulo-check"
@@ -57,12 +57,12 @@
                                                         {{ $loTienePorRol || $loTieneAsignadoExtra ? 'checked' : '' }}
                                                         {{ $loTienePorRol ? 'disabled data-from-role="1"' : '' }}>
                                                     <label class="custom-control-label font-weight-normal mb-0"
-                                                        style="cursor:pointer; font-size:0.95rem; color:#1e293b;"
+                                                        style="cursor:pointer; font-size:0.95rem; color:var(--text-main);"
                                                         for="modulo_{{ $modulo->id }}">
                                                         <strong>{{ $modulo->nombre }}</strong>
                                                         @if ($loTienePorRol)
-                                                            <span class="badge badge-success ml-1"
-                                                                style="font-size: 0.75rem;">Heredado del Rol</span>
+                                                            <span class="ml-1 rounded-md border px-2 py-0.5 text-[10px] font-bold"
+                                                                style="border-color:var(--color-primary);color:var(--color-primary);">Heredado del rol</span>
                                                         @endif
                                                     </label>
                                                 </div>
@@ -82,16 +82,16 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-list-check mr-2 text-primary"></i> Matriz de Permisos Individuales
+                                    <i class="fas fa-list-check mr-2" style="color:var(--color-primary);"></i> Matriz de permisos individuales
                                 </label>
-                                <span class="badge badge-light border text-muted"
-                                    style="border-radius: 6px; padding: 5px 10px;">
+                                <span class="inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-bold text-gray-500 dark:text-gray-400"
+                                    style="border-color:var(--border-color);">
                                     <i class="fas fa-info-circle mr-1"></i> Los cambios aquí sobrescriben el rol base
                                 </span>
                             </div>
 
                             <div class="permissions-grid p-4"
-                                style="border: 1px solid #eef2f6; border-radius: 12px; background: #fbfdff;">
+                                style="border:1px solid var(--border-color);border-radius:12px;background-color:var(--input-bg);">
                                 @include('admin.configuracion.permisos._matrix', [
                                     'items' => $menu ?? [],
                                     'rolePerms' => $rolePerms ?? [],
@@ -107,10 +107,11 @@
 
                         <div class="d-flex gap-3 justify-content-end" style="gap:10px">
                             <a href="{{ route('admin.configuracion.permisos.index') }}"
-                                class="rd-btn rd-btn-default px-4 d-flex align-items-center">
-                                Cancelar
+                                class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600"
+                                style="border-color:var(--border-color);color:var(--text-main);">
+                                <i class="fas fa-arrow-left"></i> Cancelar
                             </a>
-                            <button type="submit" id="save-perms" class="rd-btn rd-btn-primary rd-submit-btn px-5"
+                            <button type="submit" id="save-perms" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg hover:bg-red-900"
                                 style="height: 48px; justify-content: center;">
                                 <i class="fas fa-save"></i> Aplicar Ajustes
                             </button>
@@ -131,8 +132,8 @@
         }
 
         .permission-group-block {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -144,7 +145,7 @@
         }
 
         .permission-group-block:hover {
-            border-color: #cbd5e1;
+            border-color: var(--color-primary);
             box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
         }
 

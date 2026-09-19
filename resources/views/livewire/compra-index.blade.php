@@ -31,7 +31,8 @@
             class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
 
             <div>
-                <label class="block text-[11px] font-black uppercase tracking-wider mb-2 ml-1 text-gray-500 dark:text-gray-400">
+                <label
+                    class="block text-[11px] font-black uppercase tracking-wider mb-2 ml-1 text-gray-500 dark:text-gray-400">
                     Desde
                 </label>
                 <input type="date" name="fecha_desde" id="fecha_desde" value="{{ request('fecha_desde') }}"
@@ -40,7 +41,8 @@
             </div>
 
             <div>
-                <label class="block text-[11px] font-black uppercase tracking-wider mb-2 ml-1 text-gray-500 dark:text-gray-400">
+                <label
+                    class="block text-[11px] font-black uppercase tracking-wider mb-2 ml-1 text-gray-500 dark:text-gray-400">
                     Hasta
                 </label>
                 <input type="date" name="fecha_hasta" id="fecha_hasta" value="{{ request('fecha_hasta') }}"
@@ -68,7 +70,8 @@
         <div class="overflow-x-auto" id="printArea">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
+                    <tr
+                        class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
                         <th class="px-6 py-4 text-center">#</th>
                         <th class="px-6 py-4 text-center">Proveedor</th>
                         <th class="px-6 py-4 text-center">Fecha de Requisición</th>
@@ -80,12 +83,14 @@
 
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                     @forelse($compras as $compra)
-                        <x-table-row :id="$compra->id" class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors"> 
+                        <x-table-row :id="$compra->id"
+                            class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
                             <td class="px-6 py-4 text-center font-bold text-gray-500 whitespace-nowrap">
                                 {{ ($compras->currentPage() - 1) * $compras->perPage() + $loop->iteration }}
                             </td>
-                            
-                            <td class="px-6 py-4 text-center whitespace-nowrap font-bold" style="color: var(--text-main);">
+
+                            <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
+                                style="color: var(--text-main);">
                                 {{ $compra->proveedor_nombre }}
                             </td>
 
@@ -93,39 +98,39 @@
                                 {{ $compra->fecha }}
                             </td>
 
-                            <td class="px-6 py-4 text-center whitespace-nowrap font-black" style="color: var(--text-main);">
+                            <td class="px-6 py-4 text-center whitespace-nowrap font-black"
+                                style="color: var(--text-main);">
                                 {{ number_format($compra->total, 2, ',', '.') }} Bs.
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 @if ($compra->estado == 'Pendiente')
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900">
+                                    <span
+                                        class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900">
                                         <i class="fas fa-clock text-[10px]"></i> Pendiente
                                     </span>
                                 @elseif ($compra->estado == 'Enviado al proveedor')
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
+                                    <span
+                                        class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
                                         <i class="fas fa-hourglass-half text-[10px]"></i> En espera
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                                    <span
+                                        class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                         <i class="fas fa-check-circle text-[10px]"></i> Finalizada
                                     </span>
                                 @endif
                             </td>
 
-                            <x-table-actions 
-                                :id="$compra->id" 
-                                baseUrl="admin/movimientos/compras"
-                                :edit="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor'])"
-                                :toggle="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor'])"
-                                :status="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor']) ? 1 : null"
-                                class="text-center" 
-                            />
+                            <x-table-actions :id="$compra->id" baseUrl="admin/movimientos/compras" :edit="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor'])"
+                                :toggle="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor'])" :status="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor']) ? 1 : null" class="text-center" />
                         </x-table-row>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider">
-                                <i class="fas fa-clipboard-list text-3xl mb-3 block text-gray-300 dark:text-gray-700"></i>
+                            <td colspan="6"
+                                class="px-6 py-12 text-center text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider">
+                                <i
+                                    class="fas fa-clipboard-list text-3xl mb-3 block text-gray-300 dark:text-gray-700"></i>
                                 No hay Requisiciones registradas
                             </td>
                         </tr>

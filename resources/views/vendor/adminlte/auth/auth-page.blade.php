@@ -1,4 +1,4 @@
-@extends('adminlte::master')
+@extends('layouts.app')
 
 @php
     $authType = $authType ?? 'login';
@@ -17,14 +17,12 @@
     }
 @endphp
 
-@section('adminlte_css')
+@push('styles')
     @stack('css')
     @yield('css')
-@stop
+@endpush
 
-@section('classes_body'){{ $bodyClasses }}@stop
-
-@section('body')
+@section('content')
     <div class="{{ $authType }}-box">
 
         {{-- Logo --}}
@@ -84,7 +82,8 @@
     </div>
 @stop
 
-@section('adminlte_js')
+@push('scripts')
     @stack('js')
     @yield('js')
-@stop
+@endpush
+@endsection

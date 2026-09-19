@@ -2,12 +2,13 @@
 .rd-card-desayuno .rd-title {
     margin: 0;
     font-size: 20px;
-    color: #0f172a;
+    color: var(--text-main, #0f172a);
 }
 
 .rd-card-desayuno .rd-sub {
     margin: 4px 0 0;
-    color: #6b7280;
+    color: var(--text-main, #6b7280);
+    opacity: .7;
     font-size: 13px;
 }
 
@@ -33,27 +34,75 @@
 }
 
 
-.rd-card-headerr {
+.rd-card-header {
     padding: 18px 20px;
-    border-bottom: 1px solid #f2f6f9;
+    border-bottom: 1px solid var(--border-color, #f2f6f9);
 }
 
 .rd-card-footer {
     padding: 12px 20px;
-    border-top: 1px solid #f2f6f9;
-    background: #fafbfd;
+    border-top: 1px solid var(--border-color, #f2f6f9);
+    background: var(--bg-card, #fafbfd);
+}
+
+.rd-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text-main, #374151);
+}
+
+.rd-table thead th {
+    background: var(--input-bg, #fbfdff);
+    border-bottom: 1px solid var(--border-color, #eef2f6);
+    color: var(--text-main, #374151);
+    padding: 12px 10px;
+    text-align: left;
+}
+
+.rd-table tbody td {
+    border-bottom: 1px solid var(--border-color, #f6f8fb);
+    color: var(--text-main, #374151);
+    padding: 12px 10px;
+}
+
+.rd-card input:not([type="radio"]):not([type="checkbox"]):not([type="file"]),
+.rd-card select,
+.rd-card textarea {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-main) !important;
+}
+
+.rd-card-desayuno select,
+.rd-card-desayuno select option,
+.rd-card-desayuno input[type="number"] {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--text-main) !important;
+}
+
+html.dark .rd-card-desayuno select option {
+    background-color: #160c0e;
+    color: #f8fafc;
+}
+
+.rd-card-desayuno select:focus,
+.rd-card-desayuno input[type="number"]:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px var(--color-primary-alpha) !important;
 }
 
 /* Search card */
 .rd-card-search .rd-title {
     margin: 0;
     font-size: 20px;
-    color: #0f172a;
+    color: var(--text-main, #0f172a);
 }
 
 .rd-card-search .rd-sub {
     margin: 4px 0 0;
-    color: #6b7280;
+    color: var(--text-main, #6b7280);
+    opacity: .7;
     font-size: 13px;
 }
 
@@ -84,12 +133,56 @@
 .rd-btn-eliminar{
     border: 1px solid #d33a3a !important;
     background: transparent;
+    color: #b91c1c;
     &:hover{
         background: #d33a3a;
         color: white;
         transition: background .25s ease;
 
     }
+}
+
+html.dark .rd-btn-default {
+    color: #f1dfe1;
+    border-color: #5c2028;
+}
+
+html.dark .rd-btn-default:hover {
+    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+html.dark .rd-btn-eliminar {
+    color: #fca5a5;
+    border-color: #b91c1c !important;
+}
+
+html.dark .rd-btn-eliminar:hover {
+    background: #b91c1c;
+    color: #fff;
+}
+
+/* Botones del comedor: misma paleta roja en estados claro y oscuro. */
+.rd-card-desayuno .rd-btn-primary:hover {
+    background: var(--color-btn-hover);
+    filter: none;
+}
+
+.rd-card-desayuno .rd-btn-default {
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+
+.rd-card-desayuno .rd-btn-default:hover {
+    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+html.dark .rd-card-desayuno .rd-btn-default {
+    color: #f1dfe1;
+    border-color: #5c2028;
 }
 
 
@@ -119,7 +212,8 @@
 
 .rd-sub-sm {
     margin: 0;
-    color: #6b7280;
+    color: var(--text-main, #6b7280);
+    opacity: .7;
     font-size: 13px;
 }
 
@@ -143,7 +237,7 @@
     border: 1px solid transparent;
     padding: 7px 9px;
     border-radius: 8px;
-    color: #374151;
+    color: var(--text-main, #374151);
 }
 
 

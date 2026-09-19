@@ -797,16 +797,16 @@
         const reglasInput = {
             placa: {
                 max: 20,
-                msg: 'Máximo 20 caracteres.'
+                msg: 'MÃ¡ximo 20 caracteres.'
             },
             anio: {
                 min: 1990,
                 max: {{ date('Y') }},
-                msg: 'Año entre 1990 y {{ date('Y') }}.'
+                msg: 'AÃ±o entre 1990 y {{ date('Y') }}.'
             },
             color: {
                 max: 50,
-                msg: 'Máximo 50 caracteres.'
+                msg: 'MÃ¡ximo 50 caracteres.'
             },
             peso: {
                 min: 0.1,
@@ -846,18 +846,18 @@
             km_actual: {
                 min: 0,
                 max: 9999999,
-                msg: 'Máximo 9,999,999 km.'
+                msg: 'MÃ¡ximo 9,999,999 km.'
             },
             km_proximo_mantenimiento: {
                 min: 0,
                 max: 9999999,
-                msg: 'Máximo 9,999,999 km.'
+                msg: 'MÃ¡ximo 9,999,999 km.'
             },
         };
 
         function mostrarErrorInline(input, msg) {
             limpiarErrorInline(input);
-            input.classList.add('is-invalid');
+            input.classList.add('border-red-300');
             const div = document.createElement('div');
             div.className = 'text-rose-500 text-xs font-semibold mt-1 error-inline';
             div.innerHTML = `<b>${msg}</b>`;
@@ -912,7 +912,7 @@
                         .then(r => r.json())
                         .then(res => {
                             if (res.existe) {
-                                mostrarErrorInline(inputPlaca, 'Esta placa ya está registrada.');
+                                mostrarErrorInline(inputPlaca, 'Esta placa ya estÃ¡ registrada.');
                             }
                         });
                 }, 500);

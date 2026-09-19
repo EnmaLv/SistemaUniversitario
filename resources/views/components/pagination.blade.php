@@ -58,9 +58,9 @@
         padding: 8px 14px;
         font-size: 14px;
         border-radius: 10px;
-        background: #ffffff;
-        border: 1px solid #dcdcdc;
-        color: #4a4a4a;
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-color, #dcdcdc);
+        color: var(--text-main, #4a4a4a);
         text-decoration: none;
         font-weight: 500;
         transition: all .2s ease-in-out;
@@ -86,7 +86,7 @@
     .rd-pagination .disabled span {
         opacity: 0.4;
         cursor: not-allowed;
-        background: #f3f3f3;
-        color: #a0a0a0;
+        background: var(--input-bg, #f3f3f3);
+        color: var(--text-main, #a0a0a0);
     }
 </style>

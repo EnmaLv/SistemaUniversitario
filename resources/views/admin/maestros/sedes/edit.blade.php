@@ -1,116 +1,43 @@
-@extends('adminlte::page')
+@extends('layouts.app')
+
+@section('title', 'Editar Sede')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
-         ">
+    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
-                Editar Sede
-            </h1>
-
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">Editar sede o anexo</h1>
+            <p class="mt-1 text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
+                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600; font-size:0.95rem;">
-                    {{ \Carbon\Carbon::now()->format('d/m/Y') }}
-                </span>
-            </div>
-
-            <div
-                style="
-                width:46px;
-                height:46px;
-                border-radius:12px;
-                overflow:hidden;
-                box-shadow:0 4px 12px rgba(15,23,42,0.08);
-            ">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%; height:100%; object-fit:cover;">
-            </div>
-        </div>
-
+        <a href="{{ route('admin.maestros.sedes.index') }}"
+            class="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition hover:border-red-600 hover:text-red-600"
+            style="border-color: var(--border-color); color: var(--text-main);">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
     </div>
 @stop
 
 @section('content')
-    <div class="rd-card rd-card-form">
-        <div class="rd-card-body">
-            <div class="rd-card-header mb-3">
-                <div>
-                    <h3 class="rd-title-sm">Editar Sede</h3>
-                    <small class="text-muted">Modifique los datos necesarios</small>
-                </div>
-                <a href="{{ route('admin.maestros.sedes.index') }}" class="rd-btn rd-btn-default">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
-            </div>
-            <form action="{{ route('admin.maestros.sedes.update', $sede->id) }}" method="POST"
-                class="rd-prevent-double-submit">
-                @csrf
-                @method('PUT')
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="rd-label">Nombre de la Sede</label>
-                        <div class="rd-input-group">
-                            <span class="rd-input-icon"><i class="fas fa-tag"></i></span>
-                            <input type="text" name="nombre" class="rd-input w-100" value="{{ $sede->nombre }}"
-                                placeholder="Ingrese el nombre">
-                        </div>
-                        @error('nombre')
-                            <b> <span class="rd-error">{{ $message }}</span></b>
-                        @enderror
-                    </div>
-                    <div class="col-md-4">
-                        <label class="rd-label">Dirección</label>
-                        <div class="rd-input-group">
-                            <span class="rd-input-icon"><i class="fas fa-map-marker-alt"></i></span>
-                            <input type="text" name="direccion" class="rd-input w-100" value="{{ $sede->direccion }}"
-                                placeholder="Ingrese la dirección">
-                        </div>
-                        @error('direccion')
-                            <b> <span class="rd-error">Este campo es obligatorio.</span></b>
-                        @enderror
-                    </div>
-                    <div class="col-md-4">
-                        <label class="rd-label">Teléfono</label>
-                        <div class="rd-input-group">
-                            <span class="rd-input-icon"><i class="fas fa-phone"></i></span>
-                            <input type="text" name="telefono" id="telefono" class="rd-input w-100"
-                                value="{{ $sede->telefono }}" placeholder="(123) 456-7890"
-                                data-inputmask="'mask': '(999) 999-9999'" data-mask>
-                        </div>
-                        @error('telefono')
-                            <b> <span class="rd-error">Este campo es obligatorio.</span></b>
-                        @enderror
-                    </div>
-                </div>
-                <div class="mt-4 d-flex gap-2 justify-content-end">
-                    <a href="{{ route('admin.maestros.sedes.index') }}" class="rd-btn rd-btn-default">
-                        Cancelar
-                    </a>
-                    <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn">
-                        Guardar
-                    </button>
-                </div>
-            </form>
-
+    @include('components.alert')
+    <div class="rounded-2xl border p-6 shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
+        <div class="mb-6 border-b pb-4" style="border-color: var(--border-color);">
+            <h2 class="text-lg font-bold" style="color: var(--text-main);">Datos de la sede</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Modifica los datos necesarios.</p>
         </div>
+        <form action="{{ route('admin.maestros.sedes.update', $sede->id) }}" method="POST" class="space-y-6">
+            @csrf @method('PUT')
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+                @foreach ([['nombre','Nombre de la sede','Ingrese el nombre','fa-tag',$sede->nombre],['direccion','Direccion','Ingrese la direccion','fa-map-marker-alt',$sede->direccion],['telefono','Telefono','(123) 456-7890','fa-phone',$sede->telefono]] as [$name,$label,$placeholder,$icon,$value])
+                    <div><label for="{{ $name }}" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">{{ $label }}</label><div class="flex items-center rounded-xl border" style="background-color: var(--input-bg); border-color: var(--border-color);"><span class="px-3 text-gray-400"><i class="fas {{ $icon }}"></i></span><input id="{{ $name }}" type="text" name="{{ $name }}" value="{{ old($name, $value) }}" placeholder="{{ $placeholder }}" @if($name === 'telefono') data-inputmask="'mask': '(999) 999-9999'" data-mask @endif class="w-full rounded-xl border-0 bg-transparent px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-red-500/30" style="color: var(--text-main);"></div>@error($name)<p class="mt-1 text-xs font-semibold text-red-600">{{ $message }}</p>@enderror</div>
+                @endforeach
+            </div>
+            <div class="flex justify-end gap-3 border-t pt-5" style="border-color: var(--border-color);"><a href="{{ route('admin.maestros.sedes.index') }}" class="rounded-xl border px-5 py-2.5 text-sm font-bold" style="border-color: var(--border-color); color: var(--text-main);">Cancelar</a><button type="submit" class="rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg hover:bg-red-900"><i class="fas fa-save mr-1"></i> Guardar</button></div>
+        </form>
     </div>
-@endsection
+@stop
 
 @section('js')
-    <script>
-        $(document).ready(function() {
-            $("[data-mask]").inputmask();
-        });
-    </script>
+    <script>document.querySelectorAll('[data-mask]').forEach((el) => window.jQuery && $(el).inputmask());</script>
 @endsection

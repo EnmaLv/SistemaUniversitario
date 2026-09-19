@@ -1,106 +1,42 @@
-@extends('adminlte::auth.auth-page', ['authType' => 'login'])
+@extends('layouts.app')
 
-@section('adminlte_css_pre')
-    <link rel="stylesheet" href="{{ asset('vendor/icheck-bootstrap/icheck-bootstrap.min.css') }}">
-@stop
+@section('content')
+    <div class="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+        <h2 class="mb-6 text-center text-2xl font-bold text-slate-900 dark:text-slate-100">Iniciar Sesión</h2>
 
-@php
-    $loginUrl = View::getSection('login_url') ?? config('adminlte.login_url', 'login');
-    $registerUrl = View::getSection('register_url') ?? config('adminlte.register_url', 'register');
-    $passResetUrl = View::getSection('password_reset_url') ?? config('adminlte.password_reset_url', 'password/reset');
+        <form action="{{ route('login') }}" method="post" class="space-y-5">
+            @csrf
 
-    if (config('adminlte.use_route_url', false)) {
-        $loginUrl = $loginUrl ? route($loginUrl) : '';
-        $registerUrl = $registerUrl ? route($registerUrl) : '';
-        $passResetUrl = $passResetUrl ? route($passResetUrl) : '';
-    } else {
-        $loginUrl = $loginUrl ? url($loginUrl) : '';
-        $registerUrl = $registerUrl ? url($registerUrl) : '';
-        $passResetUrl = $passResetUrl ? url($passResetUrl) : '';
-    }
-@endphp
-
-@section('auth_header', 'Iniciar Secion')
-
-@section('auth_body')
-    <form action="{{ $loginUrl }}" method="post">
-        @csrf
-
-        {{-- Email field --}}
-        <div class="input-group mb-3">
-            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                value="{{ old('email') }}" placeholder="{{ __('adminlte::adminlte.email') }}" autofocus>
-
-            <div class="input-group-append">
-                <div class="input-group-text">
-                    <span class="fas fa-envelope {{ config('adminlte.classes_auth_icon', '') }}"></span>
-                </div>
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Correo</label>
+                <input type="email" name="email" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" value="{{ old('email') }}" placeholder="correo@ejemplo.com" autofocus>
+                @error('email')
+                    <span class="mt-1 block text-sm text-red-600">{{ $message }}</span>
+                @enderror
             </div>
 
-            @error('email')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div>
-
-        {{-- Password field --}}
-        <div class="input-group mb-3">
-            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                placeholder="Contraseña">
-
-            <div class="input-group-append">
-                <div class="input-group-text">
-                    <span class="fas fa-lock {{ config('adminlte.classes_auth_icon', '') }}"></span>
-                </div>
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Contraseña</label>
+                <input type="password" name="password" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" placeholder="Contraseña">
+                @error('password')
+                    <span class="mt-1 block text-sm text-red-600">{{ $message }}</span>
+                @enderror
             </div>
 
-            @error('password')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ 'Te equivocaste muchas veces capo' }}</strong>
-                </span>
-            @enderror
-        </div>
-
-        {{-- Login field --}}
-        <div class="row">
-            <div class="col-7">
-                <div class="icheck-primary" title="{{ __('adminlte::adminlte.remember_me_hint') }}">
-                    <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-
-                    <label for="remember">
-                        Rercuerdame
-                    </label>
-                </div>
-            </div>
-
-            <div class="col-5">
-                <button type=submit class="btn btn-block {{ config('adminlte.classes_auth_btn', 'btn-flat btn-primary') }}"
-                    style="border-radius: 10px">
-                    <span class="fas fa-sign-in-alt"></span>
-                    {{ __('adminlte::adminlte.sign_in') }}
+            <div class="flex items-center justify-between gap-3">
+                <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                    <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }} class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500">
+                    Recordarme
+                </label>
+                <button type="submit" class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+                    Ingresar
                 </button>
             </div>
+        </form>
+
+        <div class="mt-6 space-y-2 text-center text-sm">
+            <p><a href="{{ route('password.request') }}" class="text-red-600 hover:text-red-700">Olvidé mi contraseña</a></p>
+            <p><a href="{{ route('register') }}" class="text-red-600 hover:text-red-700">Registrar un nuevo usuario</a></p>
         </div>
-    </form>
-@stop
-
-@section('auth_footer')
-    {{-- Password reset link --}}
-    @if ($passResetUrl)
-        <p class="my-0">
-            <a href="{{ $passResetUrl }}">
-                Olvide mi Contraseña
-            </a>
-        </p>
-    @endif
-
-    {{-- Register link --}}
-    @if ($registerUrl)
-        <p class="my-0">
-            <a href="{{ $registerUrl }}">
-                Registrar un nuevo usuario
-            </a>
-        </p>
-    @endif
+    </div>
 @stop

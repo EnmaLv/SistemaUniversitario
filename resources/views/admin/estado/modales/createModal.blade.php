@@ -1,48 +1,40 @@
-<div wire:ignore.self class="modal fade" id="modalCrear" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalCrearLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-modern" style="border-radius: 50px">
-            <div class="rd-card p-4">
-                <div class="rd-card-header mb-3">
-                    <h3 class="rd-title-sm">Crear Nuevo Estado</h3>
-                </div>
-                <hr>
-                <form wire:submit.prevent="store" id="formCrearEstado" class="rd-prevent-double-submit">
-                    <input type="hidden" wire:model="from">
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="rd-label">Nombre del Estado</label>
-                            <div class="rd-input-group">
-                                <span><i class="fas fa-globe me-2"></i></span>
-                                <input type="text" 
-                                    class="form-control rd-input" 
-                                    id="nombre_estado_crear" 
-                                    wire:model.defer="nombre_estado"
-                                    inputmode="text"
-                                    maxlength="100"
-                                    placeholder="Ingrese el nombre del estado"
-                                    required>
-                                @error('nombre_estado')
-                                    <div class="error-message">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
-                            </div>
-                        </div>    
-                    </div>
-                    <div class="d-flex justify-content-end" style="gap:10px;">
-                        <button type="button" class="rd-btn rd-btn-default" data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn">
-                            Guardar
-                        </button>
-                    </div>
-                </form>
-            </div>
+<div id="modalCrearEstado" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-xl rounded-2xl border shadow-2xl" style="background-color: var(--bg-card); border-color: var(--border-color);">
+        <div class="flex items-center justify-between border-b px-5 py-4" style="border-color: var(--border-color);">
+            <h3 class="text-lg font-semibold" style="color: var(--text-main);">Crear Nuevo Estado</h3>
+            <button type="button" class="text-gray-400 hover:text-red-600" onclick="document.getElementById('modalCrearEstado').classList.add('hidden'); document.getElementById('modalCrearEstado').classList.remove('flex');">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+
+        <form wire:submit.prevent="store" id="formCrearEstado" class="space-y-4 p-5">
+            <input type="hidden" wire:model="from">
+            <div>
+                <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Nombre del Estado</label>
+                <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
+                    <span class="text-slate-500"><i class="fas fa-globe"></i></span>
+                    <input type="text"
+                        class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400" style="color: var(--text-main);"
+                        id="nombre_estado_crear"
+                        wire:model.defer="nombre_estado"
+                        inputmode="text"
+                        maxlength="100"
+                        placeholder="Ingrese el nombre del estado"
+                        required>
+                </div>
+                @error('nombre_estado')
+                    <div class="mt-2 text-sm text-red-600">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" class="rounded-xl border px-4 py-2 text-sm font-medium" style="border-color: var(--border-color); color: var(--text-main);" onclick="document.getElementById('modalCrearEstado').classList.add('hidden'); document.getElementById('modalCrearEstado').classList.remove('flex');">
+                    Cancelar
+                </button>
+                <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+                    Guardar
+                </button>
+            </div>
+        </form>
     </div>
 </div>
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">  
-@endsection

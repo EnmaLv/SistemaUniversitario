@@ -1,173 +1,117 @@
-@extends('adminlte::page')
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            @include('components.alert')
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
-        <div>
-            <h1 class="m-0" style="font-size:1.45rem;color:#0f172a;font-weight:700;">Rutas de Transporte</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-        <div>
-            <a href="{{ route('admin.transporte.maestros.bus_rutas.create') }}" class="rd-btn rd-btn-primary">
-                <i class="fas fa-plus"></i> Nueva Ruta
-            </a>
-        </div>
-    </div>
-@stop
-
-@section('content')
-    @include('components.alert')
-
-    <div class="rd-card rd-card-full">
-        <div class="rd-card-body">
-            <div class="rd-card-header rd-header-space">
+            <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h3 class="rd-title-sm">Rutas Registradas</h3>
+                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Rutas de transporte</h1>
+                    <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
                 </div>
-                <div class="rd-actions">
-                    <div class="d-flex gap-3 align-items-center">
-                        <span class="font-weight-bold" style="margin-right:10px;">Filtrar por estado:</span>
-                        <div class="toggle-container">
-                            <input type="checkbox" id="estadoToggle" class="toggle-checkbox"
-                                {{ request('estado', 1) == 1 ? 'checked' : '' }}>
-                            <label for="estadoToggle" class="toggle-label">
-                                <span class="toggle-inner"></span>
-                                <span class="toggle-switch"></span>
-                            </label>
-                        </div>
+                <a href="{{ route('admin.transporte.maestros.bus_rutas.create') }}"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
+                    <i class="fas fa-plus text-xs"></i> Nueva ruta
+                </a>
+            </div>
+
+            <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center"
+                style="background-color:var(--bg-card);border-color:var(--border-color);">
+                <form action="{{ route('admin.transporte.maestros.bus_rutas.index') }}" method="GET" class="relative w-full">
+                    <input type="hidden" name="estado" value="{{ request('estado', 1) }}">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                        <i class="fas fa-search text-sm"></i>
                     </div>
-                    <form action="{{ route('admin.transporte.maestros.bus_rutas.index') }}" method="GET"
-                        class="rd-search-inline" role="search">
-                        <input type="hidden" name="estado" value="{{ request('estado', 1) }}">
-                        <input type="text" name="buscar" value="{{ request('buscar') }}" class="rd-search-input"
-                            placeholder="Buscar ruta..." />
-                        <button class="rd-icon-btn" type="submit"><i class="fas fa-search"></i></button>
-                    </form>
+                    <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Buscar ruta..."
+                        class="w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500"
+                        style="background-color:var(--input-bg);border-color:var(--border-color);color:var(--text-main);">
+                </form>
+                <div class="flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2" style="border-color:var(--border-color);">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Activas</span>
+                    <label class="relative inline-flex cursor-pointer items-center">
+                        <input type="checkbox" id="estadoToggle" class="sr-only peer" {{ request('estado', 1) == 1 ? 'checked' : '' }}>
+                        <span class="h-6 w-10 rounded-full bg-gray-300 transition peer-checked:bg-red-700 dark:bg-gray-700"></span>
+                        <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span>
+                    </label>
                 </div>
             </div>
 
-            <table class="rd-table">
-                <thead>
-                    <tr>
-                        <th style="width:60px">#</th>
-                        <th class="text-center">Nombre</th>
-                        <th class="text-center">Origen → Destino</th>
-                        <th class="text-center">Distancia</th>
-                        <th class="text-center">Horarios</th>
-                        <th style="width:120px" class="text-center">Estado</th>
-                        <th style="width:150px" class="text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($rutas as $ruta)
-                        <tr>
-                            <td class="text-center">
-                                {{ ($rutas->currentPage() - 1) * $rutas->perPage() + $loop->iteration }}
-                            </td>
-                            <td class="text-center">{{ $ruta->nombre }}</td>
-
-                            <td class="text-center">
-                                @if ($ruta->paradas && $ruta->paradas->isNotEmpty())
-                                    {{ $ruta->paradas->first()->nombre }}
-                                    <i class="fas fa-arrow-right mx-1" style="color:var(--color-primary)"></i>
-                                    {{ $ruta->paradas->last()->nombre }}
-                                @else
-                                    <span class="text-muted" style="font-size: 0.85rem;">Sin paradas trazadas</span>
-                                @endif
-                            </td>
-
-                            <td class="text-center">{{ $ruta->distancia_km }} km</td>
-                            <td class="text-center" style="font-size:0.85rem;">
-                                @forelse($ruta->horarios as $horario)
-                                    <span
-                                        class="rd-badge {{ $horario->tipo_viaje === 'entrada' ? 'rd-badge-success' : 'rd-badge-warning' }} m-1"
-                                        title="Viaje de {{ $horario->tipo_viaje }}">
-                                        {{ substr($horario->hora_salida, 0, 5) }}
-                                        {{ $horario->tipo_viaje === 'entrada' ? '☀️' : '🏠' }}
-                                    </span>
-                                @empty
-                                    <span class="text-muted">Sin horarios</span>
-                                @endforelse
-                            </td>
-
-                            <td class="text-center">
-                                @if ($ruta->estado)
-                                    <span class="rd-badge rd-badge-success">Activa</span>
-                                @else
-                                    <span class="rd-badge rd-badge-danger">Inactiva</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                <div class="rd-action-group">
-                                    <a href="{{ route('admin.transporte.maestros.bus_rutas.edit', $ruta) }}"
-                                        class="rd-action" title="Editar">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @if ($ruta->estado)
-                                        <form action="{{ route('admin.transporte.maestros.bus_rutas.destroy', $ruta) }}"
-                                            method="POST" style="display:inline;">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="rd-action rd-btn-danger"
-                                                onclick="confirmAccion(event, this, 'inactivar', 'ruta')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    @else
-                                        <form action="{{ route('admin.transporte.maestros.bus_rutas.activar', $ruta) }}"
-                                            method="POST" style="display:inline;">
-                                            @csrf @method('PUT')
-                                            <button type="submit" class="rd-action rd-btn-success"
-                                                onclick="confirmAccion(event, this, 'activar', 'ruta')">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-4">No hay rutas registradas.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-            <div class="mt-3 d-flex justify-content-center">
-                {{ $rutas->onEachSide(1)->links('components.pagination') }}
+            <div class="overflow-hidden rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left">
+                        <thead>
+                            <tr class="border-b text-[13px] font-black uppercase tracking-wider" style="border-color:var(--border-color);color:var(--text-main);">
+                                <th class="px-6 py-4 text-center">#</th>
+                                <th class="px-6 py-4 text-center">Nombre</th>
+                                <th class="px-6 py-4 text-center">Origen → Destino</th>
+                                <th class="px-6 py-4 text-center">Distancia</th>
+                                <th class="px-6 py-4 text-center">Horarios</th>
+                                <th class="px-6 py-4 text-center">Estado</th>
+                                <th class="px-6 py-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y text-xs font-medium">
+                            @forelse($rutas as $ruta)
+                                <x-table-row :id="$ruta->id">
+                                    <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
+                                        {{ ($rutas->currentPage() - 1) * $rutas->perPage() + $loop->iteration }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $ruta->nombre }}</td>
+                                    <td class="px-6 py-4 text-center" style="color:var(--text-main);">
+                                        @if ($ruta->paradas && $ruta->paradas->isNotEmpty())
+                                            {{ $ruta->paradas->first()->nombre }}
+                                            <i class="fas fa-arrow-right mx-1" style="color:var(--color-primary);"></i>
+                                            {{ $ruta->paradas->last()->nombre }}
+                                        @else
+                                            <span style="color:var(--text-muted);">Sin paradas trazadas</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $ruta->distancia_km }} km</td>
+                                    <td class="px-6 py-4 text-center">
+                                        @forelse($ruta->horarios as $horario)
+                                            <span class="m-1 inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[10px] font-black {{ $horario->tipo_viaje === 'entrada' ? 'border-emerald-200 bg-emerald-50 text-emerald-600' : 'border-amber-200 bg-amber-50 text-amber-600' }}">
+                                                {{ substr($horario->hora_salida, 0, 5) }}
+                                                {{ $horario->tipo_viaje === 'entrada' ? 'Entrada' : 'Salida' }}
+                                            </span>
+                                        @empty
+                                            <span style="color:var(--text-muted);">Sin horarios</span>
+                                        @endforelse
+                                    </td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-center">
+                                        @if ($ruta->estado)
+                                            <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activa</span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactiva</span>
+                                        @endif
+                                    </td>
+                                    <x-table-actions :id="$ruta->id" baseUrl="admin/transporte/maestros/bus_rutas" :status="$ruta->estado" :show="false" />
+                                </x-table-row>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">No hay rutas registradas.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @if ($rutas->hasPages())
+                    <div class="flex justify-center border-t p-4" style="border-color:var(--border-color);">
+                        {{ $rutas->onEachSide(1)->appends(request()->query())->links('components.pagination') }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
-@stop
 
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
-@stop
-
-@push('js')
-    <script>
-        function confirmAccion(event, button, accion, entidad) {
-            event.preventDefault();
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: `¿Desea ${accion} la ${entidad}?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: `Sí, ${accion}`,
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) button.closest('form').submit();
+    @push('js')
+        <script>
+            document.getElementById('estadoToggle')?.addEventListener('change', function () {
+                const params = new URLSearchParams(window.location.search);
+                params.set('estado', this.checked ? '1' : '0');
+                window.location.href = "{{ route('admin.transporte.maestros.bus_rutas.index') }}?" + params.toString();
             });
-        }
-
-        document.getElementById('estadoToggle').addEventListener('change', function() {
-            const params = new URLSearchParams(window.location.search);
-            params.set('estado', this.checked ? 1 : 0);
-            window.location.href = "{{ route('admin.transporte.maestros.bus_rutas.index') }}?" + params.toString();
-        });
-    </script>
-@endpush
+        </script>
+    @endpush
+</x-app-layout>

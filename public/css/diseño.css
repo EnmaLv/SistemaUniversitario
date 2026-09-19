@@ -130,14 +130,14 @@
 }
 
 .rd-btn-primary {
-    background: var(--color-secondary);
+    background: var(--color-primary);
     color: #fff;
     transition: var(--trans-default);
 }
 
 .rd-btn-primary:hover {
     color: white;
-    background: var(--color-btn-hover); 
+    filter: brightness(0.88);
 }
 
 
@@ -439,4 +439,74 @@ html.dark .rd-alert-list i {
 html.dark .rd-alert-danger .rd-alert-text,
 html.dark .rd-alert-list li {
     color: #fee2e2 !important;
+}
+
+/* Keep legacy rd-* surfaces aligned with the application's theme. */
+html.dark .rd-card,
+html.dark .rd-card-desayuno,
+html.dark .rd-card-list,
+html.dark .rd-card-search {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+html.dark .rd-card h1,
+html.dark .rd-card h2,
+html.dark .rd-card h3,
+html.dark .rd-card h4,
+html.dark .rd-card p,
+html.dark .rd-card small,
+html.dark .rd-card span,
+html.dark .rd-title,
+html.dark .rd-title-sm,
+html.dark .rd-sub,
+html.dark .rd-sub-sm {
+    color: var(--text-main) !important;
+}
+
+html.dark .rd-card-header,
+html.dark .rd-card-footer,
+html.dark .rd-filters {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+html.dark .rd-table thead th {
+    background: var(--header-sidebar-bg) !important;
+    border-color: var(--border-color) !important;
+    color: #f8fafc !important;
+}
+
+html.dark .rd-table tbody td {
+    border-color: var(--border-color) !important;
+    color: #e5e7eb !important;
+}
+
+html.dark .rd-search-input,
+html.dark .rd-icon-btn,
+html.dark .rd-btn-default {
+    background: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: #f8fafc !important;
+}
+
+html.dark .rd-action {
+    color: #e5e7eb !important;
+}
+
+html.dark .rd-action:hover {
+    background: var(--sidebar-active-bg) !important;
+}
+
+html.dark .rd-badge-success {
+    background: #064e3b !important;
+    border-color: #10b981 !important;
+    color: #a7f3d0 !important;
+}
+
+html.dark .rd-badge-danger {
+    background: #7f1d1d !important;
+    border-color: #ef4444 !important;
+    color: #fecaca !important;
 }

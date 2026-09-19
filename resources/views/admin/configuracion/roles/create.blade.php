@@ -1,16 +1,16 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
+    <div class="rounded-2xl border p-5 mb-6 shadow-sm d-flex justify-content-between align-items-center"
+        style="background-color:var(--bg-card);border-color:var(--border-color);">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Crear Nuevo Rol</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                <i class="fas fa-shield-alt mr-1" style="color: var(--color-secondary)"></i> 
+            <h1 class="m-0 text-2xl sm:text-3xl font-extrabold" style="color:var(--text-main);">Crear nuevo rol</h1>
+            <p class="mt-1 mb-0 text-sm text-gray-500 dark:text-gray-400">
+                <i class="fas fa-shield-alt mr-1" style="color:var(--color-primary)"></i>
                 Define un nuevo perfil de acceso al sistema.
             </p>
         </div>
-        <a href="{{ route('admin.configuracion.roles.index') }}" class="rd-btn rd-btn-default">
+        <a href="{{ route('admin.configuracion.roles.index') }}" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
@@ -21,17 +21,17 @@
 
     <div class="row justify-content-center fade-in">
         <div class="col-md-11"> 
-            <div class="rd-card shadow-sm border-0">
-                <div class="rd-card-body p-4">
+            <div class="rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
+                <div class="p-5">
                     <form action="{{ route('admin.configuracion.roles.store') }}" method="POST" class="rd-prevent-double-submit">
                         @csrf
                         
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label class="rd-label mb-2">Nombre del Rol</label>
-                                <div class="rd-input-group">
+                                <label class="rd-label mb-2" style="color:var(--text-main);">Nombre del rol</label>
+                                <div class="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm outline-none transition" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);">
                                     <span><i class="fas fa-tag"></i></span>
-                                    <input type="text" name="nombre" class="rd-input w-100" 
+                                    <input type="text" name="nombre" class="w-full border-0 bg-transparent text-sm outline-none" style="color:var(--text-main);"
                                            placeholder="Ej: Supervisor" required value="{{ old('nombre') }}">
                                 </div>
                                 @error('nombre')
@@ -42,8 +42,8 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="rd-label mb-2">Descripción Corta</label>
-                                <input type="text" name="descripcion" class="form-control" 
+                                <label class="rd-label mb-2" style="color:var(--text-main);">Descripción corta</label>
+                                <input type="text" name="descripcion" class="w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);"
                                        placeholder="Propósito del rol" value="{{ old('descripcion') }}"
                                        style="border: 1px solid #d8dee9; border-radius: 10px; padding: 8px 12px; height: 45px;">
                             </div>
@@ -52,15 +52,15 @@
                         <div class="form-group mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-cubes mr-2 text-success"></i> Acceso a Módulos Globales del Sistema
+                                    <i class="fas fa-cubes mr-2" style="color:var(--color-primary);"></i> Acceso a módulos globales del sistema
                                 </label>
-                                <button type="button" id="selectAllModules" class="btn btn-xs btn-outline-secondary" style="border-radius: 6px;">
+                                <button type="button" id="selectAllModules" class="rounded-xl border px-4 py-2 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
                                     Seleccionar Todos los Módulos
                                 </button>
                             </div>
                             
                             <div class="modules-container p-4" 
-                                 style="border: 1px solid #eef2f6; border-radius: 12px; background: #fafbfc;">
+                                 style="border:1px solid var(--border-color);border-radius:12px;background-color:var(--input-bg);">
                                 <div class="row">
                                     @forelse($modulos as $modulo)
                                         <div class="col-md-4 mb-2">
@@ -68,7 +68,7 @@
                                                 <input type="checkbox" name="modulos[]" value="{{ $modulo->id }}" 
                                                        class="custom-control-input modulo-check" id="modulo_{{ $modulo->id }}"
                                                        {{ is_array(old('modulos')) && in_array($modulo->id, old('modulos')) ? 'checked' : '' }}>
-                                                <label class="custom-control-label font-weight-normal" style="cursor:pointer; font-size:0.95rem; color:#1e293b;" for="modulo_{{ $modulo->id }}">
+                                                <label class="custom-control-label font-weight-normal" style="cursor:pointer; font-size:0.95rem; color:var(--text-main);" for="modulo_{{ $modulo->id }}">
                                                     <strong>{{ $modulo->nombre }}</strong> <span class="text-muted small">({{ $modulo->key }})</span>
                                                 </label>
                                             </div>
@@ -88,9 +88,9 @@
                         <div class="form-group mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-list-check mr-2 text-primary"></i> Visibilidad de Ítems del Menú Lateral
+                                    <i class="fas fa-list-check mr-2" style="color:var(--color-primary);"></i> Visibilidad de ítems del menú lateral
                                 </label>
-                                <button type="button" id="selectAll" class="btn btn-xs btn-outline-secondary" style="border-radius: 6px;">
+                                <button type="button" id="selectAll" class="rounded-xl border px-4 py-2 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
                                     Seleccionar Todos los Menús
                                 </button>
                             </div>
@@ -129,7 +129,7 @@
 
                                                     echo '<div class="custom-control custom-checkbox mb-2 permission-item" style="margin-left:'.$margin.'px;">
                                                             <input type="checkbox" name="menu_permissions[]" value="'.e($val).'" '.$checked.' class="custom-control-input perm-check" id="check_'.e($val).'">
-                                                            <label class="custom-control-label font-weight-normal" style="cursor:pointer; font-size:0.9rem; color: #334155;" for="check_'.e($val).'">
+                                                            <label class="custom-control-label font-weight-normal" style="cursor:pointer; font-size:0.9rem; color:var(--text-main);" for="check_'.e($val).'">
                                                                 '.e($it['text']).'
                                                             </label>
                                                           </div>';
@@ -167,7 +167,7 @@
 
                                             echo '<div class="custom-control custom-checkbox mb-2 permission-item">
                                                     <input type="checkbox" name="menu_permissions[]" value="'.e($val).'" '.$checked.' class="custom-control-input perm-check" id="check_'.e($val).'">
-                                                    <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color: #334155;" for="check_'.e($val).'">
+                                                    <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color:var(--text-main);" for="check_'.e($val).'">
                                                         '.e($link['text']).'
                                                     </label>
                                                   </div>';
@@ -180,10 +180,10 @@
 
                         {{-- Botones de Acción --}}
                         <div class="d-flex mt-5 justify-content-end" style="gap: 10px">
-                            <a href="{{ route('admin.configuracion.roles.index') }}" class="rd-btn rd-btn-default px-4" style="height: 48px; justify-content: center;">
-                                Cancelar
+                            <a href="{{ route('admin.configuracion.roles.index') }}" class="inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600" style="height: 48px; justify-content: center;border-color:var(--border-color);color:var(--text-main);">
+                                <i class="fas fa-arrow-left"></i> Cancelar
                             </a>
-                            <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn px-5" style="height: 48px;justify-content: center;">
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg hover:bg-red-900" style="height: 48px;justify-content: center;">
                                 <i class="fas fa-save"></i> Guardar Nuevo Rol
                             </button>
                         </div>
@@ -203,8 +203,8 @@
         }
 
         .permission-group-block {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -239,7 +239,7 @@
             transition: background 0.2s ease;
         }
         .item-modulo:hover {
-            background-color: #f1f5f9;
+            background-color: var(--input-bg);
         }
     </style>
 @stop

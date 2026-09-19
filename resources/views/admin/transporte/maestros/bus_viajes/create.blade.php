@@ -1,31 +1,27 @@
-@extends('adminlte::page')
-
-@section('content_header')
-    <div class="rd-card p-4 mb-4"
-        style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
-        <h1 class="m-0" style="font-size:1.45rem;color:#0f172a;font-weight:700;">Programar y Asignar Viaje</h1>
-        <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">
+<x-app-layout>
+    <x-slot name="header">
+        <div class="mb-6">
+            <h1 class="text-2xl font-extrabold tracking-tight" style="color: var(--text-main);">Programar y Asignar Viaje</h1>
+            <p class="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
             Seleccione la unidad, la ruta asignada y el chofer responsable para habilitar la salida.
-        </p>
-    </div>
-@stop
+            </p>
+        </div>
+    </x-slot>
 
-@section('content')
     @include('components.alert')
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="rd-card p-4"
-                style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div>
+            <div class="rounded-2xl border p-6 shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
                 <form id="formCrear" action="{{ route('admin.transporte.maestros.bus_viajes.store') }}" method="POST">
                     @csrf
-                    <div class="form-group mb-3">
-                        <label class="rd-label">Autobús / Unidad Disponible</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-bus"></i></span>
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">AutobÃºs / Unidad Disponible</label>
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-bus"></i></span>
                             <select name="vehiculo_id" id="vehiculoSelect"
-                                class="form-control rd-filter-input @error('vehiculo_id') is-invalid @enderror" required>
-                                <option value="">-- Seleccionar Vehículo --</option>
+                                class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('vehiculo_id') border-red-500 @enderror" required>
+                                <option value="">-- Seleccionar VehÃ­culo --</option>
                                 @foreach ($vehiculos as $vehiculo)
                                     <option value="{{ $vehiculo->id }}"
                                         {{ old('vehiculo_id') == $vehiculo->id ? 'selected' : '' }}>
@@ -35,16 +31,16 @@
                             </select>
                         </div>
                         @error('vehiculo_id')
-                            <div class="text-danger font-weight-bold mt-1" style="font-size:0.85rem;">{{ $message }}</div>
+                            <div class="mt-1 text-sm font-bold text-red-600">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="rd-label">Ruta de Transporte</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-route"></i></span>
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">Ruta de Transporte</label>
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-route"></i></span>
                             <select name="bus_ruta_id" id="rutaSelect"
-                                class="form-control rd-filter-input @error('bus_ruta_id') is-invalid @enderror" required>
+                                class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('bus_ruta_id') border-red-500 @enderror" required>
                                 <option value="">-- Seleccionar Ruta --</option>
                                 @foreach ($rutas as $ruta)
                                     <option value="{{ $ruta->id }}" data-distancia="{{ $ruta->distancia_km }}"
@@ -56,16 +52,16 @@
                             </select>
                         </div>
                         @error('bus_ruta_id')
-                            <div class="text-danger font-weight-bold mt-1" style="font-size:0.85rem;">{{ $message }}</div>
+                            <div class="mt-1 text-sm font-bold text-red-600">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="rd-label">Conductor Asignado</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                    <div class="mb-4">
+                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">Conductor Asignado</label>
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-id-card"></i></span>
                             <select name="conductor_id" id="conductorSelect"
-                                class="form-control rd-filter-input @error('conductor_id') is-invalid @enderror" required>
+                                class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('conductor_id') border-red-500 @enderror" required>
                                 <option value="">-- Seleccionar Chofer --</option>
                                 @foreach ($conductores as $conductor)
                                     <option value="{{ $conductor->id_usuario }}"
@@ -78,18 +74,18 @@
                             </select>
                         </div>
                         @error('conductor_id')
-                            <div class="text-danger font-weight-bold mt-1" style="font-size:0.85rem;">{{ $message }}</div>
+                            <div class="mt-1 text-sm font-bold text-red-600">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="form-group mb-4">
-                        <label class="rd-label">Turno Correspondiente</label>
-                        <div class="input-group mt-1">
-                            <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                    <div class="mb-6">
+                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">Turno Correspondiente</label>
+                        <div class="relative mt-1">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-clock"></i></span>
                             <select name="turno" id="turnoSelect"
-                                class="form-control rd-filter-input @error('turno') is-invalid @enderror" required>
-                                <option value="mañana" {{ old('turno', $turnoSugerido) === 'mañana' ? 'selected' : '' }}>
-                                    Mañana (06:00 AM - 12:59 AM)</option>
+                                class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('turno') border-red-500 @enderror" required>
+                                <option value="maÃ±ana" {{ old('turno', $turnoSugerido) === 'maÃ±ana' ? 'selected' : '' }}>
+                                    MaÃ±ana (06:00 AM - 12:59 AM)</option>
                                 <option value="tarde" {{ old('turno', $turnoSugerido) === 'tarde' ? 'selected' : '' }}>
                                     Tarde (01:00 PM - 05:59 PM)</option>
                                 <option value="noche" {{ old('turno', $turnoSugerido) === 'noche' ? 'selected' : '' }}>
@@ -97,58 +93,51 @@
                             </select>
                         </div>
                         @error('turno')
-                            <div class="text-danger font-weight-bold mt-1" style="font-size:0.85rem;">{{ $message }}</div>
+                            <div class="mt-1 text-sm font-bold text-red-600">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4"
-                        style="border-top:1px solid #e5e7eb; padding-top:20px;">
+                    <div class="mt-6 flex items-center justify-between border-t pt-5" style="border-color: var(--border-color);">
                         <a href="{{ route('admin.transporte.maestros.bus_viajes.index') }}"
-                            class="rd-btn rd-btn-default">Cancelar</a>
-                        <button type="submit" class="rd-btn rd-btn-primary">
-                            <i class="fas fa-check mr-1"></i> Programar Viaje
+                            class="rounded-xl border px-4 py-2.5 text-sm font-bold text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">Cancelar</a>
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-red-900 active:scale-95">
+                            <i class="fas fa-check text-xs"></i> Programar Viaje
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div class="col-md-6 mt-3 mt-md-0">
-            <div class="rd-card p-4"
-                style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
-                <h3 style="font-size:1.1rem;color:#0f172a;font-weight:700;" class="mb-3">
-                    <i class="fas fa-info-circle text-primary mr-1"></i> Resumen de la Asignación
+        <div>
+            <div class="rounded-2xl border p-6 shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                <h3 class="mb-4 text-lg font-bold" style="color: var(--text-main);">
+                    <i class="fas fa-info-circle mr-1 text-red-600"></i> Resumen de la AsignaciÃ³n
                 </h3>
 
-                <div class="p-3 mb-3" style="background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Estado Inicial:</span>
-                        <span class="rd-badge rd-badge-warning">Programado</span>
+                <div class="mb-4 rounded-xl border p-4" style="background-color: var(--bg-body); border-color: var(--border-color);">
+                    <div class="mb-3 flex items-center justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Estado Inicial:</span>
+                        <span class="rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">Programado</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Distancia de la Ruta:</span>
+                    <div class="mb-3 flex items-center justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Distancia de la Ruta:</span>
                         <strong id="infoDistancia" style="color:#0f172a;">-- km</strong>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Cantidad de Paradas:</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Cantidad de Paradas:</span>
                         <strong id="infoParadas" style="color:#0f172a;">--</strong>
                     </div>
                 </div>
 
-                <div class="alert alert-info border-0 mb-0"
-                    style="border-radius:10px; background-color:#eff6ff; color:#1e40af; font-size:0.88rem;">
+                <div class="rounded-xl bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
                     <i class="fas fa-lightbulb mr-1"></i>
-                    <strong>Nota:</strong> Una vez programado, el viaje aparecerá disponible en la aplicación móvil del
+                    <strong>Nota:</strong> Una vez programado, el viaje aparecerÃ¡ disponible en la aplicaciÃ³n mÃ³vil del
                     conductor asignado para que pueda presionar <em>"Iniciar Viaje"</em> y comenzar a emitir su GPS en vivo.
                 </div>
             </div>
         </div>
     </div>
-@stop
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
-@stop
+    </div>
 
 @push('js')
     <script>
@@ -176,3 +165,4 @@
         });
     </script>
 @endpush
+</x-app-layout>

@@ -10,7 +10,6 @@ use Livewire\WithPagination;
 class EstadoController extends Controller
 {
     use WithPagination;
-    protected $paginationTheme = 'bootstrap';
 
     public function index()
     {

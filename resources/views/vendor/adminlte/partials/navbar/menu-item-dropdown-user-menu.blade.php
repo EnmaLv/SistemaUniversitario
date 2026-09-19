@@ -16,7 +16,7 @@
 <li class="nav-item user-menu d-flex align-items-center">
 
     {{-- User menu toggler --}}
-    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+    <a href="#" class="nav-link dropdown-toggle" >
         <img src="{{ asset('img/user-icon.webp') }}" class="user-image img-circle elevation-2"
             alt="{{ Auth::user()->name }}" style="object-fit: cover">
         @if (config('adminlte.usermenu_image'))
@@ -64,12 +64,12 @@
         {{-- User menu footer --}}
         <li class="user-footer" style="border-radius:10px">
             @if ($profile_url)
-                <a href="{{ $profile_url }}" class="nav-link btn btn-default btn-flat d-inline-block">
+                <a href="{{ $profile_url }}" class="inline-block rounded-lg px-3 py-2 text-sm font-semibold text-white hover:bg-white/10">
                     <i class="fa fa-fw fa-user text-lightblue"></i>
                     {{ __('adminlte::menu.profile') }}
                 </a>
             @endif
-            <a class="btn btn-default btn-flat float-right @if (!$profile_url) btn-block @endif"
+            <a class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 default btn-flat float-right @if (!$profile_url) btn-block @endif"
                 href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                 style="border-radius:10px">
                 <i class="fa fa-fw fa-power-off text-red"></i>

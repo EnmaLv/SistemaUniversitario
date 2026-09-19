@@ -15,7 +15,7 @@
                     <div style="display: flex;gap: 10px;align-items: center; justify-content: space-between;">
                         <label for="cedula" class="sr-only">Cédula</label>
                         <input type="tel" id="cedula" wire:model.defer="cedula" @disabled(!$receta_diario || !$enableInput)
-                            class="rd-input @error('cedula') rd-input-error @enderror" placeholder="Ej: 12345678"
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 @error('cedula') rd-input-error @enderror" placeholder="Ej: 12345678"
                             maxlength="8" inputmode="numeric" autofocus @if (!$enableInput)
                                 style="cursor: not-allowed;"
                             @endif/>
@@ -77,7 +77,7 @@
                         <button class="rd-icon-btn" type="submit" title="Buscar"><i class="fas fa-search"></i></button>
                     </form>
 
-                    <button class="rd-icon-btn" data-toggle="collapse" data-target="#filters" aria-expanded="false"
+                    <button class="rd-icon-btn"   aria-expanded="false"
                         aria-controls="filters" title="Filtros">
                         <i class="fas fa-filter"></i>
                     </button>
@@ -88,7 +88,7 @@
                         </button>  
                     @endif
                     <!-- Modal Finalizar Dia -->
-                    <div wire:ignore.self class="modal fade" id="modalFinalizarDia" tabindex="-1" aria-hidden="true">
+                    <div wire:ignore.self class="hidden" id="modalFinalizarDia" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-md"> <div class="modal-content rd-card border-0">
                                 <div class="modal-header border-bottom-0 pt-4 px-4">
                                     <h5 class="rd-title-sm" style="font-size: 1.25rem;">
@@ -102,24 +102,24 @@
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label class="rd-label mb-2">Fecha de Cierre</label>
-                                                <div class="rd-input-group bg-light">
+                                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group bg-light">
                                                     <span><i class="fas fa-calendar-day"></i></span>
-                                                    <input wire:model="fecha" type="date" class="form-control rd-input" id="fechaCierre" readonly >
+                                                    <input wire:model="fecha" type="date" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" id="fechaCierre" readonly >
                                                 </div>
                                             </div>
 
                                             <div class="col-md-6 mb-3">
                                                 <label class="rd-label mb-2">Cantidad Sobrante</label>
-                                                <div class="rd-input-group">
+                                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                                     <span><i class="fas fa-utensils"></i></span>
-                                                    <input wire:model="sobrante" type="number" class="form-control rd-input" id="cantidadSobrante" placeholder="0" min="0" required readonly>
+                                                    <input wire:model="sobrante" type="number" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" id="cantidadSobrante" placeholder="0" min="0" required readonly>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="mb-3">
                                             <label class="rd-label mb-2">Motivo del Cierre</label>
-                                            <select wire:model="motivo" class="form-select rd-filter-input w-100" id="motivoCierre" >
+                                            <select wire:model="motivo" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input w-100" id="motivoCierre" >
                                                 <option value="">Seleccione el motivo...</option>
 
                                                 <option value="Baja personal">Baja asistencia del personal operativo</option>
@@ -139,9 +139,9 @@
 
                                         <div class="mb-3">
                                             <label class="rd-label mb-2">Acción Tomada con el Sobrante</label>
-                                            <div class="rd-input-group">
+                                            <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                                 <span><i class="fas fa-hand-holding-heart"></i></span>
-                                                <input wire:model="accion" type="text" class="form-control rd-input" id="accionTomada" placeholder="Ej: Donación, refrigeración, descarte..." >
+                                                <input wire:model="accion" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" id="accionTomada" placeholder="Ej: Donación, refrigeración, descarte..." >
                                             </div>
                                             @error('accion')
                                                 <div class="text-danger small">{{ $message }}</div>
@@ -150,7 +150,7 @@
                                     </div>
 
                                     <div class="modal-footer border-top-0 pb-4 px-4 gap-2">
-                                        <button type="button" class="rd-btn rd-btn-default" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="button" class="rd-btn rd-btn-default" >Cancelar</button>
                                         <button type="submit" class="rd-btn rd-btn-primary" id="btnConfirmarCierre">
                                             <i class="fas fa-save me-1"></i> Guardar y Finalizar
                                         </button>
@@ -180,11 +180,11 @@
                         class="rd-filters-form">
                         <div class="rd-filter-row">
                             <label>Desde</label>
-                            <input type="date" name="fecha_desde" id="fecha_desde" class="rd-filter-input" max="{{ date('Y-m-d') }}"value="{{ request("fecha_desde") }}"/>
+                            <input type="date" name="fecha_desde" id="fecha_desde" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" max="{{ date('Y-m-d') }}"value="{{ request("fecha_desde") }}"/>
                         </div>
                         <div class="rd-filter-row">
                             <label>Hasta</label>
-                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="rd-filter-input"
+                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                                 max="{{ date('Y-m-d') }}" value="{{ request("fecha_hasta") }}"/>
                         </div>
                         <div class="rd-filter-actions">
@@ -363,7 +363,7 @@
         }
 
 
-        const finalizarModal = new bootstrap.Modal(document.getElementById('modalFinalizarDia'));
+        const finalizarModal = document.getElementById('modalFinalizarDia');
         document.addEventListener('DOMContentLoaded', ()=>{
             //Script para el boton de finalizarDia
             const finalizarBtn = document.querySelector('#finalizarDia')
@@ -386,7 +386,7 @@
         })
 
 
-        document.querySelector('button[data-bs-dismiss="modal"]').addEventListener('click', function() {
+        document.querySelector('button[]').addEventListener('click', function() {
             finalizarModal.hide();
         }); 
 
@@ -394,7 +394,7 @@
         document.addEventListener('livewire:initialized', () => {
             @this.on('openModal', () => {
                 // Mostramos la modal de forma segura una vez el DOM está listo
-                finalizarModal.show();
+                        finalizarModal.classList.remove('hidden');
             });
             
             @this.on('finalizar-dia-guardado', (event) => {

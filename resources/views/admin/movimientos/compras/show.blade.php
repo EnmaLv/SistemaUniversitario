@@ -1,21 +1,16 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
-         ">
+        style="background: var(--bg-card); border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid var(--border-color);">
 
         <!-- Texto principal -->
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
-                Compra Nro {{ $compra->id }}
+            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
+                Requisición N.º {{ $compra->id }}
             </h1>
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
+            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.72;">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
@@ -48,12 +43,12 @@
 @section('content')
     <div class="row">
         <div class="col-md-12 m-auto">
-            <div class="card">
+            <div class="card rd-card">
                 <div class="card-header">
                     <h3 class="card-title"><b>Compra Creada</b></h3>
 
                     <div class="card-tools">
-                        <a href="{{ route('admin.movimientos.compras.index') }}" class="btn btn-tool">
+                        <a href="{{ route('admin.movimientos.compras.index') }}" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 tool">
                             <i class="fas fa-arrow-left"></i>
                             <b>Volver</b>
                         </a>
@@ -67,12 +62,12 @@
                                 <div class="col-md-3" style="display: inline-block;">
                                     <div class="form-group">
                                         <label for="proveedor_id">Proveedor</label>
-                                        <div class="input-group mb-3">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text inline-block"><i
+                                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
+                                            <div class="">
+                                                <span class="px-3 text-slate-500 inline-block"><i
                                                         class="fas fa-tags"></i></span>
                                             </div>
-                                            <input type="text" class="form-control" id="proveedor_id" name="proveedor_id"
+                                            <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="proveedor_id" name="proveedor_id"
                                                 placeholder="Seleccione proveedor"
                                                 value="{{ old('proveedor_id', $compra->proveedor_nombre) }}" readonly>
                                         </div>
@@ -85,13 +80,13 @@
                                 </div>
                                 <div class="form-group col-md-2" style="display: inline-block;">
                                     <label for="fecha">Fecha de Compra</label>
-                                    <div class="input-group mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text inline-block"><i
+                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
+                                        <div class="">
+                                            <span class="px-3 text-slate-500 inline-block"><i
                                                     class="fas fa-calendar-alt"></i></span>
                                         </div>
                                         <input type="datetime-local"
-                                            class="form-control" id="fecha" name="fecha"
+                                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="fecha" name="fecha"
                                             value="{{ old('fecha', $compra->fecha ? \Carbon\Carbon::parse($compra->fecha)->format('Y-m-d\TH:i') : '') }}" disabled>
                                     </div>
                                     @error('fecha')
@@ -102,12 +97,12 @@
                                 </div>
                                 <div class="form-group col-md-3" style="display: inline-block;">
                                     <label for="observaciones">Observaciones</label>
-                                    <div class="input-group mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text inline-block"><i
+                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
+                                        <div class="">
+                                            <span class="px-3 text-slate-500 inline-block"><i
                                                     class="fas fa-sticky-note"></i></span>
                                         </div>
-                                        <input type="text" class="form-control" id="observaciones"
+                                        <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="observaciones"
                                             name="observaciones" placeholder="Ingrese observaciones"
                                             value="{{ old('observaciones', $compra->observaciones ?? 'Sin observaciones') }}" readonly>
                                     </div>
@@ -119,12 +114,12 @@
                                 </div>
                                 <div class="form-group col-md-2" style="display: inline-block;">
                                     <label for="estado">Estado Compra</label>
-                                    <div class="input-group mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text inline-block"><i
+                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
+                                        <div class="">
+                                            <span class="px-3 text-slate-500 inline-block"><i
                                                     class="fas fa-sticky-note"></i></span>
                                         </div>
-                                        <input type="text" class="form-control" id="estado" name="estado"
+                                        <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="estado" name="estado"
                                             placeholder="Ingrese estado" value="{{ old('estado', $compra->estado) }}"
                                             readonly>
                                     </div>
@@ -136,12 +131,12 @@
                                 </div>
                                 <div class="form-group col-md-2" style="display: inline-block;">
                                     <label for="sede_destino">Sede de Destino</label>
-                                    <div class="input-group mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text inline-block"><i
+                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
+                                        <div class="">
+                                            <span class="px-3 text-slate-500 inline-block"><i
                                                     class="fas fa-building"></i></span>
                                         </div>
-                                        <input type="text" class="form-control" id="sede_destino"
+                                        <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="sede_destino"
                                             name="sede_destino" placeholder="Sede de destino"
                                             value="{{ $sede_destino ? $sede_destino->nombre : 'Sin concluir' }}" readonly>
                                     </div>
@@ -162,7 +157,7 @@
     </div>
     <div class="row">
         <div class="col-md-12 m-auto">
-            <div class="card">
+            <div class="card rd-card">
                 <div class="card-header">
                     <h3 class="card-title"><b>Productos Agregados</b></h3>
                 </div>
@@ -214,10 +209,10 @@
 @push('css')
     <style>
         .rd-card {
-            background: #ffffff;
+            background: var(--bg-card);
             border-radius: 14px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-color);
             margin-bottom: 1.5rem;
         }
 
@@ -226,14 +221,14 @@
             justify-content: space-between;
             align-items: center;
             padding: 1.25rem 1.5rem;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .card-title {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #1a202c;
+            color: var(--text-main);
             margin: 0;
         }
 
@@ -245,64 +240,59 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-            color: #4a5568;
+            color: var(--text-main);
             font-size: 0.875rem;
         }
 
-        .input-group {
+        .flex.items-center.rounded-xl.border.border-slate-200.bg-slate-50 {
             border: 1px solid #d8dee9;
             border-radius: 12px;
             overflow: hidden;
             transition: all 0.2s ease;
         }
 
-        .input-group-text {
+        .px-3.text-slate-500 {
             background: transparent;
             border: none;
             color: #64748b;
             padding: 0.5rem 0.75rem;
         }
 
-        .form-control {
-            border: none;
-            background: transparent;
-            box-shadow: none;
-            padding: 0.5rem 0.75rem;
-            height: auto;
-        }
-
-        .form-control:disabled,
-        .form-control[readonly] {
-            background-color: #f8f9fa;
-            color: #6c757d;
+        input[readonly],
+        input:disabled,
+        select:disabled,
+        textarea:disabled,
+        textarea[readonly] {
+            background-color: var(--input-bg);
+            color: var(--text-main);
             cursor: not-allowed;
         }
 
         .table {
             width: 100%;
             margin-bottom: 1.5rem;
-            background-color: #fff;
+            background-color: var(--bg-card);
             border-radius: 0.5rem;
             overflow: hidden;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
         .table thead th {
-            background-color: #f8f9fa;
-            color: #4a5568;
+            background-color: var(--input-bg);
+            color: var(--text-main);
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.75rem;
             letter-spacing: 0.05em;
             padding: 0.75rem 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .table tbody td {
             padding: 1rem 1.5rem;
             vertical-align: middle;
-            border-bottom: 1px solid #e2e8f0;
-            color: #4a5568;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
         }
 
         .btn {
@@ -330,23 +320,23 @@
         }
 
         .btn-primary {
-            background-color: #7c3aed;
+            background-color: var(--color-primary);
             color: white;
             border: none;
         }
 
         .btn-primary:hover {
-            background-color: #6d28d9;
+            background-color: var(--color-btn-hover, #b91c1c);
         }
 
         .btn-tool {
             background: transparent;
-            color: #4a5568;
-            border: 1px solid #e2e8f0;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
         }
 
         .btn-tool:hover {
-            background-color: #f8f9fa;
+            background-color: var(--input-bg);
         }
 
         @media (max-width: 768px) {
