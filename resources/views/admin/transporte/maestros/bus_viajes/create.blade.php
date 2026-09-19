@@ -16,12 +16,12 @@
                 <form id="formCrear" action="{{ route('admin.transporte.maestros.bus_viajes.store') }}" method="POST">
                     @csrf
                     <div class="mb-4">
-                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">Autobús / Unidad Disponible</label>
+                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">AutobÃºs / Unidad Disponible</label>
                         <div class="relative mt-1">
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-bus"></i></span>
                             <select name="vehiculo_id" id="vehiculoSelect"
                                 class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('vehiculo_id') border-red-500 @enderror" required>
-                                <option value="">-- Seleccionar Vehículo --</option>
+                                <option value="">-- Seleccionar VehÃ­culo --</option>
                                 @foreach ($vehiculos as $vehiculo)
                                     <option value="{{ $vehiculo->id }}"
                                         {{ old('vehiculo_id') == $vehiculo->id ? 'selected' : '' }}>
@@ -84,8 +84,8 @@
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-clock"></i></span>
                             <select name="turno" id="turnoSelect"
                                 class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('turno') border-red-500 @enderror" required>
-                                <option value="mañana" {{ old('turno', $turnoSugerido) === 'mañana' ? 'selected' : '' }}>
-                                    Mañana (06:00 AM - 12:59 AM)</option>
+                                <option value="maÃ±ana" {{ old('turno', $turnoSugerido) === 'maÃ±ana' ? 'selected' : '' }}>
+                                    MaÃ±ana (06:00 AM - 12:59 AM)</option>
                                 <option value="tarde" {{ old('turno', $turnoSugerido) === 'tarde' ? 'selected' : '' }}>
                                     Tarde (01:00 PM - 05:59 PM)</option>
                                 <option value="noche" {{ old('turno', $turnoSugerido) === 'noche' ? 'selected' : '' }}>
@@ -111,7 +111,7 @@
         <div>
             <div class="rounded-2xl border p-6 shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
                 <h3 class="mb-4 text-lg font-bold" style="color: var(--text-main);">
-                    <i class="fas fa-info-circle mr-1 text-red-600"></i> Resumen de la Asignación
+                    <i class="fas fa-info-circle mr-1 text-red-600"></i> Resumen de la AsignaciÃ³n
                 </h3>
 
                 <div class="mb-4 rounded-xl border p-4" style="background-color: var(--bg-body); border-color: var(--border-color);">
@@ -131,7 +131,7 @@
 
                 <div class="rounded-xl bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
                     <i class="fas fa-lightbulb mr-1"></i>
-                    <strong>Nota:</strong> Una vez programado, el viaje aparecerá disponible en la aplicación móvil del
+                    <strong>Nota:</strong> Una vez programado, el viaje aparecerÃ¡ disponible en la aplicaciÃ³n mÃ³vil del
                     conductor asignado para que pueda presionar <em>"Iniciar Viaje"</em> y comenzar a emitir su GPS en vivo.
                 </div>
             </div>

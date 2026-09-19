@@ -1,203 +1,191 @@
-@extends('layouts.app')
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            @include('components.alert')
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
-         ">
-        <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
-                Historial de Movimientos de Inventario
-            </h1>
-
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600; font-size:0.95rem;">
-                    {{ \Carbon\Carbon::now()->format('d/m/Y') }}
-                </span>
-            </div>
-
-            <div
-                style="
-                width:46px;
-                height:46px;
-                border-radius:12px;
-                overflow:hidden;
-                box-shadow:0 4px 12px rgba(15,23,42,0.08);
-            ">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%; height:100%; object-fit:cover;">
-            </div>
-        </div>
-
-    </div>
-@stop
-
-@section('content')
-    <div class="rd-card rd-card-full">
-
-        <div class="rd-card-body">
-            <div class="rd-card-header rd-header-space">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h3 class="rd-title-sm">Inventario Registrado</h3>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                        Historial de movimientos
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
                 </div>
 
-                <div class="rd-actions">
-                    <form
-                        action="{{ route('admin.movimientos.historial_movimientos.index', request()->segment(count(request()->segments()))) }}"
-                        method="GET" class="rd-search-inline" role="search">
-                        <input type="text" name="buscar" value="{{ $buscar ?? '' }}" class="rd-search-input"
-                            placeholder="Escriba el lote" />
-                        <button class="rd-icon-btn" type="submit" title="Buscar"><i class="fas fa-search"></i></button>
-                    </form>
+                <button type="button" id="pdfBtn"
+                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                    <i class="fas fa-file-pdf text-xs"></i>
+                    <span>Exportar PDF</span>
+                </button>
+            </div>
 
-                    <button class="rd-icon-btn"   aria-expanded="false"
-                        aria-controls="filters" title="Filtros">
-                        <i class="fas fa-filter"></i>
-                    </button>
-
-                    <div class="rd-export-group">
-                        <button class="rd-btn rd-btn-danger" title="Exportar PDF" id="pdfBtn"><i
-                                class="fas fa-file-pdf"></i>
-                            PDF</button>
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="rounded-2xl border shadow-sm mb-3 p-3">
+                <form action="{{ route('admin.movimientos.historial_movimientos.index') }}" method="GET"
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 items-end gap-3">
+                    <div class="lg:col-span-2">
+                        <label for="buscar"
+                            class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Buscar lote
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                <i class="fas fa-search text-sm"></i>
+                            </div>
+                            <input type="text" name="buscar" id="buscar" value="{{ request('buscar') }}"
+                                placeholder="Escriba el lote..."
+                                style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                        </div>
                     </div>
-                </div>
+
+                    <div>
+                        <label for="fecha_desde"
+                            class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Desde
+                        </label>
+                        <input type="date" name="fecha_desde" id="fecha_desde" value="{{ request('fecha_desde') }}"
+                            style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                            class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                    </div>
+
+                    <div>
+                        <label for="fecha_hasta"
+                            class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Hasta
+                        </label>
+                        <input type="date" name="fecha_hasta" id="fecha_hasta" value="{{ request('fecha_hasta') }}"
+                            style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                            class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                    </div>
+
+                    <div>
+                        <label for="tipo_movimiento"
+                            class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Tipo de movimiento
+                        </label>
+                        <select name="tipo_movimiento" id="tipo_movimiento"
+                            style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                            class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                            <option value="">Todos</option>
+                            <option value="ENTRADA" {{ request('tipo_movimiento') === 'ENTRADA' ? 'selected' : '' }}>
+                                Entrada
+                            </option>
+                            <option value="SALIDA" {{ request('tipo_movimiento') === 'SALIDA' ? 'selected' : '' }}>
+                                Salida
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="sm:col-span-2 lg:col-span-5 flex justify-end gap-2">
+                        <a href="{{ route('admin.movimientos.historial_movimientos.index') }}"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                            style="border-color: var(--border-color);">
+                            <i class="fas fa-eraser text-xs"></i>
+                            Limpiar
+                        </a>
+                        <button type="submit"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-bold transition-colors">
+                            <i class="fas fa-filter text-xs"></i>
+                            Aplicar filtros
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <div class="collapse @if (request()->all()) show @endif" id="filters">
-                <div class="rd-filters">
-                    <form action="{{ route('admin.movimientos.historial_movimientos.index') }}" method="GET"
-                        class="rd-filters-form">
-                        <div class="rd-filter-row">
-                            <label for="fecha_desde">Desde</label>
-                            <input type="date" name="fecha_desde" id="fecha_desde" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                                value="{{ request('fecha_desde') }}" />
-                        </div>
-                        <div class="rd-filter-row">
-                            <label for="fecha_hasta">Hasta</label>
-                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                                value="{{ request('fecha_hasta') }}" />
-                        </div>
-                        <div class="rd-filter-row">
-                            <label for="tipo_movimiento">Tipo de Movimiento</label>
-                            <select name="tipo_movimiento" id="tipo_movimiento" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                                style="width:100px; background-color: white;">
-                                <option value="">Todos</option>
-                                <option value="ENTRADA" {{ request('tipo_movimiento') === 'ENTRADA' ? 'selected' : '' }}>
-                                    Entrada</option>
-                                <option value="SALIDA" {{ request('tipo_movimiento') === 'SALIDA' ? 'selected' : '' }}>
-                                    Salida</option>
-                            </select>
-                        </div>
-                        <div class="rd-filter-row rd-filter-actions">
-                            <button class="rd-btn rd-btn-primary" type="submit">Aplicar</button>
-                            <button type="button" class="rd-btn rd-btn-default"
-                                onclick="document.forms[0].reset(); 
-                 document.querySelectorAll('select').forEach(s => s.value = '');">Limpiar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div id="printArea">
-                <table class="rd-table">
-                    <thead>
-                        <tr>
-                            <th style="width:60px">#</th>
-                            <th>Tipo de Movimiento</th>
-                            <th>Producto</th>
-                            <th>Lote</th>
-                            <th>Cantidad (g)</th>
-                            <th>Unidad</th>
-                            <th>Sede</th>
-                            <th>Fecha</th>
-                            <th>ObservaciÃ³n</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($movimiento as $movimientos)
-                            <tr>
-                                <td class="text-center">
-                                    {{ ($movimiento->currentPage() - 1) * $movimiento->perPage() + $loop->iteration }}
-                                </td>
-                                @php
-                                    $tipoEntrada = $movimientos->tipo_movimiento == 'ENTRADA' ? true : false;
-                                @endphp
-                                <td class="text-center">
-                                    @if ($tipoEntrada)
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="rounded-2xl border shadow-sm overflow-hidden">
+                <div class="overflow-x-auto" id="printArea">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
+                                <th class="px-6 py-4 text-center" style="width: 60px;">#</th>
+                                <th class="px-6 py-4 text-center">Tipo de movimiento</th>
+                                <th class="px-6 py-4 text-center">Producto</th>
+                                <th class="px-6 py-4 text-center">Lote</th>
+                                <th class="px-6 py-4 text-center">Cantidad (g)</th>
+                                <th class="px-6 py-4 text-center">Unidad</th>
+                                <th class="px-6 py-4 text-center">Sede</th>
+                                <th class="px-6 py-4 text-center">Fecha</th>
+                                <th class="px-6 py-4 text-center">Observación</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
+                            @forelse($movimiento as $movimientos)
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-black/20 transition-colors">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
-                                            class="text-success rd-badge rd-badge-success d-inline-flex align-items-center">
-                                            <svg class="me-1 text-success" width="16" height="16" fill="currentColor"
-                                                viewBox="0 2 16 16">
-                                                <path
-                                                    d="M8 14a.75.75 0 0 1-.53-.22l-4-4a.75.75 0 0 1 1.06-1.06L8 11.69l3.47-3.47a.75.75 0 1 1 1.06 1.06l-4 4A.75.75 0 0 1 8 14z" />
-                                            </svg>
-                                            {{ $movimientos->tipo_movimiento }}
+                                            class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
+                                            {{ ($movimiento->currentPage() - 1) * $movimiento->perPage() + $loop->iteration }}
                                         </span>
-                                    @else
-                                        <span class="text-danger rd-badge rd-badge-danger d-inline-flex align-items-center">
-                                            <svg class="me-1 text-danger" width="16" height="16" fill="currentColor"
-                                                viewBox="0 -3 16 16">
-                                                <path
-                                                    d="M8 2a.75.75 0 0 1 .53.22l4 4a.75.75 0 0 1-1.06 1.06L8 4.31 4.53 7.78a.75.75 0 0 1-1.06-1.06l4-4A.75.75 0 0 1 8 2z" />
-                                            </svg>
-                                            {{ $movimientos->tipo_movimiento }}
-                                        </span>
-                                    @endif
-                                </td>
-                                <td>{{ $movimientos->producto->nombre }}</td>
-                                <td>{{ $movimientos->lote->codigo_lote }}</td>
-                                <td>{{ $movimientos->cantidad_convertida }}</td>
-                                <td>{{ $movimientos->unidad->nombre }}</td>
-                                <td>{{ $movimientos->sede->nombre }}</td>
-                                <td>{{ $movimientos->fecha }}</td>
-                                @if ($movimientos->observacion)
-                                    <td>{{ $movimientos->observacion }}</td>
-                                @else
-                                    <td>Sin observaciÃ³n</td>
-                                @endif
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="text-center py-4">No hay movimientos</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-3 d-flex justify-content-center">
-                {{ $movimiento->onEachSide(1)->appends(request()->query())->links('components.pagination') }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        @if ($movimientos->tipo_movimiento === 'ENTRADA')
+                                            <span
+                                                class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                                                <i class="fas fa-arrow-down"></i> Entrada
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                                                <i class="fas fa-arrow-up"></i> Salida
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
+                                        style="color: var(--text-main);">
+                                        {{ $movimientos->producto->nombre ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
+                                        {{ $movimientos->lote->codigo_lote ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ $movimientos->cantidad_convertida }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ $movimientos->unidad->nombre ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ $movimientos->sede->nombre ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ $movimientos->fecha }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        {{ $movimientos->observacion ?: 'Sin observación' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9"
+                                        class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
+                                        <i class="fas fa-boxes mb-3 block text-3xl text-gray-300 dark:text-gray-700"></i>
+                                        No hay movimientos registrados
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-center border-t p-4" style="border-color: var(--border-color);">
+                    {{ $movimiento->onEachSide(1)->appends(request()->query())->links('components.pagination') }}
+                </div>
             </div>
         </div>
     </div>
-@stop
 
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
-@stop
-
-@push('js')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const pdfBtn = document.getElementById('pdfBtn');
-            if (pdfBtn) {
-                pdfBtn.addEventListener('click', () => {
-                    const params = new URLSearchParams(window.location.search);
-                    const fechaDesde = params.get('fecha_desde') ?? "";
-                    const fechaHasta = params.get('fecha_hasta') ?? "";
-                    const tipoMovimiento = params.get('tipo_movimiento') ?? "";
-                    const url =
-                        `{{ route('admin.movimientos.historial_movimientos.export_pdf') }}?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}&tipo_movimiento=${tipoMovimiento}`;
-                    window.open(url, '_blank');
-                });
-            }
-        });
-    </script>
-@endpush
+    @push('js')
+        <script>
+            document.getElementById('pdfBtn')?.addEventListener('click', function() {
+                const params = new URLSearchParams(window.location.search);
+                const url = `{{ route('admin.movimientos.historial_movimientos.export_pdf') }}?${params.toString()}`;
+                window.open(url, '_blank');
+            });
+        </script>
+    @endpush
+</x-app-layout>

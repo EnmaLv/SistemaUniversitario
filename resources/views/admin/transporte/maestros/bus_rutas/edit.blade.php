@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+    <div class="mb-6 flex flex-col gap-4 rounded-2xl border p-5 shadow-sm md:flex-row md:items-center md:justify-between"
+        style="background-color:var(--bg-card);border-color:var(--border-color);">
         <div>
-            <h1 class="m-0 rd-title-sm" style="font-size:1.4rem; color:#0f172a; font-weight:700;">Editar Ruta</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">Modifique los datos, horarios o el trazado de la
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="font-size:1.4rem; color:#0f172a; font-weight:700;">Editar Ruta</h1>
+            <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">Modifique los datos, horarios o el trazado de la
                 ruta de transporte existente.</p>
         </div>
-        <a href="{{ route('admin.transporte.maestros.bus_rutas.index') }}" class="rd-btn rd-btn-default"><i
+        <a href="{{ route('admin.transporte.maestros.bus_rutas.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);"><i
                 class="fas fa-arrow-left"></i> Volver</a>
     </div>
 @stop
@@ -40,7 +40,7 @@
         <div class="row">
             <div class="col-lg-5">
                 <div class="rd-card p-4 mb-4"
-                    style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+                    style="background-color:var(--bg-card);border-color:var(--border-color);">
                     <h3 class="rd-title-sm mb-3" style="font-size:1.1rem;color:#0f172a;font-weight:700;">Datos de la Ruta
                     </h3>
 
@@ -90,11 +90,11 @@
                 </div>
 
                 <div class="rd-card p-4 mb-4"
-                    style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+                    style="background-color:var(--bg-card);border-color:var(--border-color);">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="m-0 font-weight-bold" style="font-size:1rem; color:#0f172a;"><i
                                 class="fas fa-clock mr-2 text-primary"></i>PlanificaciÃ³n Horarios</h4>
-                        <button type="button" id="btn-add-horario" class="rd-btn rd-btn-success btn-sm"><i
+                        <button type="button" id="btn-add-horario" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 px-4 py-2 text-sm font-bold text-emerald-700 transition-all hover:bg-emerald-50 dark:hover:bg-emerald-950/30 btn-sm"><i
                                 class="fas fa-plus"></i></button>
                     </div>
                     <table class="table table-sm table-bordered">
@@ -103,7 +103,7 @@
                 </div>
 
                 <div class="rd-card p-4 mb-4"
-                    style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+                    style="background-color:var(--bg-card);border-color:var(--border-color);">
                     <div class="form-group mb-0">
                         <label class="rd-label">DescripciÃ³n</label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
@@ -118,7 +118,7 @@
 
             <div class="col-lg-7">
                 <div class="rd-card p-4 mb-4"
-                    style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+                    style="background-color:var(--bg-card);border-color:var(--border-color);">
                     <div class="mb-3">
                         <h3 class="rd-title-sm m-0" style="font-size:1.1rem;color:#0f172a;font-weight:700;">Trazado e
                             Itinerario de Paradas</h3>
@@ -144,7 +144,7 @@
                         <div class="text-danger mt-2"><b>Debe aÃ±adir al menos 2 paradas al trazado en el mapa.</b></div>
                     @enderror
                     <div class="d-flex justify-content-end" style="gap:12px;">
-                        <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn"
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95 rd-submit-btn"
                             style="color:white; width:200px;"><i class="fas fa-save mr-2"></i> Actualizar Ruta</button>
                     </div>
                 </div>
@@ -161,7 +161,7 @@
             cursor: grab;
             padding: 8px 12px;
             margin-bottom: 6px;
-            background: #fff;
+            background-color: var(--bg-card);
             border: 1px solid #cbd5e1;
             border-radius: 6px;
             display: flex;
@@ -368,8 +368,8 @@
                 <td><input type="time" name="horarios[${indiceHorario}][hora_salida]" value="${hora}" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input-sm" required></td>
                 <td>
                     <select name="horarios[${indiceHorario}][tipo_viaje]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input-sm" required>
-                        <option value="entrada" ${tipo === 'entrada' ? 'selected' : ''}>Entrada â˜€ï¸</option>
-                        <option value="salida" ${tipo === 'salida' ? 'selected' : ''}>Salida ðŸ </option>
+                        <option value="entrada" ${tipo === 'entrada' ? 'selected' : ''}>Entrada Ã¢Ëœâ‚¬Ã¯Â¸Â</option>
+                        <option value="salida" ${tipo === 'salida' ? 'selected' : ''}>Salida Ã°Å¸ÂÂ </option>
                     </select>
                 </td>
                 <td class="text-center"><button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 xs btn-danger" onclick="document.getElementById('fila-horario-${indiceHorario}').remove()"><i class="fas fa-trash"></i></button></td>
@@ -400,4 +400,3 @@
         });
     </script>
 @endpush
-

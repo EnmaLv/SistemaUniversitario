@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="mb-6">
-            <h1 class="text-2xl font-extrabold tracking-tight" style="color: var(--text-main);">Editar Asignación de Viaje</h1>
+            <h1 class="text-2xl font-extrabold tracking-tight" style="color: var(--text-main);">Editar AsignaciÃ³n de Viaje</h1>
             <p class="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
             Modifique la unidad, la ruta o el chofer asignado para este viaje.
             </p>
@@ -18,12 +18,12 @@
                     @method('PUT')
 
                     <div class="mb-4">
-                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">Autobús / Unidad Asignada</label>
+                        <label class="mb-1 block text-sm font-bold" style="color: var(--text-main);">AutobÃºs / Unidad Asignada</label>
                         <div class="relative mt-1">
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-bus"></i></span>
                             <select name="vehiculo_id" id="vehiculoSelect"
                                 class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('vehiculo_id') border-red-500 @enderror" required>
-                                <option value="">-- Seleccionar Vehículo --</option>
+                                <option value="">-- Seleccionar VehÃ­culo --</option>
                                 @foreach ($vehiculos as $vehiculo)
                                     <option value="{{ $vehiculo->id }}"
                                         {{ old('vehiculo_id', $busViaje->vehiculo_id) == $vehiculo->id ? 'selected' : '' }}>
@@ -86,8 +86,8 @@
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-clock"></i></span>
                             <select name="turno" id="turnoSelect"
                                 class="w-full rounded-xl border py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 @error('turno') border-red-500 @enderror" required>
-                                <option value="mañana" {{ old('turno', $busViaje->turno) === 'mañana' ? 'selected' : '' }}>
-                                    Mañana (06:00 AM - 12:59 AM)</option>
+                                <option value="maÃ±ana" {{ old('turno', $busViaje->turno) === 'maÃ±ana' ? 'selected' : '' }}>
+                                    MaÃ±ana (06:00 AM - 12:59 AM)</option>
                                 <option value="tarde" {{ old('turno', $busViaje->turno) === 'tarde' ? 'selected' : '' }}>
                                     Tarde (01:00 PM - 05:59 PM)</option>
                                 <option value="noche" {{ old('turno', $busViaje->turno) === 'noche' ? 'selected' : '' }}>
@@ -145,7 +145,7 @@
 
                 <div class="rounded-xl bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
                     <i class="fas fa-lightbulb mr-1"></i>
-                    <strong>Nota:</strong> Los cambios realizados se reflejarán de inmediato en la aplicación del conductor asignado.
+                    <strong>Nota:</strong> Los cambios realizados se reflejarÃ¡n de inmediato en la aplicaciÃ³n del conductor asignado.
                 </div>
             </div>
         </div>

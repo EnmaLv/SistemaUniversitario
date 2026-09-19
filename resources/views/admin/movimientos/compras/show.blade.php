@@ -2,20 +2,15 @@
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
-         ">
+        style="background: var(--bg-card); border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid var(--border-color);">
 
         <!-- Texto principal -->
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
-                Compra Nro {{ $compra->id }}
+            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
+                Requisición N.º {{ $compra->id }}
             </h1>
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
+            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.72;">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
@@ -48,7 +43,7 @@
 @section('content')
     <div class="row">
         <div class="col-md-12 m-auto">
-            <div class="card">
+            <div class="card rd-card">
                 <div class="card-header">
                     <h3 class="card-title"><b>Compra Creada</b></h3>
 
@@ -162,7 +157,7 @@
     </div>
     <div class="row">
         <div class="col-md-12 m-auto">
-            <div class="card">
+            <div class="card rd-card">
                 <div class="card-header">
                     <h3 class="card-title"><b>Productos Agregados</b></h3>
                 </div>
@@ -177,7 +172,7 @@
                                     <thead>
                                         <tr>
                                             <th>Producto</th>
-                                            <th>CÃ³digo de Lote</th>
+                                            <th>Código de Lote</th>
                                             <th>Cantidad</th>
                                             <th>Precio Unitario</th>
                                             <th>Subtotal</th>
@@ -214,10 +209,10 @@
 @push('css')
     <style>
         .rd-card {
-            background: #ffffff;
+            background: var(--bg-card);
             border-radius: 14px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-color);
             margin-bottom: 1.5rem;
         }
 
@@ -226,14 +221,14 @@
             justify-content: space-between;
             align-items: center;
             padding: 1.25rem 1.5rem;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .card-title {
             font-size: 1.25rem;
             font-weight: 600;
-            color: #1a202c;
+            color: var(--text-main);
             margin: 0;
         }
 
@@ -245,7 +240,7 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-            color: #4a5568;
+            color: var(--text-main);
             font-size: 0.875rem;
         }
 
@@ -268,36 +263,36 @@
         select:disabled,
         textarea:disabled,
         textarea[readonly] {
-            background-color: #f8f9fa;
-            color: #6c757d;
+            background-color: var(--input-bg);
+            color: var(--text-main);
             cursor: not-allowed;
         }
 
         .table {
             width: 100%;
             margin-bottom: 1.5rem;
-            background-color: #fff;
+            background-color: var(--bg-card);
             border-radius: 0.5rem;
             overflow: hidden;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
 
         .table thead th {
-            background-color: #f8f9fa;
-            color: #4a5568;
+            background-color: var(--input-bg);
+            color: var(--text-main);
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.75rem;
             letter-spacing: 0.05em;
             padding: 0.75rem 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .table tbody td {
             padding: 1rem 1.5rem;
             vertical-align: middle;
-            border-bottom: 1px solid #e2e8f0;
-            color: #4a5568;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
         }
 
         .btn {
@@ -325,23 +320,23 @@
         }
 
         .btn-primary {
-            background-color: #7c3aed;
+            background-color: var(--color-primary);
             color: white;
             border: none;
         }
 
         .btn-primary:hover {
-            background-color: #6d28d9;
+            background-color: var(--color-btn-hover, #b91c1c);
         }
 
         .btn-tool {
             background: transparent;
-            color: #4a5568;
-            border: 1px solid #e2e8f0;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
         }
 
         .btn-tool:hover {
-            background-color: #f8f9fa;
+            background-color: var(--input-bg);
         }
 
         @media (max-width: 768px) {

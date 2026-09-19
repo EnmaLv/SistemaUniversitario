@@ -1,132 +1,97 @@
-@extends('layouts.app')
+<x-app-layout>
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
-
-        <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">ConfiguraciÃ³n de Roles</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                <i class="fas fa-user-tag mr-1" style="color: var(--color-secondary)"></i> DefiniciÃ³n de permisos y accesos
-            </p>
-        </div>
-
-        <a href="{{ route('admin.configuracion.roles.create') }}" class="rd-btn rd-btn-primary px-4">
-            <i class="fas fa-plus-circle"></i> Crear Nuevo Rol
-        </a>
-    </div>
-@stop
-
-@section('content')
     @include('components.alert')
 
-    <div class="rd-card rd-card-full shadow-sm border-0 overflow-hidden">
-        <div class="rd-card-body border-bottom bg-white">
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Roles</h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-user-tag mr-1" style="color:var(--color-primary)"></i>
+                        Definición de permisos y accesos · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
+                </div>
+                <a href="{{ route('admin.configuracion.roles.create') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
+                    <i class="fas fa-plus text-xs"></i> Crear rol
+                </a>
+            </div>
+
+    <div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">
+        <div class="p-3 border-bottom" style="border-color:var(--border-color);">
             <form action="{{ route('admin.configuracion.roles.index') }}" method="GET">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h3 class="rd-title-sm">Listado de Roles</h3>
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-extrabold" style="color:var(--text-main);">Listado de roles</h3>
                     </div>
-                    <div class="col-md-6 d-flex justify-content-end">
-                        <div class="d-flex align-items-center gap-2"> 
-                            <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
-                                <span><i class="fas fa-search"></i></span>
-                                <input type="text" name="q" value="{{ request('q') }}" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-100" placeholder="Buscar por nombre o descripciÃ³n...">
-                            </div>
-                            <button type="submit" class="rd-btn rd-btn-primary">
-                                Buscar
-                            </button>
+                    <div class="flex w-full gap-2 lg:w-auto">
+                        <div class="flex min-w-0 flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 lg:w-96" style="background-color:var(--input-bg);border-color:var(--input-border);">
+                            <i class="fas fa-search text-gray-400"></i>
+                            <input type="text" name="q" value="{{ request('q') }}" class="w-full border-0 bg-transparent text-sm outline-none" style="color:var(--text-main);" placeholder="Buscar por nombre o descripción...">
                         </div>
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800">
+                            <i class="fas fa-search text-xs"></i> Buscar
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div class="rd-table-container">
-            <table class="rd-table">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th class="text-center" style="width:60px">#</th>
-                        <th>Nombre del Rol</th>
-                        <th>DescripciÃ³n</th>
-                        <th class="text-center" style="width:160px">Acciones</th>
+                    <tr class="border-b text-[13px] font-black uppercase tracking-wider" style="background-color:var(--bg-card);border-color:var(--border-color);color:var(--text-main);">
+                        <th class="px-6 py-4 text-center">#</th>
+                        <th class="px-6 py-4">Nombre del rol</th>
+                        <th class="px-6 py-4">Descripción</th>
+                        <th class="px-6 py-4 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="fade-in">
                     @forelse($roles as $rol)
-                        <tr>
-                            <td class="text-center text-muted font-weight-bold">
+                        <x-table-row :id="$rol->id_rol" class="border-b" style="border-color:var(--border-color);">
+                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-muted);">
                                 {{ ($roles->currentPage()-1)*$roles->perPage()+$loop->iteration }}
                             </td>
-                            <td>
-                                <span class="rd-badge {{ in_array(strtolower($rol->nombre), ['administrador', 'empleado', 'obrero']) ? 'rd-badge-success' : 'rd-badge-warning' }}" 
-                                      style="font-size: 0.85rem; letter-spacing: 0.3px;">
+                            <td class="px-6 py-4 font-bold" style="color:var(--text-main);">
+                                <span class="inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-extrabold uppercase tracking-wide" style="border-color:var(--border-color);color:var(--color-primary);">
+                                    <i class="fas fa-user-tag"></i>
                                     {{ strtoupper($rol->nombre) }}
                                 </span>
                             </td>
-                            <td>
-                                <span class="text-muted" title="{{ $rol->descripcion }}">
-                                    {{ \Illuminate\Support\Str::limit($rol->descripcion, 80) ?? 'Sin descripciÃ³n' }}
+                            <td class="px-6 py-4">
+                                <span style="color:var(--text-muted);" title="{{ $rol->descripcion }}">
+                                    {{ \Illuminate\Support\Str::limit($rol->descripcion, 80) ?? 'Sin descripción' }}
                                 </span>
                             </td>
-                            <td class="text-center">
-                                @php
-                                    $protected = ['Empleado','Obrero','Administrador'];
-                                    $isProtected = in_array(strtolower($rol->nombre ?? ''), array_map('strtolower', $protected));
-                                @endphp
-                                
-                                <div class="d-flex justify-content-center gap-2">
-                                    @if(!$isProtected)
-                                        <a href="{{ route('admin.configuracion.roles.edit', $rol->id_rol) }}" 
-                                           class="rd-action" title="Editar permisos">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        
-                                        <form action="{{ route('admin.configuracion.roles.destroy', $rol->id_rol) }}" 
-                                              method="POST" class="d-inline delete-form">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="rd-action rd-btn-danger" title="Eliminar Rol">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-
-                                        <script>
-                                            document.querySelectorAll('.delete-form button').forEach(button => {
-                                                button.addEventListener('click', function(e) {
-                                                    e.preventDefault();
-                                                    const form = this.closest('.delete-form');
-                                                    
-                                                    // Si usas SweetAlert2:
-                                                    Swal.fire({
-                                                        title: 'Â¿EstÃ¡s seguro?',
-                                                        text: "Se eliminarÃ¡n los accesos y mÃ³dulos asociados a este rol.",
-                                                        icon: 'warning',
-                                                        showCancelButton: true,
-                                                        confirmButtonColor: '#3085d6',
-                                                        cancelButtonColor: '#d33',
-                                                        confirmButtonText: 'SÃ­, eliminar',
-                                                        cancelButtonText: 'Cancelar'
-                                                    }).then((result) => {
-                                                        if (result.isConfirmed) {
-                                                            form.submit(); // AquÃ­ es donde se envÃ­a realmente
-                                                        }
-                                                    });
-                                                });
-                                            });
-                                        </script>
-                                    @else
-                                        <span class="badge badge-light border text-muted px-3 py-2 text-center" style="border-radius: 8px;">
-                                            <i class="fas fa-lock "></i> Protegido
-                                        </span>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
+                            @php
+                                $protected = ['Empleado', 'Obrero', 'Administrador'];
+                                $isProtected = in_array(strtolower($rol->nombre ?? ''), array_map('strtolower', $protected));
+                            @endphp
+                            @if (!$isProtected)
+                                <x-table-actions :id="$rol->id_rol" baseUrl="admin/configuracion/roles" :show="false" :toggle="false">
+                                    <form action="{{ route('admin.configuracion.roles.destroy', $rol->id_rol) }}"
+                                        method="POST" class="inline delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors btn-delete"
+                                            title="Eliminar rol">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </form>
+                                </x-table-actions>
+                            @else
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400" style="border-color:var(--border-color);">
+                                        <i class="fas fa-lock"></i> Protegido
+                                    </span>
+                                </td>
+                            @endif
+                        </x-table-row>
                     @empty
-                        <tr>
-                            <td colspan="4" class="text-center py-5">
-                                <div class="text-muted">
+                        <tr><td colspan="4" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
+                                <div>
                                     <i class="fas fa-shield-alt fa-3x mb-3" style="opacity: 0.1"></i>
                                     <p>No se encontraron roles registrados.</p>
                                 </div>
@@ -137,27 +102,26 @@
             </table>
         </div>
 
-        <div class="rd-card-body border-top bg-light d-flex justify-content-center">
+        <div class="p-4 border-top flex justify-content-center" style="border-color:var(--border-color);">
             {{ $roles->appends(request()->query())->links('components.pagination') }}
         </div>
     </div>
-@stop
-
-@section('js')
+        </div>
+    </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function(){
-        // IntegraciÃ³n de SweetAlert2 para la eliminaciÃ³n
+        // Integración de SweetAlert2 para la eliminación
         document.querySelectorAll('.btn-delete').forEach(button => {
             button.addEventListener('click', function(){
                 Swal.fire({
-                    title: 'Â¿Eliminar Rol?',
-                    text: "Esto podrÃ­a afectar el acceso de los usuarios vinculados.",
+                    title: '¿Eliminar Rol?',
+                    text: "Esto podría afectar el acceso de los usuarios vinculados.",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: 'var(--color-primary)',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: 'SÃ­, eliminar',
+                    confirmButtonText: 'Sí, eliminar',
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -168,4 +132,4 @@
         });
     });
 </script>
-@stop
+</x-app-layout>

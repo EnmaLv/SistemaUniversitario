@@ -1,148 +1,148 @@
-@extends('layouts.app')
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            @include('components.alert')
 
-@section('title', 'Beneficios de Becas')
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                        Gestión de beneficios
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
+                </div>
 
-@section('content_header')
-    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">
-                Beneficios de Becas
-            </h1>
-            <p class="mt-1 text-sm text-gray-500">Beneficios disponibles para asociar a becas.</p>
-        </div>
-        <a href="{{ route('admin.becas.beneficios.create') }}"
-            class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white transition-colors hover:bg-red-900">
-            <i class="fas fa-plus"></i>
-            Nuevo Beneficio
-        </a>
-    </div>
-@stop
-
-@section('content')
-    @include('components.alert')
-
-    <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center"
-        style="background-color: var(--bg-card); border-color: var(--border-color);">
-        <form action="{{ route('admin.becas.beneficios.index') }}" method="GET" class="relative w-full">
-            <input type="hidden" name="activo" value="{{ request('activo', 1) }}">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
-                <i class="fas fa-search"></i>
+                <a href="{{ route('admin.becas.beneficios.create') }}"
+                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                    <i class="fas fa-plus text-xs"></i>
+                    <span>Nuevo beneficio</span>
+                </a>
             </div>
-            <input name="buscar" value="{{ request('buscar') }}" placeholder="Buscar beneficio..."
-                class="w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);">
-        </form>
-        <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="border-color: var(--border-color);">
-            <span class="text-[11px] font-black uppercase tracking-wider text-gray-500">Activos</span>
-            <label class="relative inline-flex cursor-pointer items-center">
-                <input id="estadoToggle" type="checkbox" class="peer sr-only"
-                    {{ request('activo', 1) == 1 ? 'checked' : '' }}>
-                <span class="h-6 w-10 rounded-full bg-gray-300 peer-checked:bg-red-700 dark:bg-gray-700"></span>
-                <span
-                    class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span>
-            </label>
-        </div>
-    </div>
 
-    <div class="overflow-hidden rounded-2xl border shadow-sm"
-        style="background-color: var(--bg-card); border-color: var(--border-color);">
-        <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-left">
-                <thead>
-                    <tr class="border-b text-[13px] font-black uppercase tracking-wider"
-                        style="border-color: var(--border-color); color: var(--text-main);">
-                        <th class="px-6 py-4 text-center" style="width: 80px;">#</th>
-                        <th class="px-6 py-4">Nombre</th>
-                        <th class="px-6 py-4">Descripción</th>
-                        <th class="px-6 py-4 text-center" style="width: 140px;">Estado</th>
-                        <th class="px-6 py-4 text-center" style="width: 120px;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y text-xs font-medium">
-                    @forelse($beneficios as $beneficio)
-                        <x-table-row :id="$beneficio->id">
-                            <td class="px-6 py-4 text-center" style="color: var(--text-muted);">
-                                {{ ($beneficios->currentPage() - 1) * $beneficios->perPage() + $loop->iteration }}
-                            </td>
-                            <td class="px-6 py-4 font-bold" style="color: var(--text-main);">
-                                {{ $beneficio->nombre_beneficio }}
-                            </td>
-                            <td class="px-6 py-4" style="color: var(--text-muted);">
-                                {{ $beneficio->descripcion ?: 'Sin descripción' }}
-                            </td>
-                            <td class="whitespace-nowrap px-6 py-4 text-center">
-                                @if ($beneficio->status)
-                                    <span
-                                        class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400">
-                                        <i class="fas fa-check-circle"></i>
-                                        Activo
-                                    </span>
-                                @else
-                                    <span
-                                        class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400">
-                                        <i class="fas fa-times-circle"></i>
-                                        Inactivo
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="whitespace-nowrap px-6 py-4">
-                                <div class="acciones-wrap relative flex h-8 items-center justify-center">
-                                    <div
-                                        class="acciones-trigger flex h-8 w-8 items-center justify-center rounded-xl border text-gray-500 shadow-sm transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-gray-600/50 dark:text-gray-400 dark:hover:bg-rose-950/50">
-                                        <i class="fas fa-ellipsis-vertical text-xs"></i>
-                                    </div>
-                                    <div class="acciones-panel">
-                                        <a href="{{ route('admin.becas.beneficios.edit', $beneficio) }}"
-                                            class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50"
-                                            title="Editar">
-                                            <i class="fas fa-edit text-xs"></i>
-                                        </a>
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="p-2.5 rounded-2xl border shadow-sm mb-3 flex flex-col lg:flex-row lg:items-center gap-4">
+                <form action="{{ route('admin.becas.beneficios.index') }}" method="GET"
+                    class="flex flex-col sm:flex-row items-center gap-3 w-full">
+                    <input type="hidden" name="activo" value="{{ request('activo', 1) }}">
+                    <div class="relative w-full">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-search text-sm"></i>
+                        </div>
+                        <input type="text" name="buscar" value="{{ request('buscar') }}"
+                            placeholder="Buscar beneficio..."
+                            style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                            class="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                        <button type="submit"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-600 transition-colors"
+                            title="Buscar">
+                            <i class="fas fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="flex items-center gap-2 px-3 py-2 rounded-xl border shrink-0"
+                    style="border-color: var(--border-color);">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        Activos
+                    </span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="estadoToggle" class="sr-only peer"
+                            {{ request('activo', 1) == 1 ? 'checked' : '' }}>
+                        <span
+                            class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer-checked:bg-red-700 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4">
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="rounded-2xl border shadow-sm overflow-hidden">
+                <div class="overflow-x-auto" id="printArea">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
+                                <th class="px-6 py-4 text-center" style="width: 80px;">#</th>
+                                <th class="px-6 py-4 text-center">Nombre</th>
+                                <th class="px-6 py-4 text-center">Descripción</th>
+                                <th class="px-6 py-4 text-center" style="width: 140px;">Estado</th>
+                                <th class="px-6 py-4 text-center" style="width: 120px;">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
+                            @forelse($beneficios as $beneficio)
+                                <x-table-row :id="$beneficio->id">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <span
+                                            class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
+                                            {{ ($beneficios->currentPage() - 1) * $beneficios->perPage() + $loop->iteration }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
+                                        style="color: var(--text-main);">
+                                        {{ $beneficio->nombre_beneficio }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        {{ $beneficio->descripcion ?: 'Sin descripción' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        @if ($beneficio->status)
+                                            <span
+                                                class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                                                <i class="fas fa-check-circle"></i> Activo
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                                                <i class="fas fa-times-circle"></i> Inactivo
+                                            </span>
+                                        @endif
+                                    </td>
+
+                                    <x-table-actions :id="$beneficio->id"
+                                        baseUrl="admin/becas/beneficios" :status="$beneficio->status" :toggle="false">
                                         <form action="{{ route('admin.becas.beneficios.toggle', $beneficio) }}"
-                                            method="POST" class="inline">
+                                            method="POST" class="inline" onclick="event.stopPropagation()">
                                             @csrf
                                             @method('PUT')
-                                            @if ($beneficio->status)
-                                                <button type="submit"
-                                                    class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-rose-100 hover:text-rose-500 dark:hover:bg-rose-950/50"
-                                                    title="Inactivar">
-                                                    <i class="fas fa-trash-alt text-xs"></i>
-                                                </button>
-                                            @else
-                                                <button type="submit"
-                                                    class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500 dark:hover:bg-emerald-950/50"
-                                                    title="Activar">
-                                                    <i class="fas fa-check text-xs"></i>
-                                                </button>
-                                            @endif
+                                            <button type="submit"
+                                                class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 {{ $beneficio->status ? 'hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50' : 'hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50' }} transition-colors"
+                                                title="{{ $beneficio->status ? 'Inactivar' : 'Activar' }}">
+                                                <i class="fas {{ $beneficio->status ? 'fa-trash-alt' : 'fa-check' }} text-xs"></i>
+                                            </button>
                                         </form>
-                                    </div>
-                                </div>
-                            </td>
-                        </x-table-row>
-                    @empty
-                        <tr>
-                            <td colspan="5"
-                                class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
-                                <i class="fas fa-gift mb-3 block text-3xl text-gray-300 dark:text-gray-700"></i>
-                                No hay beneficios registrados
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="flex justify-center border-t p-4" style="border-color: var(--border-color);">
-            {{ $beneficios->onEachSide(1)->appends(request()->query())->links('partials.pagination') }}
+                                    </x-table-actions>
+                                </x-table-row>
+                            @empty
+                                <tr>
+                                    <td colspan="5"
+                                        class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
+                                        <i class="fas fa-gift mb-3 block text-3xl text-gray-300 dark:text-gray-700"></i>
+                                        No hay beneficios registrados
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-center border-t p-4" style="border-color: var(--border-color);">
+                    {{ $beneficios->onEachSide(1)->appends(request()->query())->links('partials.pagination') }}
+                </div>
+            </div>
         </div>
     </div>
-@stop
 
-@push('js')
-    <script>
-        document.getElementById('estadoToggle')?.addEventListener('change', function() {
-            const url = new URL(window.location.href);
-            url.searchParams.set('activo', this.checked ? '1' : '0');
-            window.location.href = url.toString();
-        });
-    </script>
-@endpush
+    @push('js')
+        <script>
+            document.getElementById('estadoToggle')?.addEventListener('change', function() {
+                const url = new URL(window.location.href);
+                url.searchParams.set('activo', this.checked ? '1' : '0');
+                window.location.href = url.toString();
+            });
+        </script>
+    @endpush
+</x-app-layout>

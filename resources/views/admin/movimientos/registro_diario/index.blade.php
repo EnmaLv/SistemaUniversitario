@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
@@ -55,11 +55,11 @@
             <div class="rd-blur">
                 <div class="rd-blur-content">
                     <h2 class="rd-blur-title">Debes seleccionar una comida</h2>
-                    <p class="rd-blur-text">Selecciona primero la comida del dÃ­a y la cantidad servida para poder
+                    <p class="rd-blur-text">Selecciona primero la comida del día y la cantidad servida para poder
                         registrar
                         a los estudiantes.</p>
                     <a href="{{ route('admin.movimientos.registro_comida.index') }}" type="button"
-                        class="rd-btn rd-btn-primary rd-blur-btn">Ir a la secciÃ³n de comida</a>
+                        class="rd-btn rd-btn-primary rd-blur-btn">Ir a la sección de comida</a>
                 </div>
             </div>
         @endif

@@ -2,9 +2,9 @@
 
 @section('content_header')
     <div class="rd-card p-4 mb-4"
-        style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
-        <h1 class="m-0" style="font-size:1.45rem;color:#0f172a;font-weight:700;">Modificar Parada</h1>
-        <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">Modifique los datos o arrastre el marcador en el mapa
+        style="background-color:var(--bg-card);border-color:var(--border-color);">
+        <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Modificar Parada</h1>
+        <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">Modifique los datos o arrastre el marcador en el mapa
             para actualizar la ubicaciÃ³n.</p>
     </div>
 @stop
@@ -13,7 +13,7 @@
     <div class="row">
         <div class="col-md-5">
             <div class="rd-card p-4"
-                style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+                style="background-color:var(--bg-card);border-color:var(--border-color);">
                 <form id="formEditar" action="{{ route('admin.transporte.maestros.bus_paradas.update', $busParada->id) }}"
                     method="POST">
                     @csrf
@@ -77,8 +77,8 @@
                     <div class="d-flex justify-content-between mt-4"
                         style="border-top:1px solid #e5e7eb; padding-top:20px;">
                         <a href="{{ route('admin.transporte.maestros.bus_paradas.index') }}"
-                            class="rd-btn rd-btn-default">Cancelar</a>
-                        <button type="submit" class="rd-btn rd-btn-primary"><i class="fas fa-check"></i> Actualizar
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);">Cancelar</a>
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95"><i class="fas fa-check"></i> Actualizar
                             Parada</button>
                     </div>
                 </form>
@@ -97,7 +97,7 @@
 @stop
 
 @section('css')
-    <link class="styles" rel="stylesheet" href="{{ asset('css/diseño.css') }}">
+    <link class="styles" rel="stylesheet" href="{{ asset('css/diseÃ±o.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .leaflet-container {
@@ -201,4 +201,3 @@
         });
     </script>
 @endpush
-

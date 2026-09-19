@@ -1,4 +1,6 @@
 <x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     @include('components.alert')
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
@@ -6,9 +8,8 @@
                 Despacho y Control de Viajes
             </h1>
             <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                Bienvenido <span
-                    class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span>.
-                Gestione los viajes activos y programados.
+                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
 
@@ -16,20 +17,20 @@
             <a href="{{ route('admin.transporte.maestros.bus_viajes.create') }}"
                 class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
                 <i class="fas fa-bus text-xs"></i>
-                <span>Programar Nuevo Viaje</span>
+                <span>Programar nuevo viaje</span>
             </a>
         </div>
     </div>
 
     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-        class="p-2.5 rounded-2xl border shadow-sm mb-3 flex flex-col lg:flex-row lg:items-center gap-3">
+        class="p-2.5 rounded-2xl border shadow-sm mb-3 flex flex-col lg:flex-row lg:items-center gap-4">
 
         <form action="{{ route('admin.transporte.maestros.bus_viajes.index') }}" method="GET" id="filterForm"
             class="flex flex-col sm:flex-row items-center gap-3 w-full">
 
             <div class="relative w-full lg:w-48 shrink-0">
                 <select name="estado" onchange="this.form.submit()"
-                    style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
+                    style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
                     class="w-full py-2.5 px-3 rounded-xl border text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
                     <option value="todos" {{ request('estado') == 'todos' || !request('estado') ? 'selected' : '' }}>
                         Todos los estados</option>
@@ -49,7 +50,7 @@
                 </div>
                 <input type="text" name="buscar" value="{{ request('buscar') }}"
                     placeholder="Buscar bus, ruta, chofer..."
-                    style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
+                    style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
                     class="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
                 <button type="submit"
                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-600 transition-colors">
@@ -278,4 +279,6 @@
             });
         }
     </script>
+        </div>
+    </div>
 </x-app-layout>

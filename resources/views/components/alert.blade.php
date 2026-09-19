@@ -1,12 +1,15 @@
 @if (session('success'))
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const primaryColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--color-primary').trim() || '#dc2626';
+
             Swal.fire({
                 icon: 'success',
                 title: '¡Éxito!',
                 text: '{{ session('success') }}',
                 confirmButtonText: 'Aceptar',
-                confirmButtonColor: '#7c3aed',
+                confirmButtonColor: primaryColor,
                 timer: 3000,
                 timerProgressBar: true
             });

@@ -1,102 +1,116 @@
-﻿@extends('layouts.app')
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)] comedor-modern">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            @include('components.alert')
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: var(--bg-card);
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid var(--border-color);
-         ">
-
-        <!-- Texto principal -->
-        <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
-                Registro De Comida
-            </h1>
-
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.8;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-
-        <!-- Imagen + Fecha -->
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600; font-size:0.95rem;">
-                    {{ \Carbon\Carbon::now()->format('d/m/Y') }}
-                </span>
-            </div>
-
-            <div
-                style="
-                width:46px;
-                height:46px;
-                border-radius:12px;
-                overflow:hidden;
-                box-shadow:0 4px 12px rgba(15,23,42,0.08);
-            ">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%; height:100%; object-fit:cover;">
-            </div>
-        </div>
-
-    </div>
-@stop
-
-@section('content')
-    <livewire:registro-comida />
-
-    <div style="padding: 18px 12px;">
-
-        <div class="rd-card rd-card-list">
-            <div class="rd-card-header rd-header-space">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h3 class="rd-title-sm">Registros De Sobrantes</h3>
-                    <p class="rd-sub-sm">Ãšltimos movimientos del dÃ­a</p>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                        Registro de comida
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
                 </div>
             </div>
-            <div class="rd-card-body rd-list-body">
-                <div class="rd-list">
-                    <table class="rd-table">
+
+            <div class="registro-comida-panel">
+                <livewire:registro-comida />
+            </div>
+
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="rounded-2xl border shadow-sm overflow-hidden mt-6">
+                <div class="px-6 py-5 border-b" style="border-color: var(--border-color);">
+                    <h2 class="text-lg font-extrabold" style="color: var(--text-main);">Registros de sobrantes</h2>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Últimos movimientos del día</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Fecha del Registro</th>
-                                <th>Cantidad Sobrante</th>
-                                <th>Motivo</th>
-                                <th>Accion Tomada</th>
+                            <tr
+                                class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
+                                <th class="px-6 py-4 text-center">#</th>
+                                <th class="px-6 py-4 text-center">Fecha del registro</th>
+                                <th class="px-6 py-4 text-center">Cantidad sobrante</th>
+                                <th class="px-6 py-4 text-center">Motivo</th>
+                                <th class="px-6 py-4 text-center">Acción tomada</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse ($sobrantes as $sobrante)
-                                <tr>
-                                    <td class="text-center">{{ $loop->iteration }}</td>
-                                    <td>{{ $sobrante->fecha }}</td>
-                                    <td>{{ $sobrante->cantidad_sobrante }}</td>
-                                    <td>{{ $sobrante->motivo }}</td>
-                                    <td>{{ $sobrante->accion_tomada }}</td>
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-black/20 transition-colors">
+                                    <td class="px-6 py-4 text-center">
+                                        <span
+                                            class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
+                                            {{ $loop->iteration }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ $sobrante->fecha }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
+                                        style="color: var(--text-main);">
+                                        {{ $sobrante->cantidad_sobrante }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        {{ $sobrante->motivo ?: 'Sin motivo' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                        {{ $sobrante->accion_tomada ?: 'Sin acción registrada' }}
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4">No hay registros</td>
+                                    <td colspan="5"
+                                        class="px-6 py-12 text-center text-xs font-bold uppercase text-gray-400">
+                                        No hay registros de sobrantes
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                <!-- PaginaciÃ³n (si aplica) -->
-                <div class="rd-pagination">
+                <div class="flex justify-center border-t p-4" style="border-color: var(--border-color);">
                     {{ $sobrantes->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>
     </div>
-@endsection
 
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/registro-comida.css') }}">
-@endsection
+    @push('css')
+        <link rel="stylesheet" href="{{ asset('css/registro-comida.css') }}">
+        <style>
+            .comedor-modern .registro-comida-panel .rd-wrapper {
+                padding: 0;
+                background: transparent;
+            }
 
+            .comedor-modern .registro-comida-panel .rd-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                border-radius: 1rem;
+                box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+            }
+
+            .comedor-modern .registro-comida-panel .rd-card-header,
+            .comedor-modern .registro-comida-panel .rd-card-body,
+            .comedor-modern .registro-comida-panel .rd-card-footer {
+                background: transparent;
+                border-color: var(--border-color);
+            }
+
+            .comedor-modern .registro-comida-panel .rd-title,
+            .comedor-modern .registro-comida-panel .rd-title-sm {
+                color: var(--text-main);
+            }
+
+            .comedor-modern .registro-comida-panel .rd-sub,
+            .comedor-modern .registro-comida-panel .rd-sub-sm {
+                color: var(--text-muted);
+            }
+        </style>
+    @endpush
+</x-app-layout>

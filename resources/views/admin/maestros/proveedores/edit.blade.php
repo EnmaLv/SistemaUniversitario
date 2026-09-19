@@ -3,12 +3,29 @@
 @section('title', 'Editar Proveedor')
 
 @section('content_header')
-    <div class="mb-6"><h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">Editar Proveedor</h1><p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Actualiza la informacion del proveedor.</p></div>
+    <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">Editar proveedor</h1>
+            <p class="mt-1 text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
+                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+            </p>
+        </div>
+        <a href="{{ route('admin.maestros.proveedores.index') }}"
+            class="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition hover:border-red-600 hover:text-red-600"
+            style="border-color: var(--border-color); color: var(--text-main);">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
 @stop
 
 @section('content')
+    @include('components.alert')
     <div class="rounded-2xl border p-6 shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
-        <div class="mb-6 flex items-center justify-between border-b pb-4" style="border-color: var(--border-color);"><div><h2 class="text-lg font-bold" style="color: var(--text-main);">Datos del proveedor</h2><p class="text-sm text-gray-500 dark:text-gray-400">Modifique los datos necesarios.</p></div><a href="{{ route('admin.maestros.proveedores.index') }}" class="rounded-xl border px-4 py-2 text-sm font-bold" style="border-color: var(--border-color); color: var(--text-main);"><i class="fas fa-arrow-left mr-1"></i> Volver</a></div>
+        <div class="mb-6 border-b pb-4" style="border-color: var(--border-color);">
+            <h2 class="text-lg font-bold" style="color: var(--text-main);">Datos del proveedor</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Modifica los datos necesarios.</p>
+        </div>
         <form action="{{ route('admin.maestros.proveedores.update', $proveedor->id) }}" method="POST" class="space-y-6">
             @csrf @method('PUT')
             <div class="grid grid-cols-1 gap-5 md:grid-cols-3">

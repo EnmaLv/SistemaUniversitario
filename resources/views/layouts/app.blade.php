@@ -51,7 +51,6 @@
     @hasSection('css')
         @yield('css')
     @endif
-    @stack('js')
     @yield('js')
 
     <style>
@@ -204,6 +203,30 @@
             color: var(--text-main) !important;
         }
 
+        /*
+         * Native select menus use the browser's colors for their options
+         * unless both the control and its options are themed explicitly.
+         */
+        select {
+            color-scheme: light;
+        }
+
+        select option,
+        select optgroup {
+            background-color: var(--input-bg) !important;
+            color: var(--text-main) !important;
+        }
+
+        select option:checked,
+        select option:hover {
+            background-color: var(--color-primary) !important;
+            color: #ffffff !important;
+        }
+
+        html.dark select {
+            color-scheme: dark;
+        }
+
         input:focus,
         select:focus,
         textarea:focus {
@@ -285,6 +308,52 @@
         .swal2-popup-custom .swal2-html-container {
             color: var(--text-main) !important;
             opacity: 0.9;
+        }
+
+        /* SweetAlert2 must follow the active application theme, including
+         * alerts that are created directly with Swal.fire(). */
+        .swal2-popup {
+            background: var(--bg-card) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .swal2-title,
+        .swal2-html-container,
+        .swal2-content,
+        .swal2-validation-message {
+            color: var(--text-main) !important;
+        }
+
+        .swal2-html-container,
+        .swal2-content {
+            opacity: 0.9;
+        }
+
+        .swal2-input,
+        .swal2-textarea,
+        .swal2-select {
+            background: var(--input-bg) !important;
+            color: var(--text-main) !important;
+            border-color: var(--input-border) !important;
+        }
+
+        html.dark .swal2-deny,
+        html.dark .swal2-cancel {
+            color: #ffffff !important;
+        }
+
+        html.dark .swal2-popup {
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.45) !important;
+        }
+
+        .swal2-confirm {
+            background-color: var(--color-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .swal2-confirm:hover {
+            background-color: var(--color-btn-hover, #b91c1c) !important;
         }
 
         /* Legacy admin views must inherit the active Tailwind theme. */
@@ -527,6 +596,7 @@
     </script>
 
     @stack('scripts')
+    @stack('js')
     @yield('scripts')
 
     <form id="form-actualizar-tasa" action="{{ route('productos.actualizar.tasa') }}" method="POST"

@@ -15,20 +15,15 @@
     @endif
 
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
-         ">
+        style="background: var(--bg-card); border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid var(--border-color);">
 
         <!-- Texto principal -->
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
-                Requisicion nro {{ $compra->id }}
+            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
+                Requisición N.º {{ $compra->id }}
             </h1>
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
+            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.72;">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
@@ -61,9 +56,9 @@
     @include('components.alert')
     <div class="row">
         <div class="col-md-12 m-auto">
-            <div class="card">
+            <div class="card rd-card">
                 <div class="card-header">
-                    <h3 class="card-title"><b>Paso 1 | Requisicion creada</b></h3>
+                    <h3 class="card-title"><b>Paso 1 | Requisición creada</b></h3>
 
                     <div class="card-tools">
                         <form action="{{ route('admin.movimientos.compras.cancelar', $compra) }}" method="POST"
@@ -83,13 +78,13 @@
                                 function confirmDelete(event, button) {
                                     event.preventDefault();
                                     Swal.fire({
-                                        title: 'Â¿EstÃ¡s seguro?',
-                                        text: "Se perderÃ¡n todos los productos agregados.",
+                                        title: '¿Estás seguro?',
+                                        text: "Se perderán todos los productos agregados.",
                                         icon: 'warning',
                                         showCancelButton: true,
-                                        confirmButtonColor: '#3085d6',
-                                        cancelButtonColor: '#d33',
-                                        confirmButtonText: 'SÃ­',
+                                        confirmButtonColor: '#dc2626',
+                                        cancelButtonColor: '#6b7280',
+                                        confirmButtonText: 'Sí',
                                         cancelButtonText: 'Cancelar'
                                     }).then((result) => {
                                         if (result.isConfirmed) {
@@ -127,7 +122,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-3" style="display: inline-block;">
-                                    <label for="codigo">Fecha de la Requisicion</label>
+                                    <label for="codigo">Fecha de la requisición</label>
                                     <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <span><i class="fas fa-calendar-alt"></i></span>
                                         <input type="datetime-local"
@@ -162,7 +157,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-2" style="display: inline-block;">
-                                    <label for="codigo">Requisicion</label>
+                                    <label for="codigo">Requisición</label>
                                     <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                         <span><i class="fas fa-sticky-note"></i></span>
                                         <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="estado" name="estado"
@@ -185,7 +180,7 @@
     </div>
     <div class="row">
         <div class="col-md-12 m-auto">
-            <div class="card">
+            <div class="card rd-card">
                 <div class="card-header">
                     <h3 class="card-title"><b>Paso 2 | Agregar productos</b></h3>
                 </div>
@@ -200,7 +195,7 @@
     @if ($compra->estado == 'Enviado al proveedor')
         <div class="row">
             <div class="col-md-12 m-auto">
-                <div class="card">
+                <div class="card rd-card">
                     <div class="card-header">
                         <h3 class="card-title"><b>Paso 3 | Registrar Fechas de Vencimiento</b></h3>
                     </div>
@@ -215,7 +210,7 @@
                                         <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn"><i
                                                 class="fas fa-check"></i>
                                             Finalizar
-                                            Requisicion
+                                            Requisición
                                         </button>
                                     </div>
                                 </div>
@@ -228,7 +223,7 @@
                                         icon: data.icon,
                                         title: data.title,
                                         text: data.text,
-                                        confirmButtonColor: '#7c3aed',
+                                        confirmButtonColor: '#dc2626',
                                         timer: 3000,
                                         timerProgressBar: true
                                     });
@@ -242,6 +237,32 @@
     @endif
 @stop
 
+@push('css')
+    <style>
+        .comedor-swal-popup {
+            background: var(--bg-card, #ffffff) !important;
+            border: 1px solid var(--border-color, #e2e8f0) !important;
+            color: var(--text-main, #0f172a) !important;
+        }
+
+        .comedor-swal-title,
+        .comedor-swal-text {
+            color: var(--text-main, #0f172a) !important;
+        }
+
+        html.dark .comedor-swal-popup {
+            background: #160c0e !important;
+            border-color: #5c2028 !important;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45) !important;
+        }
+
+        html.dark .comedor-swal-title,
+        html.dark .comedor-swal-text {
+            color: #f8fafc !important;
+        }
+    </style>
+@endpush
+
 @section('css')
     @livewireStyles
     <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
@@ -249,4 +270,3 @@
 @section('js')
     @livewireScripts
 @stop
-

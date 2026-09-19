@@ -2,20 +2,15 @@
 
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background:#ffffff;
-            border-radius:16px;
-            border:1px solid #e5e7eb;
-            box-shadow:0 4px 14px rgba(0,0,0,0.06);
-        ">
+        style="background:var(--bg-card); border-radius:16px; border:1px solid var(--border-color); box-shadow:0 4px 14px rgba(0,0,0,0.06);">
 
-        {{-- TÃ­tulo --}}
+        {{-- Título --}}
         <div>
-            <h1 class="m-0" style="font-size:1.5rem; color:#0f172a; font-weight:700;">
-                Crear Nueva Requisicion
+            <h1 class="m-0" style="font-size:1.5rem; color:var(--text-main); font-weight:700;">
+                Crear nueva requisición
             </h1>
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
+            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.72;">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
@@ -53,8 +48,8 @@
             <div class="rd-card p-4">
 
                 {{-- Header interno --}}
-                <div class="rd-card-header mb-3">
-                    <h3 class="rd-title-sm">Datos de la Requisicion</h3>
+                <div class="rd-card-header mb-3" style="border-color: var(--border-color);">
+                    <h3 class="rd-title-sm">Datos de la requisición</h3>
 
                     <a href="{{ url('admin/movimientos/compras') }}" class="rd-btn rd-btn-default">
                         <i class="fas fa-arrow-left"></i> Volver
@@ -87,12 +82,12 @@
                             @enderror
                             <div class="mt-2 pt-2" style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
                                 <small style="color: #64748b; font-size: 0.85rem;">
-                                    Â¿No encuentras lo que buscas?
+                                    ¿No encuentras lo que buscas?
                                     <a style="color: #a84348; text-decoration: none; font-weight: 600; transition: color 0.2s;"
                                         href="{{ route('admin.maestros.proveedores.create', [
                                             'from' => url()->current(),
                                         ]) }}">
-                                        CrÃ©alo aquÃ­
+                                        Créalo aquí
                                     </a>
                                 </small>
                             </div>
@@ -100,7 +95,7 @@
 
                         {{-- Fecha --}}
                         <div class="col-md-4 mb-3">
-                            <label class="rd-label">Fecha de la Requisicion</label>
+                            <label class="rd-label">Fecha de la requisición</label>
                             <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                                 <span><i class="fas fa-calendar-alt"></i></span>
                                 <input type="datetime-local" id="fecha" name="fecha" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input"
@@ -136,7 +131,7 @@
 
                         <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn" @disabled($proveedores->isEmpty())
                             style="@if ($proveedores->isEmpty()) opacity: 0.5!important; cursor: not-allowed; @endif">
-                            Crear Requisicion
+                            Crear requisición
                         </button>
                     </div>
 
@@ -153,4 +148,3 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
 @stop
-

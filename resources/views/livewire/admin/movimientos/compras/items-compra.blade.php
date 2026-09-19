@@ -94,7 +94,12 @@
                     icon: $event.detail.icono,
                     title: $event.detail.mensaje,
                     showConfirmButton: false,
-                    timer: 3000
+                    timer: 3000,
+                    customClass: {
+                        popup: 'comedor-swal-popup',
+                        title: 'comedor-swal-title',
+                        htmlContainer: 'comedor-swal-text'
+                    }
                 });">
         </div>
     </div>
