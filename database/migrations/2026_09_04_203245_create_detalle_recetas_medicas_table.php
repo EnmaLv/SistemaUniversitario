@@ -17,6 +17,9 @@ return new class extends Migration
             $table->foreignId('producto_id')->constrained('productos', 'id')->onDelete('cascade');
             $table->foreignId('unidad_id')->constrained('unidades', 'id')->onDelete('cascade');
             $table->decimal('cantidad', 14, 2);
+            $table->decimal('cantidad_prescrita', 10, 2);
+            $table->string('unidad_prescrita', 100);
+            $table->decimal('equivalencia_ml', 10, 2);
             $table->string('frecuencia', 100);
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
