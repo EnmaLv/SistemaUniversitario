@@ -7,26 +7,17 @@ use Override;
 
 class GuardarJornadaRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
     protected function prepareForValidation()
     {
-        // Si no viene en el request (desmarcado), le asignamos 0, de lo contrario 1.
         $this->merge([
             'activa' => $this->has('activa') ? 1 : 0,
         ]);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -37,7 +28,14 @@ class GuardarJornadaRequest extends FormRequest
             'fecha_inicio_solicitud' => 'required|date',
             'fecha_fin_solicitud' => 'required|date|after_or_equal:fecha_inicio_solicitud',
             'cupos_maximos' => 'required|integer|min:1',
-            'activa' => 'required|boolean'
+            'activa' => 'required|boolean',
+
+            'criterios'                  => 'nullable|array',
+            'criterios.*.id_pregunta'    => 'required|exists:be_beca_preguntas,id',
+            'criterios.*.operador'       => 'nullable|in:=,!=,>,>=,<,<=,in,not_in,between',
+            'criterios.*.valor_esperado' => 'nullable|string|max:255',
+            'criterios.*.es_eliminatoria'=> 'nullable|boolean',
+            'criterios.*.peso'           => 'nullable|numeric|min:0',
         ];
     }
 

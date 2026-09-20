@@ -1,0 +1,561 @@
+<?php
+
+namespace App\Http\Controllers\beca;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\beca\GuardarSolicitudRequest;
+use App\Models\Becas\SolicitudBeca;
+use App\Models\Becas\JornadaBeca;
+use App\Models\Becas\Beneficio;
+use App\Models\Becas\Lapso;
+use App\Models\Persona;
+use App\Models\Usuario;
+use App\Services\becas\SolicitudBecasService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class SolicitudBecaController extends Controller
+{
+    protected SolicitudBecasService $solicitudService;
+
+    public function __construct(SolicitudBecasService $solicitudService)
+    {
+        $this->solicitudService = $solicitudService;
+    }
+
+    public function index(Request $request)
+    {
+        $solicitudes = $this->solicitudService->listarSolicitudes($request->all());
+        $beneficios = Beneficio::where('status', 1)->get();
+
+        return view('admin.becas.solicitudes.index', compact('solicitudes', 'beneficios'));
+    }
+
+    public function create()
+    {
+        $hoy = now()->toDateString();
+        $jornadas = JornadaBeca::where('activa', 1)
+            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+            ->with(['beneficio', 'lapso'])
+            ->get();
+
+        $estudiantes = Persona::where('id_perfil', 2)
+            ->orderBy('nombre_persona')
+            ->orderBy('apellido_persona')
+            ->get();
+
+        return view('admin.becas.solicitudes.create', compact('jornadas', 'estudiantes'));
+    }
+
+    public function solicitarEstudiante()
+    {
+        $hoy = now()->toDateString();
+        $jornadas = JornadaBeca::where('activa', 1)
+            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+            ->with(['beneficio', 'lapso'])
+            ->get();
+
+        return view('admin.becas.solicitudes.create_estudiante', compact('jornadas'));
+    }
+
+    public function store(GuardarSolicitudRequest $request)
+    {
+        /** @var Usuario $user */
+        $user = Auth::user();
+        try {
+            $this->solicitudService->crearSolicitud($request->validated());
+            
+            if(!$user || !$user->tieneRol(['paciente', 'becario', 'estudiante'])){
+                return redirect()
+                ->route('home')
+                ->with('success', 'Solicitud de beca registrada exitosamente.');
+            }
+            return redirect()
+                ->route('admin.becas.solicitudes.index')
+                ->with('success', 'Solicitud de beca registrada exitosamente.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Error al registrar la solicitud: ' . $e->getMessage());
+        }
+    }
+
+    public function show(int $id)
+    {
+        $solicitud = SolicitudBeca::with([
+            'persona.personaPnf.pnf', 
+            'beneficio', 
+            'jornada', 
+            'lapso', 
+            'verificador.persona'
+        ])->findOrFail($id);
+
+        return view('admin.becas.solicitudes.show', compact('solicitud'));
+    }
+
+    public function verificar(Request $request, int $id)
+    {
+        $request->validate([
+            'estado' => 'required|in:1,2',
+            'comentario_verificador' => 'required_if:estado,2|nullable|string|max:1000',
+        ], [
+            'comentario_verificador.required_if' => 'Debe ingresar la razón o comentario en caso de rechazo.',
+        ]);
+
+        try {
+            $verificadorId = Auth::user()->id_usuario;
+            $this->solicitudService->verificarSolicitud(
+                $id, 
+                intval($request->estado), 
+                $request->comentario_verificador, 
+                $verificadorId
+            );
+
+            $mensaje = intval($request->estado) === 1 ? 'aprobada' : 'rechazada';
+
+            return redirect()
+                ->route('admin.becas.solicitudes.index')
+                ->with('success', "La solicitud de beca ha sido {$mensaje} correctamente.");
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Error al procesar la solicitud: ' . $e->getMessage());
+        }
+    }
+}
+
+
+<?php
+
+namespace App\Http\Requests\beca;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class GuardarSolicitudRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true; 
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $viviendaTransporte = $this->input('vivienda_transporte', []);
+        
+        if (isset($viviendaTransporte['residencia'])) {
+            $viviendaTransporte['residencia']['paga'] = filter_var(
+                $viviendaTransporte['residencia']['paga'] ?? false, 
+                FILTER_VALIDATE_BOOLEAN
+            );
+        }
+        if (isset($viviendaTransporte['viaje_diario'])) {
+            $viviendaTransporte['viaje_diario']['es_diario'] = filter_var(
+                $viviendaTransporte['viaje_diario']['es_diario'] ?? false, 
+                FILTER_VALIDATE_BOOLEAN
+            );
+        }
+
+        $servicios = $this->input('datos_socioeconomicos.servicios', []);
+        $serviciosMapeados = [];
+        foreach (['agua', 'internet', 'cloacas', 'electricidad', 'TV cable', 'Tlf fijo', 'transport.Publico', 'Aseo_Urbano'] as $servicioKey) {
+            $serviciosMapeados[$servicioKey] = filter_var($servicios[$servicioKey] ?? false, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $datosSocio = $this->input('datos_socioeconomicos', []);
+        $datosSocio['servicios'] = $serviciosMapeados;
+
+        $this->merge([
+            'registro_patria' => $this->has('registro_patria') ? 1 : 0,
+            'vivienda_transporte' => $viviendaTransporte,
+            'datos_socioeconomicos' => $datosSocio,
+        ]);
+    }
+
+    public function rules(): array
+    {
+        return [
+            'id_persona' => 'required|exists:persona,id_persona',
+            'jornada_id' => 'required|exists:be_jornadas_becas,id',
+            'id_beneficio' => 'required|exists:be_beneficios,id',
+            'id_lapso' => 'required|exists:be_lapsos,id',
+            'tipo_solicitud' => 'required|in:nueva,renovacion',
+            'indice_academico' => 'required|numeric|min:0|max:20',
+            'direccion_temporal' => 'nullable|string|max:500',
+            'gasto_pasaje' => 'required|numeric|min:0',
+            'registro_patria' => 'required|boolean',
+            'vivienda_transporte' => 'required|array',
+            'vivienda_transporte.residencia.paga' => 'required|boolean',
+            'vivienda_transporte.residencia.monto' => 'nullable|numeric|min:0',
+            'vivienda_transporte.viaje_diario.es_diario' => 'required|boolean',
+            'vivienda_transporte.viaje_diario.frecuencia_semanal' => 'nullable|integer|min:1|max:7',
+            'vivienda_transporte.tiempo_traslado.horas' => 'nullable|integer|min:0|max:24',
+            'vivienda_transporte.tiempo_traslado.minutos' => 'nullable|integer|min:0|max:59',
+            'datos_socioeconomicos' => 'required|array',
+            'datos_socioeconomicos.vivienda.tipo' => 'required|string',
+            'datos_socioeconomicos.vivienda.tenencia' => 'required|string',
+            'datos_socioeconomicos.vivienda.distribucion' => 'required|array',
+            'datos_socioeconomicos.vivienda.distribucion.dormitorios' => 'required|integer|min:0',
+            'datos_socioeconomicos.vivienda.distribucion.cocina' => 'required|integer|min:0',
+            'datos_socioeconomicos.vivienda.distribucion.comedor' => 'required|integer|min:0',
+            'datos_socioeconomicos.vivienda.distribucion.baños' => 'required|integer|min:0',
+            'datos_socioeconomicos.vivienda.distribucion.sala' => 'required|integer|min:0',
+            'datos_socioeconomicos.vivienda.distribucion.patio' => 'required|integer|min:0',
+            'datos_socioeconomicos.vivienda.distribucion.Garaje' => 'required|integer|min:0',
+            'datos_socioeconomicos.vivienda.distribucion.lavadero' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento' => 'required|array',
+            'datos_socioeconomicos.equipamiento.nevera' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.tv' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.Cocina' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.ventidalor' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.computadora' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.muebles' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.comedor' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.cama' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.lavadora' => 'required|integer|min:0',
+            'datos_socioeconomicos.equipamiento.aire_acondicionado' => 'required|integer|min:0',
+            'datos_socioeconomicos.servicios' => 'required|array',
+            'datos_socioeconomicos.carga_familiar' => 'nullable|array',
+            'datos_socioeconomicos.carga_familiar.*.parentesco' => 'required|string|max:100',
+            'datos_socioeconomicos.carga_familiar.*.nombre_apellido' => 'required|string|max:255',
+            'datos_socioeconomicos.carga_familiar.*.edad' => 'required|integer|min:0|max:120',
+            'datos_socioeconomicos.carga_familiar.*.nivel_instituto' => 'required|string|max:100',
+            'datos_socioeconomicos.carga_familiar.*.ocupacion' => 'required|string|max:200',
+            'datos_socioeconomicos.carga_familiar.*.ingreso_mens' => 'required|numeric|min:0',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'id_persona.required' => 'Debe seleccionar un estudiante.',
+            'id_persona.exists' => 'El estudiante seleccionado no es válido.',
+            'jornada_id.required' => 'Debe asociar una jornada activa.',
+            'id_beneficio.required' => 'Debe asociar un beneficio.',
+            'id_lapso.required' => 'Debe asociar un lapso académico.',
+            'tipo_solicitud.required' => 'El tipo de solicitud es obligatorio.',
+            'indice_academico.required' => 'El índice académico es obligatorio.',
+            'indice_academico.min' => 'El índice académico debe ser mínimo 0.',
+            'indice_academico.max' => 'El índice académico debe ser máximo 20.',
+            'gasto_pasaje.required' => 'El gasto de pasaje es obligatorio.',
+            'datos_socioeconomicos.vivienda.tipo.required' => 'El tipo de vivienda es obligatorio.',
+            'datos_socioeconomicos.vivienda.tenencia.required' => 'La tenencia de la vivienda es obligatoria.',
+            'datos_socioeconomicos.carga_familiar.*.nombre_apellido.required' => 'El nombre del familiar es obligatorio.',
+            'datos_socioeconomicos.carga_familiar.*.ingreso_mens.required' => 'El ingreso mensual del familiar es obligatorio.',
+        ];
+    }
+}
+
+
+<?php
+
+namespace App\Services\becas;
+
+use App\Models\Becas\SolicitudBeca;
+use App\Models\Becas\JornadaBeca;
+use App\Models\Becas\Beneficio;
+use Illuminate\Support\Facades\DB;
+use Exception;
+
+class SolicitudBecasService
+{
+
+    public function listarSolicitudes(array $filtros = [])
+    {
+        $query = SolicitudBeca::with(['persona.personaPnf.pnf', 'beneficio', 'jornada', 'lapso']);
+
+        if (!empty($filtros['buscar'])) {
+            $buscar = $filtros['buscar'];
+            $query->whereHas('persona', function ($q) use ($buscar) {
+                $q->where('cedula_persona', 'like', "%{$buscar}%")
+                  ->orWhere('nombre_persona', 'like', "%{$buscar}%")
+                  ->orWhere('apellido_persona', 'like', "%{$buscar}%");
+            });
+        }
+
+        if (isset($filtros['estado']) && $filtros['estado'] !== '') {
+            $query->where('estado', intval($filtros['estado']));
+        }
+
+        if (!empty($filtros['beneficio_id'])) {
+            $query->where('id_beneficio', intval($filtros['beneficio_id']));
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+    }
+
+    public function crearSolicitud(array $data): SolicitudBeca
+    {
+        return DB::transaction(function () use ($data) {
+            $personaId = $data['id_persona'];
+            $jornadaId = $data['jornada_id'];
+
+            $jornada = JornadaBeca::findOrFail($jornadaId);
+            if (!$jornada->activa) {
+                throw new Exception("La jornada de becas seleccionada no se encuentra activa.");
+            }
+
+            $hoy = now()->toDateString();
+            if ($jornada->fecha_inicio_solicitud->toDateString() > $hoy || $jornada->fecha_fin_solicitud->toDateString() < $hoy) {
+                throw new Exception("El período de solicitudes para esta jornada ya expiró o no ha iniciado.");
+            }
+
+            $existeSolicitudActiva = SolicitudBeca::where('id_persona', $personaId)
+                ->where('jornada_id', $jornadaId)
+                ->whereIn('estado', [0, 1])
+                ->exists();
+            if ($existeSolicitudActiva) {
+                throw new Exception("Ya tienes una solicitud en proceso o aprobada para esta jornada.");
+            }
+
+            if ($jornada->cupos_maximos <= $jornada->cupos_asignados) {
+                throw new Exception("No hay cupos disponibles en esta jornada.");
+            }
+
+            $data['estado'] = 0;
+
+            return SolicitudBeca::create($data);
+        });
+    }
+
+    public function actualizarSolicitud(int $id, array $data): SolicitudBeca
+    {
+        $solicitud = SolicitudBeca::findOrFail($id);
+        $solicitud->update($data);
+        return $solicitud;
+    }
+
+    public function verificarSolicitud(int $id, int $nuevoEstado, ?string $comentario, int $verificadorId): SolicitudBeca
+    {
+        return DB::transaction(function () use ($id, $nuevoEstado, $comentario, $verificadorId) {
+            $solicitud = SolicitudBeca::findOrFail($id);
+            $estadoAnterior = $solicitud->estado;
+
+            if ($estadoAnterior === $nuevoEstado) {
+                return $solicitud;
+            }
+
+            $jornada = JornadaBeca::findOrFail($solicitud->jornada_id);
+            $beneficio = Beneficio::findOrFail($solicitud->id_beneficio);
+
+            if ($nuevoEstado === 1) {
+                if ($jornada->cupos_asignados >= $jornada->cupos_maximos) {
+                    throw new Exception("No hay cupos disponibles en la jornada para aprobar esta solicitud.");
+                }
+                if ($beneficio->cupones_disponibles <= 0) {
+                    throw new Exception("No hay cupones disponibles en el beneficio configurado.");
+                }
+
+                $jornada->increment('cupos_asignados');
+
+                $beneficio->increment('cupones_ocupados');
+                $beneficio->decrement('cupones_disponibles');
+            }
+
+            if ($estadoAnterior === 1) {
+                if ($jornada->cupos_asignados > 0) {
+                    $jornada->decrement('cupos_asignados');
+                }
+
+                if ($beneficio->cupones_ocupados > 0) {
+                    $beneficio->decrement('cupones_ocupados');
+                }
+                $beneficio->increment('cupones_disponibles');
+            }
+
+            $solicitud->update([
+                'estado' => $nuevoEstado,
+                'comentario_verificador' => $nuevoEstado === 2 ? $comentario : null, // Comentario solo en caso de rechazo
+                'verificado_por' => $verificadorId,
+                'fecha_verificacion' => now(),
+            ]);
+
+            return $solicitud;
+        });
+    }
+}
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Persona;
+use App\Models\Becas\Beneficio;
+use App\Models\Becas\JornadaBeca;
+use App\Models\Becas\Lapso;
+use App\Models\Usuario;
+
+class SolicitudBeca extends Model
+{
+    protected $table = 'be_solicitud_becas';
+
+    protected $fillable = [
+        'id_persona',
+        'id_beneficio',
+        'jornada_id',
+        'tipo_solicitud',
+        'estado',
+        'id_lapso',
+        'indice_academico',
+        'direccion_temporal',
+        'gasto_pasaje',
+        'vivienda_transporte',
+        'datos_socioeconomicos',
+        'comentario_verificador',
+        'verificado_por',
+        'fecha_verificacion',
+    ];
+
+    protected $casts = [
+        'estado' => 'integer',
+        'indice_academico' => 'decimal:2',
+        'gasto_pasaje' => 'decimal:2',
+        'vivienda_transporte' => 'array',
+        'datos_socioeconomicos' => 'array',
+        'fecha_verificacion' => 'datetime',
+    ];
+
+    public function getEstadoTextoAttribute(): string
+    {
+        return match ($this->estado) {
+            0 => 'Pendiente',
+            1 => 'Aprobado',
+            2 => 'Rechazado',
+            default => 'Desconocido',
+        };
+    }
+
+    public function getEstadoBadgeAttribute(): string
+    {
+        return match ($this->estado) {
+            0 => 'bg-yellow-50 text-yellow-700 border-yellow-200/50 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-900/30',
+            1 => 'bg-green-50 text-green-700 border-green-200/50 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/30',
+            2 => 'bg-red-50 text-red-700 border-red-200/50 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30',
+            default => 'bg-slate-50 text-slate-700 border-slate-200/50 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800/30',
+        };
+    }
+
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
+    }
+
+    public function beneficio()
+    {
+        return $this->belongsTo(Beneficio::class, 'id_beneficio', 'id');
+    }
+
+    public function jornada()
+    {
+        return $this->belongsTo(JornadaBeca::class, 'jornada_id', 'id');
+    }
+
+    public function lapso()
+    {
+        return $this->belongsTo(Lapso::class, 'id_lapso', 'id');
+    }
+
+    public function verificador()
+    {
+        return $this->belongsTo(Usuario::class, 'verificado_por', 'id_usuario');
+    }
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SolicitudDocumento extends Model
+{
+    protected $table = 'solicitud_documento';
+
+    protected $fillable = [
+        'id_solicitud',
+        'nombre_documento',
+        'ruta_archivo',
+        'tipo_archivo',
+    ];
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SolicitudRespuesta extends Model
+{
+    protected $table = 'be_solicitud_respuestas';
+
+    protected $fillable = [
+        'id_solicitud',
+        'id_pregunta',
+        'valor',
+        'valor_json',
+        'cumple_criterio',
+    ];
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use App\Models\Becas\Beneficio;
+use Illuminate\Database\Eloquent\Model;
+
+class BecaPregunta extends Model
+{
+    protected $table = 'be_beca_preguntas';
+
+    protected $fillable = [
+        'id_be_beneficio',
+        'codigo',
+        'etiqueta',
+        'placeholder',
+        'tipo',
+        'obligatoria',
+        'valor_min',
+        'valor_max',
+        'min_length',
+        'max_length',
+        'regex',
+        'orden',
+        'activo',
+    ];
+
+    public function beca() {
+        return $this->belongsTo(Beneficio::class, 'id_be_beneficio');
+    }
+
+    public function opciones() {
+        return $this->hasMany(BecaPreguntaOpciones::class, 'id_pregunta')->orderBy('orden');
+    }
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class BecaAsignada extends Model
+{
+    protected $table = 'beca_asignada';
+
+    protected $fillable = [
+        'id_solicitud',
+        'fecha_inicio',
+        'fecha_fin',
+        'estado',
+        'motivo_revocacion',
+    ];
+}

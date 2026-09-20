@@ -3,7 +3,7 @@
 namespace App\Models\Becas;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Becas\Beneficio;
+
 class JornadaBeca extends Model
 {
     protected $table = 'be_jornadas_becas';
@@ -22,9 +22,14 @@ class JornadaBeca extends Model
 
     protected $casts = [
         'fecha_inicio_solicitud' => 'date',
-        'fecha_fin_solicitud' => 'date',
-        'activa' => 'boolean',
+        'fecha_fin_solicitud'    => 'date',
+        'activa'                 => 'boolean',
     ];
+
+    public function criterios()
+    {
+        return $this->hasMany(JornadaCriterio::class, 'id_jornada');
+    }
 
     public function beneficio()
     {

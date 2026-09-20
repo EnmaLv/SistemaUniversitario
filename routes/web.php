@@ -372,6 +372,9 @@ Route::middleware(['auth'])->group(function () {
         // PSICOLOGIA
         require __DIR__ . '/psicologia.php';
 
+        // BECA
+        require __DIR__ . '/beca.php';
+
 
         Route::prefix('configuracion')
             ->middleware(\App\Http\Middleware\CheckMenuPermission::class)
@@ -451,4 +454,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'fetchMessages'])->name('chat.fetch');
     Route::post('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'sendMessage'])->name('chat.store');
 });
-require __DIR__ . '/beca.php';
+

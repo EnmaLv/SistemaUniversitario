@@ -17,16 +17,6 @@ class BecaService
     ) {
     }
 
-    public function listar(array $filters)
-    {
-        return Beca::with(['beneficios', 'tutores'])
-            ->buscar($filters['buscar'] ?? null)
-            ->activo($filters['activo'] ?? 1)
-            ->latest()
-            ->paginate(10)
-            ->appends($filters);
-    }
-
     public function crear(array $data): Beca
     {
         return DB::transaction(function () use ($data) {

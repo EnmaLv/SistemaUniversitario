@@ -1,0 +1,155 @@
+Schema::create('tipo_beneficio', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre');
+            $table->text('descripcion');
+            $table->boolean('estado')->default(true);
+            $table->timestamps();
+        });
+
+
+        Schema::create('be_beneficios', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('id_tipo_beneficio')->nullable()->constrained('tipo_beneficio')->onDelete('cascade');
+            $table->string('nombre_beneficio')->nullable(false);
+            $table->text('descripcion')->nullable(true);
+            $table->string('slug')->nullable(false);
+            $table->integer('cupones_disponibles')->nullable(true)->default(0);
+            $table->integer('cupones_ocupados')->nullable(true)->default(0);
+            $table->boolean('status')->default(true);
+            $table->timestamps();
+        });
+
+
+        Schema::create('be_beca_preguntas', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('id_be_beneficios')->index();
+            $table->string('texto');
+            $table->enum('tipo', ['text', 'number'])->default('text');
+            $table->decimal('min', 15, 2)->nullable();
+            $table->decimal('max', 15, 2)->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_be_beneficios')->references('id')->on('be_beneficios')->onDelete('cascade');
+        });
+
+
+        Schema::create('be_lapsos', function (Blueprint $table) {
+            $table->id();
+            // Identificación
+            $table->string('codigo', 10)->unique(); // Ej: 2026-1
+            
+            // Rango de clases
+            $table->date('fecha_inicio');
+            $table->date('fecha_fin')->nullable();
+
+            // Control de Flujo (Manual)
+            $table->boolean('es_actual')->default(false);
+            $table->boolean('permite_solicitudes')->default(false);
+            
+            // Metadata
+            $table->timestamps();
+        });
+
+
+        //Tabla condicion_estudiante parte de configuracion del sistema(NOTA: Dependiendo de la condicion del estudiante se le asigna un beneficio o no)
+        //Funciona como una tabla de filtros
+        Schema::create('condicion_estudiante', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre_condicion')->comment('Regular, repitiente, etc');
+            $table->foreignId('id_persona')->constrained('persona', 'id_persona')->onDelete('cascade');
+            $table->foreignId('lapsos_id')->constrained('be_lapsos')->onDelete('cascade');
+            $table->timestamps();
+        });
+
+        Schema::create('be_jornadas_becas', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre_jornada'); // Ej: "Convocatoria Comedor 2025-2"
+            $table->text('descripcion_jornada')->nullable();
+            
+            // Relación con el Beneficio (Qué se ofrece)
+            $table->foreignId('beneficio_id')
+                  ->constrained('be_beneficios')
+                  ->onDelete('cascade');
+
+            // Relación con el Periodo / Lapso (Cuándo ocurre)
+            $table->foreignId('lapsos_id')
+                  ->constrained('be_lapsos')
+                  ->onDelete('cascade');
+
+            // Configuración específica de esta jornada
+            $table->date('fecha_inicio_solicitud');
+            $table->date('fecha_fin_solicitud');
+            $table->integer('cupos_maximos')->default(0);
+            $table->integer('cupos_asignados')->default(0);
+            
+            $table->boolean('activa')->default(true);
+            $table->timestamps();
+        });
+
+
+        Schema::create('be_solicitud_becas', function (Blueprint $table) {
+            $table->id();
+            
+            // Relación con el estudiante
+            $table->foreignId('id_persona')
+                  ->constrained('persona', 'id_persona')
+                  ->onDelete('cascade');
+            $table->foreignId('id_beneficio')
+                  ->constrained('be_beneficios', 'id')
+                  ->onDelete('cascade');
+            
+            $table->foreignId('jornada_id')
+                  ->constrained('be_jornadas_becas')
+                  ->onDelete('restrict');
+
+            // Estados y tipos
+            $table->enum('tipo_solicitud', ['nueva', 'renovacion'])->default('nueva');
+            $table->tinyInteger('estado')->default(0)->comment('0: pendiente, 1: aprobada, 2: rechazada');
+            
+            // Datos académicos y de periodo
+            $table->foreignId('id_lapso')
+                  ->constrained('be_lapsos', 'id')
+                  ->onDelete('cascade');
+            $table->decimal('indice_academico', 4, 2)->comment('Índice de notas del estudiante');
+
+            // Información de vivienda y gastos
+            $table->string('direccion_temporal')->nullable()->comment('Si vive fuera de su residencia fija');
+            $table->decimal('gasto_pasaje', 10, 2)->nullable()->comment('Gasto mensual estimado');
+
+            /**
+             * Campos JSON:
+             * vivienda_transporte: {residencia, viaje_diario, tiempo_traslado}
+             * datos_socioeconomicos: {vivienda, equipamiento, servicios, carga_familiar}
+             */
+            $table->json('vivienda_transporte')->nullable();
+            $table->json('datos_socioeconomicos')->nullable();
+
+            // Auditoría de verificación
+            $table->text('comentario_verificador')->nullable()->comment('Razón en caso de rechazo');
+            $table->foreignId('verificado_por')
+                  ->nullable()
+                  ->constrained('usuario', 'id_usuario');
+            $table->timestamp('fecha_verificacion')->nullable();
+
+            $table->timestamps();
+        });
+
+
+        Schema::create('solicitud_documento', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('id_solicitud')->constrained('be_solicitud_becas')->onDelete('cascade');
+            $table->string('nombre_documento')->nullable();
+            $table->text('ruta_archivo')->nullable();
+            $table->string('tipo_archivo')->nullable();
+            $table->timestamps();
+        });
+
+
+        Schema::create('beca_asignada', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('id_solicitud')->constrained('be_solicitud_becas')->onDelete('cascade');
+            $table->date('fecha_inicio');
+            $table->date('fecha_fin');
+            $table->string('estado', 100)->default('activa');
+            $table->timestamps();
+        });

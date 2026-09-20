@@ -2,6 +2,7 @@
 
 namespace App\Models\Becas;
 
+use App\Models\Becas\Beneficio;
 use Illuminate\Database\Eloquent\Model;
 
 class BecaPregunta extends Model
@@ -9,20 +10,31 @@ class BecaPregunta extends Model
     protected $table = 'be_beca_preguntas';
 
     protected $fillable = [
-        'beca_id',
-        'texto',
+        'id_be_beneficio',
+        'codigo',
+        'etiqueta',
+        'placeholder',
         'tipo',
-        'min',
-        'max',
+        'obligatoria',
+        'valor_min',
+        'valor_max',
+        'min_length',
+        'max_length',
+        'regex',
+        'orden',
+        'activo',
     ];
 
-    protected $casts = [
-        'min' => 'decimal:2',
-        'max' => 'decimal:2',
-    ];
+    public function beca() {
+        return $this->belongsTo(Beneficio::class, 'id_be_beneficio');
+    }
 
-    public function beca()
+    public function opciones() {
+        return $this->hasMany(BecaPreguntaOpciones::class, 'id_pregunta')->orderBy('orden');
+    }
+    
+    public function criterios()
     {
-        return $this->belongsTo(Beca::class, 'beca_id');
+        return $this->hasMany(JornadaCriterio::class, 'id_pregunta');
     }
 }

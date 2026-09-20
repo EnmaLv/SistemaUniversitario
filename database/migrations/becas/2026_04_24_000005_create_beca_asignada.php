@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
             $table->string('estado', 100)->default('activa');
+            $table->text('motivo_revocacion')->nullable();
             $table->timestamps();
         });
     }

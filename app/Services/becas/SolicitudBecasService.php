@@ -2,23 +2,22 @@
 
 namespace App\Services\becas;
 
+use App\Models\Becas\BecaPregunta;
 use App\Models\Becas\SolicitudBeca;
 use App\Models\Becas\JornadaBeca;
 use App\Models\Becas\Beneficio;
-use App\Models\Persona;
+use App\Models\Becas\JornadaCriterio;
+use App\Models\Becas\SolicitudRespuesta;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
 class SolicitudBecasService
 {
-    /**
-     * Obtiene el listado de solicitudes paginado y con filtros para administración.
-     */
+
     public function listarSolicitudes(array $filtros = [])
     {
         $query = SolicitudBeca::with(['persona.personaPnf.pnf', 'beneficio', 'jornada', 'lapso']);
 
-        // Filtrar por búsqueda (Cédula, Nombre o Apellido)
         if (!empty($filtros['buscar'])) {
             $buscar = $filtros['buscar'];
             $query->whereHas('persona', function ($q) use ($buscar) {
@@ -28,66 +27,135 @@ class SolicitudBecasService
             });
         }
 
-        // Filtrar por Estado
         if (isset($filtros['estado']) && $filtros['estado'] !== '') {
             $query->where('estado', intval($filtros['estado']));
         }
 
-        // Filtrar por Beneficio
         if (!empty($filtros['beneficio_id'])) {
             $query->where('id_beneficio', intval($filtros['beneficio_id']));
         }
 
-        // Ordenar por fecha de creación desc
         return $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
     }
 
-    /**
-     * Registra una nueva solicitud de beca.
-     * @throws Exception
-     */
     public function crearSolicitud(array $data): SolicitudBeca
     {
         return DB::transaction(function () use ($data) {
             $personaId = $data['id_persona'];
             $jornadaId = $data['jornada_id'];
 
-            // 1. Validar que la jornada esté activa y exista
             $jornada = JornadaBeca::findOrFail($jornadaId);
             if (!$jornada->activa) {
-                throw new Exception("La jornada de becas seleccionada no se encuentra activa.");
+                throw new Exception("La jornada seleccionada no está activa.");
             }
 
-            // 2. Validar que la fecha actual esté dentro de la jornada
             $hoy = now()->toDateString();
-            if ($jornada->fecha_inicio_solicitud->toDateString() > $hoy || $jornada->fecha_fin_solicitud->toDateString() < $hoy) {
+            if ($jornada->fecha_inicio_solicitud->toDateString() > $hoy
+                || $jornada->fecha_fin_solicitud->toDateString() < $hoy) {
                 throw new Exception("El período de solicitudes para esta jornada ya expiró o no ha iniciado.");
             }
 
-            // 3. Validar duplicados para el estudiante en esta jornada
-            $existeSolicitudActiva = SolicitudBeca::where('id_persona', $personaId)
+            $existe = SolicitudBeca::where('id_persona', $personaId)
                 ->where('jornada_id', $jornadaId)
-                ->whereIn('estado', [0, 1]) // 0: Pendiente, 1: Aprobada
+                ->whereIn('estado', [0, 1])
                 ->exists();
-            if ($existeSolicitudActiva) {
-                throw new Exception("Ya tienes una solicitud en proceso o aprobada para esta jornada.");
+            if ($existe) {
+                throw new Exception("Ya existe una solicitud en proceso o aprobada para esta jornada.");
             }
 
-            // 4. Validar cupos máximos de la jornada
             if ($jornada->cupos_maximos <= $jornada->cupos_asignados) {
                 throw new Exception("No hay cupos disponibles en esta jornada.");
             }
 
-            // Por defecto, se crea en estado Pendiente (0)
-            $data['estado'] = 0;
+            $respuestas = $data['respuestas'] ?? [];
+            unset($data['respuestas']);
 
-            return SolicitudBeca::create($data);
+            $data['estado'] = 0;
+            $solicitud = SolicitudBeca::create($data);
+
+            $this->guardarRespuestas($solicitud, $jornada, $respuestas);
+
+            return $solicitud;
         });
     }
 
-    /**
-     * Actualiza los datos de una solicitud.
-     */
+    private function guardarRespuestas(SolicitudBeca $solicitud, JornadaBeca $jornada, array $respuestas): void
+    {
+        if (empty($respuestas)) return;
+
+        $criterios = JornadaCriterio::where('id_jornada', $jornada->id)
+            ->get()
+            ->keyBy('id_pregunta');
+
+        $preguntas = BecaPregunta::whereIn('id', collect($respuestas)->pluck('id_pregunta'))
+            ->get()
+            ->keyBy('id');
+
+        $rows = [];
+
+        foreach ($respuestas as $r) {
+            $idPregunta = $r['id_pregunta'] ?? null;
+            if (!$idPregunta || !isset($preguntas[$idPregunta])) continue;
+
+            $pregunta  = $preguntas[$idPregunta];
+            $criterio  = $criterios[$idPregunta] ?? null;
+            $valor     = $r['valor'] ?? null;
+            $valorJson = $r['valor_json'] ?? null;
+
+            $cumple = null;
+            if ($criterio && $criterio->operador) {
+                $cumple = $this->evaluarCriterio($criterio, $valor, $valorJson);
+            }
+
+            $rows[] = [
+                'id_solicitud'    => $solicitud->id,
+                'id_pregunta'     => $idPregunta,
+                'valor'           => $valor,
+                'valor_json'      => $valorJson ? json_encode($valorJson) : null,
+                'cumple_criterio' => $cumple,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ];
+        }
+
+        if (!empty($rows)) {
+            SolicitudRespuesta::insert($rows);
+        }
+    }
+
+    private function evaluarCriterio($criterio, $valor, $valorJson): bool
+    {
+        $operador = $criterio->operador;
+        $esperado = $criterio->valor_esperado;
+
+        if ($operador === 'in' || $operador === 'not_in') {
+            $lista = array_map('trim', explode(',', (string) $esperado));
+            $enLista = in_array((string) $valor, $lista, true);
+            return $operador === 'in' ? $enLista : !$enLista;
+        }
+
+        if ($operador === 'between') {
+            [$min, $max] = array_pad(explode(',', (string) $esperado), 2, null);
+            if ($min === null || $max === null) return false;
+            return (float) $valor >= (float) $min && (float) $valor <= (float) $max;
+        }
+
+        if (!is_numeric($valor) || !is_numeric($esperado)) return false;
+
+        $v = (float) $valor;
+        $e = (float) $esperado;
+
+        return match ($operador) {
+            '='  => $v === $e,
+            '!=' => $v !== $e,
+            '>'  => $v >  $e,
+            '>=' => $v >= $e,
+            '<'  => $v <  $e,
+            '<=' => $v <= $e,
+            default => false,
+        };
+    }
+
     public function actualizarSolicitud(int $id, array $data): SolicitudBeca
     {
         $solicitud = SolicitudBeca::findOrFail($id);
@@ -95,10 +163,6 @@ class SolicitudBecasService
         return $solicitud;
     }
 
-    /**
-     * Verifica, aprueba o rechaza una solicitud actualizando cupos.
-     * @throws Exception
-     */
     public function verificarSolicitud(int $id, int $nuevoEstado, ?string $comentario, int $verificadorId): SolicitudBeca
     {
         return DB::transaction(function () use ($id, $nuevoEstado, $comentario, $verificadorId) {
@@ -112,41 +176,31 @@ class SolicitudBecasService
             $jornada = JornadaBeca::findOrFail($solicitud->jornada_id);
             $beneficio = Beneficio::findOrFail($solicitud->id_beneficio);
 
-            // Si pasa a ser APROBADA (1)
             if ($nuevoEstado === 1) {
-                // Si antes estaba Aprobada, no sumamos (ya validado arriba que son diferentes).
-                // Validar cupos en Jornada
                 if ($jornada->cupos_asignados >= $jornada->cupos_maximos) {
                     throw new Exception("No hay cupos disponibles en la jornada para aprobar esta solicitud.");
                 }
-                // Validar cupones en el Beneficio
                 if ($beneficio->cupones_disponibles <= 0) {
                     throw new Exception("No hay cupones disponibles en el beneficio configurado.");
                 }
 
-                // Incrementar cupos asignados en la jornada
                 $jornada->increment('cupos_asignados');
 
-                // Incrementar cupones ocupados y decrementar disponibles del beneficio
                 $beneficio->increment('cupones_ocupados');
                 $beneficio->decrement('cupones_disponibles');
             }
 
-            // Si deja de ser APROBADA (pasa de Aprobada (1) a Rechazada (2) o Pendiente (0))
             if ($estadoAnterior === 1) {
-                // Decrementar cupos asignados en la jornada
                 if ($jornada->cupos_asignados > 0) {
                     $jornada->decrement('cupos_asignados');
                 }
 
-                // Decrementar cupones ocupados e incrementar disponibles en el beneficio
                 if ($beneficio->cupones_ocupados > 0) {
                     $beneficio->decrement('cupones_ocupados');
                 }
                 $beneficio->increment('cupones_disponibles');
             }
 
-            // Actualizar la solicitud
             $solicitud->update([
                 'estado' => $nuevoEstado,
                 'comentario_verificador' => $nuevoEstado === 2 ? $comentario : null, // Comentario solo en caso de rechazo

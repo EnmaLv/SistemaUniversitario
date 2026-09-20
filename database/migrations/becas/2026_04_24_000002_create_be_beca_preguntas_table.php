@@ -10,14 +10,30 @@ return new class extends Migration
     {
         Schema::create('be_beca_preguntas', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_be_beneficios')->index();
-            $table->string('texto');
-            $table->enum('tipo', ['text', 'number'])->default('text');
-            $table->decimal('min', 15, 2)->nullable();
-            $table->decimal('max', 15, 2)->nullable();
-            $table->timestamps();
+            $table->foreignId('id_be_beneficio')
+                ->constrained('be_beneficios')
+                ->onDelete('cascade');
+            $table->string('codigo', 60);
+            $table->string('etiqueta');
+            $table->string('placeholder')->nullable();
+            $table->text('ayuda')->nullable();
 
-            $table->foreign('id_be_beneficios')->references('id')->on('be_beneficios')->onDelete('cascade');
+            $table->enum('tipo', [
+                'text', 'textarea', 'number', 'decimal',
+                'email', 'date', 'select', 'radio',
+                'checkbox', 'boolean'
+            ])->default('text');
+            $table->boolean('obligatoria')->default(true);
+            $table->decimal('valor_min', 15, 2)->nullable();
+            $table->decimal('valor_max', 15, 2)->nullable();
+            $table->unsignedInteger('min_length')->nullable();
+            $table->unsignedInteger('max_length')->nullable();
+            $table->string('regex')->nullable();
+            $table->unsignedInteger('orden')->default(0);
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+            $table->unique(['id_be_beneficio', 'codigo']);
+            $table->index(['id_be_beneficio', 'activo', 'orden']);
         });
     }
 

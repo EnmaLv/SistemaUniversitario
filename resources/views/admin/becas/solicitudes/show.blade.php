@@ -1,349 +1,315 @@
 <x-app-layout>
-
-    <div class="pt-8 pb-12 min-h-[calc(100vh-4rem)]">
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {{-- CABECERA UNIFICADA --}}
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <a href="{{ route('admin.becas.solicitudes.index') }}" class="inline-flex items-center text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-widest hover:text-red-650 transition-colors mb-2">
-                        <i class="fas fa-arrow-left mr-2"></i> Volver a solicitudes
-                    </a>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
-                        Detalle de Solicitud de Beca
-                    </h1>
-                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Expediente socioeconómico del estudiante C.I. <strong>{{ $solicitud->persona->cedula_persona }}</strong>.
-                    </p>
-                </div>
-                
-                {{-- Badge de Estado Actual --}}
-                <div class="flex items-center">
-                    <span class="text-xs font-black px-4 py-2 rounded-xl border uppercase tracking-widest {{ $solicitud->estado_badge }}">
-                        Estado: {{ $solicitud->estado_texto }}
+            @include('components.alert')
+
+            <div class="mb-6">
+                <a href="{{ route('admin.becas.solicitudes.index') }}"
+                    class="inline-flex items-center text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-widest hover:text-red-800 transition-colors mb-2">
+                    <i class="fas fa-arrow-left mr-2"></i> Volver a solicitudes
+                </a>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                            Detalle de solicitud
+                        </h1>
+                        <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Expediente de
+                            <span class="font-bold">
+                                {{ $solicitud->persona->nombre_persona }} {{ $solicitud->persona->apellido_persona }}
+                            </span>
+                            · C.I. {{ $solicitud->persona->cedula_persona }}
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest self-start sm:self-auto {{ $solicitud->estado_badge }}">
+                        {{ $solicitud->estado_texto }}
                     </span>
                 </div>
             </div>
 
-            @include('components.alert')
+            {{-- BLOQUE 1: DATOS GENERALES --}}
+            <div class="rounded-2xl border shadow-sm mb-6 overflow-hidden"
+                style="background-color: var(--bg-card); border-color: var(--border-color);">
 
-            {{-- SECCIÓN 1: DATOS GENERALES Y ACADÉMICOS --}}
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-3xl border-l-8 border-red-700 overflow-hidden mb-6">
-                <div class="p-6 border-b dark:border-gray-700 bg-slate-50/50 dark:bg-gray-900/10">
-                    <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <i class="fas fa-user-graduate text-red-700"></i> Datos Académicos y de Postulación
+                <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02);">
+                    <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2"
+                        style="color: var(--text-main);">
+                        <i class="fas fa-user-graduate text-red-700"></i> Datos generales
                     </h3>
                 </div>
+
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
                     <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Estudiante</span>
-                        <span class="font-bold text-slate-800 dark:text-white">
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Estudiante</span>
+                        <span class="font-bold" style="color: var(--text-main);">
                             {{ $solicitud->persona->nombre_persona }} {{ $solicitud->persona->apellido_persona }}
                         </span>
                     </div>
                     <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Cédula de Identidad</span>
-                        <span class="font-bold text-slate-800 dark:text-white">
-                            C.I. {{ $solicitud->persona->cedula_persona }}
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Cédula</span>
+                        <span class="font-bold font-mono" style="color: var(--text-main);">
+                            {{ $solicitud->persona->cedula_persona }}
                         </span>
                     </div>
                     <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Programa / PNF</span>
-                        <span class="font-bold text-slate-850 dark:text-slate-200">
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">PNF</span>
+                        <span class="font-bold" style="color: var(--text-main);">
                             {{ $solicitud->persona->personaPnf->first()->pnf->nombre_pnf ?? 'No registrado' }}
                         </span>
                     </div>
                     <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Jornada</span>
-                        <span class="font-semibold text-slate-800 dark:text-white">
-                            {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Beneficio Ofrecido</span>
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Beneficio</span>
                         <span class="font-bold text-red-700 dark:text-red-400">
                             {{ $solicitud->beneficio->nombre_beneficio ?? 'N/A' }}
                         </span>
                     </div>
                     <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Lapso Académico</span>
-                        <span class="font-semibold text-slate-800 dark:text-white">
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Jornada</span>
+                        <span class="font-semibold" style="color: var(--text-main);">
+                            {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Lapso</span>
+                        <span class="font-semibold font-mono" style="color: var(--text-main);">
                             {{ $solicitud->lapso->codigo ?? 'N/A' }}
                         </span>
                     </div>
                     <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Tipo de Solicitud</span>
-                        <span class="font-semibold capitalize text-slate-850 dark:text-slate-200">
-                            {{ $solicitud->tipo_solicitud }}
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Tipo de solicitud</span>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest
+                            {{ $solicitud->tipo_solicitud === 'nueva'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900'
+                                : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900' }}">
+                            {{ ucfirst($solicitud->tipo_solicitud) }}
                         </span>
                     </div>
                     <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Índice Académico</span>
-                        <span class="font-black text-slate-800 dark:text-white text-base">
-                            {{ $solicitud->indice_academico }} pts
-                        </span>
-                    </div>
-                    <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Registro Patria</span>
-                        <span class="font-semibold text-slate-800 dark:text-white">
-                            {{ $solicitud->registro_patria ? 'Sí' : 'No' }}
+                        <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Fecha de envío</span>
+                        <span class="font-semibold" style="color: var(--text-main);">
+                            {{ $solicitud->created_at?->format('d/m/Y g:i A') ?? '—' }}
                         </span>
                     </div>
                 </div>
             </div>
 
-            {{-- SECCIÓN 2: VIVIENDA Y TRANSPORTE --}}
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-3xl border-l-8 border-slate-650 overflow-hidden mb-6">
-                <div class="p-6 border-b dark:border-gray-700 bg-slate-50/50 dark:bg-gray-900/10">
-                    <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <i class="fas fa-route text-slate-650"></i> Datos de Vivienda y Transporte
-                    </h3>
-                </div>
-                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
-                    <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Paga Alquiler / Residencia</span>
-                        <span class="font-semibold text-slate-800 dark:text-white">
-                            {{ ($solicitud->vivienda_transporte['residencia']['paga'] ?? false) ? 'Sí' : 'No' }}
-                        </span>
-                    </div>
-                    @if ($solicitud->vivienda_transporte['residencia']['paga'] ?? false)
-                        <div>
-                            <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Monto Alquiler</span>
-                            <span class="font-semibold text-slate-800 dark:text-white">
-                                {{ number_format($solicitud->vivienda_transporte['residencia']['monto'] ?? 0, 2) }}
-                            </span>
-                        </div>
-                    @endif
-                    <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Viaje Diario a la Universidad</span>
-                        <span class="font-semibold text-slate-800 dark:text-white">
-                            {{ ($solicitud->vivienda_transporte['viaje_diario']['es_diario'] ?? true) ? 'Sí' : 'No' }}
-                        </span>
-                    </div>
-                    @if (!($solicitud->vivienda_transporte['viaje_diario']['es_diario'] ?? true))
-                        <div>
-                            <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Frecuencia de Viaje (Semanal)</span>
-                            <span class="font-semibold text-slate-800 dark:text-white">
-                                {{ $solicitud->vivienda_transporte['viaje_diario']['frecuencia_semanal'] ?? 'N/A' }} días
-                            </span>
-                        </div>
-                    @endif
-                    <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Tiempo de Traslado (Ida)</span>
-                        <span class="font-semibold text-slate-800 dark:text-white">
-                            {{ $solicitud->vivienda_transporte['tiempo_traslado']['horas'] ?? 0 }} hrs, 
-                            {{ $solicitud->vivienda_transporte['tiempo_traslado']['minutos'] ?? 0 }} min
-                        </span>
-                    </div>
-                    <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Gasto Mensual de Pasaje</span>
-                        <span class="font-bold text-slate-800 dark:text-white text-base">
-                            {{ number_format($solicitud->gasto_pasaje, 2) }}
-                        </span>
-                    </div>
-                    @if ($solicitud->direccion_temporal)
-                        <div class="sm:col-span-2 md:col-span-3">
-                            <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Dirección Temporal</span>
-                            <span class="font-semibold text-slate-800 dark:text-white bg-slate-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl block border dark:border-gray-700 mt-1">
-                                {{ $solicitud->direccion_temporal }}
-                            </span>
-                        </div>
-                    @endif
-                </div>
-            </div>
+            {{-- BLOQUE 2: RESPUESTAS DEL FORMULARIO --}}
+            <div class="rounded-2xl border shadow-sm mb-6 overflow-hidden"
+                style="background-color: var(--bg-card); border-color: var(--border-color);">
 
-            {{-- SECCIÓN 3: DATOS SOCIOECONÓMICOS --}}
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-3xl border-l-8 border-slate-650 overflow-hidden mb-6">
-                <div class="p-6 border-b dark:border-gray-700 bg-slate-50/50 dark:bg-gray-900/10">
-                    <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <i class="fas fa-chart-bar text-slate-650"></i> Datos Socioeconómicos del Estudiante
+                <div class="px-6 py-4 border-b flex items-center justify-between"
+                    style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02);">
+                    <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2"
+                        style="color: var(--text-main);">
+                        <i class="fas fa-clipboard-list text-red-700"></i> Respuestas del formulario
                     </h3>
+                    @if ($solicitud->respuestas->isNotEmpty())
+                        <span class="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                            {{ $solicitud->respuestas->count() }} respuesta(s)
+                        </span>
+                    @endif
                 </div>
-                <div class="p-6 text-sm">
-                    {{-- Vivienda --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6 pb-6 border-b dark:border-gray-700">
-                        <div>
-                            <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Tipo de Vivienda</span>
-                            <span class="font-bold text-slate-800 dark:text-white">
-                                {{ $solicitud->datos_socioeconomicos['vivienda']['tipo'] ?? 'N/A' }}
-                            </span>
+
+                @php
+                    $respuestasOrdenadas = $solicitud->respuestas
+                        ->sortBy(fn ($r) => $r->pregunta?->orden ?? 0)
+                        ->values();
+                    $eliminatoriasFallidas = $respuestasOrdenadas->where('cumple_criterio', false)->count();
+                @endphp
+
+                @if ($eliminatoriasFallidas > 0)
+                    <div class="mx-6 mt-4 rounded-xl border px-4 py-3 flex items-start gap-3
+                        bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900">
+                        <i class="fas fa-triangle-exclamation text-rose-600 dark:text-rose-400 mt-0.5"></i>
+                        <div class="text-xs text-rose-700 dark:text-rose-300 font-semibold">
+                            <p class="font-black uppercase tracking-wider mb-0.5">Criterios eliminatorios no cumplidos</p>
+                            <p>Esta solicitud no cumple {{ $eliminatoriasFallidas }} criterio(s) eliminatorio(s). Considera esto al verificar.</p>
                         </div>
-                        <div>
-                            <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Tenencia</span>
-                            <span class="font-bold text-slate-800 dark:text-white">
-                                {{ $solicitud->datos_socioeconomicos['vivienda']['tenencia'] ?? 'N/A' }}
-                            </span>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Distribución Interna</span>
-                            <div class="flex flex-wrap gap-2 mt-1">
-                                @foreach($solicitud->datos_socioeconomicos['vivienda']['distribucion'] ?? [] as $dKey => $dVal)
-                                    @if($dVal > 0)
-                                        <span class="text-xs bg-slate-100 dark:bg-gray-700 px-2 py-1 rounded-lg border dark:border-gray-600">
-                                            {{ ucfirst($dKey) }}: <strong>{{ $dVal }}</strong>
+                    </div>
+                @endif
+
+                <div class="p-6">
+                    @forelse ($respuestasOrdenadas as $resp)
+                        @php
+                            $pregunta = $resp->pregunta;
+                            $esEliminatoria = $pregunta && $pregunta->criterios->contains(fn ($c) => $c->es_eliminatoria);
+                        @endphp
+
+                        <div class="py-4 border-b last:border-0 flex flex-col sm:flex-row sm:items-start gap-3"
+                            style="border-color: var(--border-color);">
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center gap-2 mb-1">
+                                    <span class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ $pregunta->etiqueta ?? 'Pregunta eliminada' }}
+                                    </span>
+                                    @if ($pregunta && $pregunta->codigo)
+                                        <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800 font-mono">
+                                            {{ $pregunta->codigo }}
                                         </span>
                                     @endif
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
+                                </div>
 
-                    {{-- Equipamiento --}}
-                    <div class="mb-6 pb-6 border-b dark:border-gray-700">
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-2">Equipamiento (Electrodomésticos / Mobiliario)</span>
-                        <div class="flex flex-wrap gap-2">
-                            @php $hasEquip = false; @endphp
-                            @foreach($solicitud->datos_socioeconomicos['equipamiento'] ?? [] as $eKey => $eVal)
-                                @if($eVal > 0)
-                                    @php $hasEquip = true; @endphp
-                                    <span class="text-xs bg-slate-50 dark:bg-gray-700/40 px-2.5 py-1 rounded-xl border dark:border-gray-600/50">
-                                        {{ str_replace('_', ' ', ucfirst($eKey)) }}: <strong>{{ $eVal }}</strong>
-                                    </span>
-                                @endif
-                            @endforeach
-                            @if(!$hasEquip)
-                                <span class="text-xs text-gray-500">Ningún equipamiento registrado.</span>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Servicios --}}
-                    <div class="mb-6 pb-6 border-b dark:border-gray-700">
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-2">Servicios Públicos Disponibles</span>
-                        <div class="flex flex-wrap gap-2">
-                            @php $hasServ = false; @endphp
-                            @foreach($solicitud->datos_socioeconomicos['servicios'] ?? [] as $sKey => $sVal)
-                                @if($sVal)
-                                    @php $hasServ = true; @endphp
-                                    <span class="text-xs bg-emerald-50 border border-emerald-200/50 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-900/30 dark:text-emerald-400 px-2.5 py-1 rounded-xl font-medium">
-                                        <i class="fas fa-check-circle mr-1 text-[10px]"></i> {{ str_replace('_', ' ', ucfirst($sKey)) }}
-                                    </span>
-                                @endif
-                            @endforeach
-                            @if(!$hasServ)
-                                <span class="text-xs text-gray-500">Ningún servicio público disponible.</span>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Carga Familiar --}}
-                    <div>
-                        <span class="block text-xs font-bold text-gray-450 uppercase mb-3">Carga Familiar del Estudiante</span>
-                        <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
-                            <table class="min-w-full divide-y divide-slate-100 dark:divide-gray-700 text-xs">
-                                <thead class="bg-slate-55/40 dark:bg-gray-700/40 text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left">Parentesco</th>
-                                        <th class="px-4 py-3 text-left">Nombre y Apellido</th>
-                                        <th class="px-4 py-3 text-center w-20">Edad</th>
-                                        <th class="px-4 py-3 text-left">Nivel Educativo</th>
-                                        <th class="px-4 py-3 text-left">Ocupación</th>
-                                        <th class="px-4 py-3 text-right w-36">Ingreso Mensual</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 dark:divide-gray-700">
-                                    @php $totalIngresos = 0; @endphp
-                                    @forelse($solicitud->datos_socioeconomicos['carga_familiar'] ?? [] as $familiar)
-                                        @php $totalIngresos += doubleval($familiar['ingreso_mens'] ?? 0); @endphp
-                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/10 transition-all">
-                                            <td class="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200">{{ $familiar['parentesco'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3 text-slate-800 dark:text-slate-200">{{ $familiar['nombre_apellido'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3 text-center text-slate-700 dark:text-slate-300">{{ $familiar['edad'] ?? 'N/A' }} años</td>
-                                            <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ $familiar['nivel_instituto'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ $familiar['ocupacion'] ?? 'N/A' }}</td>
-                                            <td class="px-4 py-3 text-right font-semibold text-slate-850 dark:text-slate-200">{{ number_format(doubleval($familiar['ingreso_mens'] ?? 0), 2) }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="6" class="px-4 py-4 text-center text-gray-500">Ningún miembro registrado en la carga familiar.</td>
-                                        </tr>
-                                    @endforelse
-                                    @if(count($solicitud->datos_socioeconomicos['carga_familiar'] ?? []) > 0)
-                                        <tr class="bg-slate-50/50 dark:bg-gray-700/20 font-bold">
-                                            <td colspan="5" class="px-4 py-3 text-right text-slate-800 dark:text-slate-200 uppercase tracking-wide">Total Ingreso Familiar:</td>
-                                            <td class="px-4 py-3 text-right text-base text-red-700 dark:text-red-400">{{ number_format($totalIngresos, 2) }}</td>
-                                        </tr>
+                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    @if ($pregunta && $pregunta->tipo === 'checkbox' && !empty($resp->valor_json))
+                                        <div class="flex flex-wrap gap-1.5 mt-1">
+                                            @foreach ($resp->valor_json as $v)
+                                                @php
+                                                    $opt = $pregunta->opciones->firstWhere('valor', $v);
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md
+                                                    bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400
+                                                    border border-sky-200 dark:border-sky-900">
+                                                    {{ $opt->etiqueta ?? $v }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @elseif ($pregunta && in_array($pregunta->tipo, ['select', 'radio', 'boolean']))
+                                        @php
+                                            $opt = $pregunta->opciones->firstWhere('valor', $resp->valor);
+                                            $texto = $opt->etiqueta ?? $resp->valor;
+                                            if ($pregunta->tipo === 'boolean') {
+                                                $texto = $resp->valor == '1' ? 'Sí' : ($resp->valor == '0' ? 'No' : $resp->valor);
+                                            }
+                                        @endphp
+                                        <span class="font-medium">{{ $texto ?: '—' }}</span>
+                                    @else
+                                        <span class="font-medium whitespace-pre-line">{{ $resp->valor ?: '—' }}</span>
                                     @endif
-                                </tbody>
-                            </table>
+                                </div>
+                            </div>
+
+                            @if ($resp->cumple_criterio !== null)
+                                @if ($resp->cumple_criterio)
+                                    <span class="inline-flex items-center gap-1 self-start px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg
+                                        bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400
+                                        border border-emerald-200 dark:border-emerald-900">
+                                        <i class="fas fa-check text-[8px]"></i> Cumple
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 self-start px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg
+                                        bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400
+                                        border border-rose-200 dark:border-rose-900">
+                                        <i class="fas fa-times text-[8px]"></i>
+                                        No cumple{{ $esEliminatoria ? ' · Eliminatorio' : '' }}
+                                    </span>
+                                @endif
+                            @endif
                         </div>
-                    </div>
+                    @empty
+                        <div class="text-center py-8 text-gray-400 dark:text-gray-500 text-xs font-bold uppercase tracking-wider">
+                            <i class="fas fa-inbox text-2xl mb-2 block text-gray-300 dark:text-gray-700"></i>
+                            Esta solicitud no tiene respuestas registradas
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
-            {{-- SECCIÓN DE VERIFICACIÓN / AUDITORÍA --}}
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-3xl border-l-8 {{ $solicitud->estado === 0 ? 'border-yellow-500' : ($solicitud->estado === 1 ? 'border-green-600' : 'border-red-600') }} overflow-hidden">
-                <div class="p-6 border-b dark:border-gray-700 bg-slate-50/50 dark:bg-gray-900/10">
-                    <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <i class="fas fa-check-double {{ $solicitud->estado === 0 ? 'text-yellow-500' : ($solicitud->estado === 1 ? 'text-green-600' : 'text-red-600') }}"></i> Auditoría y Verificación de Solicitud
+            {{-- BLOQUE 3: AUDITORÍA --}}
+            <div class="rounded-2xl border shadow-sm overflow-hidden"
+                style="background-color: var(--bg-card); border-color: var(--border-color);">
+
+                <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02);">
+                    <h3 class="text-xs font-black uppercase tracking-widest flex items-center gap-2"
+                        style="color: var(--text-main);">
+                        <i class="fas fa-shield-halved text-red-700"></i> Auditoría y verificación
                     </h3>
                 </div>
-                
-                <div class="p-6 text-sm">
+
+                <div class="p-6">
                     @if ($solicitud->estado === 0)
-                        {{-- Formulario para aprobar / rechazar --}}
                         <form action="{{ route('admin.becas.solicitudes.verificar', $solicitud->id) }}" method="POST" id="form-verificar">
                             @csrf
                             @method('PUT')
 
-                            <p class="mb-4 text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
-                                Revisa los datos cargados del estudiante. Puedes aprobar directamente o rechazar la solicitud indicando los motivos.
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+                                Revisa las respuestas cargadas. Puedes aprobar directamente o rechazar indicando el motivo.
                             </p>
 
-                            <div class="mb-6">
-                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Decisión *</label>
-                                <div class="flex gap-4">
-                                    <label class="flex items-center gap-2 cursor-pointer bg-green-50 border border-green-200/50 hover:bg-green-100/50 dark:bg-green-950/20 dark:border-green-900/30 px-5 py-3 rounded-2xl transition-all">
-                                        <input type="radio" name="estado" value="1" onchange="toggleComentario()" required class="text-green-650 focus:ring-green-500" />
-                                        <span class="font-bold text-green-700 dark:text-green-400 uppercase tracking-wider text-xs">Aprobar Solicitud</span>
+                            <div class="mb-5">
+                                <label class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                                    Decisión *
+                                </label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border transition-all
+                                        bg-emerald-50 dark:bg-emerald-950/20
+                                        border-emerald-200 dark:border-emerald-900
+                                        hover:bg-emerald-100 dark:hover:bg-emerald-950/40">
+                                        <input type="radio" name="estado" value="1" onchange="toggleComentario()" required
+                                            class="text-emerald-600 focus:ring-emerald-500">
+                                        <span class="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                                            Aprobar
+                                        </span>
                                     </label>
-                                    <label class="flex items-center gap-2 cursor-pointer bg-red-50 border border-red-200/50 hover:bg-red-100/50 dark:bg-red-950/20 dark:border-red-900/30 px-5 py-3 rounded-2xl transition-all">
-                                        <input type="radio" name="estado" value="2" onchange="toggleComentario()" required class="text-red-700 focus:ring-red-500" />
-                                        <span class="font-bold text-red-700 dark:text-red-400 uppercase tracking-wider text-xs">Rechazar Solicitud</span>
+                                    <label class="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border transition-all
+                                        bg-rose-50 dark:bg-rose-950/20
+                                        border-rose-200 dark:border-rose-900
+                                        hover:bg-rose-100 dark:hover:bg-rose-950/40">
+                                        <input type="radio" name="estado" value="2" onchange="toggleComentario()" required
+                                            class="text-rose-700 focus:ring-rose-500">
+                                        <span class="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                                            Rechazar
+                                        </span>
                                     </label>
                                 </div>
-                                @error('estado') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                                @error('estado')
+                                    <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                                @enderror
                             </div>
 
-                            <div class="mb-6 hidden" id="div-comentario">
-                                <label for="comentario_verificador" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Motivo del rechazo *</label>
+                            <div class="mb-5 hidden" id="div-comentario">
+                                <label for="comentario_verificador" class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                                    Motivo del rechazo *
+                                </label>
                                 <textarea name="comentario_verificador" id="comentario_verificador" rows="3"
-                                    class="w-full bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all outline-none"
-                                    placeholder="Indique detalladamente el motivo de rechazo de la solicitud..."></textarea>
-                                @error('comentario_verificador') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                                    placeholder="Indica el motivo detallado del rechazo..."
+                                    style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
+                                    class="w-full px-4 py-2.5 rounded-xl border text-sm font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+                                @error('comentario_verificador')
+                                    <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                                @enderror
                             </div>
 
-                            <div class="flex justify-end gap-3 mt-6">
-                                <a href="{{ route('admin.becas.solicitudes.index') }}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-650 dark:text-gray-300 font-bold rounded-xl text-sm transition-all border dark:border-gray-600">
+                            <div class="flex justify-end gap-3 pt-4 border-t" style="border-color: var(--border-color);">
+                                <a href="{{ route('admin.becas.solicitudes.index') }}"
+                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                                    style="border-color: var(--border-color); color: var(--text-main);">
                                     Cancelar
                                 </a>
-                                <button type="submit" class="px-5 py-2.5 bg-red-700 hover:bg-red-600 text-white font-bold rounded-xl text-sm transition-all shadow-md">
-                                    Guardar Decisión <i class="fas fa-check-circle ml-2 text-xs"></i>
+                                <button type="submit"
+                                    class="rd-submit-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
+                                    <i class="fas fa-check-circle text-xs"></i> Guardar decisión
                                 </button>
                             </div>
                         </form>
                     @else
-                        {{-- Detalle del auditor que verificó la solicitud --}}
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
                             <div>
-                                <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Verificado Por</span>
-                                <span class="font-bold text-slate-800 dark:text-white">
-                                    {{ $solicitud->verificador->persona->nombre_persona ?? 'N/A' }} {{ $solicitud->verificador->persona->apellido_persona ?? '' }}
+                                <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Verificado por</span>
+                                <span class="font-bold" style="color: var(--text-main);">
+                                    {{ $solicitud->verificador->persona->nombre_persona ?? 'N/A' }}
+                                    {{ $solicitud->verificador->persona->apellido_persona ?? '' }}
                                 </span>
-                                <span class="block text-[10px] text-gray-400 font-medium">({{ $solicitud->verificador->username ?? 'N/A' }})</span>
+                                <span class="block text-[10px] text-gray-400 font-mono mt-0.5">
+                                    {{ $solicitud->verificador->username ?? 'N/A' }}
+                                </span>
                             </div>
                             <div>
-                                <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Fecha de Verificación</span>
-                                <span class="font-semibold text-slate-800 dark:text-white">
-                                    {{ $solicitud->fecha_verificacion ? $solicitud->fecha_verificacion->format('d/m/Y g:i A') : 'N/A' }}
+                                <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Fecha de verificación</span>
+                                <span class="font-semibold" style="color: var(--text-main);">
+                                    {{ $solicitud->fecha_verificacion?->format('d/m/Y g:i A') ?? 'N/A' }}
                                 </span>
                             </div>
-                            @if ($solicitud->estado === 2)
+
+                            @if ($solicitud->estado === 2 && $solicitud->comentario_verificador)
                                 <div class="sm:col-span-2 md:col-span-3">
-                                    <span class="block text-xs font-bold text-gray-450 uppercase mb-1">Comentario o Motivo del Rechazo</span>
-                                    <span class="font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-3 py-2 rounded-xl block border border-rose-200/50 dark:border-rose-900/30 mt-1">
-                                        {{ $solicitud->comentario_verificador ?? 'Sin comentarios registrados.' }}
-                                    </span>
+                                    <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Motivo del rechazo</span>
+                                    <div class="rounded-xl border px-4 py-3 text-sm font-medium
+                                        bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300
+                                        border-rose-200 dark:border-rose-900">
+                                        {{ $solicitud->comentario_verificador }}
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -354,23 +320,22 @@
         </div>
     </div>
 
-    @push('scripts')
-        <script>
-            function toggleComentario() {
-                const radioRechazar = document.querySelector('input[name="estado"][value="2"]');
-                const divComentario = document.getElementById('div-comentario');
-                const inputComentario = document.getElementById('comentario_verificador');
+    <script>
+        function toggleComentario() {
+            const radioRechazar = document.querySelector('input[name="estado"][value="2"]');
+            const divComentario = document.getElementById('div-comentario');
+            const inputComentario = document.getElementById('comentario_verificador');
 
-                if (radioRechazar && radioRechazar.checked) {
-                    divComentario.classList.remove('hidden');
-                    inputComentario.setAttribute('required', 'required');
-                } else {
-                    divComentario.classList.add('hidden');
-                    inputComentario.removeAttribute('required');
-                    inputComentario.value = '';
-                }
+            if (!radioRechazar || !divComentario) return;
+
+            if (radioRechazar.checked) {
+                divComentario.classList.remove('hidden');
+                inputComentario.setAttribute('required', 'required');
+            } else {
+                divComentario.classList.add('hidden');
+                inputComentario.removeAttribute('required');
+                inputComentario.value = '';
             }
-        </script>
-    @endpush
-
+        }
+    </script>
 </x-app-layout>

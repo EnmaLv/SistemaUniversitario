@@ -24,14 +24,7 @@ class BecaBeneficioRequest extends FormRequest
                 Rule::unique('be_beneficios', 'nombre_beneficio')->ignore($beneficioId),
             ],
             'descripcion' => ['nullable', 'string'],
-            'status' => ['nullable', 'boolean'],
+            'status'      => ['required', 'boolean'],
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'status' => $this->boolean('status'),
-        ]);
     }
 }
