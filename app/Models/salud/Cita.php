@@ -170,7 +170,7 @@ class Cita extends Model
                 }
             }
 
-            $cita->paciente_nombre = trim(($cita->nombres ?? '') . ' ' . ($cita->apellidos ?? ''));
+            $cita->paciente_nombre = trim(($cita->paciente->persona->nombre_persona ?? '') . ' ' . ($cita->paciente->persona->apellido_persona ?? ''));
             $cita->cita_id = $cita->id;
             $cita->fecha_carbon = $cita->fecha ? Carbon::parse($cita->fecha) : null;
             $cita->created_at_carbon = $cita->created_at ? Carbon::parse($cita->created_at) : null;
@@ -369,7 +369,7 @@ class Cita extends Model
             $sortedEdades = $edadesList;
             sort($sortedEdades);
             $count = count($sortedEdades);
-            $middle = floor(($count - 1) / 2);
+            $middle = intdiv($count - 1, 2);
             $resumen['edades']['mediana'] = ($count % 2 == 0) ? ($sortedEdades[$middle] + $sortedEdades[$middle + 1]) / 2 : $sortedEdades[$middle];
             $counts = array_count_values($edadesList);
             arsort($counts);
@@ -1105,11 +1105,11 @@ class Cita extends Model
 
         if ($q) {
             $buscarNormalized = mb_strtolower($q, 'UTF-8');
-            $query->whereHas('paciente', function ($s) use ($buscarNormalized) {
-                $s->whereRaw("LOWER(COALESCE(nombres, '')) LIKE ?", ["%{$buscarNormalized}%"])
-                    ->orWhereRaw("LOWER(COALESCE(apellidos, '')) LIKE ?", ["%{$buscarNormalized}%"])
-                    ->orWhereRaw("LOWER(TRIM(CONCAT(COALESCE(nombres, ''), ' ', COALESCE(apellidos, '')))) LIKE ?", ["%{$buscarNormalized}%"])
-                    ->orWhereRaw("LOWER(COALESCE(cedula, '')) LIKE ?", ["{$buscarNormalized}%"]);
+            $query->whereHas('paciente.persona', function ($s) use ($buscarNormalized) {
+                $s->whereRaw("LOWER(COALESCE(nombre_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                    ->orWhereRaw("LOWER(COALESCE(apellido_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                    ->orWhereRaw("LOWER(TRIM(CONCAT(COALESCE(nombre_persona, ''), ' ', COALESCE(apellido_persona, '')))) LIKE ?", ["%{$buscarNormalized}%"])
+                    ->orWhereRaw("LOWER(COALESCE(cedula_persona, '')) LIKE ?", ["{$buscarNormalized}%"]);
             });
         }
 
@@ -1131,10 +1131,11 @@ class Cita extends Model
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
             if ($item->paciente) {
-                $item->user_nombres = $item->paciente->nombres;
-                $item->user_apellidos = $item->paciente->apellidos;
-                $item->paciente_email = $item->paciente->email;
-                $item->paciente_cedula = $item->paciente->cedula;
+                $persona = $item->paciente->persona;
+                $item->user_nombres = $persona->nombre_persona ?? '';
+                $item->user_apellidos = $persona->apellido_persona ?? '';
+                $item->paciente_email = $persona->email_persona ?? '';
+                $item->paciente_cedula = $persona->cedula_persona ?? '';
                 $item->paciente_horario_path = $item->paciente->horario_path;
             }
 
@@ -1167,8 +1168,8 @@ class Cita extends Model
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
             if ($item->psicologo) {
-                $item->nombres = $item->psicologo->nombres;
-                $item->apellidos = $item->psicologo->apellidos;
+                $item->nombres = $item->psicologo->persona->nombre_persona;
+                $item->apellidos = $item->psicologo->persona->apellido_persona;
             }
 
             $item = self::desencriptarItem($item);
@@ -1236,8 +1237,8 @@ class Cita extends Model
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
             if ($item->paciente) {
-                $item->user_nombres = $item->paciente->nombres;
-                $item->user_apellidos = $item->paciente->apellidos;
+                $item->user_nombres = $item->paciente->persona->nombre_persona;
+                $item->user_apellidos = $item->paciente->persona->apellido_persona;
             }
 
             $item = self::desencriptarItem($item);
@@ -1417,8 +1418,8 @@ class Cita extends Model
             ->map(function ($item) {
                 $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
                 if ($item->paciente) {
-                    $item->user_nombres = $item->paciente->nombres;
-                    $item->user_apellidos = $item->paciente->apellidos;
+                    $item->user_nombres = $item->paciente->persona->nombre_persona;
+                    $item->user_apellidos = $item->paciente->persona->apellido_persona;
                     $item->paciente_horario_path = $item->paciente->horario_path;
                 }
 
@@ -1457,8 +1458,8 @@ class Cita extends Model
             ->map(function ($item) {
                 $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
                 if ($item->paciente) {
-                    $item->user_nombres = $item->paciente->nombres;
-                    $item->user_apellidos = $item->paciente->apellidos;
+                    $item->user_nombres = $item->paciente->persona->nombre_persona;
+                    $item->user_apellidos = $item->paciente->persona->apellido_persona;
                 }
 
                 $item = self::desencriptarItem($item);
@@ -1480,8 +1481,8 @@ class Cita extends Model
             ->map(function ($item) {
                 $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
                 if ($item->paciente) {
-                    $item->user_nombres = $item->paciente->nombres;
-                    $item->user_apellidos = $item->paciente->apellidos;
+                    $item->user_nombres = $item->paciente->persona->nombre_persona;
+                    $item->user_apellidos = $item->paciente->persona->apellido_persona;
                 }
 
                 $item = self::desencriptarItem($item);
@@ -1505,8 +1506,8 @@ class Cita extends Model
                 $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
                 if ($item->psicologo) {
-                    $item->psicologo_nombres = $item->psicologo->nombres;
-                    $item->psicologo_apellidos = $item->psicologo->apellidos;
+                    $item->psicologo_nombres = $item->psicologo->persona->nombre_persona;
+                    $item->psicologo_apellidos = $item->psicologo->persona->apellido_persona;
                 }
 
                 $item = self::desencriptarItem($item);
@@ -1539,7 +1540,6 @@ class Cita extends Model
 
         if ($user->tieneRol('admin')) {
             $psicologos = Usuario::whereHas('roles', fn($q) => $q->where('nombre', 'psicologo'))
-                ->where('status', 1)
                 ->get();
             $psicologoId = $request->input('psicologo_id', $psicologos->first()->id_usuario ?? null);
         }
@@ -1923,9 +1923,9 @@ class Cita extends Model
             ->take($limit)
             ->get()
             ->map(function ($cita) {
-                $nombres = explode(' ', trim($cita->paciente->nombres ?? ''));
-                $apellidos = explode(' ', trim($cita->paciente->apellidos ?? ''));
-                $cita->paciente_nombre = trim("{$cita->paciente->nombres} {$cita->paciente->apellidos}");
+                $nombres = explode(' ', trim($cita->paciente->persona->nombre_persona ?? ''));
+                $apellidos = explode(' ', trim($cita->paciente->persona->apellido_persona ?? ''));
+                $cita->paciente_nombre = trim("{$cita->paciente->persona->nombre_persona} {$cita->paciente->persona->apellido_persona}");
                 $cita->paciente_nombre_corto = ($nombres[0] ?? '') . ' ' . ($apellidos[0] ?? '');
                 return $cita;
             });

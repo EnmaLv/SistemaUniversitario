@@ -72,7 +72,7 @@ label{
     filter: brightness(1.7);
 }
 
-.form-control-sidebar:focus{
+.rd-input-sidebar:focus{
     border-color: var(--color-primary);
 }
 
@@ -82,7 +82,7 @@ label{
     display: flex;
     align-items: center;
     border: 1px solid #cbd5e1;
-    background: #f8fafc;
+    background: var(--input-bg, #f8fafc);
     border-radius: 10px;
     padding-left: 10px;
     transition: .25s ease;
@@ -114,10 +114,11 @@ label{
 
 /* RD condensed styles for the registro diario block */
 .rd-card {
-    background: #fff;
+    background: var(--bg-card, #fff);
     border-radius: 10px;
-    border: 1px solid #eef2f6;
+    border: 1px solid var(--border-color, #eef2f6);
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+    color: var(--text-main, #0f172a);
 }
 
 .rd-card-body {
@@ -142,7 +143,7 @@ label{
     margin: 0;
     font-weight: 700;
     font-size: 1.05rem;
-    color: #0f172a;
+    color: var(--text-main, #0f172a);
 }
 
 .rd-actions {
@@ -158,7 +159,9 @@ label{
 .rd-search-input {
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid #e6eef6;
+    border: 1px solid var(--input-border, #e6eef6);
+    background: var(--input-bg, #fff);
+    color: var(--text-main, #0f172a);
     min-width: 220px;
     transition: border .2s ease;
     
@@ -176,8 +179,9 @@ label{
     width: 40px;
     height: 40px;
     border-radius: 8px;
-    border: 1px solid #e6eef6;
-    background: #fff;
+    border: 1px solid var(--border-color, #e6eef6);
+    background: var(--bg-card, #fff);
+    color: var(--text-main, #0f172a);
     cursor: pointer;
 }
 
@@ -258,8 +262,8 @@ label{
 
 .rd-filters {
     padding: 12px;
-    background: #fbfdff;
-    border-top: 1px solid #f3f6fb;
+    background: var(--input-bg, #fbfdff);
+    border-top: 1px solid var(--border-color, #f3f6fb);
     box-shadow: inset 0 6px 10px rgba(101, 114, 151, 0.1);
 }
 
@@ -280,7 +284,9 @@ label{
 .rd-filter-input {
     padding: 8px 10px;
     border-radius: 8px;
-    border: 1px solid #e6eef6;
+    border: 1px solid var(--input-border, #e6eef6);
+    background: var(--input-bg, #fff);
+    color: var(--text-main, #0f172a);
 }
 
 /*Tabla*/
@@ -291,17 +297,18 @@ label{
 }
 
 .rd-table thead th {
-    background: #fbfdff;
+    background: var(--input-bg, #fbfdff);
     padding: 12px 10px;
     text-align: left;
-    border-bottom: 1px solid #eef2f6;
+    border-bottom: 1px solid var(--border-color, #eef2f6);
     font-weight: 700;
-    color: #374151;
+    color: var(--text-main, #374151);
 }
 
 .rd-table tbody td {
     padding: 12px 10px;
-    border-bottom: 1px solid #f6f8fb;
+    border-bottom: 1px solid var(--border-color, #f6f8fb);
+    color: var(--text-main, #374151);
     vertical-align: middle;
 }
 
@@ -309,7 +316,7 @@ label{
     padding: 7px 8px;
     border-radius: 8px;
     background: transparent;
-    color: #374151;
+    color: var(--text-main, #374151);
     border: 1px solid transparent;
 }
 

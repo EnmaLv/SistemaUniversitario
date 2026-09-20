@@ -20,28 +20,21 @@ class SolicitudBeca extends Model
         'tipo_solicitud',
         'estado',
         'id_lapso',
-        'indice_academico',
-        'direccion_temporal',
-        'gasto_pasaje',
-        'vivienda_transporte',
-        'datos_socioeconomicos',
         'comentario_verificador',
         'verificado_por',
         'fecha_verificacion',
     ];
 
     protected $casts = [
-        'estado' => 'integer',
-        'indice_academico' => 'decimal:2',
-        'gasto_pasaje' => 'decimal:2',
-        'vivienda_transporte' => 'array',
-        'datos_socioeconomicos' => 'array',
-        'fecha_verificacion' => 'datetime',
+        'estado'              => 'integer',
+        'fecha_verificacion'  => 'datetime',
     ];
 
-    /**
-     * Obtiene el texto representativo del estado.
-     */
+    public function respuestas()
+    {
+        return $this->hasMany(SolicitudRespuesta::class, 'id_solicitud');
+    }
+
     public function getEstadoTextoAttribute(): string
     {
         return match ($this->estado) {
@@ -52,9 +45,6 @@ class SolicitudBeca extends Model
         };
     }
 
-    /**
-     * Obtiene la clase de Tailwind para el badge del estado.
-     */
     public function getEstadoBadgeAttribute(): string
     {
         return match ($this->estado) {
@@ -65,41 +55,26 @@ class SolicitudBeca extends Model
         };
     }
 
-    /**
-     * Relación con la Persona (estudiante).
-     */
     public function persona()
     {
         return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
     }
 
-    /**
-     * Relación con el Beneficio.
-     */
     public function beneficio()
     {
         return $this->belongsTo(Beneficio::class, 'id_beneficio', 'id');
     }
 
-    /**
-     * Relación con la Jornada.
-     */
     public function jornada()
     {
         return $this->belongsTo(JornadaBeca::class, 'jornada_id', 'id');
     }
 
-    /**
-     * Relación con el Período / Lapso.
-     */
     public function lapso()
     {
         return $this->belongsTo(Lapso::class, 'id_lapso', 'id');
     }
 
-    /**
-     * Relación con el Administrador que verificó la solicitud.
-     */
     public function verificador()
     {
         return $this->belongsTo(Usuario::class, 'verificado_por', 'id_usuario');

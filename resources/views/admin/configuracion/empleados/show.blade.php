@@ -1,20 +1,20 @@
-@extends('adminlte::page')
+﻿@extends('layouts.app')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
+    <div class="rounded-2xl border p-5 shadow-sm mb-6 d-flex justify-content-between align-items-center"
+        style="background-color: var(--bg-card); border-color: var(--border-color);">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Datos del Empleado</h1>
+            <h1 class="m-0 text-2xl font-extrabold" style="color:var(--text-main);">Datos del empleado</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
                 <i class="fas fa-id-card mr-1" style="color: var(--color-secondary)"></i> 
-                Visualizando perfil de: <strong>{{ $usuario->username }}</strong>
+                Perfil de: <strong>{{ $usuario->username }}</strong> · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_usuario) }}" class="rd-btn rd-btn-alter">
+            <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_usuario) }}" class="inline-flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800">
                 <i class="fas fa-edit"></i> Editar
             </a>
-            <a href="{{ route('admin.configuracion.empleados.index') }}" class="rd-btn rd-btn-primary">
+            <a href="{{ route('admin.configuracion.empleados.index') }}" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
         </div>
@@ -58,25 +58,25 @@
                     <div class="row p-4">
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Cédula de Identidad</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->cedula_persona ?? '—' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->cedula_persona ?? '”' }}</div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Teléfono de Contacto</label>
                             <div class="h6 font-weight-bold">
                                 <i class="fas fa-phone mr-1 text-success small"></i>
-                                {{ optional($usuario->persona)->telefono_persona ?? '—' }}
+                                {{ optional($usuario->persona)->telefono_persona ?? '”' }}
                             </div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Nombres</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->nombre_persona ?? '—' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->nombre_persona ?? '”' }}</div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Apellidos</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->apellido_persona ?? '—' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->apellido_persona ?? '”' }}</div>
                         </div>
                     </div>
 
@@ -93,7 +93,7 @@
                                 <label class="rd-label text-muted small">Fecha de Registro</label>
                                 <div class="p-2 text-muted">
                                     <i class="far fa-calendar-alt mr-1"></i>
-                                    {{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '—' }}
+                                    {{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '”' }}
                                 </div>
                             </div>
                         </div>

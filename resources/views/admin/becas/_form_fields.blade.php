@@ -8,9 +8,9 @@
     <div class="col-md-8">
         <div class="form-group mb-3">
             <label class="font-weight-bold">Nombre de la beca</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-graduation-cap"></i></span>
-                <input type="text" name="nombre" class="form-control rd-filter-input"
+            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50">
+                <span class="px-3 text-slate-500"><i class="fas fa-graduation-cap"></i></span>
+                <input type="text" name="nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
                     value="{{ old('nombre', $beca->nombre ?? '') }}" placeholder="Ej: Beca comedor integral">
             </div>
             @error('nombre')
@@ -22,7 +22,7 @@
 
 <div class="form-group mb-3">
     <label class="font-weight-bold">Descripcion</label>
-    <textarea name="descripcion" rows="3" class="form-control rd-filter-input" placeholder="Descripcion general"
+    <textarea name="descripcion" rows="3" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" placeholder="Descripcion general"
         style="resize:none;">{{ old('descripcion', $beca->descripcion ?? '') }}</textarea>
 </div>
 
@@ -59,18 +59,18 @@
             @forelse($preguntas as $index => $pregunta)
                 <tr data-index="{{ $index }}" style="vertical-align:middle;">
                     <td style="padding:0 10px 0 0;">
-                        <input type="text" name="preguntas[{{ $index }}][texto]" class="form-control question-field" value="{{ $pregunta['texto'] ?? '' }}" placeholder="Nombre de la pregunta" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                        <input type="text" name="preguntas[{{ $index }}][texto]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-field" value="{{ $pregunta['texto'] ?? '' }}" placeholder="Nombre de la pregunta" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
                     </td>
                     <td style="padding:0 10px 0 0;">
-                        <select name="preguntas[{{ $index }}][tipo]" class="form-control question-type" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                        <select name="preguntas[{{ $index }}][tipo]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-type" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
                             <option value="text" {{ ($pregunta['tipo'] ?? '') == 'text' ? 'selected' : '' }}>Texto</option>
                             <option value="number" {{ ($pregunta['tipo'] ?? '') == 'number' ? 'selected' : '' }}>Número</option>
                         </select>
                     </td>
                     <td style="padding:0 10px 0 0;">
                         <div class="limit-container" style="display:{{ ($pregunta['tipo'] ?? '') == 'number' ? 'flex' : 'none' }}; gap:10px; align-items:center; width:100%;">
-                            <input type="number" name="preguntas[{{ $index }}][min]" class="form-control question-limit-input" value="{{ $pregunta['min'] ?? '' }}" placeholder="Min" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
-                            <input type="number" name="preguntas[{{ $index }}][max]" class="form-control question-limit-input" value="{{ $pregunta['max'] ?? '' }}" placeholder="Max" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                            <input type="number" name="preguntas[{{ $index }}][min]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-limit-input" value="{{ $pregunta['min'] ?? '' }}" placeholder="Min" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                            <input type="number" name="preguntas[{{ $index }}][max]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-limit-input" value="{{ $pregunta['max'] ?? '' }}" placeholder="Max" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
                         </div>
                     </td>
                     <td class="text-right" style="padding:0;">
@@ -125,7 +125,7 @@
                     </td>
                     <td>
                         <input type="text" name="beneficios[{{ $index }}][observacion]"
-                            class="form-control rd-filter-input"
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
                             value="{{ old("beneficios.$index.observacion", $pivot->observacion ?? '') }}"
                             placeholder="Detalle opcional">
                     </td>
@@ -191,12 +191,12 @@
     </table>
 </div>
 
-<div class="modal fade" id="addTutorModal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="hidden" id="addTutorModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Agregar tutor a la beca</h5>
-                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal" aria-label="Cerrar" style="border:0;">
+                <button type="button" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"  aria-label="Cerrar" style="border:0;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -205,11 +205,11 @@
                     <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label class="font-weight-bold mb-2 d-block">Rol del tutor</label>
-                            <div class="input-group" style="border:1px solid #d1d5db; border-radius: 12px; overflow:hidden; background:#fff;">
-                                <span class="input-group-text border-0 bg-transparent" style="padding-left:12px; color:#6b7280;">
+                            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50" style="border:1px solid #d1d5db; border-radius: 12px; overflow:hidden; background:#fff;">
+                                <span class="px-3 text-slate-500 border-0 bg-transparent" style="padding-left:12px; color:#6b7280;">
                                     <i class="fas fa-briefcase"></i>
                                 </span>
-                                <select id="tutorRoleSelect" class="form-control border-0 shadow-none" style="background:transparent; height:46px; padding-left:10px; font-size:1rem; color:#374151;">
+                                <select id="tutorRoleSelect" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 border-0 shadow-none" style="background:transparent; height:46px; padding-left:10px; font-size:1rem; color:#374151;">
                                     <option value="">Seleccione rol</option>
                                     @foreach($roles as $role)
                                         <option value="{{ $role->id_rol }}">{{ $role->nombre }}</option>
@@ -221,11 +221,11 @@
                     <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label class="font-weight-bold mb-2 d-block">Persona</label>
-                            <div class="input-group" style="border:1px solid #d1d5db; border-radius: 12px; overflow:hidden; background:#fff;">
-                                <span class="input-group-text border-0 bg-transparent" style="padding-left:12px; color:#6b7280;">
+                            <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50" style="border:1px solid #d1d5db; border-radius: 12px; overflow:hidden; background:#fff;">
+                                <span class="px-3 text-slate-500 border-0 bg-transparent" style="padding-left:12px; color:#6b7280;">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                <select id="tutorPersonSelect" class="form-control border-0 shadow-none" style="background:transparent; height:46px; padding-left:10px; font-size:1rem; color:#374151;" disabled>
+                                <select id="tutorPersonSelect" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 border-0 shadow-none" style="background:transparent; height:46px; padding-left:10px; font-size:1rem; color:#374151;" disabled>
                                     <option value="">Seleccione primero un rol</option>
                                 </select>
                             </div>
@@ -234,11 +234,11 @@
                 </div>
                 <div class="form-group">
                     <label>Descripción</label>
-                    <textarea id="tutorDescription" class="form-control rd-filter-input" rows="3" placeholder="Describe el rol completo de esta persona"></textarea>
+                    <textarea id="tutorDescription" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" rows="3" placeholder="Describe el rol completo de esta persona"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="rd-btn rd-btn-default" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="rd-btn rd-btn-default" >Cancelar</button>
                 <button type="button" id="saveTutorModalBtn" class="rd-btn rd-btn-primary">Agregar</button>
             </div>
         </div>
@@ -354,16 +354,15 @@
             });
 
             const addTutorModalEl = document.getElementById('addTutorModal');
-            const addTutorModalInstance = new bootstrap.Modal(addTutorModalEl);
-            const modalCloseButtons = addTutorModalEl.querySelectorAll('[data-dismiss="modal"], [data-bs-dismiss="modal"]');
+            const modalCloseButtons = addTutorModalEl.querySelectorAll('[], []');
 
             addTutorBtn.addEventListener('click', function () {
-                addTutorModalInstance.show();
+                addTutorModalEl.classList.remove('hidden');
             });
 
             modalCloseButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
-                    addTutorModalInstance.hide();
+                    addTutorModalEl.classList.add('hidden');
                     resetTutorModal();
                 });
             });
@@ -446,18 +445,18 @@
                 row.dataset.index = index;
                 row.innerHTML = `
                     <td style="padding:0 10px 0 0;">
-                        <input type="text" name="preguntas[${index}][texto]" class="form-control question-field" placeholder="Nombre de la pregunta" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                        <input type="text" name="preguntas[${index}][texto]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-field" placeholder="Nombre de la pregunta" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
                     </td>
                     <td style="padding:0 10px 0 0;">
-                        <select name="preguntas[${index}][tipo]" class="form-control question-type" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                        <select name="preguntas[${index}][tipo]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-type" style="height:42px; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
                             <option value="text">Texto</option>
                             <option value="number">Número</option>
                         </select>
                     </td>
                     <td style="padding:0 10px 0 0;">
                         <div class="limit-container" style="display:none; gap:10px; align-items:center; width:100%;">
-                            <input type="number" name="preguntas[${index}][min]" class="form-control question-limit-input" placeholder="Min" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
-                            <input type="number" name="preguntas[${index}][max]" class="form-control question-limit-input" placeholder="Max" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                            <input type="number" name="preguntas[${index}][min]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-limit-input" placeholder="Min" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
+                            <input type="number" name="preguntas[${index}][max]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 question-limit-input" placeholder="Max" style="height:42px; width:50%; border:1px solid #d1d5db; border-radius:10px; background:#fff; box-shadow:none;">
                         </div>
                     </td>
                     <td class="text-right" style="padding:0;">

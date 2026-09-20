@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Services\becas\JornadaBecasServices;
 use App\Models\Becas\Lapso;
 use App\Models\Becas\Beneficio;
+use App\Models\Becas\BeneficioCriterio;
 
 class JornadaBecaController extends Controller
 {
@@ -20,31 +21,45 @@ class JornadaBecaController extends Controller
         $this->JornadaServices = $Jornadaserices;
     }
 
-    //Funcion para mostrar la vista principal de las jornadas
     public function index()
     {
         return $this->JornadaServices->index();
     }
 
-    //Funcion para mostrar la vista para crear una nueva jornada
     public function create()
     {
         $beneficios = Beneficio::where('status', 1)->get();
-        $lapsos = Lapso::all();
-        return view('admin.becas.jornada.create', compact('beneficios', 'lapsos'));
+        $lapsos     = Lapso::all();
+
+        $criteriosPorBeneficio = $this->mapaCriteriosPorBeneficio();
+
+        return view('admin.becas.jornada.create', compact('beneficios', 'lapsos', 'criteriosPorBeneficio'));
     }
 
-    //Funcion para guardar la jornada
+    private function mapaCriteriosPorBeneficio(): array
+    {
+        return BeneficioCriterio::with('pregunta')
+            ->get()
+            ->groupBy('id_be_beneficio')
+            ->map(fn ($items) => $items->map(fn ($c) => [
+                'id_pregunta'     => $c->id_pregunta,
+                'pregunta'        => $c->pregunta?->etiqueta,
+                'codigo'          => $c->pregunta?->codigo,
+                'operador'        => $c->operador,
+                'valor_esperado'  => $c->valor_esperado,
+                'es_eliminatoria' => (bool) $c->es_eliminatoria,
+                'peso'            => $c->peso,
+            ])->values()->all())
+            ->toArray();
+    }
+
     public function store(GuardarJornadaRequest $request)
     {
-        //Validamos los campos de la jornada
         $validated = $request->validated();
 
         try {
-            //Enviamos los datos al services
             $this->JornadaServices->crearJornada($validated);
 
-            //Recargamos la cache para saber las jornadas activas
             $this->JornadaServices->obtenerJornadaActiva();
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada creada exitosamente.');
         } catch (\Exception $e) {
@@ -52,24 +67,34 @@ class JornadaBecaController extends Controller
         }
     }
 
-    //Funcion que muestra la vista de editar jornada
     public function edit(int $id)
     {
-        $jornada = JornadaBeca::findOrFail($id);
+        $jornada    = JornadaBeca::with('criterios.pregunta')->findOrFail($id);
         $beneficios = Beneficio::where('status', 1)->get();
-        $lapsos = Lapso::all();
+        $lapsos     = Lapso::all();
 
-        return view('admin.becas.jornada.edit', compact('jornada', 'beneficios', 'lapsos'));
+        $criteriosPorBeneficio = $this->mapaCriteriosPorBeneficio();
+
+        $criteriosActuales = $jornada->criterios->map(fn ($c) => [
+            'id_pregunta'     => $c->id_pregunta,
+            'pregunta'        => $c->pregunta?->etiqueta,
+            'codigo'          => $c->pregunta?->codigo,
+            'operador'        => $c->operador,
+            'valor_esperado'  => $c->valor_esperado,
+            'es_eliminatoria' => (bool) $c->es_eliminatoria,
+            'peso'            => $c->peso,
+        ])->values()->all();
+
+        return view('admin.becas.jornada.edit',
+            compact('jornada', 'beneficios', 'lapsos', 'criteriosPorBeneficio', 'criteriosActuales'));
     }
 
-    //Funcion encargada en actualizar la jornada
     public function update(GuardarJornadaRequest $request,int $id)
     {
         $validated = $request->validated();
 
         try {
             $this->JornadaServices->actualizarJornada($id, $validated);
-            //Recargamos la cache para saber las jornadas activas
             $this->JornadaServices->obtenerJornadaActiva();
 
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada actualizada exitosamente.');
@@ -82,7 +107,6 @@ class JornadaBecaController extends Controller
     {
         try {
             $this->JornadaServices->desactivarJornada($id);
-            //Recargamos la cache para saber las jornadas activas
             $this->JornadaServices->obtenerJornadaActiva();
 
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada inactivada exitosamente.');
@@ -95,7 +119,6 @@ class JornadaBecaController extends Controller
     {
         try {
             $this->JornadaServices->activarJornada($id);
-            //Recargamos la cache para saber las jornadas activas
             $this->JornadaServices->obtenerJornadaActiva();
 
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada activada exitosamente.');

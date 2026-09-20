@@ -11,9 +11,9 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Cédula / ID</label>
-                        <div class="rd-input-group {{ $errors->has('cedula') ? 'border-danger' : '' }}">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group {{ $errors->has('cedula') ? 'border-danger' : '' }}">
                             <span><i class="fas fa-fingerprint"></i></span>
-                            <input type="number" wire:model.lazy="cedula" min="7" name="cedula" class="rd-input form-control" placeholder="25123456" value="{{ old('cedula') }}"
+                            <input type="number" wire:model.lazy="cedula" min="7" name="cedula" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" placeholder="25123456" value="{{ old('cedula') }}"
                             {{ $onlyShow ? 'disabled' : '' }}>
                         </div>
                         @error('cedula')
@@ -22,9 +22,9 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Fecha de Nacimiento</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-calendar-day"></i></span>
-                            <input wire:model="fecha_nacimiento" type="date" name="fecha_nacimiento" class="rd-input form-control" 
+                            <input wire:model="fecha_nacimiento" type="date" name="fecha_nacimiento" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" 
                             {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" value="{{ old('fecha_nacimiento') }}" 
                             max="{{ \Carbon\Carbon::now()->subYears(15)->format('Y-m-d') }}">
                         </div>
@@ -45,8 +45,8 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="rd-label">Primer Nombre</label>
-                                <div class="rd-input-group">
-                                    <input wire:model="nombre" type="text" name="nombre" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
+                                    <input wire:model="nombre" type="text" name="nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                                      style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Juan" value="{{ old('nombre') }}">
                                 </div>
                                 @error('nombre')
@@ -55,8 +55,8 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="rd-label">Segundo Nombre</label>
-                                <div class="rd-input-group">
-                                    <input wire:model="segundo_nombre" type="text" name="segundo_nombre" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} 
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
+                                    <input wire:model="segundo_nombre" type="text" name="segundo_nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} 
                                     style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Opcional" value="{{ old('segundo_nombre') }}">
                                 </div>
                             </div>
@@ -66,8 +66,8 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="rd-label">Primer Apellido</label>
-                                <div class="rd-input-group">
-                                    <input wire:model="apellido" type="text" name="apellido" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
+                                    <input wire:model="apellido" type="text" name="apellido" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                                      style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Pérez" value="{{ old('apellido') }}">
                                 </div>
                                 @error('apellido')
@@ -76,8 +76,8 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="rd-label">Segundo Apellido</label>
-                                <div class="rd-input-group">
-                                    <input wire:model="segundo_apellido" type="text" name="segundo_apellido" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Opcional" value="{{ old('segundo_apellido') }}">
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
+                                    <input wire:model="segundo_apellido" type="text" name="segundo_apellido" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Opcional" value="{{ old('segundo_apellido') }}">
                                 </div>
                             </div>
                         </div>
@@ -93,9 +93,9 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Género</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-venus-mars"></i></span>
-                            <select wire:model="genero" name="genero" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}">
+                            <select wire:model="genero" name="genero" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}">
                                 <option value="" selected>Seleccione</option>
                                 <option value="MASCULINO">MASCULINO</option>
                                 <option value="FEMENINO">FEMENINO</option>
@@ -107,9 +107,9 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Teléfono Móvil</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-mobile-alt"></i></span>
-                            <input wire:model="telefono" id="telefono" type="text" name="telefono" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="412 123-4567" value="{{ old('telefono') }}">
+                            <input wire:model="telefono" id="telefono" type="text" name="telefono" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="412 123-4567" value="{{ old('telefono') }}">
                         </div>
                         @error('telefono')
                             <small class="text-danger">{{ $message }}</small>
@@ -117,9 +117,9 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Correo Electrónico</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-at"></i></span>
-                            <input wire:model="email" type="email" name="email" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="usuario@gmail.com" value="{{ old('email') }}">
+                            <input wire:model="email" type="email" name="email" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="usuario@gmail.com" value="{{ old('email') }}">
                         </div>
                         @error('email')
                             <small class="text-danger">{{ $message }}</small>
@@ -137,9 +137,9 @@
                 <div class="row">
                     <div class="col-md-4 mb-3 fade-in">
                         <label class="rd-label">PNF</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-university"></i></span>
-                            <select wire:model="pnfId" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} 
+                            <select wire:model="pnfId" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} 
                             style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}">
                                 <option value="">Seleccione PNF</option>
                                 @foreach($pnfs as $pnf)
@@ -165,9 +165,9 @@
 
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Sede del Estudiante</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-university"></i></span>
-                            <select wire:model="sedeId" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
+                            <select wire:model="sedeId" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                             style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}">
                                 <option value="">Seleccione Sede</option>
                                 @foreach($sede as $sed)
@@ -194,9 +194,9 @@
                     
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Semestre del Estudiante</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-university"></i></span>
-                            <select wire:model="semestreId" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
+                            <select wire:model="semestreId" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                             style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}">
                                 <option value="">Seleccione Semestre</option>
                                 @php
@@ -228,9 +228,9 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Estado</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-map"></i></span>
-                            <select wire:model.lazy="estadosVeId" name="estado_id" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}">
+                            <select wire:model.lazy="estadosVeId" name="estado_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}">
                                 <option value="">Seleccione Estado</option>
                                 @foreach($estadosVE as $estado)
                                     <option value="{{ $estado->id }}">{{ $estado->nombre_estado }}</option>
@@ -255,8 +255,8 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Municipio</label>
-                        <div class="rd-input-group">
-                            <select wire:model.lazy="municipiosId" name="municipio_id" class="rd-input form-control"
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
+                            <select wire:model.lazy="municipiosId" name="municipio_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
                              {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" @if(!$enabledMunicipio) disabled @endif>
                                 <option value="">Seleccione Municipio</option>
                                 @foreach($municipiosVE as $municipio)
@@ -282,8 +282,8 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label class="rd-label">Localidad</label>
-                        <div class="rd-input-group">
-                            <select wire:model.lazy="parroquiaId" name="parroquia_id" class="rd-input form-control" 
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
+                            <select wire:model.lazy="parroquiaId" name="parroquia_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" 
                             {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" @if(!$enabledParroquia) disabled @endif>
                                 <option value="">Seleccione Localidad</option>
                                 @foreach($parroquiasVE as $parroquia)
@@ -313,9 +313,9 @@
                     {{-- Calle --}}
                     <div class="col-md-6 mb-3">
                         <label class="rd-label">Calle / Avenida</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-road"></i></span>
-                            <input wire:model="calle" type="text" name="calle" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Ej: Av. Francisco de Miranda" value="{{ old('calle') }}">
+                            <input wire:model="calle" type="text" name="calle" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Ej: Av. Francisco de Miranda" value="{{ old('calle') }}">
                         </div>
                         @error('calle')
                             <small class="text-danger">{{ $message }}</small>
@@ -324,9 +324,9 @@
                     {{-- Sector / Urbanización --}}
                     <div class="col-md-6 mb-3">
                         <label class="rd-label">Sector / Urbanización</label>
-                        <div class="rd-input-group">
+                        <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
                             <span><i class="fas fa-building"></i></span>
-                            <input wire:model="sector" type="text" name="sector" class="rd-input form-control" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Ej: Urb. Los Palos Grandes" value="{{ old('sector') }}">
+                            <input wire:model="sector" type="text" name="sector" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }} style="{{ $onlyShow || !$formHabilitado ? 'opacity: 0.5;' : '' }}" placeholder="Ej: Urb. Los Palos Grandes" value="{{ old('sector') }}">
                         </div>
                         @error('sector')
                             <small class="text-danger">{{ $message }}</small>

@@ -1,96 +1,83 @@
-@extends('adminlte::page')
+<x-app-layout>
+    <div class="min-h-[calc(100vh-4rem)] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+        <div class="mx-auto flex min-h-[calc(100vh-9rem)] max-w-7xl items-center justify-center">
+            <div class="w-full max-w-lg">
+                @include('components.alert')
 
-@section('title', 'Verificación de Seguridad')
-
-@section('content')
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
-        <div class="rd-card p-0" style="
-            width: 100%;
-            max-width: 450px;
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            border: 1px solid #e5e7eb;
-            overflow: hidden;
-        ">
-            <div class="text-center p-4" style="background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
-                <div class="mb-3">
-                    <i class="fas fa-shield-alt fa-3x" style="color: #64748b;"></i>
-                </div>
-                <h1 style="font-size: 1.5rem; color: #0f172a; font-weight: 700; margin-bottom: 8px;">
-                    Verificar Llave Maestra
-                </h1>
-                <p style="font-size: 0.9rem; color: #64748b; line-height: 1.4; margin: 0;">
-                    Para acceder a la configuración sensible, debes validar tu identidad.
-                </p>
-            </div>
-
-            <div class="p-4">
-                <form action="{{ route('admin.configuracion.master_key.verify') }}" method="POST" class="rd-prevent-double-submit">
-                    @csrf
-                    <div class="form-group">
-                        <label for="master_key" style="font-weight: 600; color: #334155; font-size: 0.9rem;">
-                            Llave Maestra
-                        </label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-transparent border-right-0" style="border-radius: 8px 0 0 8px;">
-                                    <i class="fas fa-key text-muted"></i>
-                                </span>
-                            </div>
-                            <input type="password" 
-                                name="master_key" 
-                                id="master_key"
-                                class="form-control border-left-0 @error('master_key') is-invalid @enderror" 
-                                placeholder="Introduce tu clave..."
-                                style="border-radius: 0 8px 8px 0; height: 45px;"
-                                required 
-                                autofocus />
-                            <div class="input-group-append">
-                                <button type="button" class="rd-btn rd-btn-primary" id="togglePassword" style="border-radius: 0 8px 8px 0; border-left: none;">
-                                    <i class="fas fa-eye" id="eyeIcon"></i>
-                                </button>
-                            </div>
+                <div class="overflow-hidden rounded-2xl border shadow-lg"
+                    style="background-color: var(--bg-card); border-color: var(--border-color);">
+                    <div class="border-b px-6 py-7 text-center sm:px-8"
+                        style="background-color: var(--input-bg); border-color: var(--border-color);">
+                        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300">
+                            <i class="fas fa-shield-halved text-3xl" aria-hidden="true"></i>
                         </div>
-                        @error('master_key') 
-                            <span class="invalid-feedback d-block mt-2" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span> 
-                        @enderror
+                        <h1 class="text-2xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                            Verificar llave maestra
+                        </h1>
+                        <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-gray-500 dark:text-gray-400">
+                            Valida tu identidad para acceder a la configuración sensible del sistema.
+                        </p>
                     </div>
 
-                    <div class="mt-4">
-                        <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn w-100 text-center d-flex justify-content-center align-items-center">
-                            Verificar Acceso
-                        </button>
+                    <div class="p-6 sm:p-8">
+                        <form action="{{ route('admin.configuracion.master_key.verify') }}" method="POST"
+                            class="rd-prevent-double-submit">
+                            @csrf
+                            <div>
+                                <label for="master_key" class="mb-2 block text-sm font-extrabold"
+                                    style="color: var(--text-main);">
+                                    Llave maestra
+                                </label>
+                                <div class="flex items-stretch overflow-hidden rounded-xl border focus-within:border-red-600 focus-within:ring-2 focus-within:ring-red-600/20"
+                                    style="background-color: var(--input-bg); border-color: var(--input-border);">
+                                    <span class="flex w-12 shrink-0 items-center justify-center border-r text-gray-400"
+                                        style="border-color: var(--input-border);">
+                                        <i class="fas fa-key" aria-hidden="true"></i>
+                                    </span>
+                                    <input type="password" name="master_key" id="master_key"
+                                        class="min-w-0 flex-1 border-0 bg-transparent px-3 py-3 text-sm outline-none focus:ring-0"
+                                        style="color: var(--text-main);"
+                                        placeholder="Introduce tu llave maestra" required autofocus>
+                                    <button type="button" id="togglePassword"
+                                        class="flex w-12 shrink-0 items-center justify-center border-l text-gray-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                                        style="border-color: var(--input-border);" title="Mostrar u ocultar llave">
+                                        <i class="fas fa-eye" id="eyeIcon" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                @error('master_key')
+                                    <p class="mt-2 text-sm font-semibold text-red-600" role="alert">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <button type="submit"
+                                class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-700 px-5 py-3 text-sm font-extrabold text-white shadow-md transition hover:bg-red-800 active:scale-[.99]">
+                                <i class="fas fa-unlock-keyhole"></i>
+                                Verificar acceso
+                            </button>
+                        </form>
                     </div>
-                </form>
+                </div>
+
+                <p class="mt-4 text-center text-xs text-gray-400">
+                    <i class="fas fa-lock mr-1"></i> Esta validación protege las funciones administrativas.
+                </p>
             </div>
         </div>
     </div>
-@stop
+</x-app-layout>
 
 @push('js')
-<script>
-    // Script para mostrar/ocultar contraseña
-    document.getElementById('togglePassword').addEventListener('click', function (e) {
-        const password = document.getElementById('master_key');
-        const icon = document.getElementById('eyeIcon');
-        if (password.type === 'password') {
-            password.type = 'text';
-            icon.classList.replace('fa-eye', 'fa-eye-slash');
-        } else {
-            password.type = 'password';
-            icon.classList.replace('fa-eye-slash', 'fa-eye');
-        }
-    });
-</script>
-@endpush
+    <script>
+        document.getElementById('togglePassword')?.addEventListener('click', function () {
+            const password = document.getElementById('master_key');
+            const icon = document.getElementById('eyeIcon');
 
-@push('css')
-    <style>
-        .input-group-text{
-            border: none !important;
-        }
-    </style>
+            if (!password || !icon) return;
+
+            const visible = password.type === 'text';
+            password.type = visible ? 'password' : 'text';
+            icon.classList.toggle('fa-eye', visible);
+            icon.classList.toggle('fa-eye-slash', !visible);
+        });
+    </script>
 @endpush

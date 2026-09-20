@@ -63,11 +63,6 @@ class LocalidadIndex extends Component
         return view('livewire.admin.localidad-index', compact('estados', 'localidades'));
     }
 
-    public function paginationView()
-    {
-        return 'vendor.livewire.bootstrap-custom';
-    }
-
     public function buscar()
     {
         $this->resetPage();

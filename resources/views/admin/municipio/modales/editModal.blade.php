@@ -1,63 +1,46 @@
-<div wire:ignore.self class="modal fade" id="modalEditar" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modal-modern" style="border-radius: 50px">
-            <div class="rd-card p-4">
-                <div class="rd-card-header mb-3">
-                    <h3 class="rd-title-sm">Crear Nueva Localidad</h3>
-                </div>
-                <hr>
-                <form wire:submit.prevent="update" id="formEditarEstado" class="rd-prevent-double-submit">
-                    <div id="contenedorAlertaEditar"></div>
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="rd-label">Estado</label>
-                            <div class="rd-input-group">
-                                <span><i class="fas fa-globe"></i></span>
-                                <select name="estado_id" 
-                                    wire:model.live="estado_id"
-                                    id="estado_id" 
-                                    class="form-control rd-input" 
-                                    data-live-search="true"
-                                    title="Seleccione un estado"
-                                    required>
-                                    <option value="">Seleccione un estado</option>
-                                    @foreach ($estados as $estado)
-                                        <option value="{{ $estado->id }}">{{ $estado->nombre_estado }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-12 mb-3">
-                            <label class="rd-label">Nombre del Municipio</label>
-                            <div class="rd-input-group">
-                                <span><i class="fas fa-city"></i></span>
-                                <input type="text" 
-                                    class="form-control rd-input" 
-                                    id="nombre_municipio_editar" 
-                                    wire:model.live="nombre_municipio"
-                                    inputmode="text"
-                                    maxlength="100"
-                                    placeholder="Edite el nombre del municipio"
-                                    required>
-                                @error('nombre_municipio')
-                                    <div class="error-message">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-end" style="gap:10px;">
-                        <button type="button" class="rd-btn rd-btn-default" data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn">
-                            Guardar
-                        </button>
-                    </div>
-                </form>
-            </div>
+<div id="modalEditarMunicipio" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-xl rounded-2xl border shadow-2xl" style="background-color: var(--bg-card); border-color: var(--border-color);">
+        <div class="flex items-center justify-between border-b px-5 py-4" style="border-color: var(--border-color);">
+            <h3 class="text-lg font-semibold" style="color: var(--text-main);">Editar Municipio</h3>
+            <button type="button" class="text-gray-400 hover:text-red-600" onclick="document.getElementById('modalEditarMunicipio').classList.add('hidden'); document.getElementById('modalEditarMunicipio').classList.remove('flex');">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+
+        <form wire:submit.prevent="update" id="formEditarEstado" class="space-y-4 p-5">
+            <div id="contenedorAlertaEditar"></div>
+            <div>
+                <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Estado</label>
+                <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
+                    <span class="text-slate-500"><i class="fas fa-globe"></i></span>
+                    <select name="estado_id" wire:model.live="estado_id" id="estado_id" class="w-full border-0 bg-transparent text-sm outline-none" style="color: var(--text-main);" required>
+                        <option value="">Seleccione un estado</option>
+                        @foreach ($estados as $estado)
+                            <option value="{{ $estado->id }}" {{ $estado_id == $estado->id ? 'selected' : '' }}>{{ $estado->nombre_estado }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Nombre del Municipio</label>
+                <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
+                    <span class="text-slate-500"><i class="fas fa-city"></i></span>
+                    <input type="text" class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400" style="color: var(--text-main);" id="nombre_municipio_editar" wire:model.live="nombre_municipio" inputmode="text" maxlength="100" placeholder="Edite el nombre del municipio" required>
+                </div>
+                @error('nombre_municipio')
+                    <div class="mt-2 text-sm text-red-600">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" class="rounded-xl border px-4 py-2 text-sm font-medium" style="border-color: var(--border-color); color: var(--text-main);" onclick="document.getElementById('modalEditarMunicipio').classList.add('hidden'); document.getElementById('modalEditarMunicipio').classList.remove('flex');">
+                    Cancelar
+                </button>
+                <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+                    Guardar
+                </button>
+            </div>
+        </form>
     </div>
 </div>

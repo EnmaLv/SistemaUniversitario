@@ -48,6 +48,10 @@
     @livewireScriptConfig
     @stack('styles')
     @stack('css')
+    @hasSection('css')
+        @yield('css')
+    @endif
+    @yield('js')
 
     <style>
         :root {
@@ -199,6 +203,30 @@
             color: var(--text-main) !important;
         }
 
+        /*
+         * Native select menus use the browser's colors for their options
+         * unless both the control and its options are themed explicitly.
+         */
+        select {
+            color-scheme: light;
+        }
+
+        select option,
+        select optgroup {
+            background-color: var(--input-bg) !important;
+            color: var(--text-main) !important;
+        }
+
+        select option:checked,
+        select option:hover {
+            background-color: var(--color-primary) !important;
+            color: #ffffff !important;
+        }
+
+        html.dark select {
+            color-scheme: dark;
+        }
+
         input:focus,
         select:focus,
         textarea:focus {
@@ -281,6 +309,148 @@
             color: var(--text-main) !important;
             opacity: 0.9;
         }
+
+        /* SweetAlert2 must follow the active application theme, including
+         * alerts that are created directly with Swal.fire(). */
+        .swal2-popup {
+            background: var(--bg-card) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        .swal2-title,
+        .swal2-html-container,
+        .swal2-content,
+        .swal2-validation-message {
+            color: var(--text-main) !important;
+        }
+
+        .swal2-html-container,
+        .swal2-content {
+            opacity: 0.9;
+        }
+
+        .swal2-input,
+        .swal2-textarea,
+        .swal2-select {
+            background: var(--input-bg) !important;
+            color: var(--text-main) !important;
+            border-color: var(--input-border) !important;
+        }
+
+        html.dark .swal2-deny,
+        html.dark .swal2-cancel {
+            color: #ffffff !important;
+        }
+
+        html.dark .swal2-popup {
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.45) !important;
+        }
+
+        .swal2-confirm {
+            background-color: var(--color-primary) !important;
+            color: #ffffff !important;
+        }
+
+        .swal2-confirm:hover {
+            background-color: var(--color-btn-hover, #b91c1c) !important;
+        }
+
+        /* Legacy admin views must inherit the active Tailwind theme. */
+        html.dark main .rd-card,
+        html.dark main .rd-card-header,
+        html.dark main .rd-card-body,
+        html.dark main .rd-card-footer,
+        html.dark main .rd-card-search,
+        html.dark main .rd-card-list,
+        html.dark main .rd-card-desayuno {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-main) !important;
+        }
+
+        html.dark main .rd-card h1,
+        html.dark main .rd-card h2,
+        html.dark main .rd-card h3,
+        html.dark main .rd-card h4,
+        html.dark main .rd-card p,
+        html.dark main .rd-card small,
+        html.dark main .rd-card label,
+        html.dark main .rd-card td,
+        html.dark main .rd-card th,
+        html.dark main .rd-card span {
+            color: var(--text-main) !important;
+        }
+
+        html.dark main [style*="background: #ffffff"],
+        html.dark main [style*="background:#ffffff"],
+        html.dark main [style*="background: #fff"],
+        html.dark main [style*="background:#fff"] {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        html.dark main [style*="color: #0f172a"],
+        html.dark main [style*="color:#0f172a"],
+        html.dark main [style*="color: #374151"],
+        html.dark main [style*="color:#374151"] {
+            color: var(--text-main) !important;
+        }
+
+        /* Normalize older Tailwind utility palettes in general modules. */
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="bg-white"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:bg-slate-900"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:bg-slate-800"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:bg-slate-800/80"] {
+            background-color: var(--bg-card) !important;
+        }
+
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="bg-slate-50"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:bg-slate-700"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:bg-gray-800"] {
+            background-color: var(--input-bg) !important;
+        }
+
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="border-slate-200"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:border-slate-700"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:border-slate-800"] {
+            border-color: var(--border-color) !important;
+        }
+
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="text-slate-900"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="text-slate-700"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="text-slate-600"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:text-slate-100"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:text-slate-200"],
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="dark:text-slate-300"] {
+            color: var(--text-main) !important;
+        }
+
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="hover:text-sky-600"]:hover,
+        html.dark:not([data-modulo="psicologia"]):not([data-modulo="salud"]) main [class~="hover:border-sky-300"]:hover {
+            color: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+        }
+
+            /* Keep status labels readable after the general card text reset. */
+            html.dark main .rd-badge-success,
+            html.dark main [class~="bg-emerald-100"] {
+                background-color: #064e3b !important;
+                border-color: #10b981 !important;
+                color: #a7f3d0 !important;
+            }
+
+            html.dark main .rd-badge-danger,
+            html.dark main [class~="bg-red-100"] {
+                background-color: #7f1d1d !important;
+                border-color: #ef4444 !important;
+                color: #fecaca !important;
+            }
+
+            html.dark main .rd-badge-success span,
+            html.dark main [class~="bg-emerald-100"] span {
+                color: inherit !important;
+            }
     </style>
 </head>
 
@@ -311,6 +481,12 @@
             @include('layouts.sidebar')
 
             <main class="flex-1 overflow-y-auto invisible-scrollbar p-6 scroll-smooth">
+                @hasSection('content_header')
+                    <div class="max-w-7xl mx-auto">
+                        @yield('content_header')
+                    </div>
+                @endif
+
                 @isset($header)
                     <div class="max-w-7xl mx-auto mb-6">
                         {{ $header }}
@@ -420,6 +596,8 @@
     </script>
 
     @stack('scripts')
+    @stack('js')
+    @yield('scripts')
 
     
 </body>

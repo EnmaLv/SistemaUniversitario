@@ -1,16 +1,16 @@
 <li>
 
     <div class="form-inline my-2">
-        <div class="input-group" data-widget="sidebar-search" data-arrow-sign="&raquo;">
+        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50" data-widget="sidebar-search" data-arrow-sign="&raquo;">
 
             {{-- Search input --}}
-            <input class="form-control form-control-sidebar" type="search"
+            <input class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input-sidebar" type="search"
                 @isset($item['id']) id="{{ $item['id'] }}" @endisset placeholder="{{ $item['text'] }}"
                 aria-label="{{ $item['text'] }}">
 
             {{-- Search button --}}
-            <div class="input-group-append">
-                <button class="btn btn-sidebar">
+            <div class="">
+                <button class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 sidebar">
                     <i class="fas fa-fw fa-search"></i>
                 </button>
             </div>

@@ -15,6 +15,7 @@ return new class extends Migration
         //Tabla de beneficios(Tabla configuracion de las becas)
         Schema::create('be_beneficios', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_tipo_beneficio')->nullable()->constrained('tipo_beneficio')->onDelete('cascade');
             $table->string('nombre_beneficio')->nullable(false);
             $table->text('descripcion')->nullable(true);
             $table->string('slug')->nullable(false);

@@ -1,16 +1,16 @@
-@extends('adminlte::page')
+@extends('layouts.app')
 
 @section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
+    <div class="rounded-2xl border p-5 mb-6 shadow-sm d-flex justify-content-between align-items-center"
+        style="background-color:var(--bg-card);border-color:var(--border-color);">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Editar Rol: {{ $rol->nombre }}</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                <i class="fas fa-user-shield mr-1" style="color: var(--color-secondary)"></i>
+            <h1 class="m-0 text-2xl sm:text-3xl font-extrabold" style="color:var(--text-main);">Editar rol: {{ $rol->nombre }}</h1>
+            <p class="mt-1 mb-0 text-sm text-gray-500 dark:text-gray-400">
+                <i class="fas fa-user-shield mr-1" style="color:var(--color-primary)"></i>
                 Modifica los accesos y descripción del perfil.
             </p>
         </div>
-        <a href="{{ route('admin.configuracion.roles.index') }}" class="rd-btn rd-btn-default">
+        <a href="{{ route('admin.configuracion.roles.index') }}" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
             <i class="fas fa-arrow-left"></i> Volver
         </a>
     </div>
@@ -21,8 +21,8 @@
 
     <div class="row justify-content-center fade-in">
         <div class="col-md-11">
-            <div class="rd-card shadow-sm border-0">
-                <div class="rd-card-body p-4">
+            <div class="rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
+                <div class="p-5">
                     <form action="{{ route('admin.configuracion.roles.update', $rol->id_rol) }}" method="POST"
                         class="rd-prevent-double-submit">
                         @csrf
@@ -31,10 +31,10 @@
                         {{-- 1. Datos Básicos del Rol --}}
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label class="rd-label mb-2">Nombre del Rol</label>
-                                <div class="rd-input-group {{ $isProtected ?? false ? 'bg-light' : '' }}">
+                                <label class="rd-label mb-2" style="color:var(--text-main);">Nombre del rol</label>
+                                <div class="flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm outline-none transition {{ $isProtected ?? false ? 'opacity-70' : '' }}" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);">
                                     <span><i class="fas fa-tag"></i></span>
-                                    <input type="text" name="nombre" class="rd-input w-100"
+                                    <input type="text" name="nombre" class="w-full border-0 bg-transparent text-sm outline-none" style="color:var(--text-main);"
                                         value="{{ old('nombre', $rol->nombre) }}"
                                         {{ $isProtected ?? false ? 'readonly' : 'required' }}
                                         placeholder="Nombre del rol">
@@ -46,8 +46,8 @@
                                 @enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="rd-label mb-2">Descripción</label>
-                                <input type="text" name="descripcion" class="form-control"
+                                <label class="rd-label mb-2" style="color:var(--text-main);">Descripción</label>
+                                <input type="text" name="descripcion" class="w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);"
                                     style="border: 1px solid #d8dee9; border-radius: 10px; height: 45px; padding: 0 12px;"
                                     value="{{ old('descripcion', $rol->descripcion) }}" placeholder="Descripcion del rol"
                                     {{ $isProtected ?? false ? 'readonly' : '' }}>
@@ -60,18 +60,18 @@
                         <div class="form-group mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-cubes mr-2 text-success"></i> Acceso a Módulos Globales del Sistema
+                                    <i class="fas fa-cubes mr-2" style="color:var(--color-primary);"></i> Acceso a módulos globales del sistema
                                 </label>
                                 @if (!$isAdminRole && !($isProtected ?? false))
-                                    <button type="button" id="selectAllModules" class="btn btn-xs btn-outline-secondary"
-                                        style="border-radius: 6px;">
+                                    <button type="button" id="selectAllModules" class="rounded-xl border px-4 py-2 text-sm font-bold hover:border-red-600 hover:text-red-600"
+                                        style="border-color:var(--border-color);color:var(--text-main);">
                                         Alternar Módulos
                                     </button>
                                 @endif
                             </div>
 
                             <div class="modules-container p-4 {{ $isAdminRole ? 'bg-light opacity-75' : '' }}"
-                                style="border: 1px solid #eef2f6; border-radius: 12px; background: #fafbfc;">
+                                style="border:1px solid var(--border-color);border-radius:12px;background-color:var(--input-bg);">
                                 <div class="row">
                                     @forelse($modulos as $modulo)
                                         @php
@@ -89,7 +89,7 @@
                                                     id="modulo_{{ $modulo->id }}" {{ $moduloChecked ? 'checked' : '' }}
                                                     {{ $moduloDisabled }}>
                                                 <label class="custom-control-label font-weight-normal"
-                                                    style="cursor:pointer; font-size:0.95rem; color:#1e293b;"
+                                                    style="cursor:pointer; font-size:0.95rem; color:var(--text-main);"
                                                     for="modulo_{{ $modulo->id }}">
                                                     <strong>{{ $modulo->nombre }}</strong> <span
                                                         class="text-muted small">({{ $modulo->key }})</span>
@@ -113,11 +113,11 @@
                         <div class="form-group mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="rd-label m-0">
-                                    <i class="fas fa-list-check mr-2 text-primary"></i> Permisos de Menú y Navegación
+                                    <i class="fas fa-list-check mr-2" style="color:var(--color-primary);"></i> Permisos de menú y navegación
                                 </label>
                                 @if (!$isAdminRole && !($isProtected ?? false))
-                                    <button type="button" id="selectAll" class="btn btn-xs btn-outline-secondary"
-                                        style="border-radius:6px;">
+                                    <button type="button" id="selectAll" class="rounded-xl border px-4 py-2 text-sm font-bold hover:border-red-600 hover:text-red-600"
+                                        style="border-color:var(--border-color);color:var(--text-main);">
                                         Alternar Todos
                                     </button>
                                 @endif
@@ -189,7 +189,7 @@
                                                         ' ' .
                                                         $disabled .
                                                         '>
-                                                            <label class="custom-control-label font-weight-normal" style="cursor:pointer; font-size:0.9rem; color: #334155;" for="' .
+                                                            <label class="custom-control-label font-weight-normal" style="cursor:pointer; font-size:0.9rem; color:var(--text-main);" for="' .
                                                         $id .
                                                         '">
                                                                 ' .
@@ -253,7 +253,7 @@
                                                 ' ' .
                                                 $disabled .
                                                 '>
-                                                    <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color: #334155;" for="' .
+                                                    <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color:var(--text-main);" for="' .
                                                 $id .
                                                 '">
                                                         ' .
@@ -281,13 +281,14 @@
                         {{-- Panel de Acciones --}}
                         <div class="d-flex gap-3 justify-content-end" style="gap: 10px">
                             <a href="{{ route('admin.configuracion.roles.index') }}"
-                                class="rd-btn rd-btn-default px-4 d-flex align-items-center">
-                                Cancelar
+                                class="inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600"
+                                style="border-color:var(--border-color);color:var(--text-main);">
+                                <i class="fas fa-arrow-left"></i> Cancelar
                             </a>
                             @if (!($isProtected ?? false))
-                                <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn px-5"
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg hover:bg-red-900"
                                     style="height: 48px; justify-content: center;">
-                                    <i class="fas fa-sync-alt"></i> Actualizar Rol
+                                    <i class="fas fa-save"></i> Actualizar rol
                                 </button>
                             @else
                                 <div class="alert alert-warning w-100 mb-0 shadow-sm border-0 d-flex align-items-center"
@@ -314,8 +315,8 @@
         }
 
         .permission-group-block {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -337,8 +338,7 @@
         }
 
         .rd-input:focus,
-        .perm-check:focus,
-        .form-control:focus {
+        .perm-check:focus {
             outline: none !important;
             box-shadow: none !important;
         }
@@ -362,7 +362,7 @@
         }
 
         .item-modulo:hover {
-            background-color: #f1f5f9;
+            background-color: var(--input-bg);
         }
     </style>
 @stop

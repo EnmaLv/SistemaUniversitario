@@ -1,9 +1,6 @@
-@extends('adminlte::master')
+@extends('layouts.app')
 
-@inject('layoutHelper', 'JeroenNoten\LaravelAdminLte\Helpers\LayoutHelper')
-@inject('preloaderHelper', 'JeroenNoten\LaravelAdminLte\Helpers\PreloaderHelper')
-
-@section('adminlte_css')
+@push('styles')
     @stack('css')
     @yield('css')
 @stop
@@ -55,19 +52,4 @@
 @section('adminlte_js')
     @stack('js')
     @yield('js')
-
-    <script>
-        @if (session('mensaje'))
-            Swal.fire({
-                icon: '{{ session('icono') }}',
-                title: '{{ session('mensaje') }}',
-                @if(session('texto'))
-                    text: '{{ session('texto') }}',
-                @endif
-                showConfirmButton: false,
-                timer: 3000
-            });
-        @endif
-    </script>
-    <script src="{{ asset('js/validation_global.js') }}"></script>
-@stop
+@endpush

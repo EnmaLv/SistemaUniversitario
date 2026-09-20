@@ -12,7 +12,7 @@
                 <h3 class="card-title"><b>Productos Registrados</b></h3>
 
                 <div class="card-tools">
-                    <a class="btn btn-primary" href=" {{ url('admin/maestros/productos/create') }}" class="btn btn-tool">
+                    <a class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 primary" href=" {{ url('admin/maestros/productos/create') }}" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 tool">
                         <i class="fas fa-plus"></i>
                         <b>Crear Nuevo</b>
                     </a>
@@ -66,14 +66,14 @@
                                 </td>
                                 <td style="text-align: center;">
                                     <a href="{{ url('admin/maestros/productos/' . $producto->id) }}"
-                                        class="btn btn-info"><i class="fas fa-eye"></i></a>
+                                        class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 info"><i class="fas fa-eye"></i></a>
                                     <a href="{{ url('admin/maestros/productos/' . $producto->id . '/edit') }}"
-                                        class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                        class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 warning"><i class="fas fa-edit"></i></a>
                                     <form action="{{ url('admin/maestros/productos/' . $producto->id) }}"
                                         method="POST" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger"
+                                        <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 danger"
                                             onclick="preguntar{{ $producto->id }}(event)"><i
                                                 class="fas fa-trash"></i></button>
                                     </form>

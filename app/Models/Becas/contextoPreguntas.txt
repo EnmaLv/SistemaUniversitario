@@ -1,0 +1,134 @@
+//aqui te voy a pasar todos los modelos que cree para las preguntas:
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class BecaAsignada extends Model
+{
+    protected $table = 'beca_asignada';
+
+    protected $fillable = [
+        'id_solicitud',
+        'fecha_inicio',
+        'fecha_fin',
+        'estado',
+        'motivo_revocacion',
+    ];
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use App\Models\Beneficio;
+use Illuminate\Database\Eloquent\Model;
+
+class BecaPregunta extends Model
+{
+    protected $table = 'be_beca_preguntas';
+
+    protected $fillable = [
+        'id_be_beneficio',
+        'codigo',
+        'etiqueta',
+        'placeholder',
+        'tipo',
+        'obligatoria',
+        'valor_min',
+        'valor_max',
+        'min_length',
+        'max_length',
+        'regex',
+        'orden',
+        'activo',
+    ];
+
+    public function beca()
+    {
+        return $this->belongsTo(Beneficio::class);
+    }
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class BecaPreguntaOpciones extends Model
+{
+    protected $table = 'be_beca_pregunta_opciones';
+
+    protected $fillable = [
+        'id_pregunta',
+        'etiqueta',
+        'valor',
+        'orden',
+        'activo',
+    ];
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class JornadaCriterio extends Model
+{
+    protected $table = 'be_jornada_criterios';
+
+    protected $fillable = [
+        'id_jornada',
+        'id_pregunta',
+        'es_eliminatoria',
+        'operador',
+        'valor_esperado',
+        'peso',
+    ];
+}
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SolicitudDocumento extends Model
+{
+    protected $table = 'solicitud_documento';
+
+    protected $fillable = [
+        'id_solicitud',
+        'nombre_documento',
+        'ruta_archivo',
+        'tipo_archivo',
+    ];
+}
+
+
+
+<?php
+
+namespace App\Models\Becas;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SolicitudRespuesta extends Model
+{
+    protected $table = 'be_solicitud_respuestas';
+
+    protected $fillable = [
+        'id_solicitud',
+        'id_pregunta',
+        'valor',
+        'valor_json',
+        'cumple_criterio',
+    ];
+}

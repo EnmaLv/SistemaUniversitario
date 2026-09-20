@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\BusVehiculoApiController;
 use App\Http\Controllers\Api\BusViajeApiController;
 use App\Http\Controllers\Api\BusParadaApiController;
 use App\Http\Controllers\Api\BusViajePasajeroApiController;
+use App\Http\Controllers\SedeController;
 
 Route::get('/ping', fn() => response()->json(['ok' => true]));
 
@@ -53,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('vehiculos/{vehiculo}', [BusVehiculoApiController::class, 'destroy']);
 
         Route::get('paradas', [BusParadaApiController::class, 'index']);
+        Route::get('sedes', [SedeController::class, 'index']);
 
         Route::post('viajes/{viaje}/pasajeros', [BusViajePasajeroApiController::class, 'registrar']);
         Route::get('viajes/hoy', [BusViajeApiController::class, 'cartelera']);

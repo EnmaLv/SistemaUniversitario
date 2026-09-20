@@ -1,23 +1,23 @@
-@extends('adminlte::page')
+<x-app-layout>
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background:#ffffff;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+
+    <div class="mb-6 flex flex-col gap-4 rounded-2xl border p-5 shadow-sm md:flex-row md:items-center md:justify-between"
+        style="background-color:var(--bg-card);border-color:var(--border-color);">
         <div>
-            <h1 class="m-0" style="font-size:1.45rem;color:#0f172a;font-weight:700;">Mantenimientos</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem;color:#475569;">
+            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Mantenimientos</h1>
+            <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
         <div>
-            <a href="{{ route('admin.transporte.maestros.bus_mantenimientos.create') }}" class="rd-btn rd-btn-primary">
+            <a href="{{ route('admin.transporte.maestros.bus_mantenimientos.create') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                 <i class="fas fa-plus"></i> Nuevo Mantenimiento
             </a>
         </div>
     </div>
-@stop
 
-@section('content')
+
+
     @include('components.alert')
 
     <div class="rd-card rd-card-full">
@@ -29,7 +29,7 @@
                 <div class="rd-actions">
                     <form action="{{ route('admin.transporte.maestros.bus_mantenimientos.index') }}" method="GET"
                         class="d-flex gap-3 align-items-center">
-                        <select name="estado" class="form-control rd-filter-input" style="width:160px;"
+                        <select name="estado" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" style="width:160px;"
                             onchange="this.form.submit()">
                             <option value="">Todos los estados</option>
                             <option value="pendiente"  {{ request('estado') == 'pendiente'  ? 'selected' : '' }}>Pendiente</option>
@@ -38,19 +38,19 @@
                         </select>
                         <div class="rd-search-inline">
                             <input type="text" name="buscar" value="{{ request('buscar') }}"
-                                class="rd-search-input" placeholder="Buscar título o placa..." />
+                                class="rd-search-input" placeholder="Buscar tÃ­tulo o placa..." />
                             <button class="rd-icon-btn" type="submit"><i class="fas fa-search"></i></button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <table class="rd-table">
+            <div class="overflow-x-auto rounded-2xl border" style="border-color:var(--border-color);"><table class="w-full text-left border-collapse">
                 <thead>
                     <tr>
                         <th style="width:60px">#</th>
-                        <th class="text-center">Vehículo</th>
-                        <th class="text-center">Título</th>
+                        <th class="text-center">VehÃ­culo</th>
+                        <th class="text-center">TÃ­tulo</th>
                         <th class="text-center">Tipo</th>
                         <th class="text-center">Fecha</th>
                         <th class="text-center">Costo</th>
@@ -60,7 +60,7 @@
                 </thead>
                 <tbody>
                     @forelse($mantenimientos as $m)
-                        <tr>
+                        <x-table-row :id="$m->id">
                             <td class="text-center">
                                 {{ ($mantenimientos->currentPage() - 1) * $mantenimientos->perPage() + $loop->iteration }}
                             </td>
@@ -94,38 +94,34 @@
                                     </form>
                                 </div>
                             </td>
-                        </tr>
+                        </x-table-row>
                     @empty
                         <tr>
                             <td colspan="8" class="text-center py-4">No hay mantenimientos registrados.</td>
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div></div>
 
             <div class="mt-3 d-flex justify-content-center">
                 {{ $mantenimientos->onEachSide(1)->links('components.pagination') }}
             </div>
         </div>
     </div>
-@stop
 
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseño.css') }}">
-@stop
 
 @push('js')
 <script>
 function confirmEliminar(event, button) {
     event.preventDefault();
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: '¿Desea eliminar este mantenimiento? Esta acción no se puede deshacer.',
+        title: 'Â¿EstÃ¡s seguro?',
+        text: 'Â¿Desea eliminar este mantenimiento? Esta acciÃ³n no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonText: 'SÃ­, eliminar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) button.closest('form').submit();
@@ -133,3 +129,5 @@ function confirmEliminar(event, button) {
 }
 </script>
 @endpush
+</x-app-layout>
+</x-app-layout>

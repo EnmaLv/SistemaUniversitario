@@ -34,8 +34,8 @@
         @endif
 
         <div class="permission-group-title mt-1 mb-2" style="margin-left:{{ $margin }}px;">
-            <strong class="text-uppercase small text-muted" style="letter-spacing:0.5px; color:var(--color-secondary) !important;">
-                <i class="fas fa-folder-open mr-1" style="color: #64748b;"></i> {{ $it['text'] }}
+            <strong class="text-uppercase small" style="letter-spacing:0.5px; color:var(--text-main) !important;">
+                <i class="fas fa-folder-open mr-1" style="color:var(--color-primary);"></i> {{ $it['text'] }}
             </strong>
         </div>
 
@@ -67,12 +67,12 @@
         <div class="custom-control custom-checkbox mb-2 permission-item d-flex align-items-center justify-content-between" style="margin-left:{{ $margin }}px;">
             <div class="flex-grow-1">
                 <input type="checkbox" class="custom-control-input perm-chk" id="{{ $id }}" value="{{ e($val) }}" @if($checked) checked @endif data-role="{{ $isRoleProvided ? '1' : '0' }}" @if(! $isRoleProvided) name="allow[]" @endif>
-                <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color: #334155;" for="{{ $id }}">
+                <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color:var(--text-main);" for="{{ $id }}">
                     {{ e($it['text']) }}
                 </label>
             </div>
             @if($isRoleProvided)
-                <i class="fas fa-id-badge text-muted ml-2" title="Provisto por Rol" style="font-size:0.75rem; color: #94a3b8;"></i>
+                <i class="fas fa-id-badge ml-2" title="Provisto por Rol" style="font-size:0.75rem; color:var(--color-primary);"></i>
             @endif
         </div>
     @endif
@@ -82,8 +82,8 @@
 @if($depth === 0 && count($directLinks) > 0)
     <div class="permission-group-block">
         <div class="permission-group-title mt-1 mb-3">
-            <strong class="text-uppercase small text-muted" style="letter-spacing:0.5px; color:var(--color-secondary) !important;">
-                <i class="fas fa-link mr-1" style="color: #64748b;"></i> Accesos del Sistema
+            <strong class="text-uppercase small" style="letter-spacing:0.5px; color:var(--text-main) !important;">
+            <i class="fas fa-link mr-1" style="color:var(--color-primary);"></i> Accesos del sistema
             </strong>
         </div>
 
@@ -101,12 +101,12 @@
             <div class="custom-control custom-checkbox mb-2 permission-item d-flex align-items-center justify-content-between">
                 <div class="flex-grow-1">
                     <input type="checkbox" class="custom-control-input perm-chk" id="{{ $id }}" value="{{ e($val) }}" @if($checked) checked @endif data-role="{{ $isRoleProvided ? '1' : '0' }}" @if(! $isRoleProvided) name="allow[]" @endif>
-                    <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color: #334155;" for="{{ $id }}">
+                    <label class="custom-control-label font-weight-normal mb-0" style="cursor:pointer; font-size:0.9rem; color:var(--text-main);" for="{{ $id }}">
                         {{ e($it['text']) }}
                     </label>
                 </div>
                 @if($isRoleProvided)
-                    <i class="fas fa-id-badge text-muted ml-2" title="Provisto por Rol" style="font-size:0.75rem; color: #94a3b8;"></i>
+                    <i class="fas fa-id-badge ml-2" title="Provisto por Rol" style="font-size:0.75rem; color:var(--color-primary);"></i>
                 @endif
             </div>
         @endforeach

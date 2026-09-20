@@ -141,7 +141,7 @@ Route::patch('/psicologia/maestros/citas/{cita}/prioridad', [CitaController::cla
 
 Route::get('/psicologia/maestros/agenda', [AgendaController::class, 'index'])->name('admin.psicologia.maestros.agenda.index');
 Route::get('/psicologia/maestros/agenda/pending-list', [AgendaController::class, 'pendingList'])->name('admin.psicologia.maestros.agenda.pending.list');
-Route::post('/psicologia/maestros/agenda/crear-cita-manual', [AgendaController::class, 'crearCitaManual'])->name('admin.psicologia.maestros.agenda.crear_cita_manual');
+Route::post('/psicologia/maestros/agenda/crear_cita_manual', [AgendaController::class, 'crearCitaManual'])->name('admin.psicologia.maestros.agenda.crear_cita_manual');
 Route::get('/psicologia/maestros/agenda/daily-citas', [AgendaController::class, 'dailyCitas'])->name('admin.psicologia.maestros.agenda.daily_citas');
 Route::get('/psicologia/maestros/agenda/exportar-pdf', [AgendaController::class, 'exportarPdf'])->name('admin.psicologia.maestros.agenda.exportarPdf');
 Route::get('/psicologia/maestros/agenda/estadisticas', [AgendaController::class, 'estadisticas'])->name('admin.psicologia.maestros.agenda.estadisticas');

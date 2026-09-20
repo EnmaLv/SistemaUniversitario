@@ -16,12 +16,10 @@ class BusCargaCombustibleController extends Controller
         return [
             'bus_vehiculo_id'         => 'required|exists:bus_vehiculos,id',
             'bus_viaje_id'            => 'required|exists:bus_viajes,id',
-            'bus_tipo_combustible_id' => 'required|exists:bus_tipo_combustibles,id',
             'fecha'                   => 'required|date|before_or_equal:today',
             'litros'                  => 'required|numeric|min:0.1|max:1000',
             'precio_litros'           => 'required|numeric|min:0.01|max:999999',
             'km_al_cargar'            => 'required|numeric|min:0|max:9999999',
-            'boca_numero'             => 'required|integer|min:1|max:10',
             'observaciones'           => 'nullable|string|max:2000',
         ];
     }

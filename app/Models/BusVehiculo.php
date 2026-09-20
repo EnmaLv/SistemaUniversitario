@@ -4,9 +4,12 @@ namespace App\Models;
 
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\FiltroPorSede;
 
 class BusVehiculo extends Model
 {
+    use FiltroPorSede;
+
     use ConvierteAMayusculasNoEloquent;
 
     protected $table = 'vehiculos';
@@ -21,6 +24,7 @@ class BusVehiculo extends Model
         'tipo_combustible_id',
         'cantidad_cilindros',
         'capacidad_tanque_litros',
+        'nivel_combustible_actual',
         'consumo_urbano',
         'consumo_carretera',
         'consumo_relenti',
@@ -61,13 +65,14 @@ class BusVehiculo extends Model
         return $this->belongsTo(\App\Models\Usuario::class, 'conductor_id', 'id_usuario');
     }
 
-    public static function listarVehiculos($buscar = null, $activo = 1)
+    public static function listarVehiculos($buscar = null, $estado = "todos", $activo = 1)
     {
         return self::query()
             ->with(['modelo.busMarca', 'tipoCombustible', 'sede'])
             ->when($buscar, fn($q) => $q->where('placa', 'like', "%{$buscar}%")
                 ->orWhere('color', 'like', "%{$buscar}%"))
             ->when($activo !== null && $activo !== '', fn($q) => $q->where('activo', $activo))
+            ->when($estado !== null && $estado !== '' && $estado !== 'todos', fn($q) => $q->where('estado', $estado))
             ->orderBy('placa')
             ->paginate(10)
             ->withQueryString();

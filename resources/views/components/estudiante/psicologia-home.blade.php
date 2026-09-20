@@ -227,20 +227,37 @@
                             <form action="{{ route('admin.psicologia.maestros.estado_animo_diario.store') }}"
                                 method="POST">
                                 @csrf
+                                <div class="text-center mb-2">
+                                    <span class="text-xs font-bold text-gray-500 dark:text-gray-300">
+                                        Valor seleccionado:
+                                    </span>
+                                    <span id="mood-value"
+                                        class="text-sm font-black text-indigo-600 dark:text-indigo-300">
+                                        7
+                                    </span>
+                                    <span class="text-xs font-bold text-gray-500 dark:text-gray-300">/ 10</span>
+                                </div>
+
                                 <div class="px-2">
                                     <input type="range" name="valor" min="1" max="10" value="7"
-                                        class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                        oninput="document.getElementById('mood-emoji').innerHTML = getMoodSVG(this.value);">
-                                    <div class="flex justify-between text-[10px] font-bold text-gray-400 mt-1">
+                                        aria-label="Selecciona tu estado de ánimo"
+                                        class="mood-range w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                        oninput="updateMood(this.value);">
+                                    <div
+                                        class="flex justify-between text-[10px] font-bold text-gray-500 dark:text-gray-300 mt-1">
                                         <span>1</span><span>10</span>
                                     </div>
                                 </div>
 
                                 <div class="my-2 text-center" id="mood-emoji"></div>
                                 <script>
+                                    function updateMood(value) {
+                                        document.getElementById('mood-value').textContent = value;
+                                        document.getElementById('mood-emoji').innerHTML = getMoodSVG(value);
+                                    }
+
                                     document.addEventListener('DOMContentLoaded', function() {
-                                        const el = document.getElementById('mood-emoji');
-                                        if (el) el.innerHTML = getMoodSVG(7);
+                                        updateMood(7);
                                     });
                                 </script>
 
@@ -327,3 +344,41 @@
         return '';
     }
 </script>
+
+<style>
+    .mood-range {
+        background: #cbd5e1;
+    }
+
+    .dark .mood-range {
+        background: #64748b;
+    }
+
+    .mood-range::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 9999px;
+        background: #4338ca;
+        border: 2px solid white;
+        box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+    }
+
+    .dark .mood-range::-webkit-slider-thumb {
+        background: #a5b4fc;
+        border-color: #1e293b;
+    }
+
+    .mood-range::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 9999px;
+        background: #4338ca;
+        border: 2px solid white;
+    }
+
+    .dark .mood-range::-moz-range-thumb {
+        background: #a5b4fc;
+        border-color: #1e293b;
+    }
+</style>

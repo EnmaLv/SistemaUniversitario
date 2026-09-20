@@ -1,100 +1,93 @@
-@extends('adminlte::page')
+<x-app-layout>
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background: #ffffff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
-        <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">Permisos Especiales</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                <i class="fas fa-user-shield mr-1" style="color: var(--color-secondary)"></i> 
-                Asignación de permisos granulares por usuario.
-            </p>
-        </div>
-        <div>
-            <i class="fas fa-info-circle text-muted" title="Los permisos asignados aquí se suman a los del rol base."></i>
-        </div>
-    </div>
-@stop
-
-@section('content')
     @include('components.alert')
 
-    <div class="rd-card rd-card-full shadow-sm border-0 overflow-hidden">
-        <div class="rd-card-body border-bottom bg-white">
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Permisos especiales</h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-user-shield mr-1" style="color:var(--color-primary)"></i>
+                        Asignación granular por usuario · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
+                </div>
+                <span class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold text-gray-500 dark:text-gray-400" style="border-color:var(--border-color);">
+                    <i class="fas fa-info-circle" style="color:var(--color-primary);"></i>
+                    Los permisos especiales se suman al rol base
+                </span>
+            </div>
+
+    <div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">
+        <div class="p-3 border-bottom" style="border-color:var(--border-color);">
             <form action="{{ route('admin.configuracion.permisos.index') }}" method="GET">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h3 class="rd-title-sm">Usuarios del Sistema</h3>
-                    </div>
-                    <div class="col-md-6 d-flex justify-content-end">
-                        <div class="rd-input-group">
-                            <span><i class="fas fa-search"></i></span>
-                            <input type="text" name="q" value="{{ request('q') }}" class="rd-input w-100" placeholder="Buscar por nombre o usuario...">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+                    <div class="flex-1"><h3 class="text-lg font-extrabold" style="color:var(--text-main);">Usuarios del sistema</h3></div>
+                    <div class="flex w-full gap-2 lg:w-auto">
+                        <div class="flex min-w-0 flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 lg:w-96" style="background-color:var(--input-bg);border-color:var(--input-border);">
+                            <i class="fas fa-search text-gray-400"></i>
+                            <input type="text" name="q" value="{{ request('q') }}" class="w-full border-0 bg-transparent text-sm outline-none" style="color:var(--text-main);" placeholder="Buscar por nombre o usuario...">
                         </div>
-                        <button type="submit" class="rd-btn rd-btn-primary ml-2" style="padding: 5px 15px;">
-                            Buscar
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800">
+                            <i class="fas fa-search text-xs"></i> Buscar
                         </button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div class="rd-table-container">
-            <table class="rd-table">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr>
-                        <th class="text-center" style="width:60px">#</th>
-                        <th>Identificación</th>
-                        <th>Nombre y Apellido</th>
-                        <th>Rol Asignado</th>
-                        <th class="text-center" style="width:180px">Gestión</th>
+                    <tr class="bg-gray-50/50 dark:bg-black/10" style="border-bottom:1px solid var(--border-color);">
+                        <th class="px-6 py-4 text-center text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400" style="width:60px">#</th>
+                        <th class="px-6 py-4 text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Identificación</th>
+                        <th class="px-6 py-4 text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Nombre y apellido</th>
+                        <th class="px-6 py-4 text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Rol asignado</th>
+                        <th class="px-6 py-4 text-center text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400" style="width:180px">Gestión</th>
                     </tr>
                 </thead>
                 <tbody class="fade-in">
                     @forelse($usuarios as $usuario)
-                        <tr>
-                            <td class="text-center text-muted font-weight-bold">
+                        <x-table-row :id="$usuario->id_usuario" class="border-b" style="border-color:var(--border-color);">
+                            <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400 font-bold">
                                 {{ $loop->iteration + ($usuarios->currentPage()-1)* $usuarios->perPage() }}
                             </td>
-                            <td>
-                                <span class="rd-badge rd-badge-success" style="font-family: monospace; font-size: 0.85rem;">
+                            <td class="px-6 py-4">
+                                <span class="inline-flex rounded-lg border px-3 py-1 font-mono text-xs font-bold" style="border-color:var(--border-color);color:var(--color-primary);">
                                     {{ $usuario->username }}
                                 </span>
                             </td>
-                            <td class="font-weight-bold" style="color: #1e293b;">
-                                {{$usuario->persona->nombre_persona . ' ' . $usuario->persona->apellido_persona ?? "—" }}
+                            <td class="px-6 py-4 font-bold" style="color:var(--text-main);">
+                                {{$usuario->persona->nombre_persona . ' ' . $usuario->persona->apellido_persona ?? "”" }}
                             </td>
-                            <td>
+                            <td class="px-6 py-4">
                                 @php
                                     $rolNombre = $usuario->roles->pluck('nombre')->first() ?: ($usuario->perfil->nombre_perfil ?? 'Usuario Base');
                                 @endphp
-                                <span class="badge badge-light border text-muted px-2 py-1" style="border-radius: 6px; font-weight: 500;">
+                                <span class="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400" style="border-color:var(--border-color);">
                                     <i class="fas fa-briefcase "></i> {{ $rolNombre }}
                                 </span>
                             </td>
-                            <td class="text-center">
+                            <td class="px-6 py-4 text-center">
                                 @php
                                     $auth = auth()->user();
                                     $isSelfAdmin = $auth && $auth->id_usuario == $usuario->id_usuario && $auth->roles->contains('nombre', 'Administrador');
                                 @endphp
                                 
                                 @if(!$isSelfAdmin)
-                                    <a href="{{ route('admin.configuracion.permisos.edit', $usuario->id_usuario) }}" 
-                                       class="rd-btn rd-btn-alter d-inline-flex justify-content-center" 
-                                       style="width: 120px; font-size: 0.85rem;">
-                                        <i class="fas fa-cog"></i> Gestionar
-                                    </a>
+                                    <x-table-actions :id="$usuario->id_usuario" baseUrl="admin/configuracion/permisos" :show="false" :toggle="false" />
                                 @else
-                                    <span class="text-muted small" title="El administrador principal no puede editar sus propios permisos granulares">
+                                    <span class="text-gray-500 dark:text-gray-400 text-xs" title="El administrador principal no puede editar sus propios permisos granulares">
                                         <i class="fas fa-lock mr-1"></i> Protegido
                                     </span>
                                 @endif
                             </td>
-                        </tr>
+                        </x-table-row>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <div class="text-muted">
+                            <td colspan="5" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
+                                <div>
                                     <i class="fas fa-users-slash fa-3x mb-3" style="opacity: 0.1"></i>
                                     <p>No se encontraron usuarios para la búsqueda.</p>
                                 </div>
@@ -105,17 +98,16 @@
             </table>
         </div>
 
-        <div class="rd-card-body border-top bg-light d-flex justify-content-center">
+        <div class="p-4 border-top flex justify-content-center" style="border-color:var(--border-color);">
             {{ $usuarios->appends(request()->query())->onEachSide(1)->links('components.pagination') }}
         </div>
     </div>
-@stop
-
-@section('css')
+        </div>
+    </div>
 <style>
     /* Estilo de fila al pasar el mouse */
-    .rd-table tbody tr:hover {
-        background-color: #f8fafc;
+    table tbody tr:hover {
+        background-color: color-mix(in srgb, var(--color-primary) 6%, transparent);
         transition: var(--trans-default);
     }
 
@@ -125,4 +117,4 @@
         box-shadow: none !important;
     }
 </style>
-@stop
+</x-app-layout>

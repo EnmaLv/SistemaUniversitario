@@ -32,7 +32,7 @@ class BusVehiculoApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         $activo = $request->has('activo') ? ($request->boolean('activo') ? 1 : 0) : 1;
-        $vehiculos = BusVehiculo::listarVehiculos($request->buscar, $activo);
+        $vehiculos = BusVehiculo::listarVehiculos($request->buscar, null, $activo);
 
         return response()->json([
             'success' => true,

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Becas\Beca;
 use App\Models\Becas\Beneficio;
 use Illuminate\Support\Str;
 
@@ -42,7 +41,7 @@ class BecaBeneficioService
         return $beneficio->fresh();
     }
 
-    public function sincronizar(Beca $beca, array $beneficios): void
+    public function sincronizar(Beneficio $beca, array $beneficios): void
     {
         $sync = [];
 
