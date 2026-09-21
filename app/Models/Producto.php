@@ -96,7 +96,7 @@ class Producto extends Model
             ->join('categorias', 'productos.categoria_id', '=', 'categorias.id')
             ->withSum([
                 'inventarioSedeAcarigua as cantidad_actual' => function ($query) {}
-            ], 'cantidad');
+            ], 'cantidad_convertida');
 
         if ($tipoProductoId !== null) {
             $query->where('categorias.tipo_producto_id', $tipoProductoId);
@@ -135,7 +135,7 @@ class Producto extends Model
             ->join('lotes', 'lotes.id', '=', 'inventario_sede_lotes.lote_id')
             ->where('lotes.producto_id', $this->id)
             ->where('inventario_sede_lotes.sede_id', $sedeId)
-            ->sum('inventario_sede_lotes.cantidad');
+            ->sum('inventario_sede_lotes.cantidad_convertida');
     }
 
     public static function getDatosFormulario(?int $tipoProductoId = null)
@@ -175,11 +175,20 @@ class Producto extends Model
             } else {
                 $data['codigo'] = strtoupper($data['codigo']);
             }
-            $unidad = DB::table('unidades')
-                ->where('id', $data['unidad_id'])
-                ->first();
 
-            $pesoBase = $data['peso_contenido'] * ($unidad->factor_a_base ?? 1);
+            $unidadId = $data['unidad_id'] ?? null;
+            $unidad   = $unidadId
+                ? DB::table('unidades')->where('id', $unidadId)->first()
+                : null;
+
+            $pesoBase = isset($data['peso_contenido']) && $unidad
+                ? $data['peso_contenido'] * ($unidad->factor_a_base ?? 1)
+                : 0;
+
+            // El form puede mandar 'presentacion_id' o 'envase_primario_id'
+            $presentacionId = $data['presentacion_id']
+                ?? $data['envase_primario_id']
+                ?? null;
 
             $productoId = DB::table('productos')->insertGetId([
                 'categoria_id'  => $data['categoria_id'],
@@ -190,11 +199,11 @@ class Producto extends Model
                 'precio_compra' => 0,
                 'stock_minimo'  => $data['stock_minimo'] ?? 0,
                 'stock_maximo'  => $data['stock_maximo'] ?? 0,
-                'peso_contenido' => $pesoBase,
+                'peso_contenido'            => $pesoBase,
                 'unidades_por_presentacion' => $data['unidades_por_presentacion'] ?? 1,
                 'presentacion_dispensacion' => $data['presentacion_dispensacion'] ?? null,
-                'unidad_id'     => $data['unidad_id'] ?? null,
-                'presentacion_id' => $data['envase_primario_id'] ?? null,
+                'unidad_id'      => $unidadId,
+                'presentacion_id' => $presentacionId,
                 'estado'        => isset($data['estado']) ? (int)$data['estado'] : 1,
                 'created_at'    => now(),
                 'updated_at'    => now(),
@@ -245,8 +254,11 @@ class Producto extends Model
         $data = $helper->convertirCamposAMayusculas($data, ['nombre', 'descripcion']);
         $unidadId = $data['unidad_id'] ?? null;
         $unidad = $unidadId ? DB::table('unidades')->where('id', $unidadId)->first() : null;
-        $pesoContenido = $data['peso_contenido'] ?? 0;
-        $pesoBase = $pesoContenido * ($unidad->factor_a_base ?? 1);
+
+        $pesoBase = isset($data['peso_contenido']) && $unidad
+            ? $data['peso_contenido'] * ($unidad->factor_a_base ?? 1)
+            : 0;
+
         $precioUsd = $data['costo_usd'] ?? $data['precio_compra'] ?? 0;
         $productoAntiguo = DB::table('productos')->where('id', $id)->first();
         $codigoFinal = $productoAntiguo->codigo;
@@ -265,6 +277,10 @@ class Producto extends Model
             );
         }
 
+        $presentacionId = $data['presentacion_id']
+            ?? $data['envase_primario_id']
+            ?? null;
+
         $update = [
             'codigo'          => $codigoFinal,
             'categoria_id'    => $data['categoria_id'],
@@ -277,7 +293,7 @@ class Producto extends Model
             'unidad_id'       => $unidadId,
             'unidades_por_presentacion' => $data['unidades_por_presentacion'] ?? 1,
             'presentacion_dispensacion' => $data['presentacion_dispensacion'] ?? null,
-            'presentacion_id' => $data['envase_primario_id'] ?? null,
+            'presentacion_id' => $presentacionId,
             'estado'          => isset($data['estado']) ? (int)$data['estado'] : 1,
             'updated_at'      => now(),
         ];
@@ -324,7 +340,6 @@ class Producto extends Model
     {
         $cat = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $categoriaNombre), 0, 3) ?: 'CAT');
         $prod = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $nombreProducto), 0, 3) ?: 'PRD');
-        $date = now()->format('Ymd');
         $base = "{$cat}-{$prod}";
         $suf = 1;
         do {
@@ -346,7 +361,7 @@ class Producto extends Model
             ->join('lotes as l', 'l.id', '=', 'isl.lote_id')
             ->where('l.producto_id', $productoId)
             ->where('isl.sede_id', 1)
-            ->where('isl.cantidad', '>', 0)
+            ->where('isl.cantidad_convertida', '>', 0)
             ->exists();
     }
 
@@ -356,6 +371,6 @@ class Producto extends Model
             ->join('lotes as l', 'l.id', '=', 'isl.lote_id')
             ->where('l.producto_id', $productoId)
             ->where('isl.sede_id', 1)
-            ->sum('isl.cantidad');
+            ->sum('isl.cantidad_convertida');
     }
 }

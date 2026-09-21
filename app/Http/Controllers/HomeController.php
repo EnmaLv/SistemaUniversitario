@@ -58,9 +58,7 @@ class HomeController extends Controller
         if ($roleName && strtolower($roleName) === 'obrero') {
             return redirect()->route('admin.movimientos.registro_comida.index');
         }
-        // Mantener la pantalla inicial del sistema como landing page normal.
-        // La selección de módulo sigue disponible manualmente desde el menú,
-        // pero no se fuerza la redirección automática al entrar al inicio.
+
         $rol = $roleName ? Rol::where('nombre', $roleName)->first() : null;
         $menuPermissions = $rol?->menu_permissions ?? [];
         $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
@@ -89,7 +87,7 @@ class HomeController extends Controller
             'productos.id',
             'productos.nombre',
             'productos.stock_minimo',
-            DB::raw('COALESCE(SUM(inventario_sede_lotes.cantidad), 0) as stock_actual')
+            DB::raw('COALESCE(SUM(inventario_sede_lotes.cantidad_convertida), 0) as stock_actual')
         )
             ->join('lotes', 'lotes.producto_id', '=', 'productos.id')
             ->join('inventario_sede_lotes', function ($join) use ($sedeId) {
@@ -98,8 +96,8 @@ class HomeController extends Controller
             })
             ->where('productos.estado', 1)
             ->groupBy('productos.id', 'productos.nombre', 'productos.stock_minimo')
-            ->havingRaw('SUM(inventario_sede_lotes.cantidad) <= productos.stock_minimo')
-            ->havingRaw('SUM(inventario_sede_lotes.cantidad) > 0')
+            ->havingRaw('SUM(inventario_sede_lotes.cantidad_convertida) <= productos.stock_minimo')
+            ->havingRaw('SUM(inventario_sede_lotes.cantidad_convertida) > 0')
             ->orderBy('stock_actual', 'asc')
             ->get();
 

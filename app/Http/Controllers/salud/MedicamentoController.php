@@ -284,7 +284,7 @@ class MedicamentoController extends Controller
                 $precioUSD * (1 + $margen / 100) * $tasa->promedio,
                 2
             );
-
+    
             DB::table('productos')
                 ->where('id', $producto->id)
                 ->update([

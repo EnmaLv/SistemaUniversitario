@@ -117,7 +117,7 @@ class ItemsCompra extends Component
         DB::beginTransaction();
         try {
             $unidadId = $producto->unidad_id;
-            $unidad = DB::table('unidades')->where('id', $producto->unidad_id)->first();
+
             $factor = $producto->presentacion_id
                 ? ($producto->unidades_por_presentacion ?? 1)
                 : ($producto->peso_contenido ?? 1);
@@ -125,25 +125,25 @@ class ItemsCompra extends Component
             $cantidadConvertida = $this->cantidad * $factor;
 
             $lote = Lote::create([
-                'producto_id' => $this->productoId,
-                'proveedor_id' => $this->compra->proveedor_id,
-                'codigo_lote' => $this->codigoLote,
-                'fecha_entrada' => now()->toDateString(),
-                'fecha_vencimiento' => null,
-                'cantidad_inicial' => $this->cantidad,
-                'cantidad_actual' => $cantidadConvertida,
-                'precio_compra' => $this->precioCompra,
-                'estado' => true,
+                'producto_id'        => $this->productoId,
+                'proveedor_id'       => $this->compra->proveedor_id,
+                'codigo_lote'        => $this->codigoLote,
+                'fecha_entrada'      => now()->toDateString(),
+                'fecha_vencimiento'  => null,
+                'cantidad_inicial'   => $cantidadConvertida,
+                'cantidad_actual'    => $cantidadConvertida,
+                'precio_compra'      => $this->precioCompra,
+                'estado'             => true,
             ]);
 
             $this->compra->detalleCompras()->create([
-                'producto_id' => $producto->id,
-                'lote_id' => $lote->id,
-                'cantidad' => $this->cantidad,
+                'producto_id'         => $producto->id,
+                'lote_id'             => $lote->id,
+                'cantidad'            => $this->cantidad,
                 'cantidad_convertida' => $cantidadConvertida,
-                'precio_unitario' => $this->precioCompra,
-                'subtotal' => $this->cantidad * $this->precioCompra,
-                'unidad_id' => $unidadId,
+                'precio_unitario'     => $this->precioCompra,
+                'subtotal'            => $this->cantidad * $this->precioCompra,
+                'unidad_id'           => $unidadId,
             ]);
             $this->compra->load('detalleCompras');
             $this->compra->total = $this->compra->detalleCompras->sum('subtotal');
