@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ExchangeRates;
 use Closure;
 use Illuminate\Http\Request;
 use Carbon\Carbon;

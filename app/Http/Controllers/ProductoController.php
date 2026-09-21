@@ -29,9 +29,16 @@ class ProductoController extends Controller
         return view('admin.maestros.productos.index', compact('productos', 'categorias'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $datos = Producto::getDatosFormulario(1);
+        $tipo = $request->input('tipo', 'alimento');
+        $esMedicamento = ($tipo === 'medicamento');
+
+        $tipoProductoId = $esMedicamento ? 2 : 1;
+
+        $datos = Producto::getDatosFormulario($tipoProductoId);
+        $datos['esMedicamento'] = $esMedicamento;
+
         return view('admin.maestros.productos.create', $datos);
     }
 
@@ -85,14 +92,20 @@ class ProductoController extends Controller
         return view('admin.maestros.productos.show', compact('producto'));
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $producto = Producto::findOrFail($id);
 
-        $datos = Producto::getDatosFormulario(1);
+        $tipo = $request->input('tipo', 'alimento');
+        $esMedicamento = ($tipo === 'medicamento') || ($producto->presentacion_id !== null);
+
+        $tipoProductoId = $esMedicamento ? 2 : 1;
+
+        $datos = Producto::getDatosFormulario($tipoProductoId);
+        $datos['esMedicamento'] = $esMedicamento;
 
         return view('admin.maestros.productos.edit', array_merge($datos, [
-            'producto' => $producto
+            'producto' => $producto,
         ]));
     }
 

@@ -4,7 +4,6 @@
 
             @include('components.alert')
 
-            {{-- Encabezado de la página --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
@@ -22,13 +21,17 @@
                 </a>
             </div>
 
-            {{-- Formulario --}}
-            <x-producto-formulario 
-                titulo="Registrar Nuevo Producto" 
-                :action="route('admin.maestros.productos.store')" 
-                :rutaVolver="route('admin.maestros.productos.index')" 
-                :categorias="$categorias"
-                :unidades="$unidades" />
+            @include('admin.maestros.productos._form', [
+                'titulo'          => 'Registrar Nuevo Producto',
+                'action'          => route('admin.maestros.productos.store'),
+                'metodo'          => 'POST',
+                'rutaVolver'      => route('admin.maestros.productos.index'),
+                'categorias'      => $categorias,
+                'unidades'        => $unidades,
+                'envases'         => $envases ?? [],
+                'esMedicamento'   => $esMedicamento ?? false,
+                'modelo'          => null,
+            ])
 
         </div>
     </div>

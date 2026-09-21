@@ -14,7 +14,6 @@
                         Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
-
                 </div>
                 <a href="{{ route('admin.salud.maestros.medicamentos.index') }}"
                     class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
@@ -23,8 +22,18 @@
                 </a>
             </div>
 
-            <x-producto-formulario :action="route('admin.salud.maestros.medicamentos.store')" :rutaVolver="route('admin.salud.maestros.medicamentos.index')" :categorias="$categorias" :envases="$envases"
-                :unidades="$unidades" :esMedicamento="true" />
+            {{-- Formulario --}}
+            @include('admin.maestros.productos._form', [
+                'titulo'         => 'Registrar Nuevo Medicamento',
+                'action'         => route('admin.salud.maestros.medicamentos.store'),
+                'metodo'         => 'POST',
+                'rutaVolver'     => route('admin.salud.maestros.medicamentos.index'),
+                'categorias'     => $categorias,
+                'unidades'       => $unidades,
+                'envases'        => $envases,
+                'esMedicamento'  => true,
+                'modelo'         => null,
+            ])
 
         </div>
     </div>

@@ -4,7 +4,6 @@ namespace App\Livewire\Admin\Movimientos\Compras;
 
 use Livewire\Component;
 use App\Models\Compra;
-use App\Models\DetalleCompra;
 use App\Models\Lote;
 
 class FechasCompra extends Component

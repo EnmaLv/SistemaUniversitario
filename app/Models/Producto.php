@@ -27,6 +27,8 @@ class Producto extends Model
         'stock_minimo',
         'stock_maximo',
         'peso_contenido',
+        'unidades_por_presentacion',
+        'presentacion_dispensacion',
         'unidad_id',
         'presentacion_id',
         'estado',
@@ -189,6 +191,8 @@ class Producto extends Model
                 'stock_minimo'  => $data['stock_minimo'] ?? 0,
                 'stock_maximo'  => $data['stock_maximo'] ?? 0,
                 'peso_contenido' => $pesoBase,
+                'unidades_por_presentacion' => $data['unidades_por_presentacion'] ?? 1,
+                'presentacion_dispensacion' => $data['presentacion_dispensacion'] ?? null,
                 'unidad_id'     => $data['unidad_id'] ?? null,
                 'presentacion_id' => $data['envase_primario_id'] ?? null,
                 'estado'        => isset($data['estado']) ? (int)$data['estado'] : 1,
@@ -239,20 +243,12 @@ class Producto extends Model
         $helper = new self();
 
         $data = $helper->convertirCamposAMayusculas($data, ['nombre', 'descripcion']);
-
-        // Unidad
         $unidadId = $data['unidad_id'] ?? null;
         $unidad = $unidadId ? DB::table('unidades')->where('id', $unidadId)->first() : null;
-
         $pesoContenido = $data['peso_contenido'] ?? 0;
         $pesoBase = $pesoContenido * ($unidad->factor_a_base ?? 1);
-
-        // Precios
         $precioUsd = $data['costo_usd'] ?? $data['precio_compra'] ?? 0;
-
-        // Logica para update del codigo
         $productoAntiguo = DB::table('productos')->where('id', $id)->first();
-
         $codigoFinal = $productoAntiguo->codigo;
 
         if (!empty($data['codigo'])) {
@@ -279,6 +275,8 @@ class Producto extends Model
             'stock_maximo'    => $data['stock_maximo'] ?? 0,
             'peso_contenido'  => $pesoBase,
             'unidad_id'       => $unidadId,
+            'unidades_por_presentacion' => $data['unidades_por_presentacion'] ?? 1,
+            'presentacion_dispensacion' => $data['presentacion_dispensacion'] ?? null,
             'presentacion_id' => $data['envase_primario_id'] ?? null,
             'estado'          => isset($data['estado']) ? (int)$data['estado'] : 1,
             'updated_at'      => now(),
@@ -288,7 +286,6 @@ class Producto extends Model
             $update['imagen'] = $data['imagen'];
         }
 
-        // Manejo del historial de Precios
         $ultimoPrecio = PrecioProducto::where('producto_id', $id)->latest()->first();
         $margenRequest = $data['margen'] ?? 0;
 

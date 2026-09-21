@@ -118,10 +118,11 @@ class ItemsCompra extends Component
         try {
             $unidadId = $producto->unidad_id;
             $unidad = DB::table('unidades')->where('id', $producto->unidad_id)->first();
-            $factor = $unidad->factor_a_gramo ?? 1;
+            $factor = $producto->presentacion_id
+                ? ($producto->unidades_por_presentacion ?? 1)
+                : ($producto->peso_contenido ?? 1);
 
-            $pesoUnidad = $producto->peso_contenido;
-            $cantidadGramos = $this->cantidad * $pesoUnidad;
+            $cantidadConvertida = $this->cantidad * $factor;
 
             $lote = Lote::create([
                 'producto_id' => $this->productoId,
@@ -130,7 +131,7 @@ class ItemsCompra extends Component
                 'fecha_entrada' => now()->toDateString(),
                 'fecha_vencimiento' => null,
                 'cantidad_inicial' => $this->cantidad,
-                'cantidad_actual' => $cantidadGramos,
+                'cantidad_actual' => $cantidadConvertida,
                 'precio_compra' => $this->precioCompra,
                 'estado' => true,
             ]);
@@ -139,7 +140,7 @@ class ItemsCompra extends Component
                 'producto_id' => $producto->id,
                 'lote_id' => $lote->id,
                 'cantidad' => $this->cantidad,
-                'cantidad_convertida' => $cantidadGramos,
+                'cantidad_convertida' => $cantidadConvertida,
                 'precio_unitario' => $this->precioCompra,
                 'subtotal' => $this->cantidad * $this->precioCompra,
                 'unidad_id' => $unidadId,

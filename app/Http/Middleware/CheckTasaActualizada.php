@@ -10,7 +10,6 @@ class CheckTasaActualizada
 {
     public function handle($request, Closure $next)
     {
-        // 🔹 Rutas libres (Agregamos 'tasa.ignorar')
         if (
             $request->routeIs('productos.actualizar.tasa') ||
             $request->routeIs('tasa.ignorar') ||
@@ -21,7 +20,6 @@ class CheckTasaActualizada
 
         $hoy = Carbon::today()->toDateString();
 
-        // 🔹 1. ¿Existe ALGUNA tasa?
         $existeAlgunaTasa = ExchangeRates::where('nombre', 'Oficial')->exists();
 
         if (!$existeAlgunaTasa) {
@@ -34,12 +32,10 @@ class CheckTasaActualizada
             return $next($request);
         }
 
-        // 🔹 2. ¿Existe tasa del día?
         $tasaHoy = ExchangeRates::whereDate('fecha_vigencia', $hoy)
             ->where('nombre', 'Oficial')
             ->first();
 
-        // 🔹 3. ¿El usuario ya dijo "más tarde" hoy?
         $ignoradaHoy = session('tasa_ignorada_hasta') === $hoy;
 
         if (!$tasaHoy && !$ignoradaHoy) {

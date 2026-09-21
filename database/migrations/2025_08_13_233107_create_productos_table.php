@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration; 
+use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('stock_minimo', 14, 2)->default(0);
             $table->decimal('stock_maximo', 14, 2)->default(0);
             $table->decimal('peso_contenido', 14, 2)->default(0);
-            $table->decimal('unidades_por_presentacion', 14, 3)->nullable()->default(0);
+            $table->decimal('unidades_por_presentacion', 14, 3)->default(0);
             $table->string('presentacion_dispensacion', 255)->nullable();
             $table->foreignId('presentacion_id')->nullable()->constrained('envase_primarios')->onDelete('cascade');
             $table->foreignId('unidad_id')->constrained('unidades')->onDelete('cascade');
