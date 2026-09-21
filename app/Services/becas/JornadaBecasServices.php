@@ -167,8 +167,9 @@ class JornadaBecasServices
             ->withQueryString();
 
         $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
+        $lapsoActual = Lapso::where('es_actual', 1)->first();
 
-        return view('admin.becas.jornada.index', compact('jornadas', 'beneficios'));
+        return view('admin.becas.jornada.index', compact('jornadas', 'beneficios', 'lapsoActual'));
     }
 
     public function limpiarCacheJornada(): void

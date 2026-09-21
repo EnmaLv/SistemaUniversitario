@@ -79,4 +79,9 @@ class SolicitudBeca extends Model
     {
         return $this->belongsTo(Usuario::class, 'verificado_por', 'id_usuario');
     }
+
+    public function documento()
+    {
+        return $this->hasOne(SolicitudDocumento::class, 'id_solicitud');
+    }
 }

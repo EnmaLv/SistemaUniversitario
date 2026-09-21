@@ -705,7 +705,7 @@ return [
             'module' => 'beca',
             'url' => 'admin/becas/solicitar',
             'icon' => 'fas fa-file-alt',
-            'active' => ['admin/becas/solicitar*'],
+            'active' => ['admin/becas/solicitar*', 'admin.becas.solicitudes.store'],
         ],
 
         /* ---------------------------------------------------

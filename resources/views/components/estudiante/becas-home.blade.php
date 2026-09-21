@@ -8,7 +8,7 @@
     }
 @endphp
 <div class="space-y-6">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div class="lg:col-span-5 rounded-3xl border shadow-sm p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden transition-all"
             style="background-color: var(--bg-card); border-color: var(--border-color);">
 
@@ -55,10 +55,19 @@
             </div>
 
             <div class="z-10 pt-2 grid grid-cols-1 gap-3">
+                @if(isset($jornadasRenovables) && $jornadasRenovables->count() > 0)
+                    @foreach($jornadasRenovables as $jornadaRenovable)
+                        <button type="button" @click.prevent="$dispatch('open-renovacion', { jornadaId: {{ $jornadaRenovable->id }}, nombreBeneficio: '{{ $jornadaRenovable->beneficio->nombre_beneficio ?? '' }}' })"
+                            class="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-2xl shadow-md hover:shadow-lg active:scale-95 transition-all text-sm mb-2">
+                            <i class="fas fa-bolt text-amber-200"></i>
+                            <span>Renovar Beca: {{ $jornadaRenovable->beneficio->nombre_beneficio ?? 'N/A' }}</span>
+                        </button>
+                    @endforeach
+                @endif
                 <a href="{{ route('admin.becas.solicitar') }}"
                     class="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-2xl shadow-md hover:shadow-lg active:scale-95 transition-all text-sm">
                     <span>Nueva Solicitud de Beca</span>
-                    <i class="fas fa-file-signature text-xs"></i>
+                    <i class="fas fa-arrow-right text-[11px] opacity-70"></i>
                 </a>
             </div>
         </div>
@@ -83,37 +92,45 @@
 
                         @if(isset($misSolicitudesBecas) && $misSolicitudesBecas->count() > 0)
                             <div class="space-y-3 w-full">
-                                @foreach($misSolicitudesBecas->take(3) as $solicitud)
+                                @foreach($misSolicitudesBecas->take(2) as $solicitud)
                                     <div
-                                        class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 w-full transition-all hover:bg-gray-100 dark:hover:bg-gray-800">
-                                        <div class="flex items-center gap-3">
-                                            @php
-                                                $estadoConfig = match ((int) $solicitud->estado) {
-                                                    0 => ['icon' => 'fa-clock', 'text' => 'Pendiente', 'icon_bg' => 'bg-amber-100 dark:bg-amber-900/30', 'icon_text' => 'text-amber-600 dark:text-amber-400', 'badge_bg' => 'bg-amber-50 dark:bg-amber-950', 'badge_border' => 'border-amber-200 dark:border-amber-800', 'badge_text' => 'text-amber-700 dark:text-amber-400'],
-                                                    1 => ['icon' => 'fa-check-circle', 'text' => 'Aprobada', 'icon_bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'icon_text' => 'text-emerald-600 dark:text-emerald-400', 'badge_bg' => 'bg-emerald-50 dark:bg-emerald-950', 'badge_border' => 'border-emerald-200 dark:border-emerald-800', 'badge_text' => 'text-emerald-700 dark:text-emerald-400'],
-                                                    2 => ['icon' => 'fa-times-circle', 'text' => 'Rechazada', 'icon_bg' => 'bg-rose-100 dark:bg-rose-900/30', 'icon_text' => 'text-rose-600 dark:text-rose-400', 'badge_bg' => 'bg-rose-50 dark:bg-rose-950', 'badge_border' => 'border-rose-200 dark:border-rose-800', 'badge_text' => 'text-rose-700 dark:text-rose-400'],
-                                                    default => ['icon' => 'fa-question-circle', 'text' => 'Desconocido', 'icon_bg' => 'bg-gray-100 dark:bg-gray-900/30', 'icon_text' => 'text-gray-600 dark:text-gray-400', 'badge_bg' => 'bg-gray-50 dark:bg-gray-950', 'badge_border' => 'border-gray-200 dark:border-gray-800', 'badge_text' => 'text-gray-700 dark:text-gray-400'],
-                                                };
-                                            @endphp
-                                            <div
-                                                class="w-10 h-10 rounded-full {{ $estadoConfig['icon_bg'] }} {{ $estadoConfig['icon_text'] }} flex items-center justify-center text-sm shadow-sm">
-                                                <i class="fas {{ $estadoConfig['icon'] }}"></i>
+                                        class="flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 w-full transition-all hover:bg-gray-100 dark:hover:bg-gray-800">
+                                        <div class="flex items-center justify-between w-full">
+                                            <div class="flex items-center gap-3">
+                                                @php
+                                                    $estadoConfig = match ((int) $solicitud->estado) {
+                                                        0 => ['icon' => 'fa-clock', 'text' => 'Pendiente', 'icon_bg' => 'bg-amber-100 dark:bg-amber-900/30', 'icon_text' => 'text-amber-600 dark:text-amber-400', 'badge_bg' => 'bg-amber-50 dark:bg-amber-950', 'badge_border' => 'border-amber-200 dark:border-amber-800', 'badge_text' => 'text-amber-700 dark:text-amber-400'],
+                                                        1 => ['icon' => 'fa-check-circle', 'text' => 'Aprobada', 'icon_bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'icon_text' => 'text-emerald-600 dark:text-emerald-400', 'badge_bg' => 'bg-emerald-50 dark:bg-emerald-950', 'badge_border' => 'border-emerald-200 dark:border-emerald-800', 'badge_text' => 'text-emerald-700 dark:text-emerald-400'],
+                                                        2 => ['icon' => 'fa-times-circle', 'text' => 'Rechazada', 'icon_bg' => 'bg-rose-100 dark:bg-rose-900/30', 'icon_text' => 'text-rose-600 dark:text-rose-400', 'badge_bg' => 'bg-rose-50 dark:bg-rose-950', 'badge_border' => 'border-rose-200 dark:border-rose-800', 'badge_text' => 'text-rose-700 dark:text-rose-400'],
+                                                        default => ['icon' => 'fa-question-circle', 'text' => 'Desconocido', 'icon_bg' => 'bg-gray-100 dark:bg-gray-900/30', 'icon_text' => 'text-gray-600 dark:text-gray-400', 'badge_bg' => 'bg-gray-50 dark:bg-gray-950', 'badge_border' => 'border-gray-200 dark:border-gray-800', 'badge_text' => 'text-gray-700 dark:text-gray-400'],
+                                                    };
+                                                @endphp
+                                                <div
+                                                    class="w-10 h-10 rounded-full {{ $estadoConfig['icon_bg'] }} {{ $estadoConfig['icon_text'] }} flex items-center justify-center text-sm shadow-sm">
+                                                    <i class="fas {{ $estadoConfig['icon'] }}"></i>
+                                                </div>
+                                                <div class="text-left">
+                                                    <p class="text-xs font-bold text-gray-800 dark:text-gray-200">Beca:
+                                                        {{ $solicitud->jornada->beneficio->nombre_beneficio ?? 'N/A' }}</p>
+                                                    <p class="text-[10px] text-gray-500 font-medium">Jornada:
+                                                        {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}</p>
+                                                </div>
                                             </div>
-                                            <div class="text-left">
-                                                <p class="text-xs font-bold text-gray-800 dark:text-gray-200">Beca:
-                                                    {{ $solicitud->jornada->beneficio->nombre_beneficio ?? 'N/A' }}</p>
-                                                <p class="text-[10px] text-gray-500 font-medium">Jornada:
-                                                    {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}</p>
+                                            <div class="text-right">
+                                                <span
+                                                    class="px-2.5 py-1 text-[10px] font-bold uppercase rounded-md border {{ $estadoConfig['badge_bg'] }} {{ $estadoConfig['badge_border'] }} {{ $estadoConfig['badge_text'] }}">
+                                                    {{ $estadoConfig['text'] }}
+                                                </span>
+                                                <p class="text-[9px] text-gray-400 mt-1">
+                                                    {{ $solicitud->created_at->format('d/m/Y') }}</p>
                                             </div>
                                         </div>
-                                        <div class="text-right">
-                                            <span
-                                                class="px-2.5 py-1 text-[10px] font-bold uppercase rounded-md border {{ $estadoConfig['badge_bg'] }} {{ $estadoConfig['badge_border'] }} {{ $estadoConfig['badge_text'] }}">
-                                                {{ $estadoConfig['text'] }}
-                                            </span>
-                                            <p class="text-[9px] text-gray-400 mt-1">
-                                                {{ $solicitud->created_at->format('d/m/Y') }}</p>
-                                        </div>
+                                        @if($solicitud->estado == 2 && $solicitud->comentario_verificador)
+                                            <div class="mt-3 text-[10px] text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/50">
+                                                <span class="font-bold uppercase tracking-wider block mb-0.5"><i class="fas fa-info-circle mr-1"></i>Motivo del rechazo:</span>
+                                                {{ $solicitud->comentario_verificador }}
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -144,7 +161,7 @@
 
             <!-- Card: Beneficios Activos -->
             @php
-                $beneficiosActivos = isset($misSolicitudesBecas) ? $misSolicitudesBecas->where('estado', 1) : collect();
+                $beneficiosActivos = isset($misSolicitudesBecas) ? $misSolicitudesBecas->unique('id_beneficio')->where('estado', 1) : collect();
             @endphp
             <div class="rounded-3xl border shadow-sm p-5 flex flex-col justify-between transition-all"
                 style="background-color: var(--bg-card); border-color: var(--border-color);">
@@ -218,12 +235,37 @@
                         </h3>
                     </div>
 
-                    <div class="min-h-[80px] flex items-center justify-center">
-                        <div class="flex items-center gap-3 text-gray-500">
-                            <i class="fas fa-bell-slash text-xl text-gray-300 dark:text-gray-600"></i>
-                            <p class="text-xs font-medium">Por el momento no hay convocatorias activas.</p>
+                    @if(isset($jornadasActivas) && $jornadasActivas->count() > 0)
+                        <div class="space-y-3 mt-4">
+                            @foreach($jornadasActivas as $jornada)
+                                <div class="p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-black/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-indigo-200 dark:hover:border-indigo-800/50 transition-colors">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">
+                                            {{ $jornada->nombre_jornada }}
+                                        </h4>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Beneficio: <span class="font-medium text-gray-700 dark:text-gray-300">{{ $jornada->beneficio->nombre_beneficio ?? 'N/A' }}</span>
+                                        </p>
+                                    </div>
+                                    <div class="flex flex-col sm:items-end gap-2 shrink-0">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">
+                                            <i class="fas fa-calendar-check"></i> Hasta {{ \Carbon\Carbon::parse($jornada->fecha_fin_solicitud)->format('d/m/Y') }}
+                                        </span>
+                                        @canMenu('solicitar')
+                                        <a href="{{ route('admin.becas.solicitar') }}" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 underline underline-offset-2">Solicitar ahora</a>
+                                        @endcanMenu
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                    </div>
+                    @else
+                        <div class="min-h-[80px] flex items-center justify-center">
+                            <div class="flex items-center gap-3 text-gray-500">
+                                <i class="fas fa-bell-slash text-xl text-gray-300 dark:text-gray-600"></i>
+                                <p class="text-xs font-medium">Por el momento no hay convocatorias activas.</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -259,7 +301,7 @@
                     </div>
                     <div>
                         <h3 class="text-base sm:text-lg font-extrabold tracking-tight" style="color: var(--text-main);">Historial de Solicitudes</h3>
-                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Todas tus postulaciones previas</p>
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Tus 3 postulaciones más recientes</p>
                     </div>
                 </div>
                 <button type="button" @click="showHistorialModal = false" class="text-gray-400 hover:text-red-500 transition-colors">
@@ -269,31 +311,39 @@
 
             <div class="max-h-[50vh] overflow-y-auto pr-2 space-y-3 mb-6">
                 @if(isset($misSolicitudesBecas) && $misSolicitudesBecas->count() > 0)
-                    @foreach($misSolicitudesBecas as $solicitud)
-                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/80 transition-all hover:bg-gray-100 dark:hover:bg-gray-800">
-                            <div class="flex items-center gap-3">
-                                @php
-                                    $estadoConfig = match((int)$solicitud->estado) {
-                                        0 => ['icon' => 'fa-clock', 'text' => 'Pendiente', 'icon_bg' => 'bg-amber-100 dark:bg-amber-900/30', 'icon_text' => 'text-amber-600 dark:text-amber-400', 'badge_bg' => 'bg-amber-50 dark:bg-amber-950', 'badge_border' => 'border-amber-200 dark:border-amber-800', 'badge_text' => 'text-amber-700 dark:text-amber-400'],
-                                        1 => ['icon' => 'fa-check-circle', 'text' => 'Aprobada', 'icon_bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'icon_text' => 'text-emerald-600 dark:text-emerald-400', 'badge_bg' => 'bg-emerald-50 dark:bg-emerald-950', 'badge_border' => 'border-emerald-200 dark:border-emerald-800', 'badge_text' => 'text-emerald-700 dark:text-emerald-400'],
-                                        2 => ['icon' => 'fa-times-circle', 'text' => 'Rechazada', 'icon_bg' => 'bg-rose-100 dark:bg-rose-900/30', 'icon_text' => 'text-rose-600 dark:text-rose-400', 'badge_bg' => 'bg-rose-50 dark:bg-rose-950', 'badge_border' => 'border-rose-200 dark:border-rose-800', 'badge_text' => 'text-rose-700 dark:text-rose-400'],
-                                        default => ['icon' => 'fa-question-circle', 'text' => 'Desconocido', 'icon_bg' => 'bg-gray-100 dark:bg-gray-900/30', 'icon_text' => 'text-gray-600 dark:text-gray-400', 'badge_bg' => 'bg-gray-50 dark:bg-gray-950', 'badge_border' => 'border-gray-200 dark:border-gray-800', 'badge_text' => 'text-gray-700 dark:text-gray-400'],
-                                    };
-                                @endphp
-                                <div class="w-10 h-10 rounded-full {{ $estadoConfig['icon_bg'] }} {{ $estadoConfig['icon_text'] }} flex items-center justify-center text-sm shadow-sm">
-                                    <i class="fas {{ $estadoConfig['icon'] }}"></i>
+                    @foreach($misSolicitudesBecas->take(3) as $solicitud)
+                        <div class="flex flex-col p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/80 transition-all hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <div class="flex items-center justify-between w-full">
+                                <div class="flex items-center gap-3">
+                                    @php
+                                        $estadoConfig = match((int)$solicitud->estado) {
+                                            0 => ['icon' => 'fa-clock', 'text' => 'Pendiente', 'icon_bg' => 'bg-amber-100 dark:bg-amber-900/30', 'icon_text' => 'text-amber-600 dark:text-amber-400', 'badge_bg' => 'bg-amber-50 dark:bg-amber-950', 'badge_border' => 'border-amber-200 dark:border-amber-800', 'badge_text' => 'text-amber-700 dark:text-amber-400'],
+                                            1 => ['icon' => 'fa-check-circle', 'text' => 'Aprobada', 'icon_bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'icon_text' => 'text-emerald-600 dark:text-emerald-400', 'badge_bg' => 'bg-emerald-50 dark:bg-emerald-950', 'badge_border' => 'border-emerald-200 dark:border-emerald-800', 'badge_text' => 'text-emerald-700 dark:text-emerald-400'],
+                                            2 => ['icon' => 'fa-times-circle', 'text' => 'Rechazada', 'icon_bg' => 'bg-rose-100 dark:bg-rose-900/30', 'icon_text' => 'text-rose-600 dark:text-rose-400', 'badge_bg' => 'bg-rose-50 dark:bg-rose-950', 'badge_border' => 'border-rose-200 dark:border-rose-800', 'badge_text' => 'text-rose-700 dark:text-rose-400'],
+                                            default => ['icon' => 'fa-question-circle', 'text' => 'Desconocido', 'icon_bg' => 'bg-gray-100 dark:bg-gray-900/30', 'icon_text' => 'text-gray-600 dark:text-gray-400', 'badge_bg' => 'bg-gray-50 dark:bg-gray-950', 'badge_border' => 'border-gray-200 dark:border-gray-800', 'badge_text' => 'text-gray-700 dark:text-gray-400'],
+                                        };
+                                    @endphp
+                                    <div class="w-10 h-10 rounded-full {{ $estadoConfig['icon_bg'] }} {{ $estadoConfig['icon_text'] }} flex items-center justify-center text-sm shadow-sm">
+                                        <i class="fas {{ $estadoConfig['icon'] }}"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $solicitud->jornada->beneficio->nombre_beneficio ?? 'N/A' }}</p>
+                                        <p class="text-[10px] text-gray-500 font-medium">Jornada: {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $solicitud->jornada->beneficio->nombre_beneficio ?? 'N/A' }}</p>
-                                    <p class="text-[10px] text-gray-500 font-medium">Jornada: {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}</p>
+                                <div class="text-right flex flex-col items-end gap-1">
+                                    <span class="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md border {{ $estadoConfig['badge_bg'] }} {{ $estadoConfig['badge_border'] }} {{ $estadoConfig['badge_text'] }}">
+                                        {{ $estadoConfig['text'] }}
+                                    </span>
+                                    <p class="text-[9px] text-gray-400 font-medium">{{ $solicitud->created_at->format('d/m/Y - h:i A') }}</p>
                                 </div>
                             </div>
-                            <div class="text-right flex flex-col items-end gap-1">
-                                <span class="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md border {{ $estadoConfig['badge_bg'] }} {{ $estadoConfig['badge_border'] }} {{ $estadoConfig['badge_text'] }}">
-                                    {{ $estadoConfig['text'] }}
-                                </span>
-                                <p class="text-[9px] text-gray-400 font-medium">{{ $solicitud->created_at->format('d/m/Y - h:i A') }}</p>
-                            </div>
+                            @if($solicitud->estado == 2 && $solicitud->comentario_verificador)
+                                <div class="mt-3 text-[10px] text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/50">
+                                    <span class="font-bold uppercase tracking-wider block mb-0.5"><i class="fas fa-info-circle mr-1"></i>Motivo del rechazo:</span>
+                                    {{ $solicitud->comentario_verificador }}
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 @else
@@ -312,6 +362,86 @@
                     Cerrar Historial
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div x-data="{ showRenovacionModal: false, jornadaId: null, nombreBeneficio: '' }"
+    @open-renovacion.window="showRenovacionModal = true; jornadaId = $event.detail.jornadaId; nombreBeneficio = $event.detail.nombreBeneficio"
+    x-show="showRenovacionModal" class="fixed inset-0 overflow-y-auto" style="z-index: 9999;" x-cloak>
+    <div class="flex items-center justify-center min-h-screen px-4 text-center">
+        <div x-show="showRenovacionModal" x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 transition-opacity bg-black/60 backdrop-blur-sm"
+            @click="showRenovacionModal = false"></div>
+
+        <div x-show="showRenovacionModal" x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+            style="background-color: var(--bg-card); border-color: var(--border-color);"
+            class="relative inline-block w-full max-w-lg p-6 overflow-hidden text-left transition-all transform shadow-2xl rounded-2xl border z-10">
+
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-xl border border-amber-200 dark:border-amber-800">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold tracking-tight" style="color: var(--text-main);">Renovación Rápida</h3>
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Actualiza tus notas para continuar con el beneficio</p>
+                    </div>
+                </div>
+                <button type="button" @click="showRenovacionModal = false" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.becas.solicitudes.renovar') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="jornada_id" :value="jornadaId">
+                
+                <div class="mb-5 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/50">
+                    <p class="text-sm text-amber-800 dark:text-amber-400 mb-2 font-medium">
+                        Como becario de <strong><span x-text="nombreBeneficio"></span></strong> en el lapso anterior, calificas para la renovación automática. 
+                        Solo necesitas subir tus notas certificadas actualizadas correspondientes al nuevo semestre.
+                    </p>
+                    <p class="text-[11px] text-amber-700 dark:text-amber-500 font-bold">
+                        <i class="fas fa-info-circle mr-1"></i>Tus datos y respuestas anteriores se conservarán.
+                    </p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                        Notas Certificadas (PDF) *
+                    </label>
+                    <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-amber-500 transition-all"
+                        style="border-color: var(--border-color);">
+                        <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                            style="border-color: var(--border-color);">
+                            <i class="fas fa-file-pdf text-sm text-amber-500"></i>
+                        </span>
+                        <input type="file" name="archivo_notas" accept="application/pdf" required
+                            style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                            class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 dark:file:bg-amber-900/30 dark:file:text-amber-400 transition-all cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700/50">
+                    <button type="button" @click="showRenovacionModal = false"
+                        class="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-sm rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all active:scale-95">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="px-6 py-2.5 bg-amber-500 text-white font-bold text-sm rounded-xl hover:bg-amber-600 shadow-md transition-all active:scale-95 inline-flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> Enviar Renovación
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

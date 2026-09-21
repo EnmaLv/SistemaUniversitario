@@ -79,6 +79,12 @@ class HomeController extends Controller
         $total_jornadas_becas    = JornadaBeca::count();
         $total_beneficios        = Beneficio::count();
 
+        $jornadasActivas = JornadaBeca::where('activa', 1)
+            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+            ->with(['beneficio', 'lapso'])
+            ->get();
+
         $total_lotes_vencidos = Lote::whereDate('fecha_vencimiento', '<=', $hoy)
             ->where('estado', 1)
             ->count();
@@ -165,6 +171,24 @@ class HomeController extends Controller
             $visibleModules[$key] = $visible;
         }
 
+        $jornadasRenovables = collect();
+        if ($user && $user->id_persona) {
+            foreach ($jornadasActivas as $jornada) {
+                $aprobadoAnterior = \App\Models\Becas\SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
+                    ->where('estado', 1)
+                    ->where('id_lapso', '!=', $jornada->lapsos_id)
+                    ->where('id_persona', $user->id_persona)
+                    ->exists();
+                $postuladoActual = \App\Models\Becas\SolicitudBeca::where('jornada_id', $jornada->id)
+                    ->where('id_persona', $user->id_persona)
+                    ->exists();
+                
+                if ($aprobadoAnterior && !$postuladoActual) {
+                    $jornadasRenovables->push($jornada);
+                }
+            }
+        }
+
         return view('home', array_merge([
             'variacion_dolar' => $ultimaTasa?->variacion,
             'tasa_actual'     => $ultimaTasa?->tasa,
@@ -192,7 +216,9 @@ class HomeController extends Controller
             'total_bus_cargas',
             // ── Becas ──────────────────────────────────────────
             'total_jornadas_becas',
-            'total_beneficios'
+            'total_beneficios',
+            'jornadasActivas',
+            'jornadasRenovables'
         ));
     }
 }

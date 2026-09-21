@@ -30,7 +30,20 @@ class SolicitudBecaController extends Controller
         $solicitudes = $this->solicitudService->listarSolicitudes($request->all());
         $beneficios = Beneficio::where('status', 1)->get();
 
-        return view('admin.becas.solicitudes.index', compact('solicitudes', 'beneficios'));
+        $jornadasActivas = JornadaBeca::where('activa', 1)->with('beneficio')->get();
+        $pendientesRenovacion = collect();
+        foreach($jornadasActivas as $jornada) {
+            $ids = $this->solicitudService->obtenerPendientesPorRenovar($jornada->id);
+            if($ids->isNotEmpty()) {
+                $personas = Persona::whereIn('id_persona', $ids)->get();
+                $pendientesRenovacion->put($jornada->id, [
+                    'jornada' => $jornada,
+                    'personas' => $personas
+                ]);
+            }
+        }
+
+        return view('admin.becas.solicitudes.index', compact('solicitudes', 'beneficios', 'pendientesRenovacion'));
     }
 
     public function create()
@@ -136,7 +149,7 @@ class SolicitudBecaController extends Controller
         try {
             $this->solicitudService->crearSolicitud($request->validated());
             
-            if(!$user || !$user->tieneRol(['paciente', 'becario', 'estudiante'])){
+            if(!$user || $user->tieneRol(['paciente', 'becario', 'estudiante'])){
                 return redirect()
                 ->route('home')
                 ->with('success', 'Solicitud de beca registrada exitosamente.');
@@ -152,6 +165,36 @@ class SolicitudBecaController extends Controller
         }
     }
 
+    public function renovar(Request $request)
+    {
+        $request->validate([
+            'jornada_id' => 'required|exists:be_jornadas_becas,id',
+            'archivo_notas' => 'required|file|mimes:pdf|max:2048',
+        ]);
+
+        /** @var Usuario $user */
+        $user = Auth::user();
+        if (!$user || !$user->id_persona) {
+            return redirect()->back()->with('error', 'No se pudo identificar al estudiante.');
+        }
+
+        try {
+            $this->solicitudService->renovarSolicitudSimplificada(
+                $user->id_persona,
+                $request->input('jornada_id'),
+                $request->file('archivo_notas')
+            );
+            
+            return redirect()
+                ->route('home')
+                ->with('success', '¡Renovación de beca registrada exitosamente!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Error al renovar la beca: ' . $e->getMessage());
+        }
+    }
+
     public function show(int $id)
     {
         $solicitud = SolicitudBeca::with([
@@ -161,6 +204,7 @@ class SolicitudBecaController extends Controller
             'lapso',
             'verificador.persona',
             'respuestas.pregunta.opciones',
+            'documento',
         ])->findOrFail($id);
 
         return view('admin.becas.solicitudes.show', compact('solicitud'));

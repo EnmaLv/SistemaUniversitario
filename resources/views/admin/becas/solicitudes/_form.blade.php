@@ -19,8 +19,8 @@
             </h1>
             <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                 {{ $esEstudiante
-                    ? 'Completa tu expediente para registrar tu solicitud.'
-                    : 'Completa el expediente del estudiante para registrar su postulación.' }}
+    ? 'Completa tu expediente para registrar tu solicitud.'
+    : 'Completa el expediente del estudiante para registrar su postulación.' }}
             </p>
         </div>
 
@@ -28,23 +28,27 @@
             class="rounded-2xl border shadow-sm overflow-hidden mb-6">
 
             {{-- INDICADOR DE PASOS --}}
-            <div class="border-b px-8 py-5" style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+            <div class="border-b px-8 py-5"
+                style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
                 <div class="flex items-center justify-between max-w-xl mx-auto">
-                    <button type="button" onclick="goToStep(1)" class="flex flex-col items-center text-center gap-2 focus:outline-none">
+                    <button type="button" onclick="goToStep(1)"
+                        class="flex flex-col items-center text-center gap-2 focus:outline-none">
                         <span id="step-circle-1"
                             class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all bg-red-700 border-red-700 text-white shadow-md">1</span>
                         <span id="step-text-1"
                             class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Académico</span>
                     </button>
                     <div class="flex-1 h-0.5 mx-4 mb-6" style="background-color: var(--border-color);"></div>
-                    <button type="button" onclick="goToStep(2)" class="flex flex-col items-center text-center gap-2 focus:outline-none">
+                    <button type="button" onclick="goToStep(2)"
+                        class="flex flex-col items-center text-center gap-2 focus:outline-none">
                         <span id="step-circle-2"
                             class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all bg-white border-slate-200 text-slate-400 dark:bg-gray-800 dark:border-gray-700">2</span>
                         <span id="step-text-2"
                             class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Formulario</span>
                     </button>
                     <div class="flex-1 h-0.5 mx-4 mb-6" style="background-color: var(--border-color);"></div>
-                    <button type="button" onclick="goToStep(3)" class="flex flex-col items-center text-center gap-2 focus:outline-none">
+                    <button type="button" onclick="goToStep(3)"
+                        class="flex flex-col items-center text-center gap-2 focus:outline-none">
                         <span id="step-circle-3"
                             class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all bg-white border-slate-200 text-slate-400 dark:bg-gray-800 dark:border-gray-700">3</span>
                         <span id="step-text-3"
@@ -53,7 +57,8 @@
                 </div>
             </div>
 
-            <form id="solicitudForm" action="{{ $action }}" method="POST" class="p-6 sm:p-8">
+            <form id="solicitudForm" action="{{ $action }}" method="POST" enctype="multipart/form-data"
+                class="p-6 sm:p-8">
                 @csrf
 
                 {{-- PASO 1: DATOS BASE --}}
@@ -72,7 +77,8 @@
                                 </label>
                                 <div class="rounded-xl border p-3 flex items-center gap-3"
                                     style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02);">
-                                    <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex items-center justify-center font-bold text-lg">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex items-center justify-center font-bold text-lg">
                                         {{ substr(auth()->user()->persona?->nombre_persona ?? 'E', 0, 1) }}
                                     </div>
                                     <div>
@@ -94,7 +100,8 @@
                                 </label>
                                 <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                                     style="border-color: var(--border-color);">
-                                    <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    <span
+                                        class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
                                         style="border-color: var(--border-color);">
                                         <i class="fas fa-user text-sm"></i>
                                     </span>
@@ -125,7 +132,8 @@
                             </label>
                             <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                                 style="border-color: var(--border-color);">
-                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                <span
+                                    class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
                                     style="border-color: var(--border-color);">
                                     <i class="fas fa-bullhorn text-sm"></i>
                                 </span>
@@ -136,10 +144,8 @@
                                         Seleccione la jornada...
                                     </option>
                                     @foreach ($jornadas as $j)
-                                        <option value="{{ $j->id }}"
-                                            data-beneficio-id="{{ $j->beneficio_id }}"
-                                            data-lapso-id="{{ $j->lapsos_id }}"
-                                            @selected(old('jornada_id') == $j->id)>
+                                        <option value="{{ $j->id }}" data-beneficio-id="{{ $j->beneficio_id }}"
+                                            data-lapso-id="{{ $j->lapsos_id }}" @selected(old('jornada_id') == $j->id)>
                                             {{ $j->nombre_jornada }}
                                         </option>
                                     @endforeach
@@ -160,7 +166,8 @@
                                 placeholder="Se autocompleta al elegir jornada"
                                 style="background-color: rgba(0,0,0,0.05); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full text-sm px-4 py-2.5 rounded-xl border outline-none cursor-not-allowed">
-                            <input type="hidden" name="id_beneficio" id="id_beneficio" value="{{ old('id_beneficio') }}">
+                            <input type="hidden" name="id_beneficio" id="id_beneficio"
+                                value="{{ old('id_beneficio') }}">
                             @error('id_beneficio')
                                 <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                             @enderror
@@ -200,6 +207,49 @@
                         </div>
                     </div>
 
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            Archivo de Notas (PDF) *
+                        </label>
+
+                        <div class="flex flex-col md:flex-row gap-6 items-start">
+                            <div class="w-full md:w-5/12 lg:w-2/5">
+                                <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-red-500 transition-all"
+                                    style="border-color: var(--border-color);">
+                                    <span
+                                        class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                        style="border-color: var(--border-color);">
+                                        <i class="fas fa-file-pdf text-sm text-red-500"></i>
+                                    </span>
+                                    <input type="file" name="archivo_notas" accept="application/pdf" required
+                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                        class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 dark:file:bg-red-900/30 dark:file:text-red-400 dark:hover:file:bg-red-900/50 transition-all cursor-pointer">
+                                </div>
+                                @error('archivo_notas')
+                                    <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                                @enderror
+                                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    {{ $esEstudiante ? 'Sube tu archivo PDF de notas para revisión.' : 'Sube el archivo PDF de notas del estudiante.' }}
+                                </p>
+                            </div>
+
+                            <div class="w-full md:w-7/12 lg:w-3/5">
+                                <div
+                                    class="rounded-xl border p-4 bg-sky-50/50 border-sky-100 dark:bg-sky-950/20 dark:border-sky-900/50">
+                                    <h5
+                                        class="text-[11px] font-black text-sky-800 dark:text-sky-300 uppercase tracking-wider mb-2">
+                                        <i class="fas fa-info-circle mr-1"></i> Origen del Documento
+                                    </h5>
+                                    <p class="text-[11px] text-sky-700 dark:text-sky-400 leading-relaxed font-medium">
+                                        Este documento oficial lo puedes descargar directamente desde el sistema <span
+                                            class="font-bold">SOGAC</span> de la universidad. Asegúrate de adjuntar el
+                                        archivo original sin alteraciones.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex justify-end mt-8">
                         <button type="button" onclick="goToStep(2)"
                             class="px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
@@ -215,8 +265,7 @@
                         <i class="fas fa-clipboard-list text-red-700"></i> Formulario de postulación
                     </h4>
 
-                    <div id="avisoSinJornada"
-                        class="rounded-2xl border p-8 text-center"
+                    <div id="avisoSinJornada" class="rounded-2xl border p-8 text-center"
                         style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
                         <i class="fas fa-arrow-left text-2xl text-gray-300 dark:text-gray-700 mb-2 block"></i>
                         <p class="text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -310,20 +359,20 @@
 
         for (let i = 1; i <= 3; i++) {
             const circle = document.getElementById(`step-circle-${i}`);
-            const text   = document.getElementById(`step-text-${i}`);
+            const text = document.getElementById(`step-text-${i}`);
 
             if (i < step) {
                 circle.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all bg-emerald-50 border-emerald-500 text-emerald-500 dark:bg-emerald-950/20";
                 circle.innerHTML = '<i class="fas fa-check text-xs"></i>';
-                text.className   = "text-xs font-bold text-emerald-500 uppercase tracking-wider";
+                text.className = "text-xs font-bold text-emerald-500 uppercase tracking-wider";
             } else if (i === step) {
                 circle.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all bg-red-700 border-red-700 text-white shadow-md";
                 circle.innerHTML = i;
-                text.className   = "text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider";
+                text.className = "text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider";
             } else {
                 circle.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all bg-white border-slate-200 text-slate-400 dark:bg-gray-800 dark:border-gray-700";
                 circle.innerHTML = i;
-                text.className   = "text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider";
+                text.className = "text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider";
             }
         }
 
@@ -334,13 +383,13 @@
 
     function actualizarJornada() {
         const select = document.getElementById('jornada_id');
-        const opt    = select.options[select.selectedIndex];
+        const opt = select.options[select.selectedIndex];
 
         const beneficioId = opt.getAttribute('data-beneficio-id') || '';
-        const lapsoId     = opt.getAttribute('data-lapso-id') || '';
+        const lapsoId = opt.getAttribute('data-lapso-id') || '';
 
         document.getElementById('id_beneficio').value = beneficioId;
-        document.getElementById('id_lapso').value     = lapsoId;
+        document.getElementById('id_lapso').value = lapsoId;
 
         const data = window.FORMULARIOS_POR_JORNADA[select.value];
         if (data) {
@@ -353,7 +402,7 @@
 
     function renderPreguntas(jornadaId) {
         const container = document.getElementById('preguntasContainer');
-        const aviso     = document.getElementById('avisoSinJornada');
+        const aviso = document.getElementById('avisoSinJornada');
 
         container.innerHTML = '';
 
@@ -395,7 +444,7 @@
             : `<span class="text-gray-400 text-[10px]">(opcional)</span>`;
 
         let inputHtml = '';
-        const nameValor     = `respuestas[${idx}][valor]`;
+        const nameValor = `respuestas[${idx}][valor]`;
         const nameValorJson = `respuestas[${idx}][valor_json][]`;
         const hiddenPregunta = `<input type="hidden" name="respuestas[${idx}][id_pregunta]" value="${p.id}">`;
 
@@ -415,25 +464,23 @@
                             <option value="">Seleccione...</option>${opts}
                         </select>`;
         } else if (tipo === 'radio') {
-            inputHtml = `<div class="flex flex-wrap gap-3">${
-                (p.opciones || []).map(o => `
+            inputHtml = `<div class="flex flex-wrap gap-3">${(p.opciones || []).map(o => `
                     <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer"
                         style="border-color: var(--border-color);">
                         <input type="radio" name="${nameValor}" value="${o.valor}" ${p.obligatoria ? 'required' : ''}
                             class="text-red-700 focus:ring-red-500">
                         <span class="text-sm font-medium" style="color: var(--text-main);">${o.etiqueta}</span>
                     </label>`).join('')
-            }</div>`;
+                }</div>`;
         } else if (tipo === 'checkbox') {
-            inputHtml = `<div class="flex flex-wrap gap-3">${
-                (p.opciones || []).map(o => `
+            inputHtml = `<div class="flex flex-wrap gap-3">${(p.opciones || []).map(o => `
                     <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer"
                         style="border-color: var(--border-color);">
                         <input type="checkbox" name="${nameValorJson}" value="${o.valor}"
                             class="rounded text-red-700 focus:ring-red-500">
                         <span class="text-sm font-medium" style="color: var(--text-main);">${o.etiqueta}</span>
                     </label>`).join('')
-            }</div>`;
+                }</div>`;
         } else if (tipo === 'boolean') {
             inputHtml = `<div class="flex items-center gap-4">
                 <label class="inline-flex items-center gap-2 cursor-pointer">
@@ -449,16 +496,16 @@
             </div>`;
         } else {
             const inputType = tipo === 'email' ? 'email'
-                            : tipo === 'date' ? 'date'
-                            : tipo === 'number' ? 'number'
-                            : tipo === 'decimal' ? 'number' : 'text';
+                : tipo === 'date' ? 'date'
+                    : tipo === 'number' ? 'number'
+                        : tipo === 'decimal' ? 'number' : 'text';
 
             const step = tipo === 'decimal' ? '0.01' : '1';
-            const min  = p.valor_min  !== null ? `min="${p.valor_min}"` : '';
-            const max  = p.valor_max  !== null ? `max="${p.valor_max}"` : '';
+            const min = p.valor_min !== null ? `min="${p.valor_min}"` : '';
+            const max = p.valor_max !== null ? `max="${p.valor_max}"` : '';
             const minL = p.min_length ? `minlength="${p.min_length}"` : '';
             const maxL = p.max_length ? `maxlength="${p.max_length}"` : '';
-            const pat  = p.regex ? `pattern="${p.regex.replace(/^\/|\/$/g, '')}"` : '';
+            const pat = p.regex ? `pattern="${p.regex.replace(/^\/|\/$/g, '')}"` : '';
 
             inputHtml = `<input type="${inputType}" name="${nameValor}" ${p.obligatoria ? 'required' : ''}
                             placeholder="${p.placeholder ?? ''}"
@@ -484,12 +531,12 @@
 
     function construirResumen() {
         const selectJ = document.getElementById('jornada_id');
-        const opt     = selectJ.options[selectJ.selectedIndex];
+        const opt = selectJ.options[selectJ.selectedIndex];
 
-        document.getElementById('resumen-jornada').textContent   = opt?.text ?? '—';
+        document.getElementById('resumen-jornada').textContent = opt?.text ?? '—';
         document.getElementById('resumen-beneficio').textContent = document.getElementById('beneficio_nombre_disabled').value || '—';
-        document.getElementById('resumen-lapso').textContent     = document.getElementById('lapso_codigo_disabled').value || '—';
-        document.getElementById('resumen-tipo').textContent      = document.querySelector('select[name="tipo_solicitud"]').selectedOptions[0].text;
+        document.getElementById('resumen-lapso').textContent = document.getElementById('lapso_codigo_disabled').value || '—';
+        document.getElementById('resumen-tipo').textContent = document.querySelector('select[name="tipo_solicitud"]').selectedOptions[0].text;
 
         const list = document.getElementById('resumenRespuestasList');
         list.innerHTML = '';

@@ -126,7 +126,7 @@ return new class extends Migration
 
             $becarioData = [
                 'descripcion' => 'Rol por defecto becario',
-                'menu_permissions' => json_encode(['becas', 'solicitar_beca']),
+                'menu_permissions' => json_encode(['solicitar']),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

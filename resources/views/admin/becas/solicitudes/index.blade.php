@@ -113,6 +113,35 @@
                 </form>
             </div>
 
+            @if(isset($pendientesRenovacion) && $pendientesRenovacion->isNotEmpty())
+                <div class="mb-4 space-y-3">
+                    @foreach($pendientesRenovacion as $item)
+                        <div class="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                            <div>
+                                <h3 class="text-amber-800 dark:text-amber-500 font-bold text-sm mb-1 flex items-center gap-2">
+                                    <i class="fas fa-exclamation-triangle"></i> Faltan por Renovar: {{ $item['jornada']->beneficio->nombre_beneficio ?? 'Beca' }}
+                                </h3>
+                                <p class="text-amber-700 dark:text-amber-400/80 text-xs font-medium">
+                                    Hay {{ $item['personas']->count() }} estudiante(s) del lapso anterior que no han renovado su beca para la jornada "{{ $item['jornada']->nombre_jornada }}".
+                                </p>
+                            </div>
+                            <div class="shrink-0 flex -space-x-2 overflow-hidden" title="{{ $item['personas']->pluck('nombre_persona')->implode(', ') }}">
+                                @foreach($item['personas']->take(5) as $p)
+                                    <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 bg-amber-200 dark:bg-amber-800 flex items-center justify-center text-[10px] font-bold text-amber-800 dark:text-amber-200">
+                                        {{ substr($p->nombre_persona, 0, 1) }}{{ substr($p->apellido_persona, 0, 1) }}
+                                    </div>
+                                @endforeach
+                                @if($item['personas']->count() > 5)
+                                    <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-600 dark:text-gray-300">
+                                        +{{ $item['personas']->count() - 5 }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm overflow-hidden">
 

@@ -14,6 +14,9 @@ Route::prefix('/becas')->group(function () {
         Route::put('/{beneficio}/toggle', [BecaBeneficioController::class, 'toggle'])->name('admin.becas.beneficios.toggle');
     });
 
+    // Lapsos
+    Route::post('/lapsos/avanzar', [\App\Http\Controllers\beca\LapsoController::class, 'avanzar'])->name('admin.becas.lapsos.avanzar');
+
     // Rutas de jornada
     Route::prefix('/jornada')->group(function () {
         Route::get('/', [\App\Http\Controllers\beca\JornadaBecaController::class, 'index'])->name('admin.becas.jornada.index');
@@ -33,6 +36,7 @@ Route::prefix('/becas')->group(function () {
         Route::get('/', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'index'])->name('admin.becas.solicitudes.index');
         Route::get('/create', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'create'])->name('admin.becas.solicitudes.create');
         Route::post('/store', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'store'])->name('admin.becas.solicitudes.store');
+        Route::post('/renovar', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'renovar'])->name('admin.becas.solicitudes.renovar');
         Route::get('/{id}', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'show'])->name('admin.becas.solicitudes.show');
         Route::put('/{id}/verificar', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'verificar'])->name('admin.becas.solicitudes.verificar');
     });
