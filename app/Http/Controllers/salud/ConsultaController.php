@@ -11,6 +11,7 @@ use App\Models\salud\Dispensacion;
 use App\Models\salud\Enfermedad;
 use App\Models\salud\HorarioConsultorio;
 use App\Models\Lote;
+use App\Services\Salud\SaludHomeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,8 +31,7 @@ class ConsultaController extends Controller
             $request->input('buscar'),
             $request->input('consultorio_id'),
             $request->input('medico_id'),
-            $request->input('fecha_desde'),
-            $request->input('fecha_hasta'),
+            $request->input('rango_fechas'),
             $request->input('estado')
         );
 
@@ -332,13 +332,12 @@ class ConsultaController extends Controller
         ]);
 
         $creados = 0;
-        $sede = 1; // Sede Acarigua por defecto
 
         // Obtenemos los items
         $itemsRequest = $request->input('items', []);
 
         try {
-            DB::transaction(function () use ($itemsRequest, $consulta, $receta, &$creados, $sede) {
+            DB::transaction(function () use ($itemsRequest, $consulta, $receta, &$creados) {
                 $detallesActuales = DetalleRecetasMedica::where('receta_id', $receta->id)->get();
 
                 foreach ($detallesActuales as $detalle) {
@@ -360,7 +359,6 @@ class ConsultaController extends Controller
                             'lote_id'                  => $itemData['lote_id'] ?? null,
                             'cantidad'                 => $cantidadAEntregar,
                             'unidad_id'                => $detalle->unidad_id,
-                            'sede_id'                  => $sede,
                             'usuario_id'               => auth()->id(),
                             'fecha'                    => now()->toDateString(),
                             'observaciones'            => $itemData['observaciones'] ?? null,
@@ -486,5 +484,122 @@ class ConsultaController extends Controller
         $nombreArchivo = 'recipe-' . $consulta->paciente->cedula_persona . '-' . $consulta->fecha->format('Y-m-d') . '.pdf';
 
         return $pdf->stream($nombreArchivo);
+    }
+
+    public function estadisticas(Request $request, SaludHomeService $service)
+    {
+        $reportType = $request->input('report_type', 'completo');
+        $periodo    = $request->input('periodo', 'mensual');
+        $data = $service->getDashboardData($request->all());
+        $format = $request->input('format', 'json');
+
+        if ($format === 'json') {
+            return response()->json([
+                'consultas'   => $data['consultas'],
+                'resumen'     => $data['resumen'],
+                'fechaInicio' => $data['fechaInicio'],
+                'fechaFin'    => $data['fechaFin'],
+            ]);
+        }
+
+        if ($format === 'pdf') {
+            ini_set('memory_limit', '512M');
+
+            // ── Resolver etiquetas legibles de los filtros aplicados ──
+            $consultorioId = $request->input('consultorio_id');
+            $medicoId      = $request->input('medico_id');
+
+            $consultorioNombre = $consultorioId
+                ? Consultorio::find($consultorioId)?->nombre
+                : null;
+
+            $medicoNombre = null;
+            if ($medicoId) {
+                $med = \App\Models\Persona::find($medicoId);
+                if ($med) {
+                    $medicoNombre = trim(($med->nombre_persona ?? '') . ' ' . ($med->apellido_persona ?? ''));
+                }
+            }
+
+            $enfermedadIds = (array) $request->input('enfermedad_ids', []);
+            $enfermedadIds = array_filter(array_map('intval', $enfermedadIds));
+            $enfermedadesNombres = !empty($enfermedadIds)
+                ? Enfermedad::whereIn('id', $enfermedadIds)->pluck('nombre')->toArray()
+                : [];
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.salud.pdf', [
+                // Datos base
+                'consultas'    => $data['consultas'],
+                'resumen'      => $data['resumen'],
+                'fechaInicio'  => $data['fechaInicio'],
+                'fechaFin'     => $data['fechaFin'],
+                'periodo'      => $periodo,
+                'reportType'   => $reportType,
+
+                // Filtros aplicados (con etiquetas legibles)
+                'estado_receta'        => $request->input('estado_receta'),
+                'consultorio_nombre'   => $consultorioNombre,
+                'medico_nombre'        => $medicoNombre,
+                'enfermedades_nombres' => $enfermedadesNombres,
+                'perfil_academico'     => $request->input('perfil_academico'),
+                'pnf'                  => $request->input('pnf'),
+            ]);
+
+            $pdf->setPaper('A4', 'portrait');
+            $pdf->setOptions([
+                'isRemoteEnabled'      => true,
+                'isHtml5ParserEnabled' => true,
+                'defaultFont'          => 'DejaVu Sans',
+            ]);
+
+            $nombreArchivo = 'reporte-salud-' . $reportType . '-' . now()->format('Ymd_His') . '.pdf';
+            return $pdf->stream($nombreArchivo);
+        }
+
+        if ($format === 'word') {
+            $consultorioId = $request->input('consultorio_id');
+            $medicoId      = $request->input('medico_id');
+
+            $consultorioNombre = $consultorioId
+                ? Consultorio::find($consultorioId)?->nombre
+                : null;
+
+            $medicoNombre = null;
+            if ($medicoId) {
+                $med = \App\Models\Persona::find($medicoId);
+                if ($med) {
+                    $medicoNombre = trim(($med->nombre_persona ?? '') . ' ' . ($med->apellido_persona ?? ''));
+                }
+            }
+
+            $enfermedadIds = (array) $request->input('enfermedad_ids', []);
+            $enfermedadIds = array_filter(array_map('intval', $enfermedadIds));
+            $enfermedadesNombres = !empty($enfermedadIds)
+                ? Enfermedad::whereIn('id', $enfermedadIds)->pluck('nombre')->toArray()
+                : [];
+
+            $tempFile = \App\Exports\Salud\SaludEstadisticasWordExport::generate(
+                $data['consultas'],
+                $data['resumen'],
+                $data['fechaInicio'],
+                $data['fechaFin'],
+                $periodo,
+                $reportType,
+                [
+                    'estado_receta'        => $request->input('estado_receta'),
+                    'consultorio_nombre'   => $consultorioNombre,
+                    'medico_nombre'        => $medicoNombre,
+                    'enfermedades_nombres' => $enfermedadesNombres,
+                    'perfil_academico'     => $request->input('perfil_academico'),
+                    'pnf'                  => $request->input('pnf'),
+                ]
+            );
+
+            return response()
+                ->download($tempFile, 'Estadisticas_Salud_' . now()->format('Ymd_His') . '.docx')
+                ->deleteFileAfterSend(true);
+        }
+
+        abort(400, 'Formato no soportado.');
     }
 }

@@ -327,13 +327,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/salud/maestros/consultorios/{consultorio}', [ConsultorioController::class, 'destroy'])->name('admin.salud.maestros.consultorios.destroy');
         Route::put('/salud/maestros/consultorios/{consultorio}/activar', [ConsultorioController::class, 'activar'])->name('admin.salud.maestros.consultorios.activar');
 
+
         //Horarios
         Route::get('/salud/movimientos/horarios', [HorarioConsultorioController::class, 'index'])->name('admin.salud.movimientos.horarios.index');
         Route::get('/salud/movimientos/horarios/create', [HorarioConsultorioController::class, 'create'])->name('admin.salud.movimientos.horarios.create');
         Route::post('/salud/movimientos/horarios', [HorarioConsultorioController::class, 'store'])->name('admin.salud.movimientos.horarios.store');
         Route::delete('/salud/movimientos/horarios/{horario}', [HorarioConsultorioController::class, 'destroy'])->name('admin.salud.movimientos.horarios.destroy');
         Route::get('/salud/movimientos/horarios/pdf', [HorarioConsultorioController::class, 'exportarPdf'])->name('admin.salud.movimientos.horarios.pdf');
-
 
         // Consultas
         Route::prefix('/salud/movimientos/consultas')
@@ -342,16 +342,16 @@ Route::middleware(['auth'])->group(function () {
             ->group(function () {
                 Route::get('/', [ConsultaController::class, 'index'])->name('index');
 
+                Route::get('estadisticas', [ConsultaController::class, 'estadisticas'])->name('estadisticas');
+                Route::get('/buscar-enfermedades', [ConsultaController::class, 'buscarEnfermedades'])->name('buscar-enfermedades');
+                Route::get('/buscar-personas', [ConsultaController::class, 'buscarPersonas'])->name('buscar-personas');
+
                 // Paso 1: Crear / Editar Consulta
                 Route::get('/crear/{consulta?}', [ConsultaController::class, 'create'])->name('create');
                 Route::post('/', [ConsultaController::class, 'store'])->name('store');
                 Route::put('/{consulta}', [ConsultaController::class, 'update'])->name('update');
 
-                // Búsquedas AJAX
-                Route::get('/buscar-enfermedades', [ConsultaController::class, 'buscarEnfermedades'])->name('buscar-enfermedades');
-                Route::get('/buscar-personas', [ConsultaController::class, 'buscarPersonas'])->name('buscar-personas');
-
-                // Paso 2: Recetación (Cargar Vista y Guardar/Actualizar)
+                // Paso 2: Recetación
                 Route::get('/{consulta}/recetacion', [ConsultaController::class, 'recetacion'])->name('recetacion');
                 Route::post('/{consulta}/receta', [ConsultaController::class, 'storeReceta'])->name('receta.store');
 
@@ -359,11 +359,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{consulta}/dispensacion', [ConsultaController::class, 'dispensacion'])->name('dispensacion');
                 Route::post('/{consulta}/dispensacion', [ConsultaController::class, 'storeDispensacion'])->name('dispensacion.store');
 
+                // Generar Recipe
+                Route::get('/{consulta}/recipe', [ConsultaController::class, 'generarRecipePdf'])->name('recipe_pdf');
+
                 // Ver detalle
                 Route::get('/{consulta}', [ConsultaController::class, 'show'])->name('show');
-
-                //Generar Recipe
-                Route::get('/{consulta}/recipe', [ConsultaController::class, 'generarRecipePdf'])->name('recipe_pdf');
             });
 
         // TRANSPORTE
@@ -454,4 +454,3 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'fetchMessages'])->name('chat.fetch');
     Route::post('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'sendMessage'])->name('chat.store');
 });
-

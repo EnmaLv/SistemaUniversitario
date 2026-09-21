@@ -27,19 +27,26 @@ use \App\Models\BusMantenimiento;
 use \App\Models\BusViaje;
 use \App\Models\BusCargaCombustible;
 use App\Services\Salud\PsicologiaHomeService;
+use App\Services\Salud\SaludHomeService;
 
 class HomeController extends Controller
 {
     protected $psicologiaService;
-    public function __construct(PsicologiaHomeService $psicologiaService)
-    {
+    protected $saludService;
+
+    public function __construct(
+        PsicologiaHomeService $psicologiaService,
+        SaludHomeService $saludService
+    ) {
         $this->middleware('auth');
         $this->psicologiaService = $psicologiaService;
+        $this->saludService      = $saludService;
     }
 
     public function index()
     {
         $psicologiaData = $this->psicologiaService->getPacienteData();
+        $saludData = $this->saludService->getDashboardData();
         $hoy = Carbon::now();
         $limite = Carbon::now()->addDays(7);
         $sedeId = Auth::user()->persona?->sede_id ?? 1;
@@ -143,12 +150,12 @@ class HomeController extends Controller
             'bus_vehiculos'     => 'admin/transporte/maestros/bus_vehiculos',
             'bus_rutas'         => 'admin/transporte/maestros/bus_rutas',
             'bus_paradas'       => 'admin/transporte/maestros/bus_paradas',
-            'bus_mantenimientos'=> 'admin/transporte/maestros/bus_mantenimientos',
+            'bus_mantenimientos' => 'admin/transporte/maestros/bus_mantenimientos',
             'bus_viajes'        => 'admin/transporte/maestros/bus_viajes',
             'bus_carga_combustibles' => 'admin/transporte/maestros/bus_carga_combustibles',
             // ── Becas ──────────────────────────────────────────
             'jornada_becas'         => 'admin/becas/jornada',
-            'beneficios'  
+            'beneficios'
         ];
 
         $visibleModules = [];
@@ -162,6 +169,7 @@ class HomeController extends Controller
             'variacion_dolar' => $ultimaTasa?->variacion,
             'tasa_actual'     => $ultimaTasa?->tasa,
             'visibleModules'  => $visibleModules,
+            'saludData'       => $saludData,
         ], $psicologiaData), compact(
             'total_sedes',
             'total_categorias',
