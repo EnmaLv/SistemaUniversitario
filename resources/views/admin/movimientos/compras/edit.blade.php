@@ -336,6 +336,23 @@
                             method="POST"
                             class="rd-prevent-double-submit mt-6">
                             @csrf
+                            <div class="mx-5 sm:mx-6 mb-5 p-4 rounded-xl border flex items-start gap-3"
+                                style="
+                                    background-color: rgba(59,130,246,0.06);
+                                    border-color: rgba(59,130,246,0.25);
+                                ">
+                                <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-info-circle text-xs"></i>
+                                </div>
+                                <div class="text-xs" style="color: var(--text-main);">
+                                    <p class="font-bold mb-1">¿Cómo se distribuye?</p>
+                                    <p class="text-gray-500 dark:text-gray-400 leading-relaxed">
+                                        Al finalizar, cada producto se repartirá en <strong>envases completos</strong> entre las sedes activas.
+                                        El sobrante quedará en la sede central (Acarigua). Si una sede necesita menos de un envase
+                                        completo, deberá solicitar una <strong>transferencia interna</strong>.
+                                    </p>
+                                </div>
+                            </div>
                             <div
                                 class="pt-5 border-t flex flex-col sm:flex-row items-center justify-between gap-4"
                                 style="border-color: var(--border-color);">

@@ -496,8 +496,9 @@ Table productos {
   stock_minimo   decimal(14,2) [not null, default: 0]
   stock_maximo   decimal(14,2) [not null, default: 0]
   presentacion_id        bigint  [ref: > envase_primario.id]
-  requiere_receta_medica tinyint [default: 0,
-                          note: '1 = sistema bloquea dispensación sin receta vinculada']
+  unidades_por_presentacion decimal(14,3) [not null, default: 1]
+  presentacion_dispensacion varchar(50)
+  requiere_receta_medica tinyint [default: 0]
   activo     tinyint [not null, default: 1]
   created_at timestamp
   updated_at timestamp
@@ -770,6 +771,9 @@ Table detalle_recetas_medicas {
   producto_id   bigint        [not null, ref: > productos.id]
   unidad_id     bigint        [not null, ref: > unidades.id]
   cantidad      decimal(14,2) [not null]
+  cantidad_prescrita    decimal(10,2)
+  unidad_prescrita      varchar(30)
+  equivalencia_ml      decimal(10,2)
   frecuencia    varchar(100)
   fecha_inicio  date
   fecha_fin     date

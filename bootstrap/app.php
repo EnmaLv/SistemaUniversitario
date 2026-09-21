@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Configuration\Exceptions;
 use App\Http\Middleware\CheckTasaActualizada;
+use App\Http\Middleware\IgnorarTasaHoy;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,14 +15,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->append(\App\Http\Middleware\IgnorarTasaHoy::class);
+
+        $middleware->append(IgnorarTasaHoy::class);
+
+        $middleware->web(append: [
+            CheckTasaActualizada::class,
+        ]);
+
         $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'tasa.actualizada' => CheckTasaActualizada::class,
         ]);
     })
-
-
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })

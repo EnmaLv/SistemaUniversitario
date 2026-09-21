@@ -32,10 +32,12 @@ class ProductoRequest extends FormRequest
             'precio_compra' => 'nullable|numeric',
             'stock_minimo' => 'required|integer',
             'stock_maximo' => 'required|integer',
-            'peso_contenido' => 'required|numeric|min:1',
+            'peso_contenido'             => ['nullable', 'required_without:presentacion_id', 'numeric', 'min:0'],
+            'unidades_por_presentacion'  => ['nullable', 'required_with:presentacion_id', 'numeric', 'min:0.001'],
             'unidad_id' => 'required|exists:unidades,id',
             'estado' => 'nullable|boolean',
-            'costo_usd' => 'sometimes|required|numeric|min:0'
+            'costo_usd' => 'sometimes|required|numeric|min:0',
+            'presentacion_dispensacion' => ['nullable', 'string', 'max:50'],
         ];
     }
 

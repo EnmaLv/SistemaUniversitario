@@ -23,16 +23,17 @@
             </div>
 
             {{-- Formulario --}}
-            <x-producto-formulario 
-                titulo="Editar medicamento: {{ $medicamento->nombre }}" 
-                :action="route('admin.salud.maestros.medicamentos.update', $medicamento->id)" 
-                metodo="PUT"
-                :rutaVolver="route('admin.salud.maestros.medicamentos.index')" 
-                :categorias="$categorias" 
-                :unidades="$unidades" 
-                :envases="$envases" 
-                :es-medicamento="true"
-                :modelo="$medicamento" />
+            @include('admin.maestros.productos._form', [
+                'titulo'         => 'Editar medicamento: ' . $medicamento->nombre,
+                'action'         => route('admin.salud.maestros.medicamentos.update', $medicamento->id),
+                'metodo'         => 'PUT',
+                'rutaVolver'     => route('admin.salud.maestros.medicamentos.index'),
+                'categorias'     => $categorias,
+                'unidades'       => $unidades,
+                'envases'        => $envases,
+                'esMedicamento'  => true,
+                'modelo'         => $medicamento,
+            ])
 
         </div>
     </div>

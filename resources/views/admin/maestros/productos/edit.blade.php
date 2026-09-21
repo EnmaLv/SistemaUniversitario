@@ -4,15 +4,13 @@
 
             @include('components.alert')
 
-            {{-- Encabezado de la página --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
-                        Editar Producto #{{ $producto->id }}
+                        Editar Producto
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
-                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        Editando: <span class="font-bold">{{ $producto->nombre }}</span>
                     </p>
                 </div>
                 <a href="{{ route('admin.maestros.productos.index') }}"
@@ -22,15 +20,17 @@
                 </a>
             </div>
 
-            {{-- Formulario --}}
-            <x-producto-formulario 
-                titulo="Editar producto: {{ $producto->nombre }}" 
-                :action="route('admin.maestros.productos.update', $producto->id)" 
-                metodo="PUT"
-                :rutaVolver="route('admin.maestros.productos.index')" 
-                :categorias="$categorias" 
-                :unidades="$unidades" 
-                :modelo="$producto" />
+            @include('admin.maestros.productos._form', [
+                'titulo'          => 'Actualizar Producto',
+                'action'          => route('admin.maestros.productos.update', $producto->id),
+                'metodo'          => 'PUT',
+                'rutaVolver'      => route('admin.maestros.productos.index'),
+                'categorias'      => $categorias,
+                'unidades'        => $unidades,
+                'envases'         => $envases ?? [],
+                'esMedicamento'   => $esMedicamento ?? false,
+                'modelo'          => $producto,
+            ])
 
         </div>
     </div>
