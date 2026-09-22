@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\salud;
 
 use App\Http\Controllers\Controller;
+use App\Models\InventarioSedeLote;
 use App\Models\Persona;
 use App\Models\salud\Consulta;
 use App\Models\salud\Consultorio;
@@ -11,6 +12,8 @@ use App\Models\salud\Dispensacion;
 use App\Models\salud\Enfermedad;
 use App\Models\salud\HorarioConsultorio;
 use App\Models\Lote;
+use App\Models\MovimientoInventario;
+use App\Models\Unidad;
 use App\Services\Salud\SaludHomeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -301,15 +304,21 @@ class ConsultaController extends Controller
             'receta.detalles.dispensaciones.usuario.persona',
         ]);
 
+        $sedeId = auth()->user()->persona?->sede_id ?? 1;
+
         $lotesPorProducto = [];
 
         foreach ($consulta->receta->detalles as $detalle) {
             if ($detalle->cantidad_pendiente > 0) {
-                $lotesPorProducto[$detalle->producto_id] = Lote::disponiblesParaProducto($detalle->producto_id);
+                $lotesPorProducto[$detalle->producto_id] =
+                    Lote::disponiblesParaProducto($detalle->producto_id, $sedeId);
             }
         }
 
-        return view('admin.salud.movimientos.consultas.dispensacion', compact('consulta', 'lotesPorProducto'));
+        return view(
+            'admin.salud.movimientos.consultas.dispensacion',
+            compact('consulta', 'lotesPorProducto', 'sedeId')
+        );
     }
 
     /**
@@ -331,60 +340,131 @@ class ConsultaController extends Controller
             'items.*.observaciones' => ['nullable', 'string'],
         ]);
 
+        $sedeId = auth()->user()->persona?->sede_id ?? 1;
         $creados = 0;
 
-        // Obtenemos los items
-        $itemsRequest = $request->input('items', []);
-
         try {
-            DB::transaction(function () use ($itemsRequest, $consulta, $receta, &$creados) {
-                $detallesActuales = DetalleRecetasMedica::where('receta_id', $receta->id)->get();
+            DB::transaction(function () use ($request, $consulta, $receta, $sedeId, &$creados) {
 
-                foreach ($detallesActuales as $detalle) {
-                    // Accedemos al array
-                    $itemData = $itemsRequest[$detalle->id] ?? null;
+                $detalles = DetalleRecetasMedica::where('receta_id', $receta->id)
+                    ->lockForUpdate()
+                    ->get();
 
-                    $debeDispensar = $itemData ? filter_var($itemData['dispensar'] ?? false, FILTER_VALIDATE_BOOLEAN) : false;
-                    $cantidadInput = ($itemData && isset($itemData['cantidad'])) ? (float) $itemData['cantidad'] : 0;
+                foreach ($detalles as $detalle) {
 
-                    if ($debeDispensar && $cantidadInput > 0) {
-                        $pendiente = $detalle->cantidad_pendiente;
-                        $cantidadAEntregar = min($cantidadInput, $pendiente);
+                    $itemData       = $request->input("items.{$detalle->id}", []);
+                    $debeDispensar  = filter_var($itemData['dispensar'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                    $cantidadInput  = (float) ($itemData['cantidad'] ?? 0);
+                    $loteId         = (int) ($itemData['lote_id'] ?? 0);
 
-                        Dispensacion::create([
-                            'receta_medica_id'         => $receta->id,
-                            'detalle_receta_medica_id' => $detalle->id,
-                            'producto_id'              => $detalle->producto_id,
-                            'id_persona'               => $consulta->id_persona,
-                            'lote_id'                  => $itemData['lote_id'] ?? null,
-                            'cantidad'                 => $cantidadAEntregar,
-                            'unidad_id'                => $detalle->unidad_id,
-                            'usuario_id'               => auth()->id(),
-                            'fecha'                    => now()->toDateString(),
-                            'observaciones'            => $itemData['observaciones'] ?? null,
-                        ]);
-
-                        // Se iguala la cantidad del detalle a lo que realmente se entregó
-                        $detalle->update(['cantidad' => $cantidadAEntregar]);
-                        $creados++;
-                    } else {
-                        // Si no se dispensó el medicamento
-                        $totalEntregado = $detalle->dispensaciones()->sum('cantidad');
-                        $detalle->update(['cantidad' => $totalEntregado]);
+                    // ─── Si no se marca dispensar o cantidad <= 0, se omite este ítem ───
+                    if (!$debeDispensar || $cantidadInput <= 0) {
+                        continue;
                     }
+
+                    if (!$loteId) {
+                        throw new \RuntimeException(
+                            "Debe seleccionar un lote para el medicamento: {$detalle->producto->nombre}."
+                        );
+                    }
+
+                    $pendiente = $detalle->cantidad_pendiente;
+                    $cantidadAEntregar = min($cantidadInput, $pendiente);
+
+                    if ($cantidadAEntregar <= 0) {
+                        continue;
+                    }
+
+                    // ─── 1) Validar que el lote existe y corresponde al producto ───
+                    $lote = Lote::lockForUpdate()->find($loteId);
+                    if (!$lote || (int) $lote->producto_id !== (int) $detalle->producto_id) {
+                        throw new \RuntimeException(
+                            "El lote seleccionado no corresponde al producto {$detalle->producto->nombre}."
+                        );
+                    }
+
+                    // ─── 2) Validar stock en la sede actual ───
+                    $inventario = InventarioSedeLote::where('lote_id', $loteId)
+                        ->where('sede_id', $sedeId)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$inventario || (float) $inventario->cantidad < $cantidadAEntregar) {
+                        $disp = $inventario->cantidad ?? 0;
+                        throw new \RuntimeException(
+                            "Stock insuficiente en el lote {$lote->codigo_lote} (sede actual). " .
+                                "Disponible: {$disp}, solicitado: {$cantidadAEntregar}."
+                        );
+                    }
+
+                    // ─── 3) Calcular equivalencia de unidad ───
+                    $unidad            = Unidad::find($detalle->unidad_id);
+                    $factor            = (float) ($unidad->factor_a_gramo ?? 1);
+                    $cantidadConvertida = round($cantidadAEntregar * $factor, 2);
+
+                    $cantAnteriorInv = (float) $inventario->cantidad;
+                    $cantFinalInv    = $cantAnteriorInv - $cantidadAEntregar;
+
+                    $cantAnteriorConv = (float) $inventario->cantidad_convertida;
+                    $cantFinalConv    = max(0, $cantAnteriorConv - $cantidadConvertida);
+
+                    // ─── 4) Descontar de inventario_sede_lotes ───
+                    $inventario->update([
+                        'cantidad'            => $cantFinalInv,
+                        'cantidad_convertida' => $cantFinalConv,
+                    ]);
+
+                    // ─── 5) Descontar de lotes.cantidad_actual ───
+                    $lote->update([
+                        'cantidad_actual' => max(0, (float) $lote->cantidad_actual - $cantidadAEntregar),
+                    ]);
+
+                    // ─── 6) Registrar la dispensación ───
+                    Dispensacion::create([
+                        'receta_medica_id'         => $receta->id,
+                        'detalle_receta_medica_id' => $detalle->id,
+                        'producto_id'              => $detalle->producto_id,
+                        'id_persona'               => $consulta->id_persona,
+                        'lote_id'                  => $loteId,
+                        'cantidad'                 => $cantidadAEntregar,
+                        'unidad_id'                => $detalle->unidad_id,
+                        'sede_id'                  => $sedeId,
+                        'usuario_id'               => auth()->id(),
+                        'fecha'                    => now()->toDateString(),
+                        'observaciones'            => $itemData['observaciones'] ?? null,
+                    ]);
+
+                    // ─── 7) Registrar el movimiento de inventario ───
+                    MovimientoInventario::create([
+                        'producto_id'         => $detalle->producto_id,
+                        'lote_id'             => $loteId,
+                        'sede_id'             => $sedeId,
+                        'modulo_origen_id'    => null,
+                        'tipo_movimiento'     => 'SALIDA',
+                        'unidad_id'           => $detalle->unidad_id,
+                        'cantidad'            => $cantidadAEntregar,
+                        'cantidad_convertida' => $cantidadConvertida,
+                        'cantidad_anterior'   => $cantAnteriorInv,
+                        'cantidad_final'      => $cantFinalInv,
+                        'referencia_type'     => 'Dispensacion',
+                        'fecha'               => now()->toDateString(),
+                        'observaciones'       => 'Dispensación a paciente en consulta #' . $consulta->id,
+                    ]);
+
+                    $creados++;
                 }
 
-                // Marcar el estado de la receta como Finalizada / Procesada 
+                // Marcar la receta como finalizada
                 $receta->update(['estado' => 2]);
             });
 
             return redirect()
                 ->route('admin.salud.movimientos.consultas.index')
                 ->with('success', $creados > 0
-                    ? "Se registraron {$creados} dispensación(es) y se finalizó la atención correctamente."
-                    : 'Atención finalizada sin entregas de medicamentos. La receta ha sido cerrada.');
+                    ? "Se registraron {$creados} dispensación(es) y se descontó el inventario correctamente."
+                    : 'Atención finalizada sin entregas de medicamentos.');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Ocurrió un error al guardar: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al dispensar: ' . $e->getMessage());
         }
     }
 

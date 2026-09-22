@@ -20,22 +20,19 @@
                         </p>
                     </div>
                 </div>
-                
-                {{-- Botón para regresar al Paso 2 (Recetación) --}}
+
                 <a href="{{ route('admin.salud.movimientos.consultas.recetacion', $consulta) }}"
                     class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
                     style="border-color: var(--border-color); color: var(--text-main);">
-                    <i class="fas fa-arrow-left text-xs"></i> Volver a Recetacion (Paso 2)
+                    <i class="fas fa-arrow-left text-xs"></i> Volver a Recetación (Paso 2)
                 </a>
             </div>
 
-            {{-- Stepper del Wizard --}}
+            {{-- Stepper --}}
             <x-consulta-stepper :step="3" />
 
-            {{-- Resumen de la Consulta y Receta Médica --}}
+            {{-- Resumen de la Consulta y Receta --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
-                {{-- Info de la Consulta --}}
                 <div class="p-5 rounded-2xl border shadow-sm"
                     style="background-color: var(--bg-card); border-color: var(--border-color);">
                     <div class="flex items-center gap-2.5 mb-4">
@@ -75,7 +72,6 @@
                     </div>
                 </div>
 
-                {{-- Info de la Receta --}}
                 <div class="p-5 rounded-2xl border shadow-sm"
                     style="background-color: var(--bg-card); border-color: var(--border-color);">
                     <div class="flex items-center gap-2.5 mb-4">
@@ -113,10 +109,9 @@
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            {{-- Variables de entregas previas --}}
+            {{-- Variables --}}
             @php
                 $dispensacionesExistentes = $consulta->receta->detalles->flatMap->dispensaciones;
                 $tieneDispensaciones = $dispensacionesExistentes->isNotEmpty();
@@ -124,7 +119,7 @@
                 $detallesPendientesCount = $detallesPendientes->count();
             @endphp
 
-            {{-- 1. TABLA DE MEDICAMENTOS ENTREGADOS PREVIAMENTE --}}
+            {{-- 1. ENTREGAS PREVIAS --}}
             @if ($tieneDispensaciones)
                 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                     class="rounded-2xl border shadow-sm p-6 mb-6">
@@ -181,7 +176,7 @@
                 </div>
             @endif
 
-            {{-- 2. FORMULARIO CON MODAL DE CONFIRMACIÓN --}}
+            {{-- 2. FORMULARIO --}}
             <div x-data="{
                 checkedCount: {{ $detallesPendientesCount }},
                 totalPending: {{ $detallesPendientesCount }},
@@ -189,28 +184,49 @@
                 modalType: 'confirm',
                 modalTitle: '',
                 modalMessage: '',
-            
+                validationError: '',
+
                 validarYConfirmar() {
+                    this.validationError = '';
                     this.modalType = 'confirm';
                     this.modalTitle = '¿Confirmar dispensación y finalizar?';
-            
+
+                    // 🔎 Validar que cada ítem marcado tenga lote
+                    let itemsSinLote = [];
+                    document.querySelectorAll('[data-item-dispensar]:checked').forEach(el => {
+                        const itemId = el.dataset.itemId;
+                        const sel = document.querySelector(`select[name='items[${itemId}][lote_id]']`);
+                        const cantInput = document.querySelector(`input[name='items[${itemId}][cantidad]']`);
+                        if (!sel || !sel.value) {
+                            itemsSinLote.push(el.dataset.itemNombre);
+                        }
+                    });
+
+                    if (itemsSinLote.length > 0) {
+                        this.modalType = 'warning';
+                        this.modalTitle = 'Falta seleccionar lote';
+                        this.modalMessage = 'Debe seleccionar un lote para: ' + itemsSinLote.join(', ') + '.';
+                        this.showModal = true;
+                        return;
+                    }
+
                     if (this.checkedCount <= 0) {
-                        this.modalMessage = 'No ha seleccionado ningún medicamento a entregar. No se registrará ninguna entrega y la consulta se dará por finalizada sin pendientes. Tenga en cuenta que una vez guardado, no se podrá editar ni realizar cambios en esta consulta. ¿Desea continuar?';
+                        this.modalMessage = 'No ha seleccionado ningún medicamento a entregar. La consulta se dará por finalizada sin entregas. ¿Desea continuar?';
                     } else if (this.checkedCount < this.totalPending) {
-                        this.modalMessage = `Está registrando la entrega de ${this.checkedCount} de ${this.totalPending} medicamentos. Los medicamentos no seleccionados NO quedarán pendientes. Tenga en cuenta que una vez guardado, la consulta quedará cerrada y no podrá ser editada. ¿Desea registrar y finalizar la atención?`;
+                        this.modalMessage = `Está registrando la entrega de ${this.checkedCount} de ${this.totalPending} medicamentos. Los no seleccionados NO quedarán pendientes. Una vez guardado, la consulta no podrá editarse. ¿Desea continuar?`;
                     } else {
-                        this.modalMessage = '¿Está seguro de registrar la dispensación de los medicamentos seleccionados? Una vez confirmada la información, la consulta finalizará y no se podrá editar ni modificar. ¿Desea continuar?';
+                        this.modalMessage = '¿Está seguro de registrar la dispensación de los medicamentos seleccionados? Una vez confirmada, la consulta finalizará y no se podrá editar. ¿Desea continuar?';
                     }
                     this.showModal = true;
                 },
-            
+
                 submitForm() {
                     $refs.dispensacionForm.submit();
                 }
             }">
 
                 @if (!$consulta->receta->tieneItemsPendientes())
-                    {{-- Caso: Todos los ítems fueron entregados --}}
+                    {{-- Todo entregado --}}
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                         class="rounded-2xl border shadow-sm p-10 text-center">
                         <div
@@ -229,11 +245,20 @@
                         </a>
                     </div>
                 @else
-                    {{-- Formulario para dispensar ítems --}}
                     <form x-ref="dispensacionForm"
                         action="{{ route('admin.salud.movimientos.consultas.dispensacion.store', $consulta) }}"
                         method="POST" class="rd-prevent-double-submit">
                         @csrf
+
+                        {{-- Aviso de sede --}}
+                        <div class="mb-4 p-3 rounded-xl border flex items-center gap-3 text-xs"
+                            style="background-color: rgba(14,165,233,0.06); border-color: rgba(14,165,233,0.2);">
+                            <i class="fas fa-info-circle text-sky-600"></i>
+                            <span style="color: var(--text-main);">
+                                Se descontará del inventario de la <strong>sede actual</strong>. Solo se muestran los
+                                lotes con stock disponible.
+                            </span>
+                        </div>
 
                         {{-- Card: Medicamentos Recetados --}}
                         <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -249,36 +274,69 @@
                                         Medicamentos Recetados
                                     </h3>
                                     <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                                        Los medicamentos desmarcados o no entregados no quedarán en estado pendiente.
+                                        Los medicamentos desmarcados no quedarán pendientes. Al guardar, la consulta
+                                        se cierra.
                                     </p>
                                 </div>
                             </div>
 
                             <div class="space-y-4">
                                 @foreach ($detallesPendientes as $detalle)
-                                    <div x-data="{ dispensar: true }"
-                                        class="rounded-xl border overflow-hidden transition-all"
+                                    @php
+                                        $lotesDisponibles = $lotesPorProducto[$detalle->producto_id] ?? collect();
+
+                                        // Mapa de lote_id => stock en sede actual
+                                        $stockPorLote = $lotesDisponibles->mapWithKeys(function ($lote) use ($sedeId) {
+                                            $inv = $lote->inventarioSedeLotes->firstWhere('sede_id', $sedeId);
+                                            return [$lote->id => (float) ($inv->cantidad ?? 0)];
+                                        });
+                                    @endphp
+
+                                    <div x-data="{
+                                        dispensar: true,
+                                        loteId: '',
+                                        cantidad: {{ $detalle->cantidad_pendiente }},
+                                        stockPorLote: {{ \Illuminate\Support\Js::from($stockPorLote) }},
+                                        pendiente: {{ $detalle->cantidad_pendiente }},
+
+                                        get stockLote() {
+                                            return this.loteId ? (this.stockPorLote[this.loteId] ?? 0) : 0;
+                                        },
+                                        get maxCantidad() {
+                                            return Math.min(this.pendiente, this.stockLote || this.pendiente);
+                                        },
+                                        get sinStock() {
+                                            return this.loteId && this.stockLote <= 0;
+                                        },
+                                        get excedeStock() {
+                                            return this.loteId && this.cantidad > this.stockLote;
+                                        }
+                                    }" class="rounded-xl border overflow-hidden transition-all"
                                         :class="{ 'opacity-60': !dispensar }"
                                         style="border-color: var(--border-color);">
 
-                                        {{-- Header del medicamento (checkbox + nombre + estado) --}}
-                                        <label class="flex items-start gap-3 cursor-pointer px-4 py-3 border-b"
+                                        {{-- Header --}}
+                                        <label
+                                            class="flex items-start gap-3 cursor-pointer px-4 py-3 border-b"
                                             style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color);">
-                                            <input type="hidden" name="items[{{ $detalle->id }}][dispensar]"
-                                                value="0">
-                                            <input type="checkbox" name="items[{{ $detalle->id }}][dispensar]"
-                                                value="1" x-model="dispensar"
+                                            <input type="hidden"
+                                                name="items[{{ $detalle->id }}][dispensar]" value="0">
+                                            <input type="checkbox"
+                                                name="items[{{ $detalle->id }}][dispensar]" value="1"
+                                                x-model="dispensar" data-item-dispensar
+                                                data-item-id="{{ $detalle->id }}"
+                                                data-item-nombre="{{ optional($detalle->producto)->nombre ?? $detalle->producto_id }}"
                                                 @change="dispensar ? checkedCount++ : checkedCount--"
                                                 class="mt-1 rounded border-gray-300 text-sky-600 focus:ring-sky-500">
 
                                             <div class="flex-1">
-                                                <div class="flex items-center justify-between gap-2">
+                                                <div class="flex items-center justify-between gap-2 flex-wrap">
                                                     <span class="text-sm font-bold" style="color: var(--text-main);">
                                                         {{ optional($detalle->producto)->nombre ?? '—' }}
                                                     </span>
                                                     <span
                                                         class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
-                                                        Recetado: {{ $detalle->cantidad_pendiente }}
+                                                        Pendiente: {{ $detalle->cantidad_pendiente }}
                                                         {{ optional($detalle->unidad)->nombre }}
                                                     </span>
                                                 </div>
@@ -291,42 +349,79 @@
                                             </div>
                                         </label>
 
+                                        {{-- Body --}}
                                         <div x-show="dispensar" x-collapse
                                             class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4"
                                             style="background-color: var(--bg-card);">
+
+                                            {{-- Lote --}}
                                             <div>
                                                 <label
                                                     class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">
-                                                    Lote Disponible
+                                                    Lote <span class="text-rose-500">*</span>
                                                 </label>
-                                                @php $lotesDisponibles = $lotesPorProducto[$detalle->producto_id] ?? collect(); @endphp
-                                                <select name="items[{{ $detalle->id }}][lote_id]"
-                                                    :disabled="!dispensar"
-                                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                    class="w-full px-2.5 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                                    <option value="">-- Seleccionar Lote (Opcional) --</option>
-                                                    @foreach ($lotesDisponibles as $lote)
-                                                        <option value="{{ $lote->id }}">
-                                                            Lote: {{ $lote->codigo_lote }} (Stock:
-                                                            {{ $lote->cantidad_actual }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+
+                                                @if ($lotesDisponibles->isEmpty())
+                                                    <div
+                                                        class="px-3 py-2 rounded-lg border text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900 flex items-center gap-2">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        Sin stock disponible en esta sede
+                                                    </div>
+                                                    <input type="hidden"
+                                                        name="items[{{ $detalle->id }}][lote_id]" value="">
+                                                @else
+                                                    <select name="items[{{ $detalle->id }}][lote_id]"
+                                                        x-model="loteId" :disabled="!dispensar"
+                                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
+                                                        class="w-full px-2.5 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                                        <option value="">-- Seleccionar Lote --</option>
+                                                        @foreach ($lotesDisponibles as $lote)
+                                                            @php
+                                                                $stockSede = (float) ($stockPorLote[$lote->id] ?? 0);
+                                                            @endphp
+                                                            <option value="{{ $lote->id }}">
+                                                                {{ $lote->codigo_lote }}
+                                                                @if ($lote->fecha_vencimiento)
+                                                                    · vence
+                                                                    {{ \Carbon\Carbon::parse($lote->fecha_vencimiento)->format('d/m/Y') }}
+                                                                @endif
+                                                                · Stock: {{ $stockSede }}
+                                                                {{ optional($detalle->unidad)->abreviatura ?? '' }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                @endif
                                             </div>
 
+                                            {{-- Cantidad --}}
                                             <div>
                                                 <label
                                                     class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">
                                                     Cantidad a Entregar
                                                 </label>
-                                                <input type="number" name="items[{{ $detalle->id }}][cantidad]"
-                                                    :disabled="!dispensar" value="{{ $detalle->cantidad_pendiente }}"
-                                                    min="0.01" max="{{ $detalle->cantidad_pendiente }}"
+                                                <input type="number"
+                                                    name="items[{{ $detalle->id }}][cantidad]"
+                                                    x-model.number="cantidad"
+                                                    :disabled="!dispensar"
+                                                    min="0.01"
+                                                    :max="maxCantidad"
                                                     step="0.01"
                                                     style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
                                                     class="w-full px-2.5 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+
+                                                <template x-if="dispensar && loteId && stockLote > 0">
+                                                    <p class="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                                        Disponible en lote: <span x-text="stockLote"></span>
+                                                    </p>
+                                                </template>
+                                                <template x-if="excedeStock">
+                                                    <p class="mt-1 text-[10px] text-rose-600 dark:text-rose-400 font-semibold">
+                                                        ⚠ La cantidad supera el stock del lote
+                                                    </p>
+                                                </template>
                                             </div>
 
+                                            {{-- Observación --}}
                                             <div>
                                                 <label
                                                     class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">
@@ -339,23 +434,19 @@
                                                     class="w-full px-2.5 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
                                             </div>
                                         </div>
-
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
-                        {{-- Botones de Acción --}}
+                        {{-- Botones --}}
                         <div class="p-4 sm:p-5 rounded-2xl border shadow-sm flex items-center justify-between gap-3"
                             style="background-color: var(--bg-card); border-color: var(--border-color);">
-
-                            <div class="flex items-center gap-2">
-                                <a href="{{ route('admin.salud.movimientos.consultas.index') }}"
-                                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
-                                    style="border-color: var(--border-color); color: var(--text-main);">
-                                    Cancelar
-                                </a>
-                            </div>
+                            <a href="{{ route('admin.salud.movimientos.consultas.index') }}"
+                                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                                style="border-color: var(--border-color); color: var(--text-main);">
+                                Cancelar
+                            </a>
 
                             <button type="button" @click="validarYConfirmar()"
                                 class="rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm shadow-md shadow-sky-600/20 active:scale-95 transition-all">
@@ -416,7 +507,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </x-app-layout>
