@@ -14,7 +14,10 @@ class DetalleRecetasMedica extends Model
         'receta_id',
         'producto_id',
         'unidad_id',
-        'cantidad',
+        'cantidad',              // total dispensado acumulado
+        'cantidad_prescrita',    // cantidad recetada (fija)
+        'unidad_prescrita',      // texto: nombre de la unidad
+        'equivalencia_ml',       // equivalente en ml (0 si no aplica)
         'frecuencia',
         'fecha_inicio',
         'fecha_fin',
@@ -22,9 +25,11 @@ class DetalleRecetasMedica extends Model
     ];
 
     protected $casts = [
-        'cantidad'     => 'decimal:2',
-        'fecha_inicio' => 'date',
-        'fecha_fin'    => 'date',
+        'cantidad'           => 'decimal:2',
+        'cantidad_prescrita' => 'decimal:2',
+        'equivalencia_ml'    => 'decimal:2',
+        'fecha_inicio'       => 'date',
+        'fecha_fin'          => 'date',
     ];
 
     public function receta()
@@ -48,22 +53,22 @@ class DetalleRecetasMedica extends Model
     }
 
     /**
-     * Total ya dispensado para este ítem (suma de todas sus dispensaciones).
+     * Cantidad total dispensada (usa la relación cargada si está disponible).
      */
     public function getCantidadDispensadaAttribute(): float
     {
-        // Usa la relación ya cargada si está disponible, para no disparar
-        // una consulta extra por cada detalle en listados.
         if ($this->relationLoaded('dispensaciones')) {
             return (float) $this->dispensaciones->sum('cantidad');
         }
-
         return (float) $this->dispensaciones()->sum('cantidad');
     }
 
+    /**
+     * Pendiente = prescrita - total dispensado.
+     */
     public function getCantidadPendienteAttribute(): float
     {
-        return max(0, round((float) $this->cantidad - $this->cantidad_dispensada, 2));
+        return max(0, round((float) $this->cantidad_prescrita - $this->cantidad_dispensada, 2));
     }
 
     public function getEstaCompletoAttribute(): bool

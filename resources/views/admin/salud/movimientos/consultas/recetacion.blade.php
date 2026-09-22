@@ -49,8 +49,8 @@
 
                 {{-- Card: Cabecera de la Receta --}}
                 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-                    class="rounded-2xl border shadow-sm p-4 mb-6">
-                    <div class="flex items-center gap-2.5 mb-5">
+                    class="rounded-2xl border shadow-sm p-4 mb-4">
+                    <div class="flex items-center gap-2.5 mb-4">
                         <div
                             class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                             <i class="fas fa-calendar-check text-xs"></i>
@@ -97,8 +97,8 @@
 
                 {{-- Card: Detalle de Prescripción --}}
                 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-                    class="rounded-2xl border shadow-sm p-6 mb-6">
-                    <div class="flex items-center justify-between mb-5">
+                    class="rounded-2xl border shadow-sm p-6 mb-4">
+                    <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2.5">
                             <div
                                 class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center">
@@ -133,108 +133,110 @@
 
                     <div class="space-y-4">
                         <template x-for="(item, index) in detalles" :key="index">
-                            <div class="rounded-xl border overflow-hidden transition-all"
-                                style="border-color: var(--border-color);">
+                            <div class="relative pt-6 first:pt-0" :class="{ 'border-t': index > 0 }"
+                                :style="index > 0 ? 'border-color: var(--border-color);' : ''">
 
-                                <div class="flex items-center justify-between px-4 py-2.5 border-b"
-                                    style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color);">
-                                    <span class="tracking-wider titulos ">
-                                        Medicamento <span x-text="index + 1"></span>
-                                    </span>
+                                {{-- Header del medicamento --}}
+                                <div class="flex items-center justify-between gap-3 mb-5">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span
+                                            class="text-x font-bold tabular-nums leading-none"
+                                            x-text="String(index + 1).padStart(2, '0')"></span>
+                                        <span class="text-xs font-semibold truncate"
+                                            x-text="item.producto_nombre || 'Nuevo medicamento'"></span>
+                                    </div>
                                     <button type="button" @click="eliminarItem(index)"
                                         :disabled="detalles.length === 1"
-                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors">
-                                        <i class="fas fa-trash-alt text-xs"></i>
+                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors shrink-0">
+                                        <i class="fas fa-times text-xs"></i>
                                     </button>
                                 </div>
 
-                                <div class="p-4 space-y-3" style="background-color: var(--bg-card);">
-                                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                                        <div class="sm:col-span-6">
-                                            <label class="block subtitulos tracking-wider">
-                                                Medicamento <span class="text-rose-500">*</span>
-                                            </label>
-                                            <select :name="`detalles[${index}][producto_id]`" x-model="item.producto_id"
-                                                required
-                                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                class="w-full px-3 py-2.5 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                                <option value="" disabled>Seleccione producto...</option>
-                                                @foreach ($productos as $prod)
-                                                    <option value="{{ $prod->id }}">{{ $prod->nombre }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                                {{-- Campos --}}
+                                <div class="space-y-3.5">
 
-                                        <div class="sm:col-span-3">
-                                            <label class="block subtitulos tracking-wider">
-                                                Unidad <span class="text-rose-500">*</span>
-                                            </label>
-                                            <select :name="`detalles[${index}][unidad_id]`" x-model="item.unidad_id"
-                                                required
-                                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                class="w-full px-3 py-2.5 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                                <option value="" disabled>...</option>
-                                                @foreach ($unidades as $u)
-                                                    <option value="{{ $u->id }}">{{ $u->nombre }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                                    {{-- Producto --}}
+                                    <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-2 sm:gap-4 items-center">
+                                        <label class="titulos tracking-wider">
+                                            Medicamento <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select :name="`detalles[${index}][producto_id]`" x-model="item.producto_id"
+                                            @change="item.producto_nombre = $event.target.options[$event.target.selectedIndex].text"
+                                            required
+                                            style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
+                                            class="w-full px-3.5 py-2.5 text-sm font-semibold rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                                            <option value="" disabled>Seleccione un medicamento...</option>
+                                            @foreach ($productos as $prod)
+                                                <option value="{{ $prod->id }}">{{ $prod->nombre }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
 
-                                        <div class="sm:col-span-3">
-                                            <label class="block subtitulos tracking-wider">
-                                                Cantidad <span class="text-rose-500">*</span>
-                                            </label>
-                                            <input type="number" step="0.01" min="0.01"
-                                                :name="`detalles[${index}][cantidad]`" x-model="item.cantidad"
-                                                placeholder="Ej: 10" required
-                                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                class="w-full px-3 py-2.5 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                    {{-- Dosis: cantidad + unidad + frecuencia --}}
+                                    <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-2 sm:gap-4 items-start">
+                                        <label
+                                            class="titulos tracking-wider pt-2.5">
+                                            Dosis
+                                        </label>
+                                        <div class="grid grid-cols-12 gap-2.5">
+                                            <div class="col-span-4 sm:col-span-3">
+                                                <input type="number" step="0.01" min="0.01"
+                                                    :name="`detalles[${index}][cantidad]`" x-model="item.cantidad"
+                                                    placeholder="Cant." required
+                                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
+                                                    class="w-full px-3 py-2.5 text-sm font-bold text-center rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                                            </div>
+                                            <div class="col-span-8 sm:col-span-4">
+                                                <select :name="`detalles[${index}][unidad_id]`"
+                                                    x-model="item.unidad_id" required
+                                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
+                                                    class="w-full px-3 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                                                    <option value="" disabled>Unidad</option>
+                                                    @foreach ($unidades as $u)
+                                                        <option value="{{ $u->id }}">{{ $u->nombre }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-span-12 sm:col-span-5">
+                                                <input type="text" :name="`detalles[${index}][frecuencia]`"
+                                                    x-model="item.frecuencia" placeholder="Ej: cada 8 horas" required
+                                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
+                                                    class="w-full px-3 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div>
-                                            <label class="block subtitulos tracking-wider">
-                                                Frecuencia <span class="text-rose-500">*</span>
-                                            </label>
-                                            <input type="text" :name="`detalles[${index}][frecuencia]`"
-                                                x-model="item.frecuencia" placeholder="Ej: Cada 8 horas" required
-                                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                class="w-full px-3 py-2.5 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                        </div>
-
-                                        <div>
-                                            <label class="block subtitulos tracking-wider">
-                                                Desde <span class="text-rose-500">*</span>
-                                            </label>
+                                    {{-- Duración --}}
+                                    <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-2 sm:gap-4 items-center">
+                                        <label class="titulos tracking-wider ">
+                                            Duración
+                                        </label>
+                                        <div class="flex items-center gap-3">
                                             <input type="date" :name="`detalles[${index}][fecha_inicio]`"
                                                 x-model="item.fecha_inicio" required
                                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                class="w-full px-3 py-2.5 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                        </div>
-
-                                        <div>
-                                            <label class="block subtitulos tracking-wider">
-                                                Hasta <span class="text-rose-500">*</span>
-                                            </label>
+                                                class="flex-1 px-3 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                                            <span class="text-gray-400 dark:text-gray-500 text-xs font-bold">→</span>
                                             <input type="date" :name="`detalles[${index}][fecha_fin]`"
                                                 x-model="item.fecha_fin" required
                                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                class="w-full px-3 py-2.5 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                                class="flex-1 px-3 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label class="block subtitulos tracking-wider">
-                                            Observaciones <span
-                                                class="normal-case font-medium text-gray-400">(opcional)</span>
+                                    {{-- Nota --}}
+                                    <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-2 sm:gap-4 items-center">
+                                        <label class="titulos tracking-wider">
+                                            Nota <span
+                                                class="normal-case font-medium text-gray-400 dark:text-gray-500">(opcional)</span>
                                         </label>
                                         <input type="text" :name="`detalles[${index}][observaciones]`"
-                                            x-model="item.observaciones"
-                                            placeholder="Observaciones específicas del medicamento..."
+                                            x-model="item.observaciones" placeholder="Ej: Tomar con alimentos"
                                             style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                            class="w-full px-3 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                            class="w-full px-3.5 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
                                     </div>
+
                                 </div>
                             </div>
                         </template>

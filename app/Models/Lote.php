@@ -54,7 +54,7 @@ class Lote extends Model
     /**
      * Obtiene los lotes disponibles (con stock y no vencidos) para un producto.
      */
-    public static function disponiblesParaProducto($productoId)
+    public static function disponiblesParaProducto($productoId, ?int $sedeId = null)
     {
         return self::where('producto_id', $productoId)
             ->where('cantidad_actual', '>', 0)
@@ -62,6 +62,7 @@ class Lote extends Model
                 $query->whereNull('fecha_vencimiento')
                     ->orWhere('fecha_vencimiento', '>=', now()->toDateString());
             })
+            ->with('inventarioSedeLotes')
             ->orderBy('fecha_vencimiento', 'asc')
             ->get();
     }
