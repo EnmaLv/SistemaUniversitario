@@ -16,11 +16,6 @@ class BusTipoCombustible extends Model
         'estado' => 'boolean',
     ];
 
-    public function getDescripcionAttribute($value): string
-    {
-        return $value ?? 'Ninguna';
-    }
-
     public static function listarTipos($buscar = null, $estado = 1)
     {
         return self::query()

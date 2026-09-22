@@ -57,7 +57,7 @@ class BusTipoCombustibleController extends Controller
         BusTipoCombustible::actualizarTipo($busTipoCombustible, $validated);
         $busTipoCombustible->refresh();
 
-        return response()->json([
+        $response = [
             'success' => true,
             'message' => 'Tipo de combustible actualizado correctamente.',
             'tipo'    => [
@@ -66,15 +66,23 @@ class BusTipoCombustibleController extends Controller
                 'descripcion' => $busTipoCombustible->descripcion,
                 'estado'      => $busTipoCombustible->estado,
             ],
-        ]);
+        ];
+
+        if ($request->expectsJson()) {
+            return response()->json($response);
+        }
+
+        return redirect()
+            ->route('admin.transporte.maestros.bus_tipo_combustibles.index')
+            ->with('success', $response['message']);
     }
 
-    public function destroy(BusTipoCombustible $busTipoCombustible)
+    public function destroy(Request $request, BusTipoCombustible $busTipoCombustible)
     {
         $busTipoCombustible->update(['estado' => 0]);
         $message = 'Tipo de combustible inactivado correctamente.';
 
-        if ($this->isJsonRequest(request())) {
+        if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => $message]);
         }
 
@@ -83,12 +91,12 @@ class BusTipoCombustibleController extends Controller
             ->with('success', $message);
     }
 
-    public function activar(BusTipoCombustible $busTipoCombustible)
+    public function activar(Request $request, BusTipoCombustible $busTipoCombustible)
     {
         $busTipoCombustible->update(['estado' => 1]);
         $message = 'Tipo de combustible activado correctamente.';
 
-        if ($this->isJsonRequest(request())) {
+        if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => $message]);
         }
 

@@ -55,7 +55,7 @@ class BusViajeController extends Controller
             ->whereNotIn('id', $vehiculosOcupados)
             ->get();
 
-        $rutas = BusRuta::where('estado', 1)->get();
+        $rutas = BusRuta::where('estado', 1)->with('horarios')->get();   // ← cambio
         $conductoresOcupados = BusViaje::whereIn('estado', ['programado', 'en_curso'])
             ->whereNotNull('conductor_id')
             ->pluck('conductor_id');
@@ -66,7 +66,8 @@ class BusViajeController extends Controller
 
         $turnoSugerido = BusViaje::calcularTurnoActual();
 
-        return view('admin.transporte.maestros.bus_viajes.create', compact('vehiculos', 'rutas', 'conductores', 'turnoSugerido'));
+        return view('admin.transporte.maestros.bus_viajes.create',
+            compact('vehiculos', 'rutas', 'conductores', 'turnoSugerido'));
     }
 
     public function store(Request $request)
@@ -135,7 +136,7 @@ class BusViajeController extends Controller
             ->whereNotIn('id', $vehiculosOcupados)
             ->get();
 
-        $rutas = BusRuta::where('estado', 1)->get();
+        $rutas = BusRuta::where('estado', 1)->with('horarios')->get();   // ← cambio
 
         $conductoresOcupados = BusViaje::where('id', '!=', $busViaje->id)
             ->whereIn('estado', ['programado', 'en_curso'])
@@ -146,7 +147,8 @@ class BusViajeController extends Controller
             ->whereNotIn('id_usuario', $conductoresOcupados)
             ->get();
 
-        return view('admin.transporte.maestros.bus_viajes.edit', compact('busViaje', 'vehiculos', 'rutas', 'conductores'));
+        return view('admin.transporte.maestros.bus_viajes.edit',
+            compact('busViaje', 'vehiculos', 'rutas', 'conductores'));
     }
 
     public function update(Request $request, BusViaje $busViaje)
