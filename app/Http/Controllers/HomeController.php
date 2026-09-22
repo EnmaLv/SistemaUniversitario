@@ -45,6 +45,30 @@ class HomeController extends Controller
 
     public function index()
     {
+        // ─── Chequeo de tasa (antes estaba en middleware) ───
+        if (auth()->check()) {
+            $hoy = \Carbon\Carbon::today()->toDateString();
+            $ultimaTasa = \App\Models\ExchangeRates::where('nombre', 'Oficial')
+                ->whereNotNull('fecha_vigencia')
+                ->orderByDesc('fecha_vigencia')
+                ->orderByDesc('id')
+                ->first();
+
+            if (!$ultimaTasa) {
+                session()->put('tasa_obligatoria', true);
+                session()->forget('tasa_pendiente');
+            } else {
+                $tasaHoy     = $ultimaTasa->fecha_vigencia === $hoy;
+                $ignoradaHoy = session('tasa_ignorada_hasta') === $hoy;
+
+                if (!$tasaHoy && !$ignoradaHoy) {
+                    session()->put('tasa_pendiente', true);
+                    session()->forget('tasa_obligatoria');
+                } else {
+                    session()->forget(['tasa_pendiente', 'tasa_obligatoria']);
+                }
+            }
+        }
         $psicologiaData = $this->psicologiaService->getPacienteData();
         $saludData = $this->saludService->getDashboardData();
         $hoy = Carbon::now();
