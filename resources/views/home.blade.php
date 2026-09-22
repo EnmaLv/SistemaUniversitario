@@ -73,6 +73,14 @@
                 @endif
             @break
 
+            @case('administracion')
+                @if (auth()->user()->tieneRol('paciente'))
+                    @include('components.estudiante.salud-home')
+                @else
+                    @include('components.administracion-home')
+                @endif
+            @break
+
             @case('psicologia')
                 @if (auth()->user()->tieneRol('paciente'))
                     @include('components.estudiante.psicologia-home')
@@ -116,7 +124,6 @@
 
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        @include('components.alert-home')
         @yield('grafica')
     @endpush
 </x-app-layout>
