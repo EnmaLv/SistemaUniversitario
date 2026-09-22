@@ -384,7 +384,6 @@ class ConsultaController extends Controller
 
                     if ($cantidadRestante <= 0) continue;
 
-                    // ─── Obtener lotes FIFO con stock en la sede ───
                     $lotes = Lote::where('producto_id', $detalle->producto_id)
                         ->where('cantidad_actual', '>', 0)
                         ->where(function ($q) {
@@ -431,18 +430,15 @@ class ConsultaController extends Controller
                         $cantAntesConv  = (float) $inventario->cantidad_convertida;
                         $cantDespuesConv = max(0, $cantAntesConv - $cantidadConvertida);
 
-                        // 1) Descontar inventario_sede_lotes
                         $inventario->update([
                             'cantidad'            => $cantDespuesInv,
                             'cantidad_convertida' => $cantDespuesConv,
                         ]);
 
-                        // 2) Descontar lotes.cantidad_actual
                         $lote->update([
                             'cantidad_actual' => max(0, (float) $lote->cantidad_actual - $aEntregarDeEsteLote),
                         ]);
 
-                        // 3) Registrar la dispensación
                         Dispensacion::create([
                             'receta_medica_id'         => $receta->id,
                             'detalle_receta_medica_id' => $detalle->id,
@@ -457,7 +453,6 @@ class ConsultaController extends Controller
                             'observaciones'            => $itemData['observaciones'] ?? null,
                         ]);
 
-                        // 4) Movimiento de inventario
                         MovimientoInventario::create([
                             'producto_id'         => $detalle->producto_id,
                             'lote_id'             => $lote->id,
@@ -486,7 +481,6 @@ class ConsultaController extends Controller
                         );
                     }
 
-                    // Acumular en el detalle
                     $detalle->update([
                         'cantidad' => (float) $detalle->cantidad + $totalEntregadoEsteItem,
                     ]);
@@ -496,7 +490,7 @@ class ConsultaController extends Controller
             });
 
             // ═══════════════════════════════════════════════════════════
-            // FUERA de la transacción: calcular estado final
+            // FUERA de la transacción: verificar pendientes y actualizar estado
             // ═══════════════════════════════════════════════════════════
             $quedanPendientes = DetalleRecetasMedica::where('receta_id', $receta->id)
                 ->get()
