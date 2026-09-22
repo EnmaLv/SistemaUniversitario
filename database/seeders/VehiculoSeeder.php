@@ -54,7 +54,7 @@ class VehiculoSeeder extends Seeder
                 'consumo_relenti'           => 3.000,
                 'km_actual'                 => 120000.00,
                 'km_proximo_mantenimiento'  => 125000.00,
-                'estado'                    => 'en_ruta',
+                'estado'                    => 'disponible',
                 'activo'                    => 1,
             ],
             [
