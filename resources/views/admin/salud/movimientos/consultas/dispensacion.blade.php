@@ -4,7 +4,7 @@
 
             @include('components.alert')
 
-            {{-- Encabezado --}}
+            {{-- ═══════════ ENCABEZADO ═══════════ --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div class="flex items-center gap-4">
                     <div
@@ -31,7 +31,7 @@
             {{-- Stepper --}}
             <x-consulta-stepper :step="3" />
 
-            {{-- Resumen de la Consulta y Receta --}}
+            {{-- ═══════════ RESUMEN CLÍNICO ═══════════ --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="p-5 rounded-2xl border shadow-sm"
                     style="background-color: var(--bg-card); border-color: var(--border-color);">
@@ -119,7 +119,7 @@
                 $detallesPendientesCount = $detallesPendientes->count();
             @endphp
 
-            {{-- 1. ENTREGAS PREVIAS --}}
+            {{-- ═══════════ ENTREGAS PREVIAS ═══════════ --}}
             @if ($tieneDispensaciones)
                 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                     class="rounded-2xl border shadow-sm p-6 mb-6">
@@ -133,50 +133,39 @@
                         </h3>
                     </div>
 
-                    <div class="rounded-xl border overflow-hidden text-left" style="border-color: var(--border-color);">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr
-                                    class="bg-gray-50/50 dark:bg-black/20 text-[10px] font-black uppercase tracking-wider text-gray-400">
-                                    <th class="px-4 py-3">Fecha</th>
-                                    <th class="px-4 py-3">Producto</th>
-                                    <th class="px-4 py-3 text-center">Cantidad Entregada</th>
-                                    <th class="px-4 py-3">Lote</th>
-                                    <th class="px-4 py-3">Entregado Por</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60">
-                                @foreach ($consulta->receta->detalles as $detalle)
-                                    @foreach ($detalle->dispensaciones as $disp)
-                                        <tr>
-                                            <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400">
-                                                {{ optional($disp->fecha)->format('d/m/Y') }}
-                                            </td>
-                                            <td class="px-4 py-2.5 font-bold" style="color: var(--text-main);">
-                                                {{ optional($detalle->producto)->nombre ?? '—' }}
-                                            </td>
-                                            <td class="px-4 py-2.5 text-center font-medium">
-                                                <span
-                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
-                                                    {{ $disp->cantidad }} {{ optional($detalle->unidad)->nombre }}
-                                                </span>
-                                            </td>
-                                            <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400">
-                                                {{ optional($disp->lote)->codigo_lote ?? '—' }}
-                                            </td>
-                                            <td class="px-4 py-2.5 text-gray-500 dark:text-gray-400">
-                                                {{ optional(optional($disp->usuario)->persona)->nombre_persona ?? (optional($disp->usuario)->username ?? '—') }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="space-y-2">
+                        @foreach ($consulta->receta->detalles as $detalle)
+                            @foreach ($detalle->dispensaciones as $disp)
+                                <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl border"
+                                    style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-check text-[10px]"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-bold truncate" style="color: var(--text-main);">
+                                            {{ optional($detalle->producto)->nombre ?? '—' }}
+                                        </p>
+                                        <p class="text-[10px] text-gray-500 dark:text-gray-400">
+                                            {{ optional($disp->fecha)->format('d/m/Y') }}
+                                            · Lote {{ optional($disp->lote)->codigo_lote ?? '—' }}
+                                            · por
+                                            {{ optional(optional($disp->usuario)->persona)->nombre_persona ?? '—' }}
+                                        </p>
+                                    </div>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 shrink-0">
+                                        {{ $disp->cantidad }}
+                                        {{ optional($detalle->unidad)->abreviatura ?? optional($detalle->unidad)->nombre }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        @endforeach
                     </div>
                 </div>
             @endif
 
-            {{-- 2. FORMULARIO --}}
+            {{-- ═══════════ FORMULARIO ═══════════ --}}
             <div x-data="{
                 checkedCount: {{ $detallesPendientesCount }},
                 totalPending: {{ $detallesPendientesCount }},
@@ -185,43 +174,27 @@
                 modalTitle: '',
                 modalMessage: '',
                 validationError: '',
-
+            
                 validarYConfirmar() {
                     this.validationError = '';
                     this.modalType = 'confirm';
-                    this.modalTitle = '¿Confirmar dispensación y finalizar?';
-
-                    // 🔎 Validar que cada ítem marcado tenga lote
-                    let itemsSinLote = [];
-                    document.querySelectorAll('[data-item-dispensar]:checked').forEach(el => {
-                        const itemId = el.dataset.itemId;
-                        const sel = document.querySelector(`select[name='items[${itemId}][lote_id]']`);
-                        const cantInput = document.querySelector(`input[name='items[${itemId}][cantidad]']`);
-                        if (!sel || !sel.value) {
-                            itemsSinLote.push(el.dataset.itemNombre);
-                        }
-                    });
-
-                    if (itemsSinLote.length > 0) {
-                        this.modalType = 'warning';
-                        this.modalTitle = 'Falta seleccionar lote';
-                        this.modalMessage = 'Debe seleccionar un lote para: ' + itemsSinLote.join(', ') + '.';
-                        this.showModal = true;
-                        return;
-                    }
-
+            
                     if (this.checkedCount <= 0) {
-                        this.modalMessage = 'No ha seleccionado ningún medicamento a entregar. La consulta se dará por finalizada sin entregas. ¿Desea continuar?';
+                        this.modalTitle = '¿Finalizar sin entregar?';
+                        this.modalMessage = 'No ha seleccionado ningún medicamento. La consulta se dará por FINALIZADA sin registrar entregas. Una vez guardado, no podrá editarse. ¿Desea continuar?';
                     } else if (this.checkedCount < this.totalPending) {
-                        this.modalMessage = `Está registrando la entrega de ${this.checkedCount} de ${this.totalPending} medicamentos. Los no seleccionados NO quedarán pendientes. Una vez guardado, la consulta no podrá editarse. ¿Desea continuar?`;
+                        this.modalTitle = '¿Registrar dispensación parcial?';
+                        this.modalMessage = `Está registrando la entrega de ${this.checkedCount} de ${this.totalPending} medicamentos. Los no seleccionados QUEDARÁN PENDIENTES y podrá dispensarlos en una próxima sesión. ¿Desea continuar?`;
                     } else {
-                        this.modalMessage = '¿Está seguro de registrar la dispensación de los medicamentos seleccionados? Una vez confirmada, la consulta finalizará y no se podrá editar. ¿Desea continuar?';
+                        this.modalTitle = '¿Confirmar dispensación y finalizar?';
+                        this.modalMessage = '¿Está seguro de registrar la dispensación de TODOS los medicamentos? Una vez confirmado, la atención quedará finalizada y no podrá modificarse.';
                     }
+            
                     this.showModal = true;
                 },
-
+            
                 submitForm() {
-                    $refs.dispensacionForm.submit();
+                    this.$refs.dispensacionForm.submit();
                 }
             }">
 
@@ -251,195 +224,270 @@
                         @csrf
 
                         {{-- Aviso de sede --}}
-                        <div class="mb-4 p-3 rounded-xl border flex items-center gap-3 text-xs"
+                        <div class="mb-6 p-4 rounded-2xl border flex items-start gap-3 text-xs"
                             style="background-color: rgba(14,165,233,0.06); border-color: rgba(14,165,233,0.2);">
-                            <i class="fas fa-info-circle text-sky-600"></i>
-                            <span style="color: var(--text-main);">
-                                Se descontará del inventario de la <strong>sede actual</strong>. Solo se muestran los
-                                lotes con stock disponible.
-                            </span>
+                            <div
+                                class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                                <i class="fas fa-info-circle text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold mb-0.5" style="color: var(--text-main);">
+                                    Asignación automática de lotes (FIFO)
+                                </p>
+                                <p class="text-gray-500 dark:text-gray-400">
+                                    Los lotes se consumen por <strong>vencimiento más próximo</strong>. Solo indique la
+                                    cantidad a entregar.
+                                </p>
+                            </div>
                         </div>
 
-                        {{-- Card: Medicamentos Recetados --}}
+                        {{-- Card: Medicamentos --}}
                         <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                             class="rounded-2xl border shadow-sm p-6 mb-6">
-                            <div class="flex items-center gap-2.5 mb-5">
+                            <div class="flex items-center gap-2.5 mb-6">
                                 <div
                                     class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                     <i class="fas fa-boxes text-xs"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-sm font-extrabold tracking-tight"
-                                        style="color: var(--text-main);">
+                                    <h3 class="text-sm font-extrabold tracking-tight" style="color: var(--text-main);">
                                         Medicamentos Recetados
                                     </h3>
                                     <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                                        Los medicamentos desmarcados no quedarán pendientes. Al guardar, la consulta
-                                        se cierra.
+                                        Los medicamentos desmarcados no quedarán pendientes.
                                     </p>
                                 </div>
                             </div>
 
-                            <div class="space-y-4">
+                            <div class="space-y-5">
                                 @foreach ($detallesPendientes as $detalle)
                                     @php
-                                        $lotesDisponibles = $lotesPorProducto[$detalle->producto_id] ?? collect();
-
-                                        // Mapa de lote_id => stock en sede actual
-                                        $stockPorLote = $lotesDisponibles->mapWithKeys(function ($lote) use ($sedeId) {
-                                            $inv = $lote->inventarioSedeLotes->firstWhere('sede_id', $sedeId);
-                                            return [$lote->id => (float) ($inv->cantidad ?? 0)];
-                                        });
+                                        $lotesDisponibles = $lotesPorDetalle[$detalle->id] ?? collect();
+                                        $stockTotalSede = $lotesDisponibles->sum(
+                                            fn($l) => (float) ($l->inventarioSedeLotes->first()->cantidad ?? 0),
+                                        );
+                                        $sinStock = $stockTotalSede <= 0;
                                     @endphp
 
                                     <div x-data="{
-                                        dispensar: true,
-                                        loteId: '',
-                                        cantidad: {{ $detalle->cantidad_pendiente }},
-                                        stockPorLote: {{ \Illuminate\Support\Js::from($stockPorLote) }},
+                                        dispensar: {{ $sinStock ? 'false' : 'true' }},
+                                        cantidad: {{ $sinStock ? 0 : min($detalle->cantidad_pendiente, $stockTotalSede) }},
                                         pendiente: {{ $detalle->cantidad_pendiente }},
-
-                                        get stockLote() {
-                                            return this.loteId ? (this.stockPorLote[this.loteId] ?? 0) : 0;
-                                        },
-                                        get maxCantidad() {
-                                            return Math.min(this.pendiente, this.stockLote || this.pendiente);
-                                        },
-                                        get sinStock() {
-                                            return this.loteId && this.stockLote <= 0;
-                                        },
-                                        get excedeStock() {
-                                            return this.loteId && this.cantidad > this.stockLote;
-                                        }
-                                    }" class="rounded-xl border overflow-hidden transition-all"
-                                        :class="{ 'opacity-60': !dispensar }"
+                                        stockDisponible: {{ $stockTotalSede }},
+                                        get maxCantidad() { return Math.min(this.pendiente, this.stockDisponible); },
+                                        get excedeStock() { return this.cantidad > this.stockDisponible; }
+                                    }"
+                                        class="rounded-2xl border overflow-hidden transition-all"
+                                        :class="{ 'opacity-50 grayscale': !dispensar }"
                                         style="border-color: var(--border-color);">
 
-                                        {{-- Header --}}
-                                        <label
-                                            class="flex items-start gap-3 cursor-pointer px-4 py-3 border-b"
+                                        {{-- ── HEADER del medicamento ── --}}
+                                        <label class="flex items-start gap-3 cursor-pointer px-5 py-4 border-b"
                                             style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color);">
-                                            <input type="hidden"
-                                                name="items[{{ $detalle->id }}][dispensar]" value="0">
-                                            <input type="checkbox"
-                                                name="items[{{ $detalle->id }}][dispensar]" value="1"
-                                                x-model="dispensar" data-item-dispensar
-                                                data-item-id="{{ $detalle->id }}"
-                                                data-item-nombre="{{ optional($detalle->producto)->nombre ?? $detalle->producto_id }}"
-                                                @change="dispensar ? checkedCount++ : checkedCount--"
-                                                class="mt-1 rounded border-gray-300 text-sky-600 focus:ring-sky-500">
 
-                                            <div class="flex-1">
-                                                <div class="flex items-center justify-between gap-2 flex-wrap">
-                                                    <span class="text-sm font-bold" style="color: var(--text-main);">
+                                            <input type="hidden" name="items[{{ $detalle->id }}][dispensar]"
+                                                value="0">
+                                            <input type="checkbox" name="items[{{ $detalle->id }}][dispensar]"
+                                                value="1" x-model="dispensar"
+                                                @change="dispensar ? checkedCount++ : checkedCount--"
+                                                class="mt-1 rounded border-gray-300 text-sky-600 focus:ring-sky-500 transition-all">
+
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
+                                                    <span class="text-sm font-extrabold"
+                                                        style="color: var(--text-main);">
                                                         {{ optional($detalle->producto)->nombre ?? '—' }}
                                                     </span>
-                                                    <span
-                                                        class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
-                                                        Pendiente: {{ $detalle->cantidad_pendiente }}
-                                                        {{ optional($detalle->unidad)->nombre }}
-                                                    </span>
+
+                                                    @if ($sinStock)
+                                                        <span
+                                                            class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                                                            <i class="fas fa-times-circle text-[9px]"></i>
+                                                            Sin stock
+                                                        </span>
+                                                    @else
+                                                        <span
+                                                            class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
+                                                            <i class="fas fa-prescription-bottle text-[9px]"></i>
+                                                            Pendiente: {{ $detalle->cantidad_pendiente }}
+                                                            {{ optional($detalle->unidad)->nombre }}
+                                                        </span>
+                                                    @endif
                                                 </div>
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+
+                                                <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                                                    <i class="fas fa-clock text-[9px] mr-1"></i>
                                                     <strong>Frecuencia:</strong> {{ $detalle->frecuencia }}
                                                     @if ($detalle->observaciones)
-                                                        · <em>{{ $detalle->observaciones }}</em>
+                                                        <span class="mx-1.5">·</span>
+                                                        <em>{{ $detalle->observaciones }}</em>
                                                     @endif
                                                 </p>
                                             </div>
                                         </label>
 
-                                        {{-- Body --}}
-                                        <div x-show="dispensar" x-collapse
-                                            class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4"
-                                            style="background-color: var(--bg-card);">
+                                        {{-- ── SIN STOCK ── --}}
+                                        @if ($sinStock)
+                                            <div
+                                                class="px-5 py-4 flex items-start gap-3 bg-rose-50/40 dark:bg-rose-950/20">
+                                                <div
+                                                    class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                                                    <i class="fas fa-exclamation-triangle text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="text-xs font-bold text-rose-700 dark:text-rose-300 mb-0.5">
+                                                        Sin stock disponible
+                                                    </p>
+                                                    <p class="text-[11px] text-rose-600 dark:text-rose-400">
+                                                        No hay lotes con stock en tu sede (ID: {{ $sedeId }}).
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        @else
+                                            {{-- ── LOTES (rediseñados, no tabla) ── --}}
+                                            {{-- ── LOTES (compacto) ── --}}
+                                            <div class="px-5 py-3.5" style="background-color: var(--bg-card);">
 
-                                            {{-- Lote --}}
-                                            <div>
-                                                <label
-                                                    class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">
-                                                    Lote <span class="text-rose-500">*</span>
-                                                </label>
-
-                                                @if ($lotesDisponibles->isEmpty())
-                                                    <div
-                                                        class="px-3 py-2 rounded-lg border text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900 flex items-center gap-2">
-                                                        <i class="fas fa-exclamation-triangle"></i>
-                                                        Sin stock disponible en esta sede
+                                                {{-- Header compacto con total --}}
+                                                <div class="flex items-center justify-between mb-2.5">
+                                                    <div class="flex items-center gap-2">
+                                                        <i class="fas fa-layer-group text-[10px] text-gray-400"></i>
+                                                        <span
+                                                            class="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                                                            Lotes
+                                                        </span>
+                                                        <span
+                                                            class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400">
+                                                            FIFO
+                                                        </span>
                                                     </div>
-                                                    <input type="hidden"
-                                                        name="items[{{ $detalle->id }}][lote_id]" value="">
-                                                @else
-                                                    <select name="items[{{ $detalle->id }}][lote_id]"
-                                                        x-model="loteId" :disabled="!dispensar"
-                                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                        class="w-full px-2.5 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
-                                                        <option value="">-- Seleccionar Lote --</option>
-                                                        @foreach ($lotesDisponibles as $lote)
-                                                            @php
-                                                                $stockSede = (float) ($stockPorLote[$lote->id] ?? 0);
-                                                            @endphp
-                                                            <option value="{{ $lote->id }}">
+
+                                                    <div class="flex items-center gap-1.5 text-[10px]">
+                                                        <span
+                                                            class="text-gray-400 uppercase tracking-wider font-black">Total:</span>
+                                                        <span
+                                                            class="font-black text-emerald-600 dark:text-emerald-400 text-xs">{{ $stockTotalSede }}</span>
+                                                        <span
+                                                            class="text-gray-400 font-medium">{{ optional($detalle->unidad)->abreviatura ?? '' }}</span>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Chips horizontales de lotes --}}
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    @foreach ($lotesDisponibles as $idx => $lote)
+                                                        @php
+                                                            $stockLote =
+                                                                (float) ($lote->inventarioSedeLotes->first()
+                                                                    ->cantidad ?? 0);
+                                                            $esPrimero = $idx === 0;
+                                                            $vence = $lote->fecha_vencimiento
+                                                                ? \Carbon\Carbon::parse(
+                                                                    $lote->fecha_vencimiento,
+                                                                )->format('m/y')
+                                                                : '—';
+                                                        @endphp
+
+                                                        <div
+                                                            class="inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg border text-[11px]
+                {{ $esPrimero
+                    ? 'border-sky-300 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/40'
+                    : 'border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/30' }}">
+
+                                                            {{-- Punto numerado compacto --}}
+                                                            <span
+                                                                class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black
+                    {{ $esPrimero ? 'bg-sky-600 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">
+                                                                {{ $idx + 1 }}
+                                                            </span>
+
+                                                            {{-- Info del lote --}}
+                                                            <span
+                                                                class="font-bold {{ $esPrimero ? 'text-sky-700 dark:text-sky-300' : 'text-gray-600 dark:text-gray-300' }}">
                                                                 {{ $lote->codigo_lote }}
-                                                                @if ($lote->fecha_vencimiento)
-                                                                    · vence
-                                                                    {{ \Carbon\Carbon::parse($lote->fecha_vencimiento)->format('d/m/Y') }}
-                                                                @endif
-                                                                · Stock: {{ $stockSede }}
-                                                                {{ optional($detalle->unidad)->abreviatura ?? '' }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                @endif
+                                                            </span>
+
+                                                            <span
+                                                                class="text-gray-400 dark:text-gray-500 text-[10px]">·</span>
+
+                                                            <span class="text-gray-500 dark:text-gray-400 text-[10px]">
+                                                                vence {{ $vence }}
+                                                            </span>
+
+                                                            <span
+                                                                class="text-gray-400 dark:text-gray-500 text-[10px]">·</span>
+
+                                                            {{-- Stock --}}
+                                                            <span
+                                                                class="font-black {{ $esPrimero ? 'text-sky-600 dark:text-sky-400' : 'text-gray-700 dark:text-gray-200' }}">
+                                                                {{ $stockLote }}
+                                                            </span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
                                             </div>
 
-                                            {{-- Cantidad --}}
-                                            <div>
-                                                <label
-                                                    class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">
-                                                    Cantidad a Entregar
-                                                </label>
-                                                <input type="number"
-                                                    name="items[{{ $detalle->id }}][cantidad]"
-                                                    x-model.number="cantidad"
-                                                    :disabled="!dispensar"
-                                                    min="0.01"
-                                                    :max="maxCantidad"
-                                                    step="0.01"
-                                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                    class="w-full px-2.5 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                            {{-- ── INPUTS ── --}}
+                                            <div x-show="dispensar" x-collapse
+                                                class="grid grid-cols-1 md:grid-cols-2 gap-3 px-5 py-4 border-t"
+                                                style="background-color: rgba(0,0,0,0.015); border-color: var(--border-color);">
 
-                                                <template x-if="dispensar && loteId && stockLote > 0">
-                                                    <p class="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                                        Disponible en lote: <span x-text="stockLote"></span>
-                                                    </p>
-                                                </template>
-                                                <template x-if="excedeStock">
-                                                    <p class="mt-1 text-[10px] text-rose-600 dark:text-rose-400 font-semibold">
-                                                        ⚠ La cantidad supera el stock del lote
-                                                    </p>
-                                                </template>
-                                            </div>
+                                                <div>
+                                                    <label
+                                                        class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">
+                                                        Cantidad a entregar
+                                                    </label>
+                                                    <div class="relative">
+                                                        <i
+                                                            class="fas fa-prescription-bottle absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                                                        <input type="number"
+                                                            name="items[{{ $detalle->id }}][cantidad]"
+                                                            x-model.number="cantidad" :disabled="!dispensar"
+                                                            min="0.01" :max="maxCantidad" step="0.01"
+                                                            style="background-color: var(--bg-card); color: var(--text-main); border-color: var(--border-color);"
+                                                            class="w-full pl-9 pr-3 py-2.5 text-sm font-bold rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                                                    </div>
 
-                                            {{-- Observación --}}
-                                            <div>
-                                                <label
-                                                    class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">
-                                                    Observación
-                                                </label>
-                                                <input type="text"
-                                                    name="items[{{ $detalle->id }}][observaciones]"
-                                                    :disabled="!dispensar" placeholder="Opcional..."
-                                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
-                                                    class="w-full px-2.5 py-2 text-xs font-medium rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                                                    <div class="flex items-center justify-between mt-1.5 px-0.5">
+                                                        <p
+                                                            class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                                                            Máximo: <span x-text="maxCantidad"
+                                                                class="font-bold text-gray-700 dark:text-gray-200"></span>
+                                                        </p>
+                                                        <template x-if="excedeStock">
+                                                            <p
+                                                                class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">
+                                                                <i class="fas fa-exclamation-triangle text-[9px]"></i>
+                                                                Supera el stock
+                                                            </p>
+                                                        </template>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label
+                                                        class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">
+                                                        Observación <span
+                                                            class="normal-case font-medium text-gray-400 dark:text-gray-500">(opcional)</span>
+                                                    </label>
+                                                    <div class="relative">
+                                                        <i
+                                                            class="fas fa-comment-medical absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                                                        <input type="text"
+                                                            name="items[{{ $detalle->id }}][observaciones]"
+                                                            :disabled="!dispensar" placeholder="Ej: Entrega parcial"
+                                                            style="background-color: var(--bg-card); color: var(--text-main); border-color: var(--border-color);"
+                                                            class="w-full pl-9 pr-3 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
-                        {{-- Botones --}}
+                        {{-- ── Botones ── --}}
                         <div class="p-4 sm:p-5 rounded-2xl border shadow-sm flex items-center justify-between gap-3"
                             style="background-color: var(--bg-card); border-color: var(--border-color);">
                             <a href="{{ route('admin.salud.movimientos.consultas.index') }}"
@@ -456,7 +504,7 @@
                     </form>
                 @endif
 
-                {{-- MODAL --}}
+                {{-- ── MODAL ── --}}
                 <div x-show="showModal" x-cloak x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                     x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"

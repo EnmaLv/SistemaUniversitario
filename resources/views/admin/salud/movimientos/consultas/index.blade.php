@@ -240,6 +240,11 @@
                                                     class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
                                                     <i class="fas fa-prescription"></i> Falta recetar
                                                 </span>
+                                            @elseif ($paso === 'dispensacion')
+                                                <span
+                                                    class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-900">
+                                                    <i class="fas fa-prescription"></i> Falta dispensar
+                                                </span>    
                                             @else
                                                 <span
                                                     class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">

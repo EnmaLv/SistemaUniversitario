@@ -23,7 +23,6 @@ class MedicamentoRequest extends FormRequest
             'precio_compra' => 'nullable|numeric',
             'stock_minimo' => 'required|numeric',
             'stock_maximo' => 'required|numeric',
-            'peso_contenido' => 'required|numeric|min:0.01',
             'unidad_id' => 'required|exists:unidades,id',
             'envase_primario_id' => 'nullable|exists:envase_primarios,id',
             'estado' => 'nullable|boolean',
