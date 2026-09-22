@@ -3,19 +3,19 @@
 @section('content_header')
     <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
         style="
-            background: #ffffff;
+            background: var(--bg-card);
             border-radius: 14px;
             box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-color);
          ">
 
         <!-- Texto principal -->
         <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:#0f172a; font-weight:700;">
+            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
                 Vista detallada del Registro
             </h1>
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
+            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-muted);">
                 Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
             </p>
         </div>
@@ -24,7 +24,7 @@
         <div class="d-flex align-items-center" style="gap:14px;">
             <div class="text-right d-none d-sm-block">
                 <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600; font-size:0.95rem;">
+                <span style="font-weight:600; font-size:0.95rem; color:var(--text-main);">
                     {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                 </span>
             </div>
@@ -158,4 +158,3 @@
 @section('css')
     <link rel="stylesheet" href="{{ asset('css/show-noti-register.css') }}">
 @endsection
-

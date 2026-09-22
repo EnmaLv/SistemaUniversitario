@@ -1,36 +1,70 @@
-@extends('layouts.app')
-
-@section('content_header')
-    <div class="mb-6 flex flex-col gap-4 rounded-2xl border p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="font-size:1.4rem;">Editar VehÃ­culo</h1>
-            <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600;font-size:0.95rem;">{{ \Carbon\Carbon::now()->format('d/m/Y') }}</span>
-            </div>
-            <div
-                style="width:46px;height:46px;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,42,0.08);">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%;height:100%;object-fit:cover;">
-            </div>
-        </div>
-    </div>
-@stop
-
-@section('content')
+<x-app-layout>
+    <div class="min-h-[calc(100vh-4rem)] pb-12 pt-6">
+        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     @include('components.alert')
 
-    <div class="rd-card p-4">
-        <div class="rd-card-header mb-3">
-            <h3 class="rd-title-sm">Datos del VehÃ­culo</h3>
+    <style>
+        .vehicle-create-form { color: var(--text-main); }
+        .vehicle-page-heading, .vehicle-card-heading { display:flex; align-items:center; gap:.9rem; }
+        .vehicle-page-heading-icon, .vehicle-card-heading-icon {
+            display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+            width:3rem; height:3rem; border-radius:.75rem;
+            background:linear-gradient(145deg,#dc2626,#991b1b); color:#fff;
+            box-shadow:0 8px 18px rgba(153,27,27,.2);
+        }
+        .vehicle-card-heading-icon { width:2.5rem; height:2.5rem; border-radius:.7rem; }
+        .vehicle-page-heading p, .vehicle-card-heading p { color:var(--text-muted); }
+        .vehicle-create-form .row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); column-gap:1.25rem; row-gap:1.1rem; margin:0; }
+        .vehicle-create-form .row + .row { margin-top:1.1rem; }
+        .vehicle-create-form .col-md-3 { width:auto; max-width:none; padding:0; }
+        .vehicle-create-form .form-group { height:100%; margin:0; }
+        .vehicle-create-form .form-group > label { display:block; margin-bottom:.4rem; color:var(--text-main); font-size:.75rem; font-weight:700; }
+        .vehicle-create-form .form-group > div.flex { min-height:42px; background-color:var(--input-bg)!important; border-color:var(--border-color)!important; border-radius:.6rem; }
+        .vehicle-create-form .form-group input, .vehicle-create-form .form-group select { background:transparent!important; border:0!important; color:var(--text-main)!important; font-size:.75rem; font-weight:500; }
+        .vehicle-create-form .form-group > div.flex > span { padding-left:.75rem; padding-right:.55rem; color:var(--text-muted); font-size:.8rem; }
+        .vehicle-create-form .form-group input::placeholder, .vehicle-create-form .form-group small { color:var(--text-muted)!important; }
+        .vehicle-create-form .form-group small, .vehicle-create-form .form-group small button { font-size:.65rem!important; }
+        .vehicle-create-form .form-group small button { color:var(--color-primary)!important; }
+        .vehicle-create-form > hr { display:none; }
+        .vehicle-form-actions { display:flex; justify-content:flex-end; gap:.75rem; margin-top:1.5rem; padding-top:1.25rem; border-top:1px solid var(--border-color); }
+        .vehicle-form-actions .vehicle-cancel-button, .vehicle-form-actions .vehicle-submit-button { min-height:2.5rem; border-radius:.65rem; padding:.65rem 1.1rem; font-size:.7rem; }
+        .vehicle-form-actions .vehicle-submit-button { background:#dc2626; }
+        .vehicle-form-actions .vehicle-submit-button:hover { background:#b91c1c; }
+        .vehicle-modal { position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:1rem; background:rgba(0,0,0,.65); }
+        .vehicle-modal.hidden { display:none; }
+        .vehicle-modal .modal-dialog { width:min(100%,32rem); margin:0; }
+        .vehicle-modal .modal-content { overflow:hidden; background:var(--bg-card); border:1px solid var(--border-color)!important; border-radius:1rem!important; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+        .vehicle-modal .modal-header, .vehicle-modal .modal-footer { border-color:var(--border-color)!important; background:transparent; }
+        .vehicle-modal .modal-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; }
+        .vehicle-modal .modal-body { padding:1.25rem; }
+        .vehicle-modal .modal-footer { display:flex; justify-content:flex-end; gap:.65rem; padding:1rem 1.25rem; }
+        @media (max-width:1023px) { .vehicle-create-form .row { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width:639px) { .vehicle-create-form .row { grid-template-columns:1fr; } }
+    </style>
+
+    <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div class="vehicle-page-heading">
+            <span class="vehicle-page-heading-icon"><i class="fas fa-bus"></i></span>
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Editar vehículo</h1>
+                <p class="mt-1 text-xs font-medium sm:text-sm">Actualiza los datos operativos del vehículo.</p>
+            </div>
+        </div>
+        <a href="{{ route('admin.transporte.maestros.bus_vehiculos.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition hover:border-red-500 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
+            <i class="fas fa-arrow-left text-xs"></i> Volver
+        </a>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
+        <div class="vehicle-card-heading border-b px-6 py-4" style="border-color:var(--border-color);">
+            <span class="vehicle-card-heading-icon"><i class="fas fa-bus"></i></span>
+            <div>
+                <h2 class="text-base font-extrabold" style="color:var(--text-main);">Datos del vehículo</h2>
+                <p class="mt-1 text-xs">Actualiza la información necesaria para mantener el registro.</p>
+            </div>
         </div>
         <form action="{{ route('admin.transporte.maestros.bus_vehiculos.update', $busVehiculo) }}" method="POST"
-            class="rd-prevent-double-submit">
+            class="vehicle-create-form space-y-6 p-6 rd-prevent-double-submit">
             @csrf
             @method('PUT')
             <div class="row">
@@ -70,10 +104,10 @@
                         @enderror
                         <div class="mt-2">
                             <small style="color:#64748b;font-size:0.85rem;">
-                                Â¿No encuentras?
-                                <button type="button"  
+                                ¿No encuentras?
+                                <button type="button" onclick="openModal('modalAddModelo')"
                                     style="background:none;border:none;padding:0;color:#a84348;font-weight:600;font-size:0.85rem;cursor:pointer;">
-                                    <i class="fas fa-plus-circle"></i> AÃ±Ã¡delo aquÃ­
+                                    <i class="fas fa-plus-circle"></i> Añádelo aquí
                                 </button>
                             </small>
                         </div>
@@ -82,7 +116,7 @@
 
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">AÃ±o</label>
+                        <label class="font-weight-bold">Año</label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-calendar"></i></span>
                             <input type="number" name="anio"
@@ -116,7 +150,7 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">Peso del VehÃ­culo</label>
+                        <label class="font-weight-bold">Peso del Vehículo</label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-weight-hanging"></i></span>
                             <input type="text" inputmode="decimal" name="peso"
@@ -207,10 +241,10 @@
                         @enderror
                         <div class="mt-2">
                             <small style="color:#64748b;font-size:0.85rem;">
-                                Â¿No encuentras?
-                                <button type="button"  
+                                ¿No encuentras?
+                                <button type="button" onclick="openModal('modalAddCombustible')"
                                     style="background:none;border:none;padding:0;color:#a84348;font-weight:600;font-size:0.85rem;cursor:pointer;">
-                                    <i class="fas fa-plus-circle"></i> AÃ±Ã¡delo aquÃ­
+                                    <i class="fas fa-plus-circle"></i> Añádelo aquí
                                 </button>
                             </small>
                         </div>
@@ -252,7 +286,7 @@
 
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">KM PrÃ³x. Mantenimiento</label>
+                        <label class="font-weight-bold">KM Próx. Mantenimiento</label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-wrench"></i></span>
                             <input type="text" inputmode="decimal" name="km_proximo_mantenimiento" step="0.01"
@@ -304,7 +338,7 @@
 
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label class="font-weight-bold">Consumo RalentÃ­ (L/h)</label>
+                        <label class="font-weight-bold">Consumo Ralentí (L/h)</label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-clock"></i></span>
                             <input type="text" inputmode="decimal" name="consumo_relenti" step="0.001"
@@ -348,26 +382,26 @@
             </div>
 
             <hr>
-            <div class="d-flex justify-content-end" style="gap:12px;">
-                <a href="{{ route('admin.transporte.maestros.bus_vehiculos.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);">
+            <div class="vehicle-form-actions">
+                <a href="{{ route('admin.transporte.maestros.bus_vehiculos.index') }}" class="vehicle-cancel-button inline-flex items-center justify-center gap-2 border font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);">
                     Cancelar
                 </a>
-                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95 rd-submit-btn" style="color:white;">
-                    <i class="fas fa-save"></i> Guardar Cambios
+                <button type="submit" class="vehicle-submit-button inline-flex items-center justify-center gap-2 font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95 rd-submit-btn" style="color:white;">
+                    <i class="fas fa-check"></i> Guardar vehículo
                 </button>
             </div>
         </form>
     </div>
 
     <!-- MODAL NUEVO MODELO -->
-    <div class="hidden" id="modalAddModelo" tabindex="-1" aria-hidden="true">
+    <div class="vehicle-modal hidden" id="modalAddModelo" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content rd-card" style="border-radius:12px;border:1px solid #e5e7eb;">
                 <div class="modal-header" style="border-bottom:1px solid #e5e7eb;">
                     <h5 class="modal-title rd-title-sm">
                         <i class="fas fa-car mr-2" style="color:var(--color-primary)"></i>Nuevo Modelo
                     </h5>
-                    <button type="button" class="text-slate-500 hover:text-slate-700" ><span>&times;</span></button>
+                    <button type="button" onclick="closeModal('modalAddModelo')" class="text-slate-500 hover:text-slate-700"><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -393,17 +427,17 @@
                         <div id="errorModeloNombre" class="text-danger mt-1" style="display:none;"></div>
                     </div>
                     <div class="form-group mb-0">
-                        <label class="font-weight-bold">DescripciÃ³n <span
+                        <label class="font-weight-bold">Descripción <span
                                 class="text-muted font-weight-normal">(opcional)</span></label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-align-left"></i></span>
                             <input type="text" id="newModeloDescripcion" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
-                                placeholder="Ej: SedÃ¡n compacto" maxlength="255">
+                                placeholder="Ej: Sedán compacto" maxlength="255">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid #e5e7eb;">
-                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);" >Cancelar</button>
+                    <button type="button" onclick="closeModal('modalAddModelo')" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);">Cancelar</button>
                     <button type="button" id="btnGuardarModelo" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                         <i class="fas fa-check"></i> Guardar y Seleccionar
                     </button>
@@ -413,14 +447,14 @@
     </div>
 
     <!-- MODAL NUEVO COMBUSTIBLE -->
-    <div class="hidden" id="modalAddCombustible" tabindex="-1" aria-hidden="true">
+    <div class="vehicle-modal hidden" id="modalAddCombustible" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content rd-card" style="border-radius:12px;border:1px solid #e5e7eb;">
                 <div class="modal-header" style="border-bottom:1px solid #e5e7eb;">
                     <h5 class="modal-title rd-title-sm">
                         <i class="fas fa-gas-pump mr-2" style="color:var(--color-primary)"></i>Nuevo Tipo de Combustible
                     </h5>
-                    <button type="button" class="text-slate-500 hover:text-slate-700" ><span>&times;</span></button>
+                    <button type="button" onclick="closeModal('modalAddCombustible')" class="text-slate-500 hover:text-slate-700"><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -433,7 +467,7 @@
                         <div id="errorCombustibleNombre" class="text-danger mt-1" style="display:none;"></div>
                     </div>
                     <div class="form-group mb-0">
-                        <label class="font-weight-bold">DescripciÃ³n <span
+                        <label class="font-weight-bold">Descripción <span
                                 class="text-muted font-weight-normal">(opcional)</span></label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-align-left"></i></span>
@@ -443,24 +477,31 @@
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid #e5e7eb;">
-                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);" >Cancelar</button>
+                    <button type="button" onclick="closeModal('modalAddCombustible')" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);">Cancelar</button>
                     <button type="button" id="btnGuardarCombustible" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                         <i class="fas fa-check"></i> Guardar y Seleccionar
                     </button>
                 </div>
             </div>
         </div>
-    </div>
-@stop
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/diseÃ±o.css') }}">
-@stop
-
 @push('js')
     <script>
         const CSRF = '{{ csrf_token() }}';
         const vehiculoId = {{ $busVehiculo->id }};
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+        }
 
         function toastExito(mensaje) {
             Swal.fire({
@@ -474,7 +515,7 @@
             });
         }
 
-        // --- Registro DinÃ¡mico de Modelo via Modal ---
+        // --- Registro Dinámico de Modelo vía Modal ---
         document.getElementById('btnGuardarModelo').addEventListener('click', function() {
             const marca = document.getElementById('newModeloMarca').value;
             const nombre = document.getElementById('newModeloNombre').value.trim();
@@ -523,7 +564,7 @@
                         document.getElementById('newModeloMarca').value = '';
                         document.getElementById('newModeloNombre').value = '';
                         document.getElementById('newModeloDescripcion').value = '';
-                        $('#modalAddModelo').modal('hide');
+                        closeModal('modalAddModelo');
                         toastExito(`Modelo "${res.modelo.nombre}" agregado y seleccionado.`);
                     } else {
                         if (res.errors?.marca_id) {
@@ -542,7 +583,7 @@
                 });
         });
 
-        // --- Registro DinÃ¡mico de Tipo de Combustible via Modal ---
+        // --- Registro Dinámico de Tipo de Combustible vía Modal ---
         document.getElementById('btnGuardarCombustible').addEventListener('click', function() {
             const nombre = document.getElementById('newCombustibleNombre').value.trim();
             const descripcion = document.getElementById('newCombustibleDescripcion').value.trim();
@@ -577,7 +618,7 @@
 
                         document.getElementById('newCombustibleNombre').value = '';
                         document.getElementById('newCombustibleDescripcion').value = '';
-                        $('#modalAddCombustible').modal('hide');
+                        closeModal('modalAddCombustible');
                         toastExito(`"${res.tipo.nombre}" agregado y seleccionado.`);
                     } else if (res.errors?.nombre) {
                         errNombre.textContent = res.errors.nombre[0];
@@ -590,24 +631,24 @@
                 });
         });
 
-        // --- Reglas y ValidaciÃ³n en Tiempo Real (Inline) ---
+        // --- Reglas y Validación en Tiempo Real (Inline) ---
         const reglasInput = {
             placa: {
                 max: 20,
-                msg: 'MÃ¡ximo 20 caracteres.'
+                msg: 'Máximo 20 caracteres.'
             },
             anio: {
                 min: 1990,
                 max: {{ date('Y') }},
-                msg: 'AÃ±o entre 1990 y {{ date('Y') }}.'
+                msg: 'Año entre 1990 y {{ date('Y') }}.'
             },
             color: {
                 max: 50,
-                msg: 'MÃ¡ximo 50 caracteres.'
+                msg: 'Máximo 50 caracteres.'
             },
             peso: {
                 max: 50,
-                msg: 'MÃ¡ximo 50 caracteres.'
+                msg: 'Máximo 50 caracteres.'
             },
             cantidad_pasajeros: {
                 min: 1,
@@ -642,12 +683,12 @@
             km_actual: {
                 min: 0,
                 max: 9999999,
-                msg: 'MÃ¡ximo 9,999,999 km.'
+                msg: 'Máximo 9,999,999 km.'
             },
             km_proximo_mantenimiento: {
                 min: 0,
                 max: 9999999,
-                msg: 'MÃ¡ximo 9,999,999 km.'
+                msg: 'Máximo 9,999,999 km.'
             },
         };
 
@@ -689,7 +730,7 @@
             });
         });
 
-        // --- VerificaciÃ³n AsÃ­ncrona de Placa Ãšnica (Excluyendo ID Actual) ---
+        // --- Verificación Asíncrona de Placa Única (Excluyendo ID Actual) ---
         let placaTimer = null;
         const inputPlaca = document.querySelector('[name="placa"]');
         if (inputPlaca) {
@@ -709,7 +750,7 @@
                         .then(r => r.json())
                         .then(res => {
                             if (res.existe) {
-                                mostrarErrorInline(inputPlaca, 'Esta placa ya estÃ¡ registrada.');
+                                mostrarErrorInline(inputPlaca, 'Esta placa ya está registrada.');
                             }
                         });
                 }, 500);
@@ -717,3 +758,6 @@
         }
     </script>
 @endpush
+    </div>
+    </div>
+</x-app-layout>

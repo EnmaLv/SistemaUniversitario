@@ -10,14 +10,18 @@ class BecaBeneficioService
 {
     public function listar(array $filters)
     {
+        $activo = array_key_exists('activo', $filters)
+            ? (string) $filters['activo']
+            : '1';
+
         return Beneficio::query()
             ->when($filters['buscar'] ?? null, function ($query, $buscar) {
-                $query->where('nombre_beneficio', 'like', "%{$buscar}%")
-                    ->orWhere('descripcion', 'like', "%{$buscar}%");
+                $query->where(function ($query) use ($buscar) {
+                    $query->where('nombre_beneficio', 'like', "%{$buscar}%")
+                        ->orWhere('descripcion', 'like', "%{$buscar}%");
+                });
             })
-            ->when(($filters['activo'] ?? '') !== '', function ($query) use ($filters) {
-                $query->where('status', (bool) ($filters['activo'] ?? 1));
-            })
+            ->where('status', $activo === '1')
             ->latest()
             ->paginate(10)
             ->appends($filters);

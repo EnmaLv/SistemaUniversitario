@@ -1,15 +1,14 @@
 <div class="rd-wrapper">
-    @include('components.alert')
     <!-- Formulario de registro diario -->
-    <div class="rd-grid">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] gap-3 items-start">
         <!-- Left: Cedula buscador -->
-        <div class="rd-card rd-card-search">
-            <div class="rd-card-headerr">
+        <div class="rd-card rd-card-search rounded-2xl border shadow-sm overflow-hidden" style="background-color: var(--bg-card); border-color: var(--border-color);">
+            <div class="rd-card-headerr border-b px-5 py-4" style="border-color: var(--border-color);">
                 <h2 class="rd-title">Registro Diario</h2>
                 <p class="rd-sub">Escanea el código de barras del carnet para registrar la entrada</p>
             </div>
 
-            <div class="rd-card-body">
+            <div class="rd-card-body px-5 py-5">
                 <form wire:submit.prevent="save" class="rd-search-form" autocomplete="off">
                     @csrf
                     <div style="display: flex;gap: 10px;align-items: center; justify-content: space-between;">
@@ -20,7 +19,7 @@
                                 style="cursor: not-allowed;"
                             @endif/>
 
-                        <button class="rd-btn rd-btn-primary" type="submit" @disabled(!$enableInput)
+                        <button class="rd-btn rd-btn-primary inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:bg-red-900" type="submit" @disabled(!$enableInput)
                          aria-label="Buscar"  @if(!$enableInput) style="opacity: .8; cursor: not-allowed;" @endif>Buscar</button>
                     </div>
                     <small class="text-muted d-block mt-1">
@@ -62,34 +61,42 @@
         </div>
 
         <!-- Right: Buscador, filtros y tabla -->
-        <div class="rd-card rd-card-list" style="height: 100%">
-            <div class="rd-card-header rd-header-space">
-                <div>
+        <div class="rd-card rd-card-list rounded-2xl border shadow-sm overflow-hidden" style="height: 100%; background-color: var(--bg-card); border-color: var(--border-color);">
+            <div class="rd-card-header rd-header-space" style="display:flex; flex-direction:column; align-items:stretch; gap:16px;">
+                <div class="shrink-0">
                     <h3 class="rd-title-sm">Registros</h3>
                     <p class="rd-sub-sm">Últimos movimientos del día</p>
                 </div>
 
-                <div class="rd-actions">
+                <div class="flex items-center justify-between gap-6">
+                    <div class="rd-actions shrink-0" style="display:flex; align-items:center; gap:8px; min-width:0;">
                     <form action="{{ route('admin.movimientos.registro_diario.index') }}" method="GET"
-                        class="rd-search-inline" role="search">
-                        <input name="buscar" value="{{ $buscar ?? '' }}" class="rd-search-input"
+                        class="rd-search-inline flex items-center gap-2 shrink-0" style="flex-wrap:nowrap;" role="search">
+                        <input name="buscar" value="{{ $buscar ?? '' }}" class="rd-search-input h-10 w-56"
                             placeholder="Nombre, apellido o PNF" id="search" />
-                        <button class="rd-icon-btn" type="submit" title="Buscar"><i class="fas fa-search"></i></button>
+                        <button class="rd-btn rd-btn-primary inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-red-900" type="submit" title="Buscar">
+                            <i class="fas fa-search text-xs"></i>
+                            <span>Buscar</span>
+                        </button>
                     </form>
 
-                    <button class="rd-icon-btn"   aria-expanded="false"
+                    <button class="rd-icon-btn h-10 w-10 shrink-0"   aria-expanded="false"
                         aria-controls="filters" title="Filtros">
                         <i class="fas fa-filter"></i>
                     </button>
+                    </div>
+
+                    <div class="flex shrink-0 items-center justify-end gap-2">
                     @if ($showBtnFinalizar)
-                        <button class="rd-btn rd-btn-alter" title="Finalizar Dia" id="finalizarDia">
+                        <button class="rd-btn rd-btn-alter order-3 inline-flex h-10 min-w-[136px] items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-red-900" title="Finalizar Día" id="finalizarDia">
                             <i class="fas fa-sun"></i>
                             Finalizar Dia
                         </button>  
                     @endif
                     <!-- Modal Finalizar Dia -->
-                    <div wire:ignore.self class="hidden" id="modalFinalizarDia" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered modal-md"> <div class="modal-content rd-card border-0">
+                    <div wire:ignore.self class="hidden rd-modal-overlay" id="modalFinalizarDia" tabindex="-1" aria-hidden="true">
+                        <div class="rd-modal-dialog">
+                            <div class="modal-content rd-card rd-modal-content border-0">
                                 <div class="modal-header border-bottom-0 pt-4 px-4">
                                     <h5 class="rd-title-sm" style="font-size: 1.25rem;">
                                         <i class="fas fa-file-signature me-2" style="color: var(--color-tertiary);"></i>
@@ -150,9 +157,13 @@
                                     </div>
 
                                     <div class="modal-footer border-top-0 pb-4 px-4 gap-2">
-                                        <button type="button" class="rd-btn rd-btn-default" >Cancelar</button>
-                                        <button type="submit" class="rd-btn rd-btn-primary" id="btnConfirmarCierre">
-                                            <i class="fas fa-save me-1"></i> Guardar y Finalizar
+                                        <button type="button" id="cancelarFinalizarDia"
+                                            class="rd-btn inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-700 px-4 py-2.5 text-sm font-extrabold text-red-400 transition hover:bg-red-950/50">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" id="btnConfirmarCierre"
+                                            class="rd-btn inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-red-900">
+                                            <i class="fas fa-save text-xs"></i> Guardar y Finalizar
                                         </button>
                                     </div>
                                 </form>
@@ -162,20 +173,26 @@
 
                     
 
-                    <div class="rd-export-group">
+                    <div class="rd-export-group order-1 flex shrink-0 items-center gap-2" style="display:flex; flex-direction:row; align-items:center; gap:8px;">
                         <a href="{{ route('admin.movimientos.registro_diario.export_excel', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
-                            class="rd-btn rd-btn-success" title="Exportar Excel"><i class="fas fa-file-excel"></i>
+                            class="rd-btn rd-btn-alter inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-emerald-700 bg-[#071b16] px-4 py-2.5 text-sm font-extrabold shadow-sm transition hover:bg-[#0a241d]"
+                            style="color: #34d399 !important;" title="Exportar Excel"><i class="fas fa-file-excel"
+                                style="color: #34d399 !important;"></i>
                             Excel</a>
 
-                        <button class="rd-btn rd-btn-danger" title="Exportar PDF" id="pdfBtn"><i
-                                class="fas fa-file-pdf"></i>
-                            PDF</button>
+                        <a href="{{ route('admin.movimientos.registro_diario.export_pdf', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
+                            class="rd-btn rd-btn-alter inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-red-700 bg-[#22090d] px-4 py-2.5 text-sm font-extrabold shadow-sm transition hover:bg-[#2d0b11]"
+                            style="color: #f87171 !important;" title="Exportar PDF"><i class="fas fa-file-pdf"
+                                style="color: #f87171 !important;"></i>
+                            PDF</a>
+                    </div>
+                    <span class="order-2 mx-2 h-10 w-px bg-red-900/60" aria-hidden="true"></span>
                     </div>
                 </div> 
             </div>
 
             <div class="collapse" id="filters">
-                <div class="rd-filters">
+                <div class="rd-filters rounded-2xl border p-3 shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
                     <form action="{{ route('admin.movimientos.registro_diario.index') }}" method="GET"
                         class="rd-filters-form">
                         <div class="rd-filter-row">
@@ -196,49 +213,66 @@
                 </div>
             </div>
 
-            <div class="rd-card-body rd-list-body">
+            <div class="rd-card-body rd-list-body p-0">
                 <div class="rd-list">
-                    <table class="rd-table">
+                    <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nombre</th>
-                                <th>Apellido</th>
-                                <th>PNF</th>
-                                <th>Registrado</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
+                            <tr class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
+                                <th class="px-6 py-4 text-center" style="width: 80px;">#</th>
+                                <th class="px-6 py-4 text-center">Nombre</th>
+                                <th class="px-6 py-4 text-center">Apellido</th>
+                                <th class="px-6 py-4 text-center">PNF</th>
+                                <th class="px-6 py-4 text-center">Registrado</th>
+                                <th class="px-6 py-4 text-center" style="width: 140px;">Estado</th>
+                                <th class="px-6 py-4 text-center" style="width: 120px;">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-xs font-medium">
                             @forelse ($data as $registro)
-                                <tr>
-                                    <td class="text-center">{{ $loop->iteration }}</td>
-                                    <td>{{ $registro->nombre_persona }}</td>
-                                    <td>{{ $registro->apellido_persona }}</td>
-                                    <td>{{ $registro->nombre_pnf }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                <x-table-row :id="$registro->id" class="border-b" style="border-color: var(--border-color);">
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
+                                            {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                                        </span>
                                     </td>
-                                    <td class="text-center">
-                                        <span class="rd-badge rd-badge-success">Aprobado</span>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap font-bold" style="color: var(--text-main);">
+                                        {{ $registro->nombre_persona }}
                                     </td>
-                                    <td class="text-center">
-                                        <div class="rd-action-group">
-                                            <a class="rd-action"
-                                                href="{{ route('admin.movimientos.registro_diario.show', $registro->id) }}"
-                                                title="Ver"><i class="fas fa-eye"></i></a>
-                                        </div>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
+                                        {{ $registro->apellido_persona }}
                                     </td>
-                                </tr>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ $registro->nombre_pnf }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-[#071b16] border border-emerald-700 shadow-sm"
+                                            style="color: #34d399 !important;">
+                                            <i class="fas fa-check-circle" style="color: #34d399 !important;"></i> Aprobado
+                                        </span>
+                                    </td>
+                                    <x-table-actions :id="$registro->id" :show="false" :edit="false" :toggle="false">
+                                        <a href="{{ route('admin.movimientos.registro_diario.show', $registro->id) }}"
+                                            onclick="event.stopPropagation()"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-500 hover:bg-sky-100 dark:hover:bg-sky-950/50 transition-colors"
+                                            title="Ver detalle">
+                                            <i class="fas fa-eye text-xs"></i>
+                                        </a>
+                                    </x-table-actions>
+                                </x-table-row>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4">No hay registros</td>
+                                    <td colspan="7" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
+                                        No hay registros
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3 d-flex justify-content-center">
+                <div class="flex justify-center border-t p-4" style="border-color: var(--border-color);">
                     {{ $data->onEachSide(1)->links('components.pagination-livewire') }}
                 </div>
             </div>
@@ -364,9 +398,11 @@
 
 
         const finalizarModal = document.getElementById('modalFinalizarDia');
-        document.addEventListener('DOMContentLoaded', ()=>{
+        document.addEventListener('DOMContentLoaded', () => {
             //Script para el boton de finalizarDia
             const finalizarBtn = document.querySelector('#finalizarDia')
+            if (!finalizarBtn || !finalizarModal) return;
+
             finalizarBtn.addEventListener('click', function() {
                 //Mostramos una alerta de confirmacion
                 Swal.fire({
@@ -379,27 +415,27 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         //emitimos el evento
-                        @this.openModal();  
+                        @this.openModal();
                     }
                 });
-            })
-        })
+            });
 
+            const cerrarModal = () => {
+                finalizarModal.classList.add('hidden');
+                finalizarModal.setAttribute('aria-hidden', 'true');
+            };
 
-        document.querySelector('button[]').addEventListener('click', function() {
-            finalizarModal.hide();
-        }); 
+            document.querySelector('#cancelarFinalizarDia')?.addEventListener('click', cerrarModal);
 
-        // Escuchamos el evento que viene del servidor (PHP)
-        document.addEventListener('livewire:initialized', () => {
-            @this.on('openModal', () => {
-                // Mostramos la modal de forma segura una vez el DOM está listo
-                        finalizarModal.classList.remove('hidden');
+            // Escuchamos el evento que viene del servidor (PHP)
+            Livewire.on('openModal', () => {
+                finalizarModal.classList.remove('hidden');
+                finalizarModal.setAttribute('aria-hidden', 'false');
             });
             
-            @this.on('finalizar-dia-guardado', (event) => {
-                let message = event[0]
-                finalizarModal.hide();
+            Livewire.on('finalizar-dia-guardado', (event) => {
+                const message = event[0] ?? event;
+                cerrarModal();
                 Swal.fire({
                     icon: message.icon,
                     title: message.title,
@@ -412,19 +448,5 @@
 
 
 
-        //Script para mostrar el PdfGeneratorUtil
-        const pdfBtn = document.querySelector('#pdfBtn');
-        const pdfRoute = `{{ route('admin.movimientos.registro_diario.export_pdf') }}`;
-        if (pdfBtn) {
-            pdfBtn.addEventListener('click', function() {
-
-                const params = new URLSearchParams(window.location.search);
-                const fechaDesde = params.get('fecha_desde') ?? "";
-                const fechaHasta = params.get('fecha_hasta') ?? "";
-
-                const url = `${pdfRoute}?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`;
-                window.open(url, '_blank');
-            });
-        }
     </script>
 @endpush

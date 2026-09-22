@@ -8,7 +8,7 @@
             <span class="px-3 text-gray-400"><i class="fas fa-gift"></i></span>
             <input id="nombre_beneficio" type="text" name="nombre_beneficio"
                 value="{{ old('nombre_beneficio', $beneficio->nombre_beneficio ?? '') }}"
-                placeholder="Ej. Ayuda economica"
+                placeholder="Ej. Ayuda económica"
                 class="w-full rounded-xl border-0 bg-transparent px-3 py-3 text-sm outline-none transition focus:ring-2 focus:ring-red-500/30"
                 style="color: var(--text-main);" required>
         </div>
@@ -19,9 +19,9 @@
 
     <div>
         <label for="descripcion" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">
-            Descripcion <span class="font-normal text-gray-400">(opcional)</span>
+            Descripción <span class="font-normal text-gray-400">(opcional)</span>
         </label>
-        <textarea id="descripcion" name="descripcion" rows="4" placeholder="Descripcion del beneficio"
+        <textarea id="descripcion" name="descripcion" rows="4" placeholder="Descripción del beneficio"
             class="w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/30"
             style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main); resize: vertical;">{{ old('descripcion', $beneficio->descripcion ?? '') }}</textarea>
         @error('descripcion')

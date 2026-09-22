@@ -10,7 +10,7 @@
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
-                <button type="button" onclick="document.getElementById('modalCrearEstado').classList.remove('hidden'); document.getElementById('modalCrearEstado').classList.add('flex');"
+                <button type="button" onclick="window.abrirCrearEstado()"
                     class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
                     <i class="fas fa-plus text-xs"></i><span>Nuevo estado</span>
                 </button>
@@ -20,5 +20,17 @@
     </div>
     @push('js')
         <script src="{{ asset('js/validations/estado.js') }}"></script>
+        <script>
+            window.abrirCrearEstado = function () {
+                const modal = document.getElementById('modalCrearEstado');
+                if (!modal) {
+                    return;
+                }
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('nombre_estado_crear')?.focus();
+            };
+        </script>
     @endpush
 </x-app-layout>

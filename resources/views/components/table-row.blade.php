@@ -34,8 +34,11 @@
                 justify-content: center;
                 gap: .5rem;
                 max-width: 0;
+                width: 0;
                 opacity: 0;
                 overflow: hidden;
+                pointer-events: none;
+                visibility: hidden;
                 transition: max-width .25s ease, opacity .2s ease;
             }
 
@@ -47,7 +50,10 @@
 
             .fila-tabla.is-open .acciones-panel {
                 max-width: 200px;
+                width: auto;
                 opacity: 1;
+                pointer-events: auto;
+                visibility: visible;
             }
 
             /* Resaltado dinámico según el módulo */

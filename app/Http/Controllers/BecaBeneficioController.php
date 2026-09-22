@@ -33,10 +33,10 @@ class BecaBeneficioController extends Controller
     {
         session(['modulo_activo' => 'beca']);
 
-        $beneficio = $this->beneficioService->crear($request->validated());
+        $this->beneficioService->crear($request->validated());
 
         return redirect()
-            ->route('admin.becas.beneficios.edit', $beneficio)
+            ->route('admin.becas.beneficios.index')
             ->with('success', 'Beneficio registrado exitosamente.');
     }
 

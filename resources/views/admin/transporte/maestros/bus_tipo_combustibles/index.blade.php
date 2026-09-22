@@ -10,9 +10,9 @@
                             {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                         </p>
                 </div>
-                <button type="button" onclick="openModal('modalCrear')" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
+                <a href="{{ route('admin.transporte.maestros.bus_tipo_combustibles.create') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                         <i class="fas fa-plus text-xs"></i> Nuevo tipo
-                </button>
+                </a>
             </div>
 
             <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center" style="background-color:var(--bg-card);border-color:var(--border-color);">
@@ -24,7 +24,9 @@
                 <div class="flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2" style="border-color:var(--border-color);">
                         <span class="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Activos</span>
                         <label class="relative inline-flex cursor-pointer items-center">
-                            <input type="checkbox" id="estadoToggle" class="sr-only peer" {{ request('estado', 1) == 1 ? 'checked' : '' }}>
+                            <input type="checkbox" id="estadoToggle" class="sr-only peer"
+                                {{ request('estado', 1) == 1 ? 'checked' : '' }}
+                                onchange="filtrarTiposCombustible(this.checked)">
                             <span class="h-6 w-10 rounded-full bg-gray-300 transition peer-checked:bg-red-700 dark:bg-gray-700"></span>
                             <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span>
                         </label>
@@ -43,7 +45,7 @@
                         <th class="px-6 py-4 text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y text-xs font-medium">
+                <tbody class="text-xs font-medium">
                     @forelse($tipos as $tipo)
                         <x-table-row :id="$tipo->id" data-id="{{ $tipo->id }}">
                             <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ ($tipos->currentPage() - 1) * $tipos->perPage() + $loop->iteration }}</td>
@@ -90,7 +92,7 @@
         <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                 <h5 class="text-lg font-semibold text-slate-900">Nuevo Tipo de Combustible</h5>
-                <button type="button" class="text-slate-500 hover:text-slate-700" onclick="closeModal('modalCrear')"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="text-slate-500 hover:text-slate-700" onclick="closeTipoCombustibleModal('modalCrear')"><span aria-hidden="true">&times;</span></button>
             </div>
             <form id="formCrear" action="{{ route('admin.transporte.maestros.bus_tipo_combustibles.store') }}" method="POST" class="space-y-4 p-5">
                 @csrf
@@ -109,7 +111,7 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-slate-200 pt-4">
-                    <button type="button" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" onclick="closeModal('modalCrear')">Cancelar</button>
+                    <button type="button" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" onclick="closeTipoCombustibleModal('modalCrear')">Cancelar</button>
                     <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Guardar</button>
                 </div>
             </form>
@@ -120,7 +122,7 @@
         <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
                 <h5 class="text-lg font-semibold text-slate-900">Editar Tipo de Combustible</h5>
-                <button type="button" class="text-slate-500 hover:text-slate-700" onclick="closeModal('modalEditar')"><span aria-hidden="true">&times;</span></button>
+                <button type="button" class="text-slate-500 hover:text-slate-700" onclick="closeTipoCombustibleModal('modalEditar')"><span aria-hidden="true">&times;</span></button>
             </div>
             <form id="formEditar" action="" method="POST" class="space-y-4 p-5">
                 @csrf @method('PUT')
@@ -139,7 +141,7 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-slate-200 pt-4">
-                    <button type="button" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" onclick="closeModal('modalEditar')">Cancelar</button>
+                    <button type="button" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" onclick="closeTipoCombustibleModal('modalEditar')">Cancelar</button>
                     <button type="submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Guardar</button>
                 </div>
             </form>
@@ -149,14 +151,18 @@
 
 @push('js')
     <script>
-        function openModal(id) {
+        document.getElementById('estadoToggle')?.addEventListener('change', function() {
+            filtrarTiposCombustible(this.checked);
+        });
+
+        function openTipoCombustibleModal(id) {
             const modal = document.getElementById(id);
             if (!modal) return;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
 
-        function closeModal(id) {
+        function closeTipoCombustibleModal(id) {
             const modal = document.getElementById(id);
             if (!modal) return;
             modal.classList.add('hidden');
@@ -167,14 +173,14 @@
             document.getElementById('editNombre').value = button.dataset.nombre || '';
             document.getElementById('editDescripcion').value = button.dataset.descripcion || '';
             document.getElementById('formEditar').action = `/admin/transporte/maestros/bus_tipo_combustibles/${button.dataset.id}`;
-            openModal('modalEditar');
+            openTipoCombustibleModal('modalEditar');
         }
 
         function openEditarTipoByData(tipo) {
             document.getElementById('editNombre').value = tipo.nombre || '';
             document.getElementById('editDescripcion').value = tipo.descripcion === 'Ninguna' ? '' : (tipo.descripcion || '');
             document.getElementById('formEditar').action = `/admin/transporte/maestros/bus_tipo_combustibles/${tipo.id}`;
-            openModal('modalEditar');
+            openTipoCombustibleModal('modalEditar');
         }
 
         function toastExito(mensaje) {
@@ -208,7 +214,7 @@
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
-                    closeModal('modalCrear');
+                    closeTipoCombustibleModal('modalCrear');
                     form.reset();
                     toastExito(res.message);
                     window.location.reload();
@@ -232,30 +238,48 @@
             .then(r => r.json())
             .then(res => {
                 if (res.success) {
-        text: `Â¿Desea ${accion} el ${entidad}?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: `SÃ­, ${accion}`,
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (!result.isConfirmed) return;
-        const form = button.closest('form');
-        fetch(form.action, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-            body: new FormData(form),
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                button.closest('tr').remove();
-                toastExito(res.message);
-            }
+                    closeTipoCombustibleModal('modalEditar');
+                    toastExito(res.message);
+                    window.location.reload();
+                } else {
+                    mostrarErrores(res.errors ?? {}, '#formEditar');
+                }
+            })
+            .catch(() => mostrarErrores({ nombre: ['Error inesperado, intente de nuevo.'] }, '#formEditar'));
         });
-    });
-}
+
+        function confirmAccion(event, button, accion, entidad) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: @json('¿Estás seguro?'),
+                text: @json('¿Desea') + ` ${accion} el ${entidad}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: @json('Sí') + `, ${accion}`,
+                cancelButtonText: @json('Cancelar')
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                const form = button.closest('form');
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: new FormData(form),
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        button.closest('tr').remove();
+                        toastExito(res.message);
+                    }
+                });
+            });
+        }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Helpers DOM Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 let contadorFilas = {{ $tipos->total() }};
@@ -315,11 +339,14 @@ function actualizarFilaTabla(tipo) {
 }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Toggle estado Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-document.getElementById('estadoToggle').addEventListener('change', function() {
+function filtrarTiposCombustible(mostrarActivos) {
     const params = new URLSearchParams(window.location.search);
-    params.set('estado', this.checked ? 1 : 0);
-    window.location.href = "{{ route('admin.transporte.maestros.bus_tipo_combustibles.index') }}?" + params.toString();
-});
+    params.set('estado', mostrarActivos ? '1' : '0');
+    params.delete('page');
+    window.location.assign(
+        "{{ route('admin.transporte.maestros.bus_tipo_combustibles.index') }}?" + params.toString()
+    );
+}
 </script>
 @endpush
 </x-app-layout>

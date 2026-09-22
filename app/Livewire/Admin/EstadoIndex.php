@@ -124,6 +124,11 @@ class EstadoIndex extends Component
         $this->dispatch('confirm-delete', id: $id);
     }
 
+    public function confirmActivate($id)
+    {
+        $this->dispatch('confirm-activate', id: $id);
+    }
+
     #[On('destroy-estado')]
     public function destroy($id)
     {
@@ -136,6 +141,21 @@ class EstadoIndex extends Component
             icon: 'success',
             title: 'Eliminado',
             text: 'Estado eliminado Exitosamente.'
+        );
+    }
+
+    #[On('activate-estado')]
+    public function activate($id)
+    {
+        Estado::findOrFail($id)->update([
+            'status' => true
+        ]);
+
+        $this->dispatch(
+            'swal',
+            icon: 'success',
+            title: 'Activado',
+            text: 'Estado reactivado exitosamente.'
         );
     }
 }

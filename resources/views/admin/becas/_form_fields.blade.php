@@ -4,37 +4,132 @@
         : collect();
 @endphp
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="form-group mb-3">
-            <label class="font-weight-bold">Nombre de la beca</label>
+@push('styles')
+    <style>
+        .beca-form-fields table th {
+            padding: .85rem 1rem;
+            background: rgba(0, 0, 0, .02);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: .75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .beca-form-fields table td {
+            padding: .75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .beca-form-fields input,
+        .beca-form-fields textarea,
+        .beca-form-fields select {
+            border-color: var(--border-color) !important;
+            background-color: var(--input-bg) !important;
+            color: var(--text-main) !important;
+        }
+
+        .beca-form-fields > .space-y-3 {
+            gap: .75rem;
+        }
+
+        .beca-form-fields .table-responsive {
+            overflow-x: auto;
+        }
+
+        .beca-form-fields table {
+            min-width: 700px;
+        }
+
+        .beca-form-fields #benefitsTable {
+            min-width: 760px;
+        }
+
+        .beca-form-fields .section-empty {
+            height: 86px;
+            color: var(--text-muted);
+            text-align: center;
+            vertical-align: middle;
+            font-size: .75rem;
+        }
+
+        .beca-form-fields .section-empty i {
+            display: block;
+            margin-bottom: .35rem;
+            font-size: 1.15rem;
+            opacity: .8;
+        }
+
+        .beca-form-fields .section-header-content {
+            width: 100%;
+        }
+
+        .beca-form-fields .availability-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .25rem .55rem;
+            white-space: nowrap;
+            border: 1px solid #047857 !important;
+            border-radius: .55rem;
+            background: #041c17 !important;
+            color: #34d399 !important;
+            font-size: .65rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .beca-form-fields .availability-badge i {
+            font-size: .6rem;
+        }
+
+        html.dark main .beca-form-fields .availability-badge,
+        html:not(.dark) main .beca-form-fields .availability-badge {
+            background: #041c17 !important;
+            border-color: #047857 !important;
+            color: #34d399 !important;
+        }
+    </style>
+@endpush
+
+<div class="beca-form-fields">
+<div class="space-y-3">
+<div class="rounded-2xl border p-5 shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="lg:col-span-2">
+        <div>
+            <label class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Nombre de la beca</label>
             <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50">
                 <span class="px-3 text-slate-500"><i class="fas fa-graduation-cap"></i></span>
                 <input type="text" name="nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
                     value="{{ old('nombre', $beca->nombre ?? '') }}" placeholder="Ej: Beca comedor integral">
             </div>
             @error('nombre')
-                <div class="text-danger mt-1"><b>{{ $message }}</b></div>
+                <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p>
             @enderror
         </div>
     </div>
-</div>
+    <div class="lg:col-span-3">
+    <label class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Descripción <span class="font-normal text-gray-400">(opcional)</span></label>
+    <textarea name="descripcion" rows="3" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" placeholder="Descripción general"
+        style="resize:none;">{{ old('descripcion', $beca->descripcion ?? '') }}        </textarea>
+        </div>
+        </div>
+        </div>
 
-<div class="form-group mb-3">
-    <label class="font-weight-bold">Descripcion</label>
-    <textarea name="descripcion" rows="3" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" placeholder="Descripcion general"
-        style="resize:none;">{{ old('descripcion', $beca->descripcion ?? '') }}</textarea>
-</div>
-
-<hr>
+        <div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">
+<div class="border-b px-5 py-4 flex items-center justify-between gap-3" style="border-color:var(--border-color);">
 
 <div id="preguntasError" class="alert alert-danger mt-2" style="display:none;">Hay preguntas sin rellenar. Completa el nombre de cada pregunta antes de guardar.</div>
 
-<div class="rd-card-header mb-3 d-flex justify-content-between align-items-center">
-    <h3 class="rd-title-sm">Preguntas de la beca</h3>
-    <button type="button" id="addQuestionBtn" class="rd-btn rd-btn-secondary">
+<div class="section-header-content mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <h3 class="text-base font-extrabold flex items-center gap-3" style="color: var(--text-main);"><i class="far fa-comment-alt text-lg"></i>Preguntas de la beca</h3>
+    <button type="button" id="addQuestionBtn" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:bg-red-900 active:scale-95">
         <i class="fas fa-plus"></i> Agregar pregunta
     </button>
+</div>
 </div>
 <div class="table-responsive mb-4" id="questionsContainer">
     <style>
@@ -42,7 +137,7 @@
         #questionsContainer { -ms-overflow-style: none; scrollbar-width: none; }
         #questionsContainer::-webkit-scrollbar { display: none; }
     </style>
-    <table class="rd-table" id="questionsTable" style="width:100%; border-collapse:separate; border-spacing:0 10px;">
+    <table class="w-full border-collapse text-left" id="questionsTable">
         <thead>
             <tr>
                 <th style="width:38%; padding:0 10px 12px 0;">Pregunta</th>
@@ -74,25 +169,27 @@
                         </div>
                     </td>
                     <td class="text-right" style="padding:0;">
-                        <button type="button" class="rd-btn rd-btn-danger btn-sm remove-question" title="Eliminar pregunta" style="height:42px; width:42px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center;">
+                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400" title="Eliminar pregunta">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center py-4">No hay preguntas agregadas aún.</td>
+                    <td colspan="4" class="section-empty"><i class="far fa-file-alt"></i>No hay preguntas agregadas aún.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 </div>
-
-<div class="rd-card-header mb-3">
-    <h3 class="rd-title-sm">Beneficios asignados</h3>
 </div>
-<div class="table-responsive mb-4">
-    <table class="rd-table">
+
+<div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">
+<div class="border-b px-5 py-4" style="border-color:var(--border-color);">
+    <h3 class="text-base font-extrabold flex items-center gap-3" style="color: var(--text-main);"><i class="fas fa-users text-lg"></i>Beneficios asignados</h3>
+</div>
+<div class="table-responsive">
+    <table id="benefitsTable" class="w-full border-collapse text-left">
         <thead>
             <tr>
                 <th style="width:80px" class="text-center">Usar</th>
@@ -118,7 +215,8 @@
                         <div class="text-muted small">{{ $beneficio->descripcion }}</div>
                     </td>
                     <td>
-                        <span class="rd-badge rd-badge-success">
+                        <span class="rd-badge rd-badge-success availability-badge">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
                             {{ max(($beneficio->cupones_disponibles ?? 0) - ($beneficio->cupones_ocupados ?? 0), 0) }}
                             disponibles
                         </span>
@@ -132,21 +230,23 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center py-4">No hay beneficios activos registrados.</td>
+                    <td colspan="4" class="section-empty"><i class="fas fa-gift"></i>No hay beneficios activos registrados.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 </div>
+</div>
 
-<div class="rd-card-header mb-3 d-flex justify-content-between align-items-center">
-    <h3 class="rd-title-sm">Tutores de la beca</h3>
-    <button type="button" id="addTutorBtn" class="rd-btn rd-btn-secondary">
+<div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">
+<div class="border-b px-5 py-4 flex items-center justify-between gap-3" style="border-color:var(--border-color);">
+    <h3 class="text-base font-extrabold flex items-center gap-3" style="color: var(--text-main);"><i class="fas fa-user-friends text-lg"></i>Tutores de la beca</h3>
+    <button type="button" id="addTutorBtn" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:bg-red-900 active:scale-95">
         <i class="fas fa-plus"></i> Agregar tutor
     </button>
 </div>
-<div class="table-responsive mb-4">
-    <table class="rd-table" id="tutorsTable">
+<div class="table-responsive">
+    <table class="w-full border-collapse text-left" id="tutorsTable">
         <thead>
             <tr>
                 <th>Rol</th>
@@ -177,18 +277,21 @@
                     <td>{{ optional($tutores->firstWhere('id_persona', $tutorRow['tutor_id'])) ? trim(optional($tutores->firstWhere('id_persona', $tutorRow['tutor_id']))->nombre_persona . ' ' . optional($tutores->firstWhere('id_persona', $tutorRow['tutor_id']))->apellido_persona) : 'Sin tutor' }}</td>
                     <td>{{ $tutorRow['descripcion'] ?? '' }}</td>
                     <td class="text-center">
-                        <button type="button" class="rd-btn rd-btn-danger btn-sm remove-tutor" title="Eliminar tutor">
+                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400 remove-tutor" title="Eliminar tutor">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center py-4">No hay tutores asignados aún.</td>
+                    <td colspan="4" class="section-empty"><i class="fas fa-user-friends"></i>No hay tutores asignados aún.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
+</div>
+</div>
+</div>
 </div>
 
 <div class="hidden" id="addTutorModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -212,7 +315,7 @@
                                 <select id="tutorRoleSelect" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 border-0 shadow-none" style="background:transparent; height:46px; padding-left:10px; font-size:1rem; color:#374151;">
                                     <option value="">Seleccione rol</option>
                                     @foreach($roles as $role)
-                                        <option value="{{ $role->id_rol }}">{{ $role->nombre }}</option>
+                                        <option value="{{ $role->id_rol }}">{{ $role->nombre ?? 'Sin nombre' }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -247,7 +350,7 @@
 
 @php
     $tutorJsRoles = $roles->map(function ($role) {
-        return ['id' => $role->id_rol, 'name' => $role->nombre];
+        return ['id' => $role->id_rol, 'name' => $role->nombre ?? 'Sin nombre'];
     })->toArray();
 
     $tutorJsPersonas = $tutores->map(function ($tutor) {
@@ -325,7 +428,7 @@
                     <td>${value.tutor_name || ''}</td>
                     <td>${value.descripcion || ''}</td>
                     <td class="text-center">
-                        <button type="button" class="rd-btn rd-btn-danger btn-sm remove-tutor" title="Eliminar tutor">
+                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400 remove-tutor" title="Eliminar tutor">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -354,7 +457,9 @@
             });
 
             const addTutorModalEl = document.getElementById('addTutorModal');
-            const modalCloseButtons = addTutorModalEl.querySelectorAll('[], []');
+            const modalCloseButtons = addTutorModalEl.querySelectorAll(
+                'button[aria-label="Cerrar"], .modal-footer .rd-btn-default'
+            );
 
             addTutorBtn.addEventListener('click', function () {
                 addTutorModalEl.classList.remove('hidden');
@@ -423,7 +528,7 @@
                     const row = button.closest('tr');
                     row.remove();
                     if (!getQuestionRowCount()) {
-                        questionsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No hay preguntas agregadas aún.</td></tr>';
+                        questionsTableBody.innerHTML = '<tr><td colspan="4" class="section-empty"><i class="far fa-file-alt"></i>No hay preguntas agregadas aún.</td></tr>';
                     }
                 });
             }
@@ -460,7 +565,7 @@
                         </div>
                     </td>
                     <td class="text-right" style="padding:0;">
-                        <button type="button" class="rd-btn rd-btn-danger btn-sm remove-question" title="Eliminar pregunta" style="height:42px; width:42px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center;">
+                        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400 remove-question" title="Eliminar pregunta">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -600,3 +705,4 @@
     </script>
 @endpush
 
+</div>

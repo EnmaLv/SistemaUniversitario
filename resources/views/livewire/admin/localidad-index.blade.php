@@ -2,10 +2,19 @@
     @include('admin.localidad.modales.createModal')
     @include('admin.localidad.modales.editModal')
     <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('swal', data => Swal.fire({ icon:data.icon,title:data.title,text:data.text,confirmButtonColor:'#991b1b',timer:3000,timerProgressBar:true }));
-            Livewire.on('confirm-delete', data => Swal.fire({ title:'¿Estás seguro?',text:'¿Desea inactivar la localidad?',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, inactivar',cancelButtonText:'Cancelar',confirmButtonColor:'#991b1b',cancelButtonColor:'#4b5563' }).then(result => { if(result.isConfirmed) Livewire.dispatch('destroy-localidad',{id:data.id}); }));
-        });
+        (() => {
+            const registerLocalidadListeners = () => {
+                Livewire.on('swal', data => Swal.fire({ icon:data.icon,title:data.title,text:data.text,confirmButtonColor:'#991b1b',timer:3000,timerProgressBar:true }));
+                Livewire.on('confirm-delete', data => Swal.fire({ title:'¿Estás seguro?',text:'¿Desea inactivar la localidad?',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, inactivar',cancelButtonText:'Cancelar',confirmButtonColor:'#991b1b',cancelButtonColor:'#4b5563' }).then(result => { if(result.isConfirmed) Livewire.dispatch('destroy-localidad',{id:data.id}); }));
+                Livewire.on('confirm-activate', data => Swal.fire({ title:'¿Reactivar localidad?',text:'La localidad volverá a estar disponible en el sistema.',icon:'question',showCancelButton:true,confirmButtonText:'Sí, reactivar',cancelButtonText:'Cancelar',confirmButtonColor:'#991b1b',cancelButtonColor:'#4b5563' }).then(result => { if(result.isConfirmed) Livewire.dispatch('activate-localidad',{id:data.id}); }));
+            };
+
+            if (window.Livewire) {
+                registerLocalidadListeners();
+            } else {
+                document.addEventListener('livewire:init', registerLocalidadListeners, { once: true });
+            }
+        })();
     </script>
     <div style="background-color:var(--bg-card);border-color:var(--border-color);" class="rounded-2xl border shadow-sm overflow-hidden">
         <div class="p-2.5 border-b" style="border-color:var(--border-color);">
@@ -24,7 +33,7 @@
                         <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">{{ $datos->municipio->nombre_municipio ?? 'Sin municipio' }}</td>
                         <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">{{ $datos->municipio->estado->nombre_estado ?? 'Sin estado' }}</td>
                         <td class="px-6 py-4 text-center whitespace-nowrap">@if($datos->status)<span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900"><i class="fas fa-check-circle"></i> Activo</span>@else<span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900"><i class="fas fa-times-circle"></i> Inactivo</span>@endif</td>
-                        <x-table-actions :id="$datos->id" baseUrl="admin/localidad" :status="$datos->status" :show="false" :edit="false" :toggle="false"><button wire:click="edit({{ $datos->id }})" @click="abrirEditar=true" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50" title="Editar"><i class="fas fa-edit text-xs"></i></button>@if($datos->status)<button wire:click="confirmDestroy({{ $datos->id }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-950/50" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>@endif</x-table-actions>
+                        <x-table-actions :id="$datos->id" baseUrl="admin/localidad" :status="$datos->status" :show="false" :edit="false" :toggle="false"><button wire:click="edit({{ $datos->id }})" @click="abrirEditar=true" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50" title="Editar"><i class="fas fa-edit text-xs"></i></button>@if($datos->status)<button wire:click="confirmDestroy({{ $datos->id }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-950/50" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>@else<button wire:click="confirmActivate({{ $datos->id }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50" title="Reactivar"><i class="fas fa-undo text-xs"></i></button>@endif</x-table-actions>
                     </x-table-row>
                 @empty<tr><td colspan="6" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">No hay localidades registradas</td></tr>@endforelse
             </tbody></table></div>

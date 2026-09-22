@@ -6,15 +6,12 @@ use Livewire\Component;
 use App\Models\Compra;
 use App\Models\DetalleCompra;
 use App\Models\Lote;
+use Illuminate\Support\Facades\DB;
 
 class FechasCompra extends Component
 {
     public $compra;
     public $fechas = [];
-
-    protected $rules = [
-        'fechas' => 'required|date|after:today',
-    ];
 
     public function mount(Compra $compra)
     {
@@ -30,35 +27,30 @@ class FechasCompra extends Component
 
     public function guardar()
     {
+        $this->resetErrorBag();
+
         foreach ($this->fechas as $detalleId => $datos) {
+            $this->validate([
+                "fechas.$detalleId.fecha_vencimiento" => 'required|date|after:today',
+            ], [
+                "fechas.$detalleId.fecha_vencimiento.required" => 'La fecha es obligatoria.',
+                "fechas.$detalleId.fecha_vencimiento.after" => 'Debe ser mayor a hoy.',
+            ]);
+        }
 
-            if (empty($datos['fecha_vencimiento'])) {
-                $this->addError(
-                    "fechas.$detalleId.fecha_vencimiento",
-                    'La fecha es obligatoria.'
-                );
-                return;
-            }
-
-            if ($datos['fecha_vencimiento'] <= now()->toDateString()) {
-                $this->addError(
-                    "fechas.$detalleId.fecha_vencimiento",
-                    'Debe ser mayor a hoy.'
-                );
-                return;
-            }
-
-            Lote::where('id', $datos['lote_id'])
-                ->update([
+        DB::transaction(function () {
+            foreach ($this->fechas as $datos) {
+                Lote::whereKey($datos['lote_id'])->update([
                     'fecha_vencimiento' => $datos['fecha_vencimiento'],
                 ]);
-        }
+            }
+        });
 
         $this->dispatch(
             'swal',
             icon: 'success',
             title: '¡Éxito!',
-            text: 'Fecha guardada Exitosamente.'
+            text: 'Fechas de vencimiento guardadas exitosamente.'
         );
     }
 

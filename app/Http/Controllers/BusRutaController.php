@@ -34,7 +34,9 @@ class BusRutaController extends Controller
     public function create()
     {
         $sedes = Sede::orderBy('nombre')->get();
-        $paradas = BusParada::orderBy('nombre')->get(['id', 'nombre', 'lat', 'lng']);
+        $paradas = BusParada::where('estado', 1)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'lat', 'lng']);
         return view('admin.transporte.maestros.bus_rutas.create', compact('sedes', 'paradas'));
     }
 

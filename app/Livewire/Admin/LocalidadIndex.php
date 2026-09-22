@@ -166,6 +166,11 @@ class LocalidadIndex extends Component
         $this->dispatch('confirm-delete', id: $id);
     }
 
+    public function confirmActivate($id)
+    {
+        $this->dispatch('confirm-activate', id: $id);
+    }
+
     #[On('destroy-localidad')]
     public function destroy($id)
     {
@@ -178,6 +183,21 @@ class LocalidadIndex extends Component
             icon: 'success',
             title: 'Eliminado',
             text: 'Estado eliminado Exitosamente.'
+        );
+    }
+
+    #[On('activate-localidad')]
+    public function activate($id)
+    {
+        Localidad::findOrFail($id)->update([
+            'status' => true
+        ]);
+
+        $this->dispatch(
+            'swal',
+            icon: 'success',
+            title: 'Activada',
+            text: 'Localidad reactivada exitosamente.'
         );
     }
 }

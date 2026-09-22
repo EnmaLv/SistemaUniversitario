@@ -71,7 +71,7 @@
                                     <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $ruta->distancia_km }} km</td>
                                     <td class="px-6 py-4 text-center">
                                         @forelse($ruta->horarios as $horario)
-                                            <span class="m-1 inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[10px] font-black {{ $horario->tipo_viaje === 'entrada' ? 'border-emerald-200 bg-emerald-50 text-emerald-600' : 'border-amber-200 bg-amber-50 text-amber-600' }}">
+                                            <span class="rd-badge m-1 inline-flex items-center gap-1 text-[10px] {{ $horario->tipo_viaje === 'entrada' ? 'rd-badge-success' : 'rd-badge-danger' }}">
                                                 {{ substr($horario->hora_salida, 0, 5) }}
                                                 {{ $horario->tipo_viaje === 'entrada' ? 'Entrada' : 'Salida' }}
                                             </span>

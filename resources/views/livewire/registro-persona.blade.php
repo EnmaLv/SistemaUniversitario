@@ -336,12 +336,17 @@
             </div>
 
             @if(!$onlyShow)
-            <div class="mt-4 d-flex justify-content-end gap-2">
-                <button type="reset" class="rd-btn rd-btn-default" wire:click="$set('formHabilitado', false)">
-                    <i class="fas fa-undo"></i> Restablecer
+            <div class="mt-5 flex justify-end gap-3 border-t pt-5" style="border-color: var(--border-color);">
+                <button type="reset"
+                    class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-600 transition hover:border-red-500 hover:text-red-600 dark:border-gray-700 dark:text-gray-300"
+                    wire:click="$set('formHabilitado', false)">
+                    <i class="fas fa-undo text-xs"></i> Restablecer
                 </button>
-                <button type="submit" class="rd-btn rd-btn-primary rd-submit-btn" {{ !$formHabilitado ? 'disabled' : '' }} style="{{ !$formHabilitado ? 'opacity: 0.5; cursor: not-allowed;' : '' }}">
-                    <i class="fas fa-save"></i> {{ $isEdit ? 'Actualizar' : 'Registrar' }} Estudiante
+                <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:bg-red-900 active:scale-95"
+                    {{ !$formHabilitado ? 'disabled' : '' }}
+                    style="{{ !$formHabilitado ? 'opacity: 0.5; cursor: not-allowed;' : '' }}">
+                    <i class="fas fa-save text-xs"></i> {{ $isEdit ? 'Actualizar' : 'Registrar' }} estudiante
                 </button>
             </div>
             @endif

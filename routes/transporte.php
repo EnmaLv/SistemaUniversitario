@@ -28,6 +28,7 @@ Route::put('/transporte/maestros/bus_modelos/{busModelo}/activar', [BusModeloCon
 
 /* Tipo de Combustible */
 Route::get('/transporte/maestros/bus_tipo_combustibles', [BusTipoCombustibleController::class, 'index'])->name('admin.transporte.maestros.bus_tipo_combustibles.index');
+Route::get('/transporte/maestros/bus_tipo_combustibles/create', [BusTipoCombustibleController::class, 'create'])->name('admin.transporte.maestros.bus_tipo_combustibles.create');
 Route::post('/transporte/maestros/bus_tipo_combustibles/store', [BusTipoCombustibleController::class, 'store'])->name('admin.transporte.maestros.bus_tipo_combustibles.store');
 Route::put('/transporte/maestros/bus_tipo_combustibles/{busTipoCombustible}', [BusTipoCombustibleController::class, 'update'])->name('admin.transporte.maestros.bus_tipo_combustibles.update');
 Route::delete('/transporte/maestros/bus_tipo_combustibles/{busTipoCombustible}', [BusTipoCombustibleController::class, 'destroy'])->name('admin.transporte.maestros.bus_tipo_combustibles.destroy');
