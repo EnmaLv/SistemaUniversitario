@@ -4,6 +4,32 @@
         'opciones',
         $modelo?->opciones->map(fn ($o) => ['etiqueta' => $o->etiqueta, 'valor' => $o->valor])->toArray() ?? []
     );
+
+    $regexPresets = [
+        ''                 => ['label' => '— Sin restricción —',                          'pattern' => ''],
+        'solo_enteros'     => ['label' => 'Solo números enteros (0, 1, 25…)',             'pattern' => '/^\d+$/'],
+        'decimal_2'        => ['label' => 'Decimales con hasta 2 decimales (1.50)',       'pattern' => '/^\d+(\.\d{1,2})?$/'],
+        'rango_1_7'        => ['label' => 'Número del 1 al 7 (días de la semana)',        'pattern' => '/^[1-7]$/'],
+        'rango_0_23'       => ['label' => 'Horas del día (0 a 23)',                       'pattern' => '/^(?:[0-9]|1[0-9]|2[0-3])$/'],
+        'rango_0_59'       => ['label' => 'Minutos (0 a 59)',                             'pattern' => '/^(?:[0-5]?[0-9])$/'],
+        'solo_letras'      => ['label' => 'Solo letras y espacios',                       'pattern' => '/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/'],
+        'alfanumerico'     => ['label' => 'Letras y números (sin espacios)',              'pattern' => '/^[A-Za-z0-9]+$/'],
+        'alfanumerico_esp' => ['label' => 'Letras, números y espacios',                   'pattern' => '/^[A-Za-z0-9\s]+$/'],
+        'cedula_ve'        => ['label' => 'Cédula venezolana (V-12345678)',               'pattern' => '/^[VEJvej]-?\d{6,9}$/'],
+        'telefono'         => ['label' => 'Teléfono (7 a 15 dígitos)',                    'pattern' => '/^[0-9+\-\s()]{7,15}$/'],
+        'email'            => ['label' => 'Correo electrónico (nombre@dominio.com)',      'pattern' => '/^[^\s@]+@[^\s@]+\.[^\s@]+$/'],
+        'fecha_iso'        => ['label' => 'Fecha en formato YYYY-MM-DD',                  'pattern' => '/^\d{4}-\d{2}-\d{2}$/'],
+    ];
+
+    $regexActual = old('regex', $modelo?->regex ?? '');
+
+    // Detecta si el regex del modelo coincide con algún preset
+    $presetSeleccionado = '';
+    foreach ($regexPresets as $key => $preset) {
+        if ($key === '') continue;
+        if ($preset['pattern'] === $regexActual) { $presetSeleccionado = $key; break; }
+    }
+    $esCustom = $regexActual !== '' && $presetSeleccionado === '';
 @endphp
 
 <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
@@ -347,20 +373,60 @@
                 {{-- Regex --}}
                 <div class="mb-6">
                     <label class="block text-[15px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
-                        Expresión regular (opcional)
+                        Regla de formato del campo
                     </label>
-                    <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
-                        style="border-color: var(--border-color);">
-                        <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
-                            style="border-color: var(--border-color);">
-                            <i class="fas fa-code text-sm"></i>
-                        </span>
-                        <input type="text" name="regex"
-                            value="{{ old('regex', $modelo?->regex) }}"
-                            placeholder="Ej: /^[0-9]{10}$/"
-                            style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
-                            class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none font-mono">
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                        {{-- Selector de plantilla --}}
+                        <div class="md:col-span-6">
+                            <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
+                                style="border-color: var(--border-color);">
+                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    style="border-color: var(--border-color);">
+                                    <i class="fas fa-filter text-sm"></i>
+                                </span>
+                                <select id="regex_preset"
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                    @foreach ($regexPresets as $key => $preset)
+                                        <option value="{{ $key }}" @selected($presetSeleccionado === $key)>
+                                            {{ $preset['label'] }}
+                                        </option>
+                                    @endforeach
+                                    <option value="custom" @selected($esCustom)>Personalizada…</option>
+                                </select>
+                            </div>
+                            <p class="mt-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                                Elige una plantilla común. Si no aplica, elige "Personalizada".
+                            </p>
+                        </div>
+
+                        {{-- Input visible solo si es personalizada --}}
+                        <div class="md:col-span-6" id="regexCustomWrapper"
+                            style="{{ $esCustom ? '' : 'display:none;' }}">
+                            <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
+                                style="border-color: var(--border-color);">
+                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    style="border-color: var(--border-color);">
+                                    <i class="fas fa-code text-sm"></i>
+                                </span>
+                                <input type="text" id="regex_input" name="regex"
+                                    value="{{ $regexActual }}"
+                                    placeholder="Ej: /^[0-9]{10}$/"
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none font-mono">
+                            </div>
+                            <p class="mt-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                                Debe incluir las barras <code>/</code> al inicio y al final.
+                            </p>
+                        </div>
                     </div>
+
+                    {{-- Hidden input para enviar el valor final cuando NO es custom --}}
+                    <input type="hidden" id="regex_hidden" name="regex"
+                        value="{{ $esCustom ? '' : $regexActual }}"
+                        {{ $esCustom ? 'disabled' : '' }}>
+
                     @error('regex')
                         <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                     @enderror
@@ -386,6 +452,37 @@
 </div>
 
 <script>
+    (function () {
+        const presets = @json(collect($regexPresets)->map(fn($p) => $p['pattern'])->toArray());
+        const select  = document.getElementById('regex_preset');
+        const wrapper = document.getElementById('regexCustomWrapper');
+        const input   = document.getElementById('regex_input');
+        const hidden  = document.getElementById('regex_hidden');
+
+        if (!select || !wrapper || !input || !hidden) return;
+
+        function sync() {
+            const val = select.value;
+
+            if (val === 'custom') {
+                // Modo personalizado: mostrar input, activar name, desactivar hidden
+                wrapper.style.display = '';
+                input.disabled = false;
+                hidden.disabled = true;
+                input.focus();
+            } else {
+                // Modo preset: ocultar input, desactivar su name, enviar valor por hidden
+                wrapper.style.display = 'none';
+                input.disabled = true;
+                hidden.disabled = false;
+                hidden.value = presets[val] ?? '';
+            }
+        }
+
+        select.addEventListener('change', sync);
+        sync(); // estado inicial
+    })();
+    
     let opcionesCount = 0;
 
     function addOption(etiqueta = '', valor = '') {

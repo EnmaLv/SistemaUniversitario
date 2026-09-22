@@ -440,6 +440,7 @@
         container.classList.remove('hidden');
 
         preguntas.forEach((p, i) => container.appendChild(buildPregunta(p, i)));
+        attachRegexGuard(container);
     }
 
     function buildPregunta(p, idx) {
@@ -516,16 +517,30 @@
                         : tipo === 'decimal' ? 'number' : 'text';
 
             const step = tipo === 'decimal' ? '0.01' : '1';
-            const min = p.valor_min !== null ? `min="${p.valor_min}"` : '';
-            const max = p.valor_max !== null ? `max="${p.valor_max}"` : '';
+            const min = p.valor_min !== null && p.valor_min !== undefined ? `min="${p.valor_min}"` : '';
+            const max = p.valor_max !== null && p.valor_max !== undefined ? `max="${p.valor_max}"` : '';
             const minL = p.min_length ? `minlength="${p.min_length}"` : '';
             const maxL = p.max_length ? `maxlength="${p.max_length}"` : '';
-            const pat = p.regex ? `pattern="${p.regex.replace(/^\/|\/$/g, '')}"` : '';
+
+            // Parsear regex: /patrón/flags  →  { source, flags }
+            let cleanPattern = '';
+            if (p.regex) {
+                const m = p.regex.match(/^\/(.+)\/([gimsuvy]*)$/);
+                cleanPattern = m ? m[1] : p.regex;
+            }
+
+            const pat       = cleanPattern ? `pattern="${cleanPattern.replace(/"/g, '&quot;')}"` : '';
+            const dataRegex = p.regex ? `data-regex="${p.regex.replace(/"/g, '&quot;')}"` : '';
+
+            // Atributos extra para number según tipo
+            const inputMode = inputType === 'number'
+                ? `inputmode="${tipo === 'decimal' ? 'decimal' : 'numeric'}"`
+                : '';
 
             inputHtml = `<input type="${inputType}" name="${nameValor}" ${p.obligatoria ? 'required' : ''}
                             placeholder="${p.placeholder ?? ''}"
                             ${inputType === 'number' ? `step="${step}" ${min} ${max}` : ''}
-                            ${minL} ${maxL} ${pat}
+                            ${minL} ${maxL} ${pat} ${dataRegex} ${inputMode}
                             style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                             class="w-full text-sm px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-sky-500 focus:outline-none">`;
         }
@@ -570,6 +585,79 @@
             list.appendChild(li);
         });
     }
+
+    function attachRegexGuard(root) {
+        const inputs = root.querySelectorAll('input[data-regex], textarea[data-regex]');
+        inputs.forEach(input => {
+            const raw = input.getAttribute('data-regex');
+            if (!raw) return;
+
+            const m = raw.match(/^\/(.+)\/([gimsuvy]*)$/);
+            const source = m ? m[1] : raw;
+
+            let re;
+            try {
+                re = new RegExp(source);
+            } catch (e) {
+                console.warn('[regex inválido]', raw, e);
+                return;
+            }
+
+            let lastValid = input.value;
+            if (lastValid && !re.test(lastValid)) lastValid = '';
+
+            input.addEventListener('input', function () {
+                const val = this.value;
+                if (val === '') { lastValid = ''; return; }
+                if (re.test(val)) { lastValid = val; return; }
+
+                const withoutLast = val.slice(0, -1);
+                if (withoutLast === '' || re.test(withoutLast)) {
+                    const pos = this.selectionStart;
+                    this.value = withoutLast;
+                    lastValid = withoutLast;
+                    try { this.setSelectionRange(Math.max(0, pos - 1), Math.max(0, pos - 1)); } catch (_) {}
+                } else {
+                    this.value = lastValid;
+                }
+            });
+
+            input.addEventListener('paste', function (e) {
+                const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                const next = this.value + pasted;
+                if (!re.test(next)) e.preventDefault();
+            });
+
+            if (input.type === 'number') {
+                input.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+            }
+        });
+    }
+
+    /* ============================================================
+    Init
+    ============================================================ */
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('jornada_id').value) {
+            actualizarJornada();
+        }
+
+        const form = document.getElementById('solicitudForm');
+        form.addEventListener('submit', function (e) {
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                const invalid = form.querySelector(':invalid');
+                if (invalid) {
+                    const pane = invalid.closest('.step-pane');
+                    if (pane) {
+                        const stepNum = parseInt(pane.id.replace('step-content-', ''));
+                        goToStep(stepNum);
+                        setTimeout(() => invalid.reportValidity(), 100);
+                    }
+                }
+            }
+        });
+    });
 
     function leerValorBloque(block) {
         const checks = block.querySelectorAll('input[type="checkbox"]:checked');
