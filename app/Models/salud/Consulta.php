@@ -63,18 +63,14 @@ class Consulta extends Model
     public function getPasoActualAttribute(): string
     {
         if (!$this->relationLoaded('receta')) {
-            $this->load('receta.detalles.dispensaciones');
+            $this->load('receta');
         }
 
         if (!$this->receta) {
             return 'receta';
         }
 
-        if ($this->receta->tieneItemsPendientes()) {
-            return 'dispensacion';
-        }
-
-        return 'completa';
+        return (int) $this->receta->estado === 2 ? 'completa' : 'dispensacion';
     }
 
     public static function crear(array $data, int $creadoPor): self
