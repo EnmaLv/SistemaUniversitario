@@ -41,6 +41,10 @@ class DatabaseSeeder extends Seeder
             MedicamentoSeeder::class,
             ConsultorioSeeder::class,
             HorarioConsultoriosSeeder::class,
+            MarcaSeeder::class,
+            TipoCombustibleSeeder::class,
+            ModeloSeeder::class,
+            VehiculoSeeder::class,
         ]);
         \App\Models\Proveedor::factory(1)->create();
     }
