@@ -8,7 +8,10 @@ use App\Models\Becas\JornadaBeca;
 use App\Models\Becas\Beneficio;
 use App\Models\Becas\JornadaCriterio;
 use App\Models\Becas\SolicitudRespuesta;
+use App\Models\Becas\Lapso;
+use App\Models\Becas\SolicitudDocumento;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\UploadedFile;
 use Exception;
 
 class SolicitudBecasService
@@ -70,8 +73,33 @@ class SolicitudBecasService
             $respuestas = $data['respuestas'] ?? [];
             unset($data['respuestas']);
 
+            $archivoNotas = $data['archivo_notas'] ?? null;
+            unset($data['archivo_notas']);
+
             $data['estado'] = 0;
             $solicitud = SolicitudBeca::create($data);
+
+            // Procesamiento y guardado del documento adjunto (Notas)
+            if ($archivoNotas instanceof UploadedFile) {
+                // Obtener el código del lapso académico activo para agrupar los archivos en carpetas por período
+                $lapsoActual = Lapso::where('es_actual', true)->first();
+                $codigoLapso = $lapsoActual ? $lapsoActual->codigo : 'sin-lapso';
+
+                // Generar un nombre único para el archivo que evita exponer información sensible del estudiante
+                $extension = $archivoNotas->extension() ?: $archivoNotas->getClientOriginalExtension();
+                $nombreArchivo = 'notas_solicitud_' . $solicitud->id . '_' . uniqid() . '.' . $extension;
+                
+                // Guardar el archivo físicamente en el storage bajo: documentos_becas/{codigo_lapso}/{nombre_archivo}
+                $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'public');
+
+                // Registrar la referencia del documento en la base de datos asociado a la solicitud
+                SolicitudDocumento::create([
+                    'id_solicitud'     => $solicitud->id,
+                    'nombre_documento' => 'Notas Certificadas',
+                    'ruta_archivo'     => $ruta,
+                    'tipo_archivo'     => $extension,
+                ]);
+            }
 
             $this->guardarRespuestas($solicitud, $jornada, $respuestas);
 
@@ -209,6 +237,114 @@ class SolicitudBecasService
             ]);
 
             return $solicitud;
+        });
+    }
+
+    public function obtenerPendientesPorRenovar(int $jornadaId)
+    {
+        $jornada = JornadaBeca::findOrFail($jornadaId);
+        
+        // Estudiantes aprobados en el mismo beneficio en cualquier lapso anterior
+        $aprobadosAnteriores = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
+            ->where('estado', 1)
+            ->where('id_lapso', '!=', $jornada->lapsos_id)
+            ->pluck('id_persona');
+
+        // Estudiantes que ya tienen solicitud (de cualquier estado) en la jornada actual
+        $postuladosActuales = SolicitudBeca::where('jornada_id', $jornadaId)
+            ->pluck('id_persona');
+
+        // Los que faltan por postularse en esta jornada
+        $pendientes = $aprobadosAnteriores->diff($postuladosActuales);
+
+        return $pendientes;
+    }
+
+    public function renovarSolicitudSimplificada(int $personaId, int $jornadaId, UploadedFile $archivoNotas): SolicitudBeca
+    {
+        return DB::transaction(function () use ($personaId, $jornadaId, $archivoNotas) {
+            $jornada = JornadaBeca::findOrFail($jornadaId);
+
+            if (!$jornada->activa) {
+                throw new Exception("La jornada seleccionada no está activa.");
+            }
+
+            $hoy = now()->toDateString();
+            if ($jornada->fecha_inicio_solicitud->toDateString() > $hoy
+                || $jornada->fecha_fin_solicitud->toDateString() < $hoy) {
+                throw new Exception("El período de solicitudes para esta jornada ya expiró o no ha iniciado.");
+            }
+
+            // Verificar si tiene una solicitud previa aprobada para este beneficio
+            $solicitudPrevia = SolicitudBeca::where('id_persona', $personaId)
+                ->where('id_beneficio', $jornada->beneficio_id)
+                ->where('estado', 1)
+                ->where('id_lapso', '!=', $jornada->lapsos_id)
+                ->latest('created_at')
+                ->first();
+
+            if (!$solicitudPrevia) {
+                throw new Exception("El estudiante no cumple los requisitos para renovación automática (no tiene una beca previa aprobada para este beneficio).");
+            }
+
+            // Verificar si ya tiene solicitud en esta jornada
+            $existe = SolicitudBeca::where('id_persona', $personaId)
+                ->where('jornada_id', $jornadaId)
+                ->exists();
+            if ($existe) {
+                throw new Exception("Ya existe una solicitud registrada para esta jornada.");
+            }
+
+            if ($jornada->cupos_maximos <= $jornada->cupos_asignados) {
+                throw new Exception("No hay cupos disponibles en esta jornada para renovar.");
+            }
+
+            // Crear la nueva solicitud
+            $nuevaSolicitud = SolicitudBeca::create([
+                'id_persona' => $personaId,
+                'id_beneficio' => $jornada->beneficio_id,
+                'jornada_id' => $jornadaId,
+                'id_lapso' => $jornada->lapsos_id,
+                'tipo_solicitud' => 'renovacion',
+                'estado' => 0, // Pendiente de revisión
+            ]);
+
+            // Guardar el nuevo documento de notas
+            $lapsoActual = Lapso::where('id', $jornada->lapsos_id)->first();
+            $codigoLapso = $lapsoActual ? $lapsoActual->codigo : 'sin-lapso';
+            $extension = $archivoNotas->extension() ?: $archivoNotas->getClientOriginalExtension();
+            $nombreArchivo = 'notas_renovacion_' . $nuevaSolicitud->id . '_' . uniqid() . '.' . $extension;
+            
+            $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'public');
+
+            SolicitudDocumento::create([
+                'id_solicitud'     => $nuevaSolicitud->id,
+                'nombre_documento' => 'Notas Certificadas',
+                'ruta_archivo'     => $ruta,
+                'tipo_archivo'     => $extension,
+            ]);
+
+            // Clonar las respuestas anteriores
+            $respuestasAnteriores = SolicitudRespuesta::where('id_solicitud', $solicitudPrevia->id)->get();
+            $nuevasRespuestas = [];
+
+            foreach ($respuestasAnteriores as $respuesta) {
+                $nuevasRespuestas[] = [
+                    'id_solicitud'    => $nuevaSolicitud->id,
+                    'id_pregunta'     => $respuesta->id_pregunta,
+                    'valor'           => $respuesta->valor,
+                    'valor_json'      => $respuesta->valor_json,
+                    'cumple_criterio' => $respuesta->cumple_criterio,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ];
+            }
+
+            if (!empty($nuevasRespuestas)) {
+                SolicitudRespuesta::insert($nuevasRespuestas);
+            }
+
+            return $nuevaSolicitud;
         });
     }
 }

@@ -30,6 +30,9 @@ class CheckMenuPermission
         $allowedRouteNames = [
             'admin.configuracion.master_key.form',
             'admin.configuracion.master_key.verify',
+            'admin.becas.solicitudes.store',
+            'admin.becas.solicitudes.renovar',
+            'admin.becas.lapsos.avanzar',
         ];
 
         $currentPath = ltrim($request->path(), '/');

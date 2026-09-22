@@ -1,6 +1,6 @@
 @php
     $becasConfigKeys = ['beneficios', 'preguntas', 'criterios'];
-    $becasOpsKeys    = ['jornada', 'solicitud'];
+    $becasOpsKeys = ['jornada', 'solicitud'];
 @endphp
 
 @canMenu($becasConfigKeys)
@@ -81,13 +81,14 @@
         @endcanMenu
     </div>
 </div>
-@if (auth()->user()->tieneRol('estudiante', 'becario'))
-@canMenu('solicitud')
-    <a href="{{ route('admin.becas.solicitar') }}"
-        class="flex items-center gap-2.5 h-8 rounded-lg px-3 text-sm font-medium transition-all {{ request()->routeIs('admin.becas.solicitudes.*') ? 'bg-[#623739] text-white font-semibold' : 'text-white/80 hover:bg-[#623739]/60 hover:text-white' }}">
-        <i class="fa-solid fa-file-signature w-4 text-center flex-shrink-0"></i>
-        <span class="truncate">Solicitar</span>
-    </a>
+@endcanMenu
+
+@if (auth()->user()->tieneRol('becario'))
+@canMenu('solicitar')
+<a href="{{ route('admin.becas.solicitar') }}"
+    class="flex items-center gap-2.5 h-8 rounded-lg px-3 text-sm font-medium transition-all {{ request()->routeIs('admin.becas.solicitudes.*') ? 'bg-[#623739] text-white font-semibold' : 'text-white/80 hover:bg-[#623739]/60 hover:text-white' }}">
+    <i class="fa-solid fa-file-signature w-4 text-center flex-shrink-0"></i>
+    <span class="truncate">Solicitar Beca</span>
+</a>
 @endcanMenu
 @endif
-@endcanMenu

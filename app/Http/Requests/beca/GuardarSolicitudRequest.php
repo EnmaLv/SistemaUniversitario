@@ -22,6 +22,7 @@ class GuardarSolicitudRequest extends FormRequest
             'id_beneficio'    => 'required|exists:be_beneficios,id',
             'id_lapso'        => 'required|exists:be_lapsos,id',
             'tipo_solicitud'  => 'required|in:nueva,renovacion',
+            'archivo_notas'   => 'required|file|mimes:pdf|max:2048',
 
             'respuestas'                  => 'required|array',
             'respuestas.*.id_pregunta'    => 'required|exists:be_beca_preguntas,id',
@@ -98,6 +99,10 @@ class GuardarSolicitudRequest extends FormRequest
             'id_persona.required' => 'Debe seleccionar un estudiante.',
             'jornada_id.required' => 'Debe asociar una jornada activa.',
             'respuestas.required' => 'Debe responder el formulario.',
+            'archivo_notas.required' => 'El archivo de notas es obligatorio.',
+            'archivo_notas.file' => 'El documento cargado debe ser un archivo válido.',
+            'archivo_notas.mimes' => 'El documento de notas debe ser un archivo PDF.',
+            'archivo_notas.max' => 'El documento de notas no debe pesar más de 2MB.',
         ];
     }
 }
