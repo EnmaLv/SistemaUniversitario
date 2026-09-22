@@ -53,6 +53,9 @@ class SolicitudBecaController extends Controller
         $jornadas = JornadaBeca::where('activa', 1)
             ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
             ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+            ->whereHas('lapso', function ($q) {
+                $q->where('es_actual', 1);
+            })
             ->with(['beneficio', 'lapso'])
             ->get();
 
@@ -74,6 +77,9 @@ class SolicitudBecaController extends Controller
         $jornadas = JornadaBeca::where('activa', 1)
             ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
             ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+            ->whereHas('lapso', function ($q) {
+                $q->where('es_actual', 1);
+            })
             ->with(['beneficio', 'lapso'])
             ->get();
 

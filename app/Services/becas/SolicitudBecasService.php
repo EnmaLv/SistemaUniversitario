@@ -59,11 +59,12 @@ class SolicitudBecasService
             }
 
             $existe = SolicitudBeca::where('id_persona', $personaId)
-                ->where('jornada_id', $jornadaId)
+                ->where('id_beneficio', $jornada->beneficio_id)
+                ->where('id_lapso', $jornada->lapsos_id)
                 ->whereIn('estado', [0, 1])
                 ->exists();
             if ($existe) {
-                throw new Exception("Ya existe una solicitud en proceso o aprobada para esta jornada.");
+                throw new Exception("Ya existe una solicitud en proceso o aprobada para este beneficio en el lapso actual.");
             }
 
             if ($jornada->cupos_maximos <= $jornada->cupos_asignados) {
@@ -287,12 +288,13 @@ class SolicitudBecasService
                 throw new Exception("El estudiante no cumple los requisitos para renovación automática (no tiene una beca previa aprobada para este beneficio).");
             }
 
-            // Verificar si ya tiene solicitud en esta jornada
+            // Verificar si ya tiene solicitud en este lapso
             $existe = SolicitudBeca::where('id_persona', $personaId)
-                ->where('jornada_id', $jornadaId)
+                ->where('id_beneficio', $jornada->beneficio_id)
+                ->where('id_lapso', $jornada->lapsos_id)
                 ->exists();
             if ($existe) {
-                throw new Exception("Ya existe una solicitud registrada para esta jornada.");
+                throw new Exception("Ya existe una solicitud registrada para este beneficio en el lapso actual.");
             }
 
             if ($jornada->cupos_maximos <= $jornada->cupos_asignados) {

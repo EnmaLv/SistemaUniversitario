@@ -58,7 +58,7 @@
             </div>
 
             <form id="solicitudForm" action="{{ $action }}" method="POST" enctype="multipart/form-data"
-                class="p-6 sm:p-8">
+            class="p-6 sm:p-8" novalidate>
                 @csrf
 
                 {{-- PASO 1: DATOS BASE --}}
@@ -354,6 +354,21 @@
     let currentStep = 1;
 
     function goToStep(step) {
+        if (step > currentStep) {
+            // Validar paso actual antes de avanzar
+            const currentPane = document.getElementById(`step-content-${currentStep}`);
+            const inputs = currentPane.querySelectorAll('input, select, textarea');
+            let isValid = true;
+            for (let i = 0; i < inputs.length; i++) {
+                if (!inputs[i].checkValidity()) {
+                    inputs[i].reportValidity();
+                    isValid = false;
+                    break;
+                }
+            }
+            if (!isValid) return; // Bloquear avance
+        }
+
         document.querySelectorAll('.step-pane').forEach(el => el.classList.add('hidden'));
         document.getElementById(`step-content-${step}`).classList.remove('hidden');
 
@@ -575,5 +590,21 @@
         if (document.getElementById('jornada_id').value) {
             actualizarJornada();
         }
+
+        const form = document.getElementById('solicitudForm');
+        form.addEventListener('submit', function (e) {
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                const invalid = form.querySelector(':invalid');
+                if (invalid) {
+                    const pane = invalid.closest('.step-pane');
+                    if (pane) {
+                        const stepNum = parseInt(pane.id.replace('step-content-', ''));
+                        goToStep(stepNum);
+                        setTimeout(() => invalid.reportValidity(), 100);
+                    }
+                }
+            }
+        });
     });
 </script>

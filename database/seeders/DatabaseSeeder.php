@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             CategoriaMedicamentoSeeder::class,
             RolModuloSeeder::class,
             JornadaBecaSeeder::class,
+            BecaPreguntaSeeder::class,
             GrupoHorarioSeeder::class,
             AvanceSesionSeeder::class,
             NotaEvolucionSeeder::class,
