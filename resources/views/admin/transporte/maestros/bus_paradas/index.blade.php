@@ -51,7 +51,7 @@
                                 <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y text-xs font-medium">
+                        <tbody class="text-xs font-medium">
                             @forelse($paradas as $parada)
                                 <x-table-row :id="$parada->id">
                                     <td class="px-6 py-4 text-center" style="color:var(--text-muted);">

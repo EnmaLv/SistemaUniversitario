@@ -3,11 +3,18 @@
     @include('admin.estado.modales.editModal')
 
     <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('swal', data => Swal.fire({
-                icon: data.icon, title: data.title, text: data.text,
-                confirmButtonColor: '#991b1b', timer: 3000, timerProgressBar: true
-            }));
+        (() => {
+            const registerEstadoListeners = () => {
+                Livewire.on('swal', data => {
+                    if (data.title === '¡Éxito!') {
+                        document.getElementById('modalCrearEstado')?.classList.add('hidden');
+                        document.getElementById('modalCrearEstado')?.classList.remove('flex');
+                    }
+                    Swal.fire({
+                        icon: data.icon, title: data.title, text: data.text,
+                        confirmButtonColor: '#991b1b', timer: 3000, timerProgressBar: true
+                    });
+                });
             Livewire.on('confirm-delete', data => {
                 Swal.fire({
                     title: '¿Estás seguro?', text: '¿Desea inactivar el estado?', icon: 'warning',
@@ -18,7 +25,28 @@
                     if (result.isConfirmed) Livewire.dispatch('destroy-estado', { id: data.id });
                 });
             });
-        });
+            Livewire.on('confirm-activate', data => {
+                Swal.fire({
+                    title: '¿Reactivar estado?',
+                    text: 'El estado volverá a estar disponible en el sistema.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, reactivar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#991b1b',
+                    cancelButtonColor: '#4b5563'
+                }).then(result => {
+                    if (result.isConfirmed) Livewire.dispatch('activate-estado', { id: data.id });
+                });
+            });
+            };
+
+            if (window.Livewire) {
+                registerEstadoListeners();
+            } else {
+                document.addEventListener('livewire:init', registerEstadoListeners, { once: true });
+            }
+        })();
     </script>
 
     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -66,6 +94,8 @@
                                 <button wire:click="edit({{ $datos->id }})" @click="abrirEditar = true" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors" title="Editar"><i class="fas fa-edit text-xs"></i></button>
                                 @if($datos->status)
                                     <button wire:click="confirmDestroy({{ $datos->id }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>
+                                @else
+                                    <button wire:click="confirmActivate({{ $datos->id }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors" title="Reactivar"><i class="fas fa-undo text-xs"></i></button>
                                 @endif
                             </x-table-actions>
                         </x-table-row>

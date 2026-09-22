@@ -30,7 +30,7 @@
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm p-4 sm:p-6 mb-8">
                 <form action="{{ route('admin.movimientos.compras.store') }}" method="POST"
-                    class="rd-prevent-double-submit">
+                    class="space-y-6 p-6 rd-prevent-double-submit">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <div class="md:col-span-3">
@@ -158,4 +158,5 @@
             </div>
         </div>
     </div>
+</x-app-layout>
 </x-app-layout>

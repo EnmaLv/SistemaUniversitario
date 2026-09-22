@@ -40,10 +40,10 @@
     if (typeof confirmToggleEstado === 'undefined') {
         function confirmToggleEstado(id, action = 'inactivar', formPrefix = 'form-toggle-') {
             const isActivate = action === 'activar';
-            const title = isActivate ? '¿Activar registro?' : '¿Inactivar registro?';
+            const title = isActivate ? @json('¿Activar registro?') : @json('¿Inactivar registro?');
             const text = isActivate ?
-                'El registro volverá a estar disponible en el sistema.' :
-                'El registro dejará de estar disponible en el sistema.';
+                @json('El registro volverá a estar disponible en el sistema.') :
+                @json('El registro dejará de estar disponible en el sistema.');
 
             Swal.fire({
                 title: title,

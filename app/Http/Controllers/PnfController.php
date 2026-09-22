@@ -29,7 +29,7 @@ class PnfController extends Controller
             return redirect($from . '?pnf_id=' . $fromidreuse->id)
                 ->with('success', 'PNF creado exitosamente');
         } else {
-            return redirect()->route('admin.maestros.recetas.index')
+            return redirect()->route('admin.maestros.pnf.index')
                 ->with('success', 'PNF creado exitosamente');
         }
     }

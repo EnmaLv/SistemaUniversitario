@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="min-h-[calc(100vh-4rem)] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
+        <div class="mx-auto max-w-4xl">
             @include('components.alert')
             <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
@@ -13,12 +13,14 @@
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>
-            <div class="rounded-2xl border p-5 shadow-sm sm:p-6" style="background-color: var(--bg-card); border-color: var(--border-color);">
-                <div class="mb-6 border-b pb-4" style="border-color: var(--border-color);">
+            <div class="overflow-hidden rounded-2xl border shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                <div class="border-b px-6 py-5" style="border-color: var(--border-color);">
                     <h2 class="text-lg font-extrabold" style="color: var(--text-main);">Datos del estudiante</h2>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Completa la información requerida.</p>
                 </div>
-                <livewire:registro-persona />
+                <div class="p-6">
+                    <livewire:registro-persona />
+                </div>
             </div>
         </div>
     </div>

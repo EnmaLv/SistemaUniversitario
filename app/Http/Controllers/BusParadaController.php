@@ -54,13 +54,17 @@ class BusParadaController extends Controller
     public function destroy(BusParada $busParada)
     {
         $busParada->update(['estado' => 0]);
-        return response()->json(['success' => true, 'message' => 'Parada inactivada correctamente.']);
+        return redirect()
+            ->route('admin.transporte.maestros.bus_paradas.index')
+            ->with('success', 'Parada inactivada correctamente.');
     }
 
     public function activar(BusParada $busParada)
     {
         $busParada->update(['estado' => 1]);
-        return response()->json(['success' => true, 'message' => 'Parada activada correctamente.']);
+        return redirect()
+            ->route('admin.transporte.maestros.bus_paradas.index')
+            ->with('success', 'Parada activada correctamente.');
     }
 
     public function verificarNombre(Request $request)

@@ -11,7 +11,8 @@
                 {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
-        <button type="button" onclick="openModal('modalCrearPnf')"
+        <button type="button"
+            onclick="const modal = document.getElementById('modalCrearPnf'); modal?.classList.remove('hidden'); modal?.classList.add('flex'); document.querySelector('#modalCrearPnf input[name=&quot;nombre&quot;]')?.focus();"
             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
             <i class="fas fa-plus text-xs"></i><span>Nuevo programa</span>
         </button>
@@ -26,10 +27,18 @@
                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
                 style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);">
         </form>
-        <div class="flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2" style="border-color: var(--border-color);">
+        <div class="flex shrink-0 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2"
+            style="border-color: var(--border-color);"
+            role="button"
+            tabindex="0"
+            onclick="window.location.href = this.dataset.url"
+            onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href = this.dataset.url; }"
+            data-url="{{ request()->fullUrlWithQuery(['id_estatus' => (int) request('id_estatus', 1) === 1 ? 2 : 1]) }}">
             <span class="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Activos</span>
             <label class="relative inline-flex cursor-pointer items-center">
-                <input type="checkbox" id="estadoToggle" class="peer sr-only" {{ request('id_estatus', 1) == 1 ? 'checked' : '' }}>
+                <input type="checkbox" id="estadoToggle" class="peer sr-only" tabindex="-1"
+                    {{ (int) request('id_estatus', 1) === 1 ? 'checked' : '' }}
+                    aria-label="Mostrar programas activos">
                 <span class="h-6 w-10 rounded-full bg-gray-300 transition peer-checked:bg-red-700 dark:bg-gray-700"></span>
                 <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span>
             </label>
@@ -100,9 +109,6 @@
     <script>
         function openModal(id) { document.getElementById(id)?.classList.replace('hidden', 'flex'); }
         function closeModal(id) { document.getElementById(id)?.classList.replace('flex', 'hidden'); }
-        document.getElementById('estadoToggle')?.addEventListener('change', function () {
-            const url = new URL(window.location.href); url.searchParams.set('id_estatus', this.checked ? '1' : '2'); window.location.href = url.toString();
-        });
         function confirmDelete(event, button) {
             event.preventDefault();
             Swal.fire({ title: '¿Estás seguro?', text: button.closest('form').action.includes('/activar') ? '¿Desea activar el programa?' : '¿Desea inactivar el programa?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#991b1b', cancelButtonColor: '#4b5563', confirmButtonText: 'Sí, continuar', cancelButtonText: 'Cancelar' }).then((result) => { if (result.isConfirmed) button.closest('form').submit(); });

@@ -75,9 +75,9 @@
         padding: 8px 14px;
         font-size: 14px;
         border-radius: 10px;
-        background: #ffffff;
-        border: 1px solid #dcdcdc;
-        color: #4a4a4a;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
         text-decoration: none;
         font-weight: 500;
         transition: all .2s ease-in-out;
@@ -85,25 +85,25 @@
     }
 
     .rd-pagination a:hover {
-        background: var(--color-bg-light-dark-red);
+        background: var(--color-primary);
         color: #fff !important;
         transform: translateY(-2px);
-        box-shadow: 0 4px 10px var(--color-bg-light-dark-red);
+        box-shadow: 0 4px 10px var(--color-primary-alpha);
     }
 
     .rd-pagination .active span {
-        background: var(--color-bg-light-dark-red);
+        background: var(--color-primary);
         color: white;
-        border-color: var(--color-bg-light-dark-red);
+        border-color: var(--color-primary);
         font-weight: 600;
         cursor: default;
-        box-shadow: 0 4px 10px var(--color-bg-light-dark-red);
+        box-shadow: 0 4px 10px var(--color-primary-alpha);
     }
 
     .rd-pagination .disabled span {
         opacity: 0.4;
         cursor: not-allowed;
-        background: #f3f3f3;
-        color: #a0a0a0;
+        background: var(--input-bg);
+        color: var(--text-muted, var(--text-main));
     }
 </style>

@@ -137,6 +137,11 @@ class MunicipioIndex extends Component
         $this->dispatch('confirm-delete', id: $id);
     }
 
+    public function confirmActivate($id)
+    {
+        $this->dispatch('confirm-activate', id: $id);
+    }
+
     #[On('destroy-municipio')]
     public function destroy($id)
     {
@@ -149,6 +154,21 @@ class MunicipioIndex extends Component
             icon: 'success',
             title: 'Eliminado',
             text: 'Estado eliminado Exitosamente.'
+        );
+    }
+
+    #[On('activate-municipio')]
+    public function activate($id)
+    {
+        Municipio::findOrFail($id)->update([
+            'status' => true
+        ]);
+
+        $this->dispatch(
+            'swal',
+            icon: 'success',
+            title: 'Activado',
+            text: 'Municipio reactivado exitosamente.'
         );
     }
 }

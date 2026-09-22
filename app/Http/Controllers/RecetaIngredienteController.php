@@ -109,11 +109,11 @@ class RecetaIngredienteController extends Controller
     {
         $validated = $request->validate([
             'recetas_id' => 'required|exists:recetas,id',
-            'producto_id' => 'required|array|min:1',
+            'producto_id' => 'nullable|array',
             'producto_id.*' => 'required|exists:productos,id',
-            'cantidad_porcion' => 'required|array',
+            'cantidad_porcion' => 'nullable|array',
             'cantidad_porcion.*' => 'required|numeric|min:0.0001',
-            'unidad_id' => 'required|array',
+            'unidad_id' => 'nullable|array',
             'unidad_id.*' => 'required|exists:unidades,id',
         ]);
 
@@ -125,7 +125,7 @@ class RecetaIngredienteController extends Controller
         try {
             RecetaIngrediente::where('recetas_id', $recetaId)->delete();
 
-            foreach ($validated['producto_id'] as $index => $productoId) {
+            foreach ($validated['producto_id'] ?? [] as $index => $productoId) {
                 $cantidad = $validated['cantidad_porcion'][$index] ?? null;
                 $unidadId = $validated['unidad_id'][$index] ?? null;
 

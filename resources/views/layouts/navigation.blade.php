@@ -323,7 +323,7 @@
                             class="group flex items-center gap-3 px-3 py-1.5 rounded-full {{ $navHoverBg }} transition-all border border-white/10 focus:outline-none">
                             <div class="text-right">
                                 <div class="text-sm font-semibold text-white leading-tight">
-                                    {{ Auth::user()->persona?->nombre_persona ?? (Auth::user()->nombres ?? Auth::user()->name) }}
+                                    {{ Auth::user()?->persona?->nombre_persona ?? (Auth::user()?->nombres ?? Auth::user()?->name ?? 'Usuario') }}
                                 </div>
                                 <div class="text-xs text-gray-300 leading-tight">
                                     {{ ucfirst(Auth::user()->role ?? 'Usuario') }}
@@ -333,7 +333,7 @@
                             <div class="flex-shrink-0">
                                 @php
                                     $user = Auth::user();
-                                    $initials = strtoupper(mb_substr($user->name ?? ($user->nombres ?? 'U'), 0, 1));
+                                    $initials = strtoupper(mb_substr($user?->name ?? ($user?->nombres ?? 'U'), 0, 1));
                                 @endphp
                                 <div
                                     class="h-9 w-9 rounded-full {{ $avatarBg }} flex items-center justify-center text-white text-sm font-black shadow-md ring-2">

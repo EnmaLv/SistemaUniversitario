@@ -134,12 +134,12 @@
                             @enderror
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold" style="color:var(--text-main);">DescripciÃ³n <span class="text-xs text-gray-400">(opcional)</span></label>
+                            <label class="mb-1 block text-sm font-bold" style="color:var(--text-main);">Descripción <span class="text-xs text-gray-400">(opcional)</span></label>
                             <div class="flex items-center rounded-xl border" style="background-color:var(--input-bg);border-color:var(--border-color);">
                                 <span class="px-3 text-gray-400"><i class="fas fa-align-left"></i></span>
                                 <input type="text" name="descripcion"
                                     class="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-0" style="color:var(--text-main);"
-                                    placeholder="Ej: Marca japonesa de vehÃ­culos"
+                                    placeholder="Ej: Marca japonesa de vehículos"
                                     value="{{ old('descripcion') }}" maxlength="255">
                             </div>
                         </div>
@@ -178,12 +178,12 @@
                             </div>
                         </div>
                         <div>
-                            <label class="mb-1 block text-sm font-bold" style="color:var(--text-main);">DescripciÃ³n <span class="text-xs text-gray-400">(opcional)</span></label>
+                            <label class="mb-1 block text-sm font-bold" style="color:var(--text-main);">Descripción <span class="text-xs text-gray-400">(opcional)</span></label>
                             <div class="flex items-center rounded-xl border" style="background-color:var(--input-bg);border-color:var(--border-color);">
                                 <span class="px-3 text-gray-400"><i class="fas fa-align-left"></i></span>
                                 <input type="text" id="editDescripcion" name="descripcion"
                                     class="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-0" style="color:var(--text-main);"
-                                    placeholder="DescripciÃ³n de la marca" maxlength="255">
+                                    placeholder="Descripción de la marca" maxlength="255">
                             </div>
                         </div>
                     </div>
@@ -201,6 +201,30 @@
 
 @push('js')
     <script>
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+    }
+
     function abrirModalEditarMarca(marca) {
         document.getElementById('editNombre').value = marca.nombre ?? '';
         document.getElementById('editDescripcion').value = marca.descripcion === 'Ninguna' ? '' : (marca.descripcion ?? '');
@@ -235,7 +259,8 @@
                 const div = document.createElement('div');
                 div.className = 'text-danger mt-1';
                 div.innerHTML = `<b>${errors[campo][0]}</b>`;
-                input.closest('.flex items-center rounded-xl border border-slate-200 bg-slate-50').after(div);
+                const field = input.closest('div.flex.items-center.rounded-xl.border') || input.parentElement;
+                field.insertAdjacentElement('afterend', div);
             }
         });
     }
@@ -256,7 +281,7 @@
         .then(r => r.json())
         .then(res => {
             if (res.success) {
-                $('#modalCrear').modal('hide');
+                closeModal('modalCrear');
                 form.reset();
                 // Agregar fila a la tabla
                 agregarFilaTabla(res.marca);
@@ -299,7 +324,7 @@
         .then(r => r.json())
         .then(res => {
             if (res.success) {
-                $('#modalEditar').modal('hide');
+                closeModal('modalEditar');
                 // Actualizar fila existente
                 actualizarFilaTabla(res.marca);
                 toastExito(res.message);
@@ -319,13 +344,13 @@
     function confirmAccion(event, button, accion, entidad) {
         event.preventDefault();
         Swal.fire({
-            title: 'Â¿EstÃ¡s seguro?',
-            text: `Â¿Desea ${accion} la ${entidad}?`,
+            title: '¿Estás seguro?',
+            text: `¿Desea ${accion} la ${entidad}?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: `SÃ­, ${accion}`,
+            confirmButtonText: `Sí, ${accion}`,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (!result.isConfirmed) return;

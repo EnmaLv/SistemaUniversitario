@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     @include('admin.becas.beneficios._form', [
         'titulo'    => 'Editar Beneficio',
         'subtitulo' => 'Modifica los datos del beneficio. Los cupones se gestionan automáticamente al aprobar solicitudes.',

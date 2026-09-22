@@ -131,7 +131,7 @@
             <h3 class="font-extrabold text-xl tracking-tight" style="color: var(--text-main);" x-text="view === 'list' ? 'Mensajes' : selectedContact.name">Mensajes</h3>
         </div>
         <div class="flex items-center gap-1">
-            @if(!auth()->user()->tieneRol('paciente'))
+            @if(auth()->check() && !auth()->user()->tieneRol('paciente'))
                 <a href="#" title="Ver mensajería completa" class="hidden sm:inline-flex p-2 hover:bg-sky-50 dark:hover:bg-sky-900/50 rounded-full transition text-gray-400 dark:text-gray-500 hover:text-sky-600 dark:hover:text-sky-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                 </a>

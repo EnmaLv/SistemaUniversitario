@@ -204,6 +204,30 @@
 
 @push('js')
     <script>
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) {
+                return;
+            }
+
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+        }
+
         function abrirModalEditarModelo(modelo) {
             document.getElementById('editMarca').value = modelo.marca_id ?? '';
             document.getElementById('editNombre').value = modelo.nombre ?? '';
@@ -238,7 +262,8 @@
                     const div = document.createElement('div');
                     div.className = 'text-danger mt-1';
                     div.innerHTML = `<b>${errors[campo][0]}</b>`;
-                    input.closest('.flex items-center rounded-xl border border-slate-200 bg-slate-50').after(div);
+                    const field = input.closest('div.flex.items-center.rounded-xl.border') || input.parentElement;
+                    field.insertAdjacentElement('afterend', div);
                 }
             });
         }
@@ -257,7 +282,7 @@
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
-                        $('#modalCrear').modal('hide');
+                        closeModal('modalCrear');
                         this.reset();
                         agregarFilaTabla(res.modelo);
                         toastExito(res.message);
@@ -295,7 +320,7 @@
                 .then(r => r.json())
                 .then(res => {
                     if (res.success) {
-                        $('#modalEditar').modal('hide');
+                        closeModal('modalEditar');
                         actualizarFilaTabla(res.modelo);
                         toastExito(res.message);
                     } else {
@@ -308,14 +333,14 @@
         function confirmAccion(event, button, accion, entidad) {
             event.preventDefault();
             Swal.fire({
-                title: 'Â¿EstÃ¡s seguro?',
-                text: `Â¿Desea ${accion} el ${entidad}?`,
+                title: @json('¿Estás seguro?'),
+                text: @json('¿Desea') + ` ${accion} el ${entidad}?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: `SÃ­, ${accion}`,
-                cancelButtonText: 'Cancelar'
+                confirmButtonText: @json('Sí') + `, ${accion}`,
+                cancelButtonText: @json('Cancelar')
             }).then((result) => {
                 if (!result.isConfirmed) return;
                 const form = button.closest('form');
