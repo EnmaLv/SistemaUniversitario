@@ -9,11 +9,25 @@
                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 mb-3 border border-indigo-100 dark:border-indigo-800">
                         <i class="fas fa-brain text-[10px]"></i> Psico-Guía
                     </span>
+                    @php
+                        \Log::info('DEBUG NAME PSICO', [
+                            'auth_id'         => auth()->id(),
+                            'id_usuario'      => auth()->user()->id_usuario,
+                            'id_persona'      => auth()->user()->id_persona,
+                            'persona'         => optional(auth()->user()->persona)->toArray(),
+                            'nombre_persona'  => auth()->user()->persona?->nombre_persona,
+                            'nombres_attr'    => auth()->user()->nombres ?? null,
+                            'name_attr'       => auth()->user()->name ?? null,
+                            'roles'           => auth()->user()->roles->pluck('nombre', 'slug')->toArray(),
+                            'tieneRol_pac'    => auth()->user()->tieneRol('paciente'),
+                            'tieneRol_Pac'    => auth()->user()->tieneRol('Paciente'),
+                        ]);
+                    @endphp
                     <h2 class="text-2xl sm:text-3xl font-black leading-tight tracking-tight"
                         style="color: var(--text-main);">
                         {{ $saludo ?? 'Buenos días' }},<br>
                         <span class="text-indigo-600 dark:text-indigo-400">
-                            {{ auth()->user()->persona?->nombre_persona ?? (auth()->user()->nombres ?? auth()->user()->name) }}
+                            {{ auth()->user()->persona->nombre_persona ?? (auth()->user()->nombres ?? auth()->user()->name) }}
                         </span>
                     </h2>
                     <p class="mt-2 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed">

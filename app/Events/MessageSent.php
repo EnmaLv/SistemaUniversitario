@@ -19,6 +19,11 @@ class MessageSent implements ShouldBroadcastNow
         $this->message = $message;
     }
 
+    public function broadcastAs(): string
+    {
+        return 'MessageSent';
+    }
+
     public function broadcastOn(): array
     {
         $conversation = \Illuminate\Support\Facades\DB::table('conversations')->where('id', $this->message->conversation_id)->first();

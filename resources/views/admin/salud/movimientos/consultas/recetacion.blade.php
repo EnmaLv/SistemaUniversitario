@@ -191,7 +191,7 @@
                                                     x-model="item.unidad_id" required
                                                     style="background-color: rgba(0,0,0,0.02); color: var(--text-main); border-color: var(--border-color);"
                                                     class="w-full px-3 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
-                                                    <option value="" disabled>Unidad</option>
+                                                    <option value="" disabled>Elija una Opcion</option>
                                                     @foreach ($unidades as $u)
                                                         <option value="{{ $u->id }}">{{ $u->nombre }}
                                                         </option>

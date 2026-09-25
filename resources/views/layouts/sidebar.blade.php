@@ -111,5 +111,23 @@
                     </span>
                 </button>
             </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (!window.Echo || !{{ auth()->id() ?? 'null' }}) return;
+
+                    window.Echo.private('App.Models.Usuario.' + {{ auth()->id() ?? 'null' }})
+                        .listen('.MessageSent', (e) => {
+                            // Si no estoy viendo esta conversación, incremento el badge global
+                            const badge = document.querySelector('.chat-badge');
+                            if (!badge) return;
+                            const current = parseInt(badge.dataset.count || '0', 10);
+                            const next = current + 1;
+                            badge.dataset.count = next;
+                            badge.textContent = next > 99 ? '99+' : next;
+                            badge.style.display = '';
+                        });
+                });
+            </script>
     </nav>
 </aside>

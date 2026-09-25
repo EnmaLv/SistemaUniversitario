@@ -22,7 +22,7 @@
 
             if (window.Echo) {
                 window.Echo.private('App.Models.Usuario.' + {{ auth()->id() ?? 'null' }})
-                    .listen('MessageSent', (e) => {
+                    .listen('.MessageSent', (e) => {
                         if (!this.selectedContact || this.selectedContact.id != e.sender_id) {
                             let contactIndex = this.contacts.findIndex(c => c.id == e.sender_id);
                             if (contactIndex !== -1) {
@@ -71,7 +71,7 @@
                     this.currentEchoChannel = 'chat.' + convId;
                     if (window.Echo) {
                         window.Echo.private(this.currentEchoChannel)
-                            .listen('MessageSent', (e) => {
+                            .listen('.MessageSent', (e) => {
                                 if (e.sender_id != {{ auth()->id() ?? 'null' }}) {
                                     this.messages.push({ id: e.id, body: e.body, is_mine: false, time: e.time });
                                     this.scrollToBottom();

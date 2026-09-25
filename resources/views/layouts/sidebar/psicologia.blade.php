@@ -62,7 +62,7 @@
     @endcanMenu
     @endcanMenu
 @endif
-
+@if (!auth()->user()->tieneRol('paciente'))
 @canMenu($agendaKeys)
 <div x-data="{ open: {{ request()->routeIs('agenda.*') ? 'true' : 'false' }} }" class="w-full space-y-1">
     <button @click="open = !open"
@@ -184,6 +184,7 @@
     </div>
 </div>
 @endcanMenu
+@endif
 
 @if (!auth()->user()->tieneRol('paciente'))
 @canMenu($publicacionesKeys)
