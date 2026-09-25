@@ -1,12 +1,5 @@
 // ============================================================
 // BASE DE DATOS: bienestraestudiantil — v4
-// Cambios respecto a v3:
-//   - Nueva tabla: departamento (para seguridad y contexto intranet)
-//   - rol ahora pertenece a un departamento
-//   - modulos ahora pertenece a un departamento
-//   - Se eliminó slug de rol (no aporta valor real)
-//   - Se mantiene key en permiso (necesario para verificación en código)
-//   - Nueva tabla: bitacora (auditoría completa del sistema)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -195,13 +188,22 @@ Table artamento {
   updated_at  timestamp
 }
 
+Table departamentos {
+  id               bigint       [pk, increment]
+  nombre           varchar(255) [not null]
+  descripcion      text
+  activo           tinyint      [not null, default: 1]
+  created_at       timestamp
+  updated_at       timestamp
+}
+
 Table modulos {
   id               bigint       [pk, increment]
   key              varchar(100) [not null, unique,
                     note: 'Identificador técnico usado en código. Ej: comedor, salud, becas']
   nombre           varchar(255) [not null]
   descripcion      text
-  departamento_id  bigint       [not null, ref: > departamento.id,
+  departamento_id  bigint       [not null, ref: > departamentos.id,
                     note: 'Departamento universitario al que pertenece este módulo']
   activo           tinyint      [not null, default: 1]
   created_at       timestamp
@@ -214,7 +216,7 @@ Table rol {
   id              bigint       [pk, increment]
   nombre          varchar(255) [not null]
   descripcion     text
-  departamento_id bigint       [not null, ref: > departamento.id,
+  departamento_id bigint       [not null, ref: > departamentos.id,
                    note: 'El rol es válido solo dentro de este departamento']
   activo          tinyint      [not null, default: 1]
   created_at      timestamp
@@ -330,21 +332,24 @@ Table persona {
   semestre_persona         varchar(255)
   estado                   tinyint      [not null, default: 1]
   id_perfil                bigint       [not null, ref: > perfil.id_perfil]
-  id_sede                  bigint       [not null, ref: > sede.id_sede]
+  id_sede                  bigint       [not null, ref: > sede.id]
   created_at               timestamp
   updated_at               timestamp
 }
 
 Table usuario {
-  id_usuario         bigint       [pk, increment]
-  id_persona         bigint       [not null, ref: - persona.id_persona]
-  id_perfil          bigint       [not null, ref: > perfil.id_perfil]
-  username           varchar(255) [not null, unique]
-  password           varchar(255) [not null]
-  master_key         text
-  security_questions json
-  created_at         timestamp
-  updated_at         timestamp
+  id_usuario            bigint       [pk, increment]
+  id_persona            bigint       [not null, ref: - persona.id_persona]
+  id_perfil             bigint       [not null, ref: > perfil.id_perfil]
+  username              varchar(255) [not null, unique]
+  password              varchar(255) [not null]
+  master_key            text
+  security_questions    json
+  extra_permissions     json
+  ultima_actividad_chat timestamp
+  infracciones_reset_at timestamp
+  created_at            timestamp
+  updated_at            timestamp
 }
 
 Table direccion {
@@ -451,7 +456,7 @@ Table categorias {
   nombre      varchar(100) [not null]
   descripcion text
   id_tipo_producto    int  [not null, ref: > tipo_producto.id]
-  estado      tinyint      [not null, default: 1]
+  activo      tinyint      [not null, default: 1]
   created_at  timestamp
   updated_at  timestamp
 
@@ -491,15 +496,16 @@ Table productos {
   nombre         varchar(150)  [not null]
   descripcion    text
   imagen         varchar(255)
-  categoria_id   bigint        [not null, ref: > categorias.id]
-  unidad_id      bigint        [not null, ref: > unidades.id]
+  precio_compra  decimal(10,3)
   stock_minimo   decimal(14,2) [not null, default: 0]
   stock_maximo   decimal(14,2) [not null, default: 0]
-  presentacion_id        bigint  [ref: > envase_primario.id]
+  peso_contenido decimal(14,2)
   unidades_por_presentacion decimal(14,3) [not null, default: 1]
   presentacion_dispensacion varchar(50)
-  requiere_receta_medica tinyint [default: 0]
-  activo     tinyint [not null, default: 1]
+  presentacion_id bigint  [ref: > envase_primario.id]
+  unidad_id      bigint        [not null, ref: > unidades.id]
+  estado     tinyint [not null, default: 1]
+  categoria_id   bigint        [not null, ref: > categorias.id]
   created_at timestamp
   updated_at timestamp
 
@@ -698,7 +704,7 @@ Table sobrantes_comedor {
 // MÓDULO: SALUD
 // ============================================================
 
-Table consultorio {
+Table consultorios {
   id          bigint       [pk, increment] 
   nombre      varchar(150) [not null]
   sede_id bigint       [not null, ref: > sede.id]
@@ -708,24 +714,14 @@ Table consultorio {
   updated_at  timestamp
 }
 
-Table horario_consultorio {
+Table horario_consultorios {
   id             bigint  [pk, increment]
-  consultorio_id bigint  [not null, ref: > consultorio.id]
-  dia    tinyint [not null, note: '1=lunes … 7=domingo']
+  consultorio_id bigint  [not null, ref: > consultorios.id]
+  id_rol_usuario bigint  [not null, ref: > rol_usuario.id]
+  dia            tinyint [not null]
   hora_inicio    time    [not null]
   hora_fin       time    [not null]
-}
-
-//psicologia
-Table cita {
-  id             bigint      [pk, increment]
-  id_persona     bigint      [not null, ref: > persona.id_persona]
-  consultorio_id bigint      [not null, ref: > consultorio.id]
-  medico_id      bigint      [not null, ref: > persona.id_persona]
-  fecha_hora     datetime    [not null]
-  duracion_min   int
-  estado         varchar(20) [not null, note: 'enum: pendiente | confirmada | atendida | cancelada']
-  motivo         text
+  descripcion    text
   created_at     timestamp
 }
 
@@ -733,16 +729,16 @@ Table enfermedades {
   id             bigint      [pk, increment]
   codigo         varchar(50)   [not null, unique]
   nombre         varchar(100)   [not null]
-  esPsicologica  tinyint [not null]
+  categoria      tinyint [not null]
+  nivel          int
   activo         bool [not null, default: 1]
 } 
 
-//salud 
 Table consulta {
   id             bigint   [pk, increment]
   id_persona     bigint   [not null, ref: > persona.id_persona]
   medico_id      bigint   [not null, ref: > persona.id_persona]
-  consultorio_id bigint   [not null, ref: > consultorio.id]
+  consultorio_id bigint   [not null, ref: > consultorios.id]
   enfermedad_id  bigint   [not null, ref: > enfermedades.id]
   fecha          datetime [not null]
   motivo         text
@@ -790,7 +786,7 @@ Table dispensacion {
   lote_id                  bigint        [ref: > lotes.id]
   cantidad                 decimal(14,2) [not null]
   unidad_id                bigint        [not null, ref: > unidades.id]
-  sede_id              bigint        [not null, ref: > sede.id]
+  sede_id                  bigint        [not null, ref: > sede.id]
   usuario_id               bigint        [not null, ref: > usuario.id_usuario]
   fecha                    datetime      [not null]
   observaciones            text
@@ -799,6 +795,216 @@ Table dispensacion {
   Note: 'Genera movimiento_inventarios tipo=salida, modulo_origen=salud'
 }
 
+// ============================================================
+// MÓDULO: PSICOLOGIA
+// ============================================================
+
+Table estado_animos {
+  id             bigint      [pk, increment]
+  valor          int
+  nombre         varchar(255)
+  status         tinyint
+  created_at     timestamp
+}
+
+Table chat_notificaciones_pendientes {
+  id                bigint      [pk, increment]
+  sender_id         bigint
+  receiver_id       bigint
+  cantidad_mensajes int
+  programado_para   timestamp
+  estado            enum
+  created_at        timestamp
+}
+
+Table notifications {
+  id          bigint      [pk, increment]
+  type        varchar(255)
+  notifiable  morph
+  data        text
+  read_at     timestamp
+  estado      enum
+  created_at  timestamp
+}
+
+Table avances_sesion {
+  id            bigint      [pk, increment]
+  psicologo_id  bigint      [not null, ref: > usuario.id_usuario]
+  valor         int
+  nombre        varchar(255)
+  descripcion   text
+  estado        tinyint
+  es_sistema    tinyint
+  created_at    imestamp
+}
+
+Table estado_animo_diarios {
+  id           bigint      [pk, increment]
+  paciente_id  bigint      [not null, ref: > usuario.id_usuario]
+  valor        int
+  fecha        date
+  created_at   timestamp
+}
+
+Table grupos_horarios {
+  id           bigint      [pk, increment]
+  user_id      bigint      [not null, ref: > usuario.id_usuario]
+  nombre       int
+  activo       tinyint
+  created_at   timestamp
+}
+
+Table horarios {
+  id          bigint      [pk, increment]
+  user_id     bigint      [not null, ref: > usuario.id_usuario]
+  dia         varchar(255)
+  hora_inicio time
+  hora_fin    time
+  descripcion tinyint
+  activo      tinyint     
+  grupo_horario_id bigint  [not null, ref: > grupos_horarios.id]
+  created_at   timestamp
+}
+
+Table historia_plantillas_globales {
+  id              bigint      [pk, increment]
+  psicologo_id    bigint      [not null, ref: > usuario.id_usuario]
+  titulo          varchar(255)
+  descripcion     text
+  secciones       json
+  status          tinyint     
+  created_at      timestamp
+}
+
+Table historia_plantillas_secciones {
+  id              bigint      [pk, increment]
+  psicologo_id    bigint      [not null, ref: > usuario.id_usuario]
+  titulo          varchar(255)
+  descripcion_general text
+  segmentos       json
+  status          tinyint     
+  created_at      timestamp
+}
+
+Table nota_evolucion_campos {
+  id              bigint      [pk, increment]
+  psicologo_id    bigint      [not null, ref: > usuario.id_usuario]
+  titulo          varchar(255)
+  status          tinyint     
+  created_at      timestamp
+}
+
+Table prioridades {
+  id              bigint      [pk, increment]
+  psicologo_id    bigint      [not null, ref: > usuario.id_usuario]
+  nombre          varchar(255)
+  nivel_gravedad  int
+  activo          tinyint     
+  created_at      timestamp
+}
+
+Table publicaciones {
+  id              bigint      [pk, increment]
+  psicologo_id    bigint      [not null, ref: > usuario.id_usuario]
+  titulo          varchar(255)
+  contenido       text
+  tipo            varchar(255)
+  color_fondo     varchar(255)
+  media_path      varchar(255)
+  alcance         varchar(255)
+  estatus         tinyint     
+  created_at      timestamp
+}
+
+Table conversations {
+  id              bigint      [pk, increment]
+  user_one_id    bigint      [not null, ref: > usuario.id_usuario]
+  user_two_id    bigint      [not null, ref: > usuario.id_usuario]
+  created_at      timestamp
+}
+
+Table historia_clinicas {
+  id              bigint      [pk, increment]
+  user_id         bigint      [not null, ref: > usuario.id_usuario]
+  psicologo_id    bigint      [not null, ref: > usuario.id_usuario]
+  created_at      timestamp
+}
+
+Table historia_secciones_personalizadas {
+  id                    bigint      [pk, increment]
+  historia_clinica_id   bigint      [not null, ref: > historia_clinicas.id]
+  descripcion_general   varchar(255)
+  orden                 int
+  status                tinyint     
+  created_at            timestamp
+}
+
+Table historia_segmentos_personalizados {
+  id          bigint      [pk, increment]
+  seccion_id  bigint      [not null, ref: > historia_secciones_personalizadas.id]
+  titulo      varchar(255)
+  subtitulo   varchar(255)
+  icono       varchar(255)
+  contenido   text
+  orden       int   
+  created_at  timestamp
+}
+
+Table messages {
+  id                bigint        [pk, increment]
+  conversation_id   bigint        [not null, ref: > conversations.id]
+  sender_id         bigint  [not null, ref: > usuario.id_usuario]
+  body              text
+  read_at           timestamp
+  created_at        timestamp
+}
+
+Table historia_enfermedad {
+  id                  bigint      [pk, increment]
+  historia_clinica_id bigint      [not null, ref: > historia_clinicas.id]
+  enfermedad_id       bigint      [not null, ref: > enfermedades.id]
+  contexto            varchar(255)
+  status              tinyint
+  created_at          timestamp
+}
+
+Table publicacion_reacciones {
+  id                  bigint      [pk, increment]
+  publicacion_id bigint      [not null, ref: > publicaciones.id]
+  paciente_id       bigint      [not null, ref: > usuario.id_usuario]
+  created_at          timestamp
+}
+
+Table citas {
+  id                              bigint      [pk, increment]
+  user_id                         bigint      [not null, ref: > usuario.id_usuario]
+  psicologo_id                    bigint      [not null, ref: > usuario.id_usuario]
+  motivo                          text
+  bloques_sugeridos               text
+  fecha                           date
+  hora                            time
+  confirmado_en                   timestamp
+  estado                          enum
+  status                          boolean
+  estado_animo_id                 bigint  [not null, ref: > estado_animos.id]
+  prioridad                       varchar(255)
+  notas                           text
+  cancelado_por                   enum
+  bloque_propuesto                varchar(255)
+  bloques_propuestos              text
+  propuesta_estado                varchar(255)
+  propuesta_bloque_seleccionado   text
+  motivo_rechazo_propuesta        text
+  created_at     timestamp
+}
+
+Table cita_nota_evolucion {
+  id             bigint      [pk, increment]
+  cita_id        bigint      [not null, ref: > citas.id]
+  campo_id       bigint      [not null, ref: > nota_evolucion_campos.id]
+  contenido      text
+  created_at     timestamp
+}
 
 // ============================================================
 // MÓDULO: DEPORTES
@@ -831,7 +1037,7 @@ Table deporte_calendario {
   descripcion  text
   fecha_inicio date         [not null]
   fecha_fin    date         [not null]
-  id_sede      bigint       [not null, ref: > sede.id_sede]
+  id_sede      bigint       [not null, ref: > sede.id]
   activo       tinyint      [not null, default: 1]
   creado_por   bigint       [not null, ref: > usuario.id_usuario]
   created_at   timestamp
@@ -1023,12 +1229,15 @@ Table vehiculos {
   modelo_id                bigint        [not null, ref: > modelos.id]
   anio                     year          [not null]
   color                    varchar(50)   [not null]
+  peso                     decimal(8,2)   [not null]
   cantidad_pasajeros       int           [not null, default: 0]
-  peso                     varchar(50)   [not null]
   tipo_combustible_id      bigint        [not null, ref: > tipo_combustibles.id]
-  cantidad_cilindros           int           [not null, default: 1]
+  cantidad_cilindros       int           [not null, default: 1]
   capacidad_tanque_litros  decimal(8,2)  [not null, default: 0]
-  consumo_litros_km        decimal(6,3)  [not null, default: 0]
+  nivel_combustible_actual decimal(8,2)
+  consumo_urbano           decimal(6,3)  [not null, default: 0]
+  consumo_carretera        decimal(6,3)  [not null, default: 0]
+  consumo_relenti          decimal(6,3)  [not null, default: 0]
   km_actual                decimal(10,2) [not null, default: 0]
   km_proximo_mantenimiento decimal(10,2) [not null, default: 0]
   sede_id              bigint        [not null, ref: > sede.id]
@@ -1071,12 +1280,13 @@ Table viaje_pasajeros {
 
 Table bus_gps_logs {
   id            bigint        [pk, increment]
+  local_id      uuid
   bus_viaje_id  bigint        [not null, ref: > bus_viajes.id]
   lat           decimal(11,7) [not null]
   lng           decimal(11,7) [not null]
   velocidad     decimal(6,2)
-  tipo_via      varchar(15) [note: 'urbano | carretera | ralenti']
   heading       decimal(6,2)
+  tipo_via      varchar(15) [note: 'urbano | carretera | ralenti']
   registrado_en time          [not null]
   origen        varchar(50)   [not null]
   created_at    timestamp
@@ -1119,67 +1329,140 @@ Table mantenimientos {
 // MÓDULO: BECAS
 // ============================================================
 
-Table lapso_academico {
-  id_lapso_academico bigint       [pk, increment]
-  descripcion        varchar(255) [not null, note: 'Ej: 2025-2, 2026-1']
-  trayecto           varchar(255) [not null]
-  fecha_inicio       date         [not null]
-  fecha_fin          date         [not null]
-  created_at         timestamp
-  updated_at         timestamp
+Table tipo_beneficio {
+  id          bigint       [pk, increment]
+  nombre      varchar(255)
+  descripcion text
+  estado      tinyint
+  created_at  timestamp
+  updated_at  timestamp
+}
+
+Table be_lapsos {
+  id                  bigint       [pk, increment]
+  codigo              varchar(255) [not null, note: 'Ej: 2025-2, 2026-1']
+  fecha_inicio        date         [not null]
+  fecha_fin           date         [not null]
+  es_actual           tinyint
+  permite_solicitudes tinyint
+  created_at          timestamp
+  updated_at          timestamp
 }
 
 Table condicion_estudiante {
-  id_condicion_estudiante bigint       [pk, increment]
+  id                      bigint       [pk, increment]
   nombre_condicion        varchar(255) [not null, note: 'Regular, Repitiente, etc.']
   id_persona              bigint       [not null, ref: > persona.id_persona]
-  id_lapso_academico      bigint       [not null, ref: > lapso_academico.id_lapso_academico]
+  lapsos_id      bigint       [not null, ref: > be_lapsos.id]
   created_at              timestamp
   updated_at              timestamp
 }
 
-Table beneficio_bienestar {
-  id                    bigint       [pk, increment]
-  nombre_beneficio      varchar(255) [not null]
-  descripcion_beneficio text
-  tipo_beneficio        varchar(25)  [not null,
-                         note: 'enum: beca_estudiantil | ayudantia | ayuda_economica | comedor']
-  cupones_disponibles   int          [not null, default: 0]
-  cupones_ocupados      int          [not null, default: 0]
-  activo                tinyint      [not null, default: 1]
-  created_at            timestamp
-  updated_at            timestamp
+Table be_beca_preguntas {
+  id                      bigint       [pk, increment]
+  id_be_beneficio         bigint       [not null, ref: > be_beneficios.id]
+  codigo                  varchar(255)
+  etiqueta                varchar(255) 
+  placeholder             varchar(255)
+  ayuda                   text
+  tipo                    enum
+  obligatoria             boolean
+  valor_min               int
+  valor_max               int
+  min_length              bigint
+  max_length              bigint
+  regex                   varchar(255)
+  orden                   bigint
+  activo                  tinyint
+  created_at              timestamp
+  updated_at              timestamp
 }
 
-Table jornada_beca {
-  id_jornada_beca          bigint       [pk, increment]
-  nombre_jornada_beca      varchar(255) [not null]
-  descripcion_jornada_beca text
-  id_beneficio             bigint       [not null, ref: > beneficio_bienestar.id]
-  id_lapso_academico       bigint       [not null, ref: > lapso_academico.id_lapso_academico]
-  fecha_inicio_solicitud   date         [not null]
-  fecha_fin_solicitud      date         [not null]
-  cupos_maximos            int          [not null, default: 0]
-  activo                   tinyint      [not null, default: 1]
+Table be_beca_pregunta_opciones {
+  id                      bigint       [pk, increment]
+  id_pregunta             bigint       [not null, ref: > be_beca_preguntas.id]
+  etiqueta                varchar(255) 
+  valor                   varchar(255)
+  orden                   bigint
+  activo                  tinyint
+  created_at              timestamp
+  updated_at              timestamp
+}
+
+Table be_beneficio_criterios {
+  id                       bigint       [pk, increment]
+  id_be_beneficio          bigint       [not null, ref: > be_beneficios.id]
+  id_pregunta              bigint       [not null, ref: > be_beca_preguntas.id]
+  es_eliminatoria          boolean
+  operador                 enum
+  valor_esperado           varchar(255)
+  peso                     int
   created_at               timestamp
   updated_at               timestamp
 }
 
-Table solicitud_beca {
+Table be_beneficios {
+  id                    bigint       [pk, increment]
+  id_tipo_beneficio     bigint       [not null, ref: > tipo_beneficio.id]
+  nombre_beneficio      varchar(255) [not null]
+  descripcion           text
+  slug                  varchar(255)
+  cupones_disponibles   int          [not null, default: 0]
+  cupones_ocupados      int          [not null, default: 0]
+  status                tinyint      [not null, default: 1]
+  created_at            timestamp
+  updated_at            timestamp
+}
+
+Table beca_asignada {
+  id                    bigint       [pk, increment]
+  id_solicitud          bigint       [not null, ref: > be_solicitud_becas.id]
+  fecha_inicio          date
+  fecha_fin             date
+  estado                varchar(255)
+  motivo_revocacion     text
+  updated_at            timestamp
+}
+
+
+Table jornada_beca {
+  id                       bigint       [pk, increment]
+  nombre_jornada           varchar(255) [not null]
+  descripcion_jornada      text
+  beneficio_id             bigint       [not null, ref: > be_beneficios.id]
+  lapsos_id       bigint       [not null, ref: > be_lapsos.id]
+  fecha_inicio_solicitud   date         [not null]
+  fecha_fin_solicitud      date         [not null]
+  cupos_maximos            int          [not null, default: 0]
+  cupos_asignados          int          [not null, default: 0]
+  activa                   tinyint      [not null, default: 1]
+  created_at               timestamp
+  updated_at               timestamp
+}
+
+Table be_jornada_criterios {
+  id                       bigint       [pk, increment]
+  id_jornada               bigint       [not null, ref: > jornada_beca.id]
+  id_pregunta              bigint       [not null, ref: > be_beca_preguntas.id]
+  es_eliminatoria          boolean
+  operador                 enum
+  valor_esperado           varchar(255)
+  peso                     int
+  created_at               timestamp
+  updated_at               timestamp
+}
+
+Table be_solicitud_becas {
   id                     bigint        [pk, increment]
-  id_usuario             bigint        [not null, ref: > usuario.id_usuario]
-  id_jornada_beca        bigint        [not null, ref: > jornada_beca.id_jornada_beca]
+  id_persona             bigint        [not null, ref: > usuario.id_usuario]
+  id_beneficio           bigint        [not null, ref: > be_beneficios.id]
+  jornada_id             bigint        [not null, ref: > jornada_beca.id]
   tipo_solicitud         varchar(15)   [not null, default: 'nueva',
                           note: 'enum: nueva | renovacion']
   estado                 varchar(15)   [not null, default: 'pendiente',
                           note: 'enum: pendiente | aprobada | rechazada']
-  comentario_verificador text
-  periodo_solicitud      varchar(20)   [not null]
-  indice_academico       decimal(4,2)  [not null]
-  direccion_temporal     varchar(255)
-  gasto_pasaje           decimal(10,2)
-  vivienda_transporte    json
-  datos_socioeconomicos  json
+  id_lapso               bigint        [not null, ref: > be_lapsos.id]
+  comentario_verificador text         
   verificado_por         bigint        [ref: > usuario.id_usuario]
   fecha_verificacion     timestamp
   created_at             timestamp
@@ -1188,24 +1471,10 @@ Table solicitud_beca {
 
 Table solicitud_documento {
   id               bigint       [pk, increment]
-  id_solicitud     bigint       [not null, ref: > solicitud_beca.id]
+  id_solicitud     bigint       [not null, ref: > be_solicitud_becas.id]
   nombre_documento varchar(255) [not null]
   ruta_archivo     varchar(500) [not null]
   tipo_archivo     varchar(50)
   created_at       timestamp
   updated_at       timestamp
-}
-
-Table beca_asignada {
-  id                bigint      [pk, increment]
-  id_solicitud      bigint      [not null, ref: - solicitud_beca.id]
-  id_usuario        bigint      [not null, ref: > usuario.id_usuario]
-  id_jornada_beca   bigint      [not null, ref: > jornada_beca.id_jornada_beca]
-  fecha_inicio      date        [not null]
-  fecha_fin         date
-  estado            varchar(15) [not null, default: 'activa',
-                    note: 'enum: activa | vencida | revocada']
-  motivo_revocacion text
-  created_at        timestamp
-  updated_at        timestamp
 }
