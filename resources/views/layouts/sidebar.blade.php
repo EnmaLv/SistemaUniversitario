@@ -113,19 +113,40 @@
             </div>
 
             <script>
+                // ─── Helpers globales para el badge ───
+                window.updateChatBadge = function (count) {
+                    const badge = document.querySelector('.chat-badge');
+                    if (!badge) return;
+                    if (count === undefined) {
+                        count = parseInt(badge.dataset.count || '0', 10);
+                    }
+                    badge.dataset.count = count;
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = count > 0 ? '' : 'none';
+                };
+
+                window.incrementChatBadge = function (by = 1) {
+                    const badge = document.querySelector('.chat-badge');
+                    if (!badge) return;
+                    const current = parseInt(badge.dataset.count || '0', 10);
+                    window.updateChatBadge(current + by);
+                };
+
+                window.recalculateChatBadge = function (contacts) {
+                    if (!Array.isArray(contacts)) return;
+                    const total = contacts.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+                    window.updateChatBadge(total);
+                };
+
+                // ─── Listener de mensajes nuevos ───
                 document.addEventListener('DOMContentLoaded', () => {
                     if (!window.Echo || !{{ auth()->id() ?? 'null' }}) return;
 
                     window.Echo.private('App.Models.Usuario.' + {{ auth()->id() ?? 'null' }})
                         .listen('.MessageSent', (e) => {
-                            // Si no estoy viendo esta conversación, incremento el badge global
-                            const badge = document.querySelector('.chat-badge');
-                            if (!badge) return;
-                            const current = parseInt(badge.dataset.count || '0', 10);
-                            const next = current + 1;
-                            badge.dataset.count = next;
-                            badge.textContent = next > 99 ? '99+' : next;
-                            badge.style.display = '';
+                            // Solo incrementar si el chat con ese contacto NO está abierto
+                            // El chat-window/chat-index llamará a recalculateChatBadge cuando corresponda
+                            window.incrementChatBadge();
                         });
                 });
             </script>

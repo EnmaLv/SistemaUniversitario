@@ -265,6 +265,9 @@
                                     this.contacts.unshift(contact);
                                 }
                             }
+                            if (window.recalculateChatBadge) {
+                                window.recalculateChatBadge(this.contacts);
+                            }
                         });
                 }
 
@@ -282,6 +285,10 @@
                 contact.unreadCount = 0;
                 this.messages = [];
                 this.fetchMessages();
+
+                if (window.recalculateChatBadge) {
+                    window.recalculateChatBadge(this.contacts);
+                }
             },
 
             fetchMessages() {
@@ -321,6 +328,10 @@
 
                                             this.contacts.splice(contactIndex, 1);
                                             this.contacts.unshift(contact);
+                                        }
+
+                                        if (window.recalculateChatBadge) {
+                                            window.recalculateChatBadge(this.contacts);
                                         }
                                     }
                                 });
