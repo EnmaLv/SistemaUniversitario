@@ -273,7 +273,7 @@
                         </p>
                     </div>
 
-                    <div id="preguntasContainer" class="hidden space-y-4"></div>
+                    <div id="preguntasContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
                     <div class="flex justify-between mt-8">
                         <button type="button" onclick="goToStep(1)"
@@ -443,9 +443,19 @@
         attachRegexGuard(container);
     }
 
+    function esAnchoCompleto(p) {
+        if (p.tipo === 'textarea') return true;
+        if (p.tipo === 'checkbox') return (p.opciones || []).length > 3;
+        if (p.tipo === 'radio')    return (p.opciones || []).length > 3;
+        if (p.tipo === 'select')   return (p.opciones || []).length > 8;
+        return false;
+    }
+
     function buildPregunta(p, idx) {
         const wrap = document.createElement('div');
-        wrap.className = 'rounded-2xl border p-4 sm:p-5';
+        const fullWidth = esAnchoCompleto(p);
+
+        wrap.className = `rounded-2xl border p-4 sm:p-5 ${fullWidth ? 'md:col-span-2' : ''}`;
         wrap.style.borderColor = 'var(--border-color)';
         wrap.style.backgroundColor = 'rgba(0,0,0,0.015)';
 
@@ -633,31 +643,6 @@
             }
         });
     }
-
-    /* ============================================================
-    Init
-    ============================================================ */
-    document.addEventListener('DOMContentLoaded', function () {
-        if (document.getElementById('jornada_id').value) {
-            actualizarJornada();
-        }
-
-        const form = document.getElementById('solicitudForm');
-        form.addEventListener('submit', function (e) {
-            if (!form.checkValidity()) {
-                e.preventDefault();
-                const invalid = form.querySelector(':invalid');
-                if (invalid) {
-                    const pane = invalid.closest('.step-pane');
-                    if (pane) {
-                        const stepNum = parseInt(pane.id.replace('step-content-', ''));
-                        goToStep(stepNum);
-                        setTimeout(() => invalid.reportValidity(), 100);
-                    }
-                }
-            }
-        });
-    });
 
     function leerValorBloque(block) {
         const checks = block.querySelectorAll('input[type="checkbox"]:checked');
