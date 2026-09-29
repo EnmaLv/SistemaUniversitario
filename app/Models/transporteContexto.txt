@@ -1,0 +1,603 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class ViajePasajero extends Model
+{
+    protected $table = 'viaje_pasajeros';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'bus_viaje_id',
+        'persona_id',
+        'bus_parada_id',
+        'escaneado_at',
+    ];
+
+    protected $casts = [
+        'escaneado_at' => 'datetime',
+    ];
+
+    public function busViaje()
+    {
+        return $this->belongsTo(BusViaje::class, 'bus_viaje_id');
+    }
+
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'persona_id');
+    }
+
+    public function busParada()
+    {
+        return $this->belongsTo(BusParada::class, 'bus_parada_id');
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
+use App\Models\BusVehiculo;
+use App\Models\BusRuta;
+use App\Models\Usuario;
+
+class BusViaje extends Model
+{
+    protected $table = 'bus_viajes';
+
+    protected $fillable = [
+        'vehiculo_id',
+        'bus_ruta_id',
+        'conductor_id',
+        'turno',
+        'firebase_id',
+        'fecha_inicio',
+        'km_inicio',
+        'km_fin',
+        'distancia_km',
+        'litros_gastados',
+        'pasajeros',
+        'hubo_desvio',
+        'motivo_desvio',
+        'estado',
+    ];
+
+    protected $casts = [
+        'fecha_inicio'   => 'datetime',
+        'fecha_fin'    => 'datetime',
+        'hubo_desvio'    => 'boolean',
+        'km_inicio'       => 'decimal:2',
+        'km_fin'          => 'decimal:2',
+        'distancia_km'   => 'decimal:2',
+        'litros_gastados' => 'decimal:2',
+        'pasajeros'      => 'integer',
+    ];
+
+    public function gpsLogs()
+    {
+        return $this->hasMany(BusGpsLog::class, 'bus_viaje_id');
+    }
+
+    public function vehiculo()
+    {
+        return $this->belongsTo(BusVehiculo::class, 'vehiculo_id');
+    }
+
+    public function ruta()
+    {
+        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+    }
+
+    public function busRuta()
+    {
+        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+    }
+
+    public function conductor()
+    {
+        return $this->belongsTo(Usuario::class, 'conductor_id', 'id_usuario');
+    }
+
+    public function cargasCombustible()
+    {
+        return $this->hasMany(BusCargaCombustible::class, 'bus_viaje_id');
+    }
+
+    public function getEstadoBadgeAttribute(): string
+    {
+        return match($this->estado) {
+            'programado' => '<span class="rd-badge rd-badge-warning">Programado</span>',
+            'en_curso'   => '<span class="rd-badge rd-badge-info">En Curso</span>',
+            'finalizado' => '<span class="rd-badge rd-badge-success">Finalizado</span>',
+            'cancelado'  => '<span class="rd-badge rd-badge-danger">Cancelado</span>',
+            default      => '<span class="rd-badge">-</span>',
+        };
+    }
+
+    public static function listarViajes($buscar = null, $estado = null)
+    {
+        return self::query()
+            ->with(['vehiculo', 'ruta', 'conductor'])
+            ->when($buscar, fn ($q) => $q
+                ->whereHas('vehiculo', fn ($q2) => $q2->where('placa', 'like', "%{$buscar}%"))
+                ->orWhereHas('ruta', fn ($q2) => $q2->where('nombre', 'like', "%{$buscar}%")))
+            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('estado', $estado))
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    public static function crearViaje(array $datos): self
+    {
+        return self::create($datos);
+    }
+
+    public static function actualizarViaje(self $viaje, array $datos): self
+    {
+        $viaje->update($datos);
+        return $viaje;
+    }
+
+    public function scopeDelConductor($query, $conductorId)
+    {
+        return $query->where('conductor_id', $conductorId);
+    }
+
+    public static function calcularTurnoActual(): string
+    {
+        $hora = Carbon::now()->hour;
+
+        if ($hora >= 6 && $hora < 13) {
+            return 'mañana';
+        } elseif ($hora >= 13 && $hora < 18) {
+            return 'tarde';
+        } else {
+            return 'noche';
+        }
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Models\BusViaje;
+
+class BusGpsLog extends Model
+{
+    protected $table = 'bus_gps_logs';
+    
+    protected $fillable = [
+        'local_id',
+        'bus_viaje_id',
+        'lat',
+        'lng',
+        'velocidad',
+        'heading',
+        'registrado_en',
+        'origen',
+    ];
+    
+    protected $casts = [
+        'registrado_en' => 'datetime',
+    ];
+
+    public function viaje()
+    {
+        return $this->belongsTo(BusViaje::class, 'bus_viaje_id');
+    }
+}
+
+
+<?php
+
+namespace App\Models;
+
+use App\Traits\ConvierteAMayusculasNoEloquent;
+use Illuminate\Database\Eloquent\Model;
+
+class BusParada extends Model
+{
+    use ConvierteAMayusculasNoEloquent;
+
+    protected $table    = 'bus_paradas';
+    protected $fillable = ['nombre', 'lat', 'lng', 'direccion', 'estado'];
+
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
+
+    public function busRuta()
+    {
+        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+    }
+
+    public function getDireccionAttribute($value): string
+    {
+        return $value ?? 'Ninguna';
+    }
+
+    public static function listarParadas($buscar = null, $estado = 1)
+    {
+        return self::query()
+            ->when($buscar, fn ($q) => $q->where('nombre', 'like', "%{$buscar}%")
+                ->orWhere('direccion', 'like', "%{$buscar}%"))
+            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('estado', $estado))
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    public static function crearParada(array $datos)
+    {
+        return self::create([
+            'nombre'    => $datos['nombre'],
+            'lat'       => $datos['lat'] ?? null,
+            'lng'       => $datos['lng'] ?? null,
+            'direccion' => $datos['direccion'] ?? null,
+            'estado'    => 1,
+        ]);
+    }
+
+    public static function actualizarParada(BusParada $parada, array $datos)
+    {
+        $parada->update([
+            'nombre'    => $datos['nombre'],
+            'lat'       => $datos['lat'] ?? null,
+            'lng'       => $datos['lng'] ?? null,
+            'direccion' => $datos['direccion'] ?? null,
+        ]);
+        return $parada;
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use App\Traits\ConvierteAMayusculasNoEloquent;
+use Illuminate\Database\Eloquent\Model;
+
+class BusRuta extends Model
+{
+    use ConvierteAMayusculasNoEloquent;
+
+    protected $table = 'bus_rutas';
+
+    protected $fillable = [
+        'nombre',
+        'distancia_km',
+        'descripcion',
+        'sede_id',
+        'estado',
+    ];
+
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sede_id');
+    }
+
+    public function horarios()
+    {
+        return $this->hasMany(RutaHorario::class, 'bus_ruta_id');
+    }
+
+    public function paradas()
+    {
+        return $this->belongsToMany(BusParada::class, 'bus_ruta_paradas')
+            ->withPivot('orden')
+            ->orderBy('bus_ruta_paradas.orden');
+    }
+
+    public function getDescripcionAttribute($value): string
+    {
+        return $value ?? 'Ninguna';
+    }
+
+    public static function listarRutas($buscar = null, $estado = 1)
+    {
+        return self::query()
+            ->with(['sede', 'horarios'])
+            ->when($buscar, fn($q) => $q->where('nombre', 'like', "%{$buscar}%"))
+            ->when($estado !== null && $estado !== '', fn($q) => $q->where('estado', $estado))
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    public static function crearRuta(array $datos)
+    {
+        return self::create([
+            'nombre'       => $datos['nombre'],
+            'distancia_km' => $datos['distancia_km'],
+            'descripcion'  => $datos['descripcion'] ?? null,
+            'sede_id'      => $datos['sede_id'],
+            'estado'       => 1,
+        ]);
+    }
+
+    public static function actualizarRuta(BusRuta $ruta, array $datos)
+    {
+        $ruta->update([
+            'nombre'       => $datos['nombre'],
+            'distancia_km' => $datos['distancia_km'],
+            'descripcion'  => $datos['descripcion'] ?? null,
+            'sede_id'      => $datos['sede_id'],
+        ]);
+        return $ruta;
+    }
+    public function rutaParadas()
+    {
+        return $this->hasMany(BusRutaParada::class, 'bus_ruta_id')->orderBy('orden');
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Models\BusRuta;
+use App\Models\BusParada;
+
+class BusRutaParada extends Model
+{
+    protected $table = 'bus_ruta_paradas';
+    
+    protected $fillable = [
+        'bus_ruta_id',
+        'bus_parada_id',
+        'orden',
+        'estado',
+    ];
+    
+    public function busRuta()
+    {
+        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+    }
+    
+    public function busParada()
+    {
+        return $this->belongsTo(BusParada::class, 'bus_parada_id');
+    }
+}
+
+
+<?php
+
+namespace App\Models;
+
+use App\Traits\ConvierteAMayusculasNoEloquent;
+use Illuminate\Database\Eloquent\Model;
+
+class BusTipoCombustible extends Model
+{
+    use ConvierteAMayusculasNoEloquent;
+
+    protected $table    = 'tipo_combustibles';
+    protected $fillable = ['nombre', 'descripcion', 'estado'];
+
+    protected $casts = [
+        'estado' => 'boolean',
+    ];
+
+    public static function listarTipos($buscar = null, $estado = 1)
+    {
+        return self::query()
+            ->when($buscar, fn ($q) => $q->where('nombre', 'like', "%{$buscar}%"))
+            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('estado', $estado))
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    public static function crearTipo(array $datos)
+    {
+        return self::create([
+            'nombre'      => $datos['nombre'],
+            'descripcion' => $datos['descripcion'] ?? null,
+            'estado'      => 1,
+        ]);
+    }
+
+    public static function actualizarTipo(BusTipoCombustible $tipo, array $datos)
+    {
+        $tipo->update([
+            'nombre'      => $datos['nombre'],
+            'descripcion' => $datos['descripcion'] ?? null,
+        ]);
+
+        return $tipo;
+    }
+}
+
+<?php
+
+namespace App\Models;
+
+use App\Traits\ConvierteAMayusculasNoEloquent;
+use Illuminate\Database\Eloquent\Model;
+use App\Traits\FiltroPorSede;
+
+class BusVehiculo extends Model
+{
+    use FiltroPorSede;
+
+    use ConvierteAMayusculasNoEloquent;
+
+    protected $table = 'vehiculos';
+
+    protected $fillable = [
+        'placa',
+        'modelo_id',
+        'anio',
+        'color',
+        'cantidad_pasajeros',
+        'peso',
+        'tipo_combustible_id',
+        'cantidad_cilindros',
+        'capacidad_tanque_litros',
+        'nivel_combustible_actual',
+        'consumo_urbano',
+        'consumo_carretera',
+        'consumo_relenti',
+        'km_actual',
+        'km_proximo_mantenimiento',
+        'sede_id',
+        'activo',
+        'estado',
+    ];
+
+    protected $casts = [
+        'activo' => 'boolean',
+        'consumo_urbano' => 'decimal:3',
+        'consumo_carretera' => 'decimal:3',
+        'consumo_relenti' => 'decimal:3',
+        'capacidad_tanque_litros' => 'decimal:2',
+        'km_actual' => 'decimal:2',
+        'km_proximo_mantenimiento' => 'decimal:2',
+    ];
+
+    public function modelo()
+    {
+        return $this->belongsTo(BusModelo::class, 'modelo_id');
+    }
+
+    public function tipoCombustible()
+    {
+        return $this->belongsTo(BusTipoCombustible::class, 'tipo_combustible_id');
+    }
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sede_id');
+    }
+
+    public function conductor()
+    {
+        return $this->belongsTo(\App\Models\Usuario::class, 'conductor_id', 'id_usuario');
+    }
+
+    public static function listarVehiculos($buscar = null, $estado = "todos", $activo = 1)
+    {
+        return self::query()
+            ->with(['modelo.busMarca', 'tipoCombustible', 'sede'])
+            ->when($buscar, fn($q) => $q->where('placa', 'like', "%{$buscar}%")
+                ->orWhere('color', 'like', "%{$buscar}%"))
+            ->when($activo !== null && $activo !== '', fn($q) => $q->where('activo', $activo))
+            ->when($estado !== null && $estado !== '' && $estado !== 'todos', fn($q) => $q->where('estado', $estado))
+            ->orderBy('placa')
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    public static function crearVehiculo(array $datos)
+    {
+        return self::create($datos);
+    }
+
+    public static function actualizarVehiculo(BusVehiculo $vehiculo, array $datos)
+    {
+        $vehiculo->update($datos);
+        return $vehiculo;
+    }
+
+    public function getEstadoBadgeAttribute(): string
+    {
+        return match ($this->estado) {
+            'disponible'   => '<span class="rd-badge rd-badge-success">Disponible</span>',
+            'en_ruta'      => '<span class="rd-badge rd-badge-info">En Ruta</span>',
+            'mantenimiento' => '<span class="rd-badge rd-badge-warning">Mantenimiento</span>',
+            'inactivo'     => '<span class="rd-badge rd-badge-danger">Inactivo</span>',
+            default        => '<span class="rd-badge">Desconocido</span>',
+        };
+    }
+}
+
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('mantenimientos', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('vehiculo_id')->constrained('vehiculos')->onDelete('cascade');
+            $table->enum('tipo', ['preventivo', 'correctivo']);
+            $table->string('titulo', 150);
+            $table->text('descripcion')->nullable();
+            $table->decimal('costo', 10, 2)->nullable();
+            $table->date('fecha'); 
+            $table->decimal('km_al_servicio', 10, 2)->nullable();
+            $table->decimal('proximo_km', 10, 2)->nullable();
+            $table->date('proxima_fecha')->nullable();
+            $table->enum('estado', ['pendiente', 'en_proceso', 'completado'])->default('pendiente');
+            $table->unsignedBigInteger('usuario_registro_id')->nullable();
+            $table->foreign('usuario_registro_id')->references('id_usuario')->on('usuario')->nullOnDelete();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('mantenimientos');
+    }
+};
+
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('carga_combustibles', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('vehiculo_id')->constrained('vehiculos')->onDelete('cascade');
+            $table->foreignId('bus_viaje_id')->constrained('bus_viajes')->onDelete('cascade');
+            $table->date('fecha');
+            $table->decimal('litros', 8, 2);
+            $table->decimal('precio_litros', 10, 2);
+            $table->decimal('total', 12, 2); 
+            $table->decimal('km_al_cargar', 10, 2);
+            $table->text('observaciones')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('carga_combustibles');
+    }
+};

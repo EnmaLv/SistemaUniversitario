@@ -28,25 +28,31 @@ use \App\Models\BusViaje;
 use \App\Models\BusCargaCombustible;
 use App\Services\Salud\PsicologiaHomeService;
 use App\Services\Salud\SaludHomeService;
+use App\Services\Transporte\TransporteHomeService;
+use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
     protected $psicologiaService;
     protected $saludService;
+    protected $transporteService;
 
     public function __construct(
         PsicologiaHomeService $psicologiaService,
-        SaludHomeService $saludService
+        SaludHomeService $saludService,
+        TransporteHomeService $transporteService
     ) {
         $this->middleware('auth');
-        $this->psicologiaService = $psicologiaService;
-        $this->saludService      = $saludService;
+        $this->psicologiaService  = $psicologiaService;
+        $this->saludService       = $saludService;
+        $this->transporteService  = $transporteService;
     }
 
     public function index()
     {
         $psicologiaData = $this->psicologiaService->getPacienteData();
         $saludData = $this->saludService->getDashboardData();
+        $transporteData = $this->transporteService->getDashboardData();
         $hoy = Carbon::now();
         $limite = Carbon::now()->addDays(7);
         $sedeId = Auth::user()->persona?->sede_id ?? 1;
@@ -204,6 +210,7 @@ class HomeController extends Controller
             'visibleModules'  => $visibleModules,
             'saludData'       => $saludData,
             'resumenGeneral'  => $resumenGeneral,
+            'transporteData' => $transporteData,
         ], $psicologiaData), compact(
             'total_sedes',
             'total_categorias',
@@ -230,6 +237,30 @@ class HomeController extends Controller
             'jornadasActivas',
             'jornadasRenovables'
         ));
+    }
+
+    public function transporteEstadisticas(Request $request)
+    {
+        $filtros = [
+            'start_date'   => $request->query('start_date'),
+            'end_date'     => $request->query('end_date'),
+            'vehiculo_id'  => $request->query('vehiculo_id'),
+            'ruta_id'      => $request->query('ruta_id'),
+            'conductor_id' => $request->query('conductor_id'),
+            'turno'        => $request->query('turno'),
+            'estado'       => $request->query('estado'),
+        ];
+
+        $data = $this->transporteService->getDashboardData($filtros);
+
+        $format = $request->query('format', 'json');
+
+        if ($format === 'json') {
+            return response()->json(['resumen' => $data['resumen']]);
+        }
+
+        // TODO: implementar exportación PDF/Word cuando se requiera
+        return response()->json(['resumen' => $data['resumen']]);
     }
 
     /**

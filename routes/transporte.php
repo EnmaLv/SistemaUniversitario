@@ -82,7 +82,9 @@ Route::get('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::cl
 Route::put('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::class, 'update'])->name('admin.transporte.maestros.bus_viajes.update');
 Route::delete('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::class, 'destroy'])->name('admin.transporte.maestros.bus_viajes.destroy');
 Route::post('/transporte/maestros/bus_viajes/{busViaje}/cancelar', [BusViajeController::class, 'cancelar'])->name('admin.transporte.maestros.bus_viajes.cancelar');
-
+Route::get('/viajes/estadisticas', [\App\Http\Controllers\HomeController::class, 'transporteEstadisticas'])
+    ->name('admin.transporte.viajes.estadisticas');
+    
 /* Cargas de Combustible */
 Route::get('/transporte/maestros/bus_carga_combustibles', [BusCargaCombustibleController::class, 'index'])->name('admin.transporte.maestros.bus_carga_combustibles.index');
 Route::get('/transporte/maestros/bus_carga_combustibles/create', [BusCargaCombustibleController::class, 'create'])->name('admin.transporte.maestros.bus_carga_combustibles.create');
