@@ -6,21 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Modulo;
-use Illuminate\Support\Facades\DB;
 
 class ModuloController extends Controller
 {
     public function seleccionarForm()
     {
-        $user = Auth::user();
-        
-        // Forzar la regeneración de los permisos del módulo en la sesión
-        session()->forget(['modulos_permitidos', 'menu_permissions_user']);
-        (new \App\AdminLTE\Filters\ModuleFilter)->transform(['key' => 'init_check']);
+        session()->forget(['modulo_activo']);
 
-        $modulos = Modulo::where('activo', true)->get();
+        if (is_null(session('modulos_permitidos'))) {
+            $user = Auth::user();
+            (new \App\AdminLTE\Filters\ModuleFilter)
+                ->inicializarSesion($user->id_usuario ?? $user->id);
+        }
 
-        return view('admin.modulos.seleccionar', compact('modulos'));
+        return redirect()->route('home');
     }
 
     public function cambiar(Request $request)
@@ -29,13 +28,11 @@ class ModuloController extends Controller
 
         $moduloKey = $request->input('modulo');
 
-        // Verificar que el módulo existe y está activo
         $modulo = Modulo::where('key', $moduloKey)->where('activo', true)->first();
         if (! $modulo) {
             return redirect()->back()->with('error', 'Módulo no válido.');
         }
 
-        // Verificar que el usuario tiene acceso a ese módulo
         $permitidos = session('modulos_permitidos', []);
         if (! in_array($moduloKey, $permitidos)) {
             return redirect()->back()->with('error', 'No tienes acceso a ese módulo.');
@@ -43,6 +40,7 @@ class ModuloController extends Controller
 
         session(['modulo_activo' => $modulo->key]);
 
-        return redirect()->route('home')->with('success', 'Módulo cambiado a: ' . $modulo->nombre);
+        return redirect()->route('home')
+            ->with('success', 'Módulo cambiado a: ' . $modulo->nombre);
     }
 }

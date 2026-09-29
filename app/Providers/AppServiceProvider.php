@@ -22,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
         RedirectIfAuthenticated::redirectUsing(function ($request) {
             if (Auth::check()) {
                 $user = Auth::user();
-                return (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($user->id_usuario ?? $user->id);
+                return (new \App\AdminLTE\Filters\ModuleFilter())
+                    ->resolveInitialRoute($user->id_usuario ?? $user->id);
             }
             return '/';
         });

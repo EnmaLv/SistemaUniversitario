@@ -182,11 +182,20 @@ class HomeController extends Controller
                 $postuladoActual = \App\Models\Becas\SolicitudBeca::where('jornada_id', $jornada->id)
                     ->where('id_persona', $user->id_persona)
                     ->exists();
-                
+
                 if ($aprobadoAnterior && !$postuladoActual) {
                     $jornadasRenovables->push($jornada);
                 }
             }
+        }
+
+        // ─────────────────────────────────────────────────────────
+        // Resumen general: solo cuando NO hay módulo activo.
+        // Es una guía descriptiva de qué hace cada módulo.
+        // ─────────────────────────────────────────────────────────
+        $resumenGeneral = null;
+        if (is_null(session('modulo_activo'))) {
+            $resumenGeneral = $this->construirResumenGeneral();
         }
 
         return view('home', array_merge([
@@ -194,6 +203,7 @@ class HomeController extends Controller
             'tasa_actual'     => $ultimaTasa?->tasa,
             'visibleModules'  => $visibleModules,
             'saludData'       => $saludData,
+            'resumenGeneral'  => $resumenGeneral,
         ], $psicologiaData), compact(
             'total_sedes',
             'total_categorias',
@@ -220,5 +230,103 @@ class HomeController extends Controller
             'jornadasActivas',
             'jornadasRenovables'
         ));
+    }
+
+    /**
+     * Devuelve la guía descriptiva de cada módulo visible para el usuario.
+     * Sin queries numéricas: solo nombre, icono, descripción y funcionalidades.
+     */
+    protected function construirResumenGeneral(): array
+    {
+        $permitidos = session('modulos_permitidos', []);
+        $esAdmin    = session('es_admin', false);
+        $puedeVer   = fn ($key) => $esAdmin || in_array($key, $permitidos);
+
+        $catalogo = [
+            'comedor' => [
+                'nombre'      => 'Comedor',
+                'icon'        => 'fa-utensils',
+                'descripcion' => 'Gestión integral del servicio de alimentación universitario: control de inventario, recetas, compras y registro diario de comidas.',
+                'funcionalidades' => [
+                    'Registro diario de comidas servidas',
+                    'Control de inventario y lotes',
+                    'Recetas, platos y productos',
+                    'Compras y proveedores',
+                    'Alertas por vencimiento y stock mínimo',
+                ],
+            ],
+            'salud' => [
+                'nombre'      => 'Salud',
+                'icon'        => 'fa-heartbeat',
+                'descripcion' => 'Atención médica a la comunidad universitaria: consultas, emisión de recetas y dispensación de medicamentos.',
+                'funcionalidades' => [
+                    'Registro de consultas médicas',
+                    'Emisión de recetas',
+                    'Dispensación de medicamentos',
+                    'Gestión de consultorios y horarios',
+                    'Reportes y estadísticas de atención',
+                ],
+            ],
+            'psicologia' => [
+                'nombre'      => 'Psicología',
+                'icon'        => 'fa-brain',
+                'descripcion' => 'Acompañamiento psicológico a estudiantes y personal, con agenda de citas y seguimiento clínico de cada paciente.',
+                'funcionalidades' => [
+                    'Solicitud y agenda de citas',
+                    'Historias clínicas',
+                    'Seguimiento de pacientes',
+                    'Gestión de horarios del psicólogo',
+                    'Reportes y estadísticas',
+                ],
+            ],
+            'beca' => [
+                'nombre'      => 'Becas',
+                'icon'        => 'fa-graduation-cap',
+                'descripcion' => 'Administración de programas de becas, jornadas de postulación y beneficios para los estudiantes de la universidad.',
+                'funcionalidades' => [
+                    'Jornadas de postulación',
+                    'Verificación de solicitudes',
+                    'Gestión de beneficios',
+                    'Seguimiento de becarios',
+                    'Historial de asignaciones',
+                ],
+            ],
+            'transporte' => [
+                'nombre'      => 'Transporte',
+                'icon'        => 'fa-bus',
+                'descripcion' => 'Control de la flota vehicular universitaria: rutas, viajes, combustible y mantenimiento de las unidades.',
+                'funcionalidades' => [
+                    'Gestión de vehículos y marcas',
+                    'Rutas y paradas',
+                    'Registro de viajes',
+                    'Control de carga de combustible',
+                    'Mantenimiento de unidades',
+                ],
+            ],
+            'administracion' => [
+                'nombre'      => 'Administración',
+                'icon'        => 'fa-cog',
+                'descripcion' => 'Configuración general del sistema: catálogos maestros, usuarios, roles y permisos de la plataforma.',
+                'funcionalidades' => [
+                    'Gestión de sedes y categorías',
+                    'Administración de usuarios',
+                    'Roles y permisos',
+                    'Configuración del sistema',
+                    'Catálogos maestros',
+                ],
+            ],
+        ];
+
+        $visibles = [];
+        foreach ($catalogo as $key => $info) {
+            if ($puedeVer($key)) {
+                $visibles[$key] = $info;
+            }
+        }
+
+        return [
+            'modulos'      => $visibles,
+            'totalModulos' => count($visibles),
+        ];
     }
 }

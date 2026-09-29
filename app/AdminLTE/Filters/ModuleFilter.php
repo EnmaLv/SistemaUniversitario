@@ -30,27 +30,19 @@ class ModuleFilter implements FilterInterface
         $esAdmin         = session('es_admin', false);
         $moduloActivo    = session('modulo_activo', null);
 
-        // 1. Filtrado por llave de menú (Permisos tradicionales)
         if (isset($item['key']) && ! empty($item['key'])) {
             if (! $esAdmin && ! in_array($item['key'], $menuPermissions)) {
                 return false;
             }
         }
 
-        // 2. Filtrado por Módulo Dinámico
         if (isset($item['module']) && ! empty($item['module'])) {
-
-            // Si el ítem requiere módulo, pero no hay ninguno activo, se oculta (Aplica para Admin/Secretaria)
             if (is_null($moduloActivo)) {
                 return false;
             }
-
-            // Si hay un módulo activo, pero este ítem pertenece a otro, se oculta
             if ($item['module'] !== $moduloActivo) {
                 return false;
             }
-
-            // Verificación de seguridad
             if (! in_array($item['module'], $permitidos)) {
                 return false;
             }
@@ -61,32 +53,35 @@ class ModuleFilter implements FilterInterface
 
     public function resolveInitialRoute($userId): string
     {
-        session()->forget(['modulos_permitidos', 'menu_permissions_user', 'es_admin', 'modulo_activo']);
+        session()->forget([
+            'modulos_permitidos',
+            'menu_permissions_user',
+            'es_admin',
+            'modulo_activo',
+        ]);
+
         $this->inicializarSesion($userId);
 
         $permitidos = session('modulos_permitidos', []);
 
         if (count($permitidos) === 1) {
             session(['modulo_activo' => $permitidos[0]]);
-            return route('home');
-        }
-
-        if (count($permitidos) > 1) {
-            return route('admin.modulos.seleccionar');
         }
 
         return route('home');
     }
 
-    private function inicializarSesion($userId)
+    public function inicializarSesion($userId)
     {
-        $modulesTable = Schema::hasTable('modulos') ? 'modulos' : (Schema::hasTable('modulo') ? 'modulo' : null);
+        $modulesTable = Schema::hasTable('modulos')
+            ? 'modulos'
+            : (Schema::hasTable('modulo') ? 'modulo' : null);
 
         if (! $modulesTable) {
             session([
                 'modulos_permitidos'    => [],
                 'menu_permissions_user' => [],
-                'es_admin'              => false
+                'es_admin'              => false,
             ]);
             return;
         }
@@ -100,7 +95,7 @@ class ModuleFilter implements FilterInterface
             session([
                 'modulos_permitidos'    => [],
                 'menu_permissions_user' => [],
-                'es_admin'              => false
+                'es_admin'              => false,
             ]);
             return;
         }
@@ -143,8 +138,5 @@ class ModuleFilter implements FilterInterface
             'menu_permissions_user' => $menuPermissions,
             'es_admin'              => $esAdmin,
         ]);
-
-        // No se selecciona automáticamente un módulo al entrar por primera vez.
-        // La vista de selección debe mostrarse para que el usuario elija el módulo.
     }
 }
