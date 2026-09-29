@@ -11,11 +11,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="pusher-app-key" content="{{ config('broadcasting.connections.pusher.key') }}">
+    <meta name="pusher-app-cluster" content="{{ config('broadcasting.connections.pusher.options.cluster') }}">
 
     <title>{{ config('app.name', 'Bienestar Estudiantil') }}</title>
 
     <script>
-        (function () {
+        (function() {
             const getStoredTheme = () => localStorage.getItem('theme');
             const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
@@ -432,25 +434,25 @@
             border-color: var(--color-primary) !important;
         }
 
-            /* Keep status labels readable after the general card text reset. */
-            html.dark main .rd-badge-success,
-            html.dark main [class~="bg-emerald-100"] {
-                background-color: #064e3b !important;
-                border-color: #10b981 !important;
-                color: #a7f3d0 !important;
-            }
+        /* Keep status labels readable after the general card text reset. */
+        html.dark main .rd-badge-success,
+        html.dark main [class~="bg-emerald-100"] {
+            background-color: #064e3b !important;
+            border-color: #10b981 !important;
+            color: #a7f3d0 !important;
+        }
 
-            html.dark main .rd-badge-danger,
-            html.dark main [class~="bg-red-100"] {
-                background-color: #7f1d1d !important;
-                border-color: #ef4444 !important;
-                color: #fecaca !important;
-            }
+        html.dark main .rd-badge-danger,
+        html.dark main [class~="bg-red-100"] {
+            background-color: #7f1d1d !important;
+            border-color: #ef4444 !important;
+            color: #fecaca !important;
+        }
 
-            html.dark main .rd-badge-success span,
-            html.dark main [class~="bg-emerald-100"] span {
-                color: inherit !important;
-            }
+        html.dark main .rd-badge-success span,
+        html.dark main [class~="bg-emerald-100"] span {
+            color: inherit !important;
+        }
     </style>
 </head>
 
@@ -499,15 +501,11 @@
                     @yield('content')
                 @endif
             </main>
-
-            @if (View::exists('components.chat-window'))
-                <x-chat-window />
-            @endif
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const primaryColor = '{{ $primaryColorHex }}';
 
             window.Toast = Swal.mixin({
@@ -526,7 +524,7 @@
             });
 
             window.AppModal = {
-                show: function (title, text, options = {}) {
+                show: function(title, text, options = {}) {
                     const isDark = document.documentElement.classList.contains('dark');
                     return Swal.fire({
                         title: title || 'Aviso',
@@ -545,13 +543,13 @@
                         buttonsStyling: true
                     }).then((result) => result.isConfirmed);
                 },
-                confirm: function (title, text) {
+                confirm: function(title, text) {
                     return this.show(title, text, {
                         type: 'confirm',
                         icon: 'warning'
                     });
                 },
-                alert: function (title, text) {
+                alert: function(title, text) {
                     return this.show(title, text, {
                         type: 'alert',
                         icon: 'info'
@@ -599,7 +597,7 @@
     @stack('js')
     @yield('scripts')
 
-    
+
 </body>
 
 </html>

@@ -26,8 +26,15 @@ class MessageSent implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        $conversation = \Illuminate\Support\Facades\DB::table('conversations')->where('id', $this->message->conversation_id)->first();
-        $recipientId = ($conversation->user_one_id == $this->message->sender_id)
+        $conversation = \Illuminate\Support\Facades\DB::table('conversations')
+            ->where('id', $this->message->conversation_id)
+            ->first();
+
+        if (!$conversation) {
+            return [new PrivateChannel('chat.' . $this->message->conversation_id)];
+        }
+
+        $recipientId = ((int)$conversation->user_one_id === (int)$this->message->sender_id)
             ? $conversation->user_two_id
             : $conversation->user_one_id;
 
