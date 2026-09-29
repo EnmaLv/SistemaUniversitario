@@ -501,6 +501,9 @@
                     @yield('content')
                 @endif
             </main>
+            @if (View::exists('components.chat-window'))
+                <x-chat-window />
+            @endif
         </div>
     </div>
 
