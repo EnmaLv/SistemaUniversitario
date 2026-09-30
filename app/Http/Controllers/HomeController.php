@@ -3,66 +3,52 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use App\Models\Sede;
-use App\Models\Categoria;
-use App\Models\Producto;
-use App\Models\Proveedor;
-use App\Models\Compra;
-use App\Models\Lote;
 use App\Models\ExchangeRates;
 use App\Models\Rol;
-use App\Models\salud\EnvasePrimario;
 use App\Models\Becas\JornadaBeca;
 use App\Models\Becas\Beneficio;
-use Illuminate\Support\Facades\DB;
+use App\Models\Becas\SolicitudBeca;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-// MÓDULO TRANSPORTE — Abdias
-use \App\Models\BusMarca;
-use \App\Models\BusModelo;
-use \App\Models\BusTipoCombustible;
-use \App\Models\BusVehiculo;
-use \App\Models\BusRuta;
-use \App\Models\BusParada;
-use \App\Models\BusMantenimiento;
-use \App\Models\BusViaje;
-use \App\Models\BusCargaCombustible;
 use App\Services\Salud\PsicologiaHomeService;
 use App\Services\Salud\SaludHomeService;
 use App\Services\Transporte\TransporteHomeService;
-use Illuminate\Http\Request;
-
+use App\Services\Comedor\ComedorHomeService;
+use App\Services\becas\BecasHomeService;
 class HomeController extends Controller
 {
     protected $psicologiaService;
     protected $saludService;
     protected $transporteService;
+    protected $comedorService;
+    protected $becasService;
 
     public function __construct(
         PsicologiaHomeService $psicologiaService,
         SaludHomeService $saludService,
-        TransporteHomeService $transporteService
+        TransporteHomeService $transporteService,
+        ComedorHomeService $comedorService,
+        BecasHomeService $becasService,
     ) {
         $this->middleware('auth');
-        $this->psicologiaService  = $psicologiaService;
-        $this->saludService       = $saludService;
-        $this->transporteService  = $transporteService;
+        $this->psicologiaService     = $psicologiaService;
+        $this->saludService          = $saludService;
+        $this->transporteService     = $transporteService;
+        $this->comedorService        = $comedorService;
+        $this->becasService          = $becasService;
     }
 
     public function index()
     {
         $psicologiaData = $this->psicologiaService->getPacienteData();
-        $saludData = $this->saludService->getDashboardData();
+        $saludData      = $this->saludService->getDashboardData();
         $transporteData = $this->transporteService->getDashboardData();
-        $hoy = Carbon::now();
-        $limite = Carbon::now()->addDays(7);
-        $sedeId = Auth::user()->persona?->sede_id ?? 1;
-        $user = Auth::user();
+        $comedorData    = $this->comedorService->getDashboardData();
+        $becasData      = $this->becasService->getDashboardData();
+        $administracionData = ['secciones' => $this->construirResumenAdministracion()];
 
-        $roleName = $user->role ?? null;
-        if (empty($roleName) && method_exists($user, 'roles')) {
-            $firstRole = $user->roles()->first();
-            $roleName = $firstRole?->nombre ?? null;
-        }
+        $user     = Auth::user();
+        $roleName = $this->resolveRoleName($user);
 
         if (is_null(session('modulos_permitidos')) || is_null(session('menu_permissions_user'))) {
             (new \App\AdminLTE\Filters\ModuleFilter)->transform(['key' => 'init_check']);
@@ -72,64 +58,97 @@ class HomeController extends Controller
             return redirect()->route('admin.movimientos.registro_comida.index');
         }
 
-        $rol = $roleName ? Rol::where('nombre', $roleName)->first() : null;
-        $menuPermissions = $rol?->menu_permissions ?? [];
-        $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
-        $isSecretaria = $roleName && strtolower($roleName) === 'secretaria de bienestar';
-        $total_envases_primarios = EnvasePrimario::count();
-        $total_sedes             = Sede::count();
-        $total_categorias        = Categoria::count();
-        $total_productos         = Producto::count();
-        $total_proveedores       = Proveedor::count();
-        $total_compras           = Compra::count();
-        $total_jornadas_becas    = JornadaBeca::count();
-        $total_beneficios        = Beneficio::count();
+        $visibleModules = $this->construirModulosVisibles($roleName);
 
+        $hoy             = Carbon::now();
         $jornadasActivas = JornadaBeca::where('activa', 1)
             ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
             ->whereDate('fecha_fin_solicitud', '>=', $hoy)
             ->with(['beneficio', 'lapso'])
             ->get();
 
-        $total_lotes_vencidos = Lote::whereDate('fecha_vencimiento', '<=', $hoy)
-            ->where('estado', 1)
-            ->count();
-
-        $total_lotes_por_vencer = Lote::whereBetween(
-            'fecha_vencimiento',
-            [$hoy, $limite]
-        )->count();
+        $jornadasRenovables = $this->obtenerJornadasRenovables($user, $jornadasActivas);
 
         $ultimaTasa = ExchangeRates::latest()->first();
+        $resumenGeneral = is_null(session('modulo_activo'))
+            ? $this->construirResumenGeneral()
+            : null;
 
-        $productos_stock_minimo = Producto::select(
-            'productos.id',
-            'productos.nombre',
-            'productos.stock_minimo',
-            DB::raw('COALESCE(SUM(inventario_sede_lotes.cantidad_convertida), 0) as stock_actual')
-        )
-            ->join('lotes', 'lotes.producto_id', '=', 'productos.id')
-            ->join('inventario_sede_lotes', function ($join) use ($sedeId) {
-                $join->on('inventario_sede_lotes.lote_id', '=', 'lotes.id')
-                    ->where('inventario_sede_lotes.sede_id', '=', $sedeId);
-            })
-            ->where('productos.estado', 1)
-            ->groupBy('productos.id', 'productos.nombre', 'productos.stock_minimo')
-            ->havingRaw('SUM(inventario_sede_lotes.cantidad_convertida) <= productos.stock_minimo')
-            ->havingRaw('SUM(inventario_sede_lotes.cantidad_convertida) > 0')
-            ->orderBy('stock_actual', 'asc')
-            ->get();
+        return view(
+            'home',
+            array_merge([
+                'variacion_dolar' => $ultimaTasa?->variacion,
+                'tasa_actual'     => $ultimaTasa?->tasa,
+                'visibleModules'  => $visibleModules,
+                'saludData'       => $saludData,
+                'resumenGeneral'  => $resumenGeneral,
+                'transporteData'  => $transporteData,
+                'comedorData'     => $comedorData,
+                'becasData'       => $becasData,
+                'administracionData' => $administracionData,
+                'psicologiaData'       => $psicologiaData
+            ])
+        );
+    }
 
-        $total_productos_stock_minimo = $productos_stock_minimo->count();
-        $total_bus_marcas            = BusMarca::count();
-        $total_bus_modelos           = BusModelo::count();
-        $total_bus_tipo_combustibles = BusTipoCombustible::count();
-        $total_bus_vehiculos = BusVehiculo::count();
-        $total_bus_rutas = BusRuta::count();
-        $total_bus_paradas = BusParada::count();
-        $total_bus_mantenimientos = BusMantenimiento::count();
-        $total_bus_viajes = BusViaje::count();
-        $total_bus_cargas = BusCargaCombustible::count();
+    public function becasEstadisticas(Request $request)
+    {
+        $data = $this->becasService->getDashboardData([
+            'start_date'     => $request->query('start_date'),
+            'end_date'       => $request->query('end_date'),
+            'beneficio_id'   => $request->query('beneficio_id'),
+            'jornada_id'     => $request->query('jornada_id'),
+            'estado'         => $request->query('estado'),
+            'tipo_solicitud' => $request->query('tipo_solicitud'),
+            'lapso_id'       => $request->query('lapso_id'),
+        ]);
+
+        return response()->json(['resumen' => $data['resumen']]);
+    }
+
+    public function comedorEstadisticas(Request $request)
+    {
+        $data = $this->comedorService->getDashboardData([
+            'start_date' => $request->query('start_date'),
+            'end_date'   => $request->query('end_date'),
+            'pnf_id'     => $request->query('pnf_id'),
+        ]);
+
+        return response()->json(['resumen' => $data['resumen']]);
+    }
+
+    public function transporteEstadisticas(Request $request)
+    {
+        $data = $this->transporteService->getDashboardData([
+            'start_date'   => $request->query('start_date'),
+            'end_date'     => $request->query('end_date'),
+            'vehiculo_id'  => $request->query('vehiculo_id'),
+            'ruta_id'      => $request->query('ruta_id'),
+            'conductor_id' => $request->query('conductor_id'),
+            'turno'        => $request->query('turno'),
+            'estado'       => $request->query('estado'),
+        ]);
+
+        return response()->json(['resumen' => $data['resumen']]);
+    }
+
+    protected function resolveRoleName($user): ?string
+    {
+        $roleName = $user->role ?? null;
+
+        if (empty($roleName) && method_exists($user, 'roles')) {
+            $roleName = optional($user->roles()->first())->nombre;
+        }
+
+        return $roleName;
+    }
+
+    protected function construirModulosVisibles(?string $roleName): array
+    {
+        $rol             = $roleName ? Rol::where('nombre', $roleName)->first() : null;
+        $menuPermissions = $rol?->menu_permissions ?? [];
+        $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
+        $isSecretaria    = $roleName && strtolower($roleName) === 'secretaria de bienestar';
 
         $menuConfig = config('adminlte.menu');
 
@@ -165,113 +184,113 @@ class HomeController extends Controller
             'bus_mantenimientos' => 'admin/transporte/maestros/bus_mantenimientos',
             'bus_viajes'        => 'admin/transporte/maestros/bus_viajes',
             'bus_carga_combustibles' => 'admin/transporte/maestros/bus_carga_combustibles',
-            // ── Becas ──────────────────────────────────────────
-            'jornada_becas'         => 'admin/becas/jornada',
-            'beneficios'
+            'jornada_becas'     => 'admin/becas/jornada',
+            'beneficios'        => null,
         ];
 
         $visibleModules = [];
         foreach ($modules as $key => $url) {
-            $menuKey = $findKeyForUrl($menuConfig, $url);
-            $visible = $isAdministrator || $isSecretaria || ($menuKey && in_array($menuKey, $menuPermissions));
+            $menuKey = $url ? $findKeyForUrl($menuConfig, $url) : null;
+            $visible = $isAdministrator
+                || $isSecretaria
+                || ($menuKey && in_array($menuKey, $menuPermissions));
             $visibleModules[$key] = $visible;
         }
 
-        $jornadasRenovables = collect();
-        if ($user && $user->id_persona) {
-            foreach ($jornadasActivas as $jornada) {
-                $aprobadoAnterior = \App\Models\Becas\SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
-                    ->where('estado', 1)
-                    ->where('id_lapso', '!=', $jornada->lapsos_id)
-                    ->where('id_persona', $user->id_persona)
-                    ->exists();
-                $postuladoActual = \App\Models\Becas\SolicitudBeca::where('jornada_id', $jornada->id)
-                    ->where('id_persona', $user->id_persona)
-                    ->exists();
+        return $visibleModules;
+    }
 
-                if ($aprobadoAnterior && !$postuladoActual) {
-                    $jornadasRenovables->push($jornada);
-                }
+    protected function obtenerJornadasRenovables($user, $jornadasActivas)
+    {
+        $renovables = collect();
+
+        if (!$user || !$user->id_persona) {
+            return $renovables;
+        }
+
+        foreach ($jornadasActivas as $jornada) {
+            $aprobadoAnterior = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
+                ->where('estado', 1)
+                ->where('id_lapso', '!=', $jornada->lapsos_id)
+                ->where('id_persona', $user->id_persona)
+                ->exists();
+
+            $postuladoActual = SolicitudBeca::where('jornada_id', $jornada->id)
+                ->where('id_persona', $user->id_persona)
+                ->exists();
+
+            if ($aprobadoAnterior && !$postuladoActual) {
+                $renovables->push($jornada);
             }
         }
 
-        // ─────────────────────────────────────────────────────────
-        // Resumen general: solo cuando NO hay módulo activo.
-        // Es una guía descriptiva de qué hace cada módulo.
-        // ─────────────────────────────────────────────────────────
-        $resumenGeneral = null;
-        if (is_null(session('modulo_activo'))) {
-            $resumenGeneral = $this->construirResumenGeneral();
-        }
-
-        return view('home', array_merge([
-            'variacion_dolar' => $ultimaTasa?->variacion,
-            'tasa_actual'     => $ultimaTasa?->tasa,
-            'visibleModules'  => $visibleModules,
-            'saludData'       => $saludData,
-            'resumenGeneral'  => $resumenGeneral,
-            'transporteData' => $transporteData,
-        ], $psicologiaData), compact(
-            'total_sedes',
-            'total_categorias',
-            'total_productos',
-            'total_proveedores',
-            'total_compras',
-            'total_lotes_vencidos',
-            'total_lotes_por_vencer',
-            'productos_stock_minimo',
-            'total_productos_stock_minimo',
-            'total_envases_primarios',
-            'total_bus_marcas',
-            'total_bus_modelos',
-            'total_bus_tipo_combustibles',
-            'total_bus_vehiculos',
-            'total_bus_rutas',
-            'total_bus_paradas',
-            'total_bus_mantenimientos',
-            'total_bus_viajes',
-            'total_bus_cargas',
-            // ── Becas ──────────────────────────────────────────
-            'total_jornadas_becas',
-            'total_beneficios',
-            'jornadasActivas',
-            'jornadasRenovables'
-        ));
+        return $renovables;
     }
 
-    public function transporteEstadisticas(Request $request)
+
+    protected function construirResumenAdministracion(): array
     {
-        $filtros = [
-            'start_date'   => $request->query('start_date'),
-            'end_date'     => $request->query('end_date'),
-            'vehiculo_id'  => $request->query('vehiculo_id'),
-            'ruta_id'      => $request->query('ruta_id'),
-            'conductor_id' => $request->query('conductor_id'),
-            'turno'        => $request->query('turno'),
-            'estado'       => $request->query('estado'),
+        return [
+            [
+                'titulo'      => 'Catálogos maestros',
+                'icon'        => 'fa-database',
+                'descripcion' => 'Datos base que alimentan todos los módulos del sistema.',
+                'funcionalidades' => [
+                    'Sedes donde opera la institución',
+                    'Categorías y tipos de producto',
+                    'Catálogo general de productos',
+                    'Proveedores que abastecen al sistema',
+                    'Programas nacionales de formación (PNF)',
+                    'Envases primarios para medicamentos',
+                ],
+            ],
+            [
+                'titulo'      => 'Operaciones',
+                'icon'        => 'fa-arrow-right-arrow-left',
+                'descripcion' => 'Registros de actividad diaria que alimentan el inventario.',
+                'funcionalidades' => [
+                    'Compras: registro y seguimiento del ciclo completo',
+                    'Movimientos: entradas y salidas del inventario',
+                    'Lotes: control de vencimientos y trazabilidad',
+                    'Registro diario del comedor',
+                    'Inventario disponible por sede',
+                    'Historial completo de operaciones',
+                ],
+            ],
+            [
+                'titulo'      => 'Configuración del sistema',
+                'icon'        => 'fa-sliders',
+                'descripcion' => 'Usuarios, roles, permisos y ajustes generales de la plataforma.',
+                'funcionalidades' => [
+                    'Gestión de usuarios y sus datos',
+                    'Roles con permisos por módulo',
+                    'Permisos granulares por acción',
+                    'Configuración general del sistema',
+                    'Gestor de archivos cargados',
+                    'Clave maestra de administración',
+                ],
+            ],
+            [
+                'titulo'      => 'Salud del sistema',
+                'icon'        => 'fa-heart-pulse',
+                'descripcion' => 'Catálogos auxiliares y datos de referencia transversal.',
+                'funcionalidades' => [
+                    'PNF y perfiles institucionales',
+                    'Tipos de producto y categorías médicas',
+                    'Consultorios y horarios de atención',
+                    'Enfermedades y estados de ánimo',
+                    'Estados, municipios y localidades',
+                    'Prioridades y avances clínicos',
+                ],
+            ],
         ];
-
-        $data = $this->transporteService->getDashboardData($filtros);
-
-        $format = $request->query('format', 'json');
-
-        if ($format === 'json') {
-            return response()->json(['resumen' => $data['resumen']]);
-        }
-
-        // TODO: implementar exportación PDF/Word cuando se requiera
-        return response()->json(['resumen' => $data['resumen']]);
     }
 
-    /**
-     * Devuelve la guía descriptiva de cada módulo visible para el usuario.
-     * Sin queries numéricas: solo nombre, icono, descripción y funcionalidades.
-     */
     protected function construirResumenGeneral(): array
     {
         $permitidos = session('modulos_permitidos', []);
         $esAdmin    = session('es_admin', false);
-        $puedeVer   = fn ($key) => $esAdmin || in_array($key, $permitidos);
+        $puedeVer   = fn($key) => $esAdmin || in_array($key, $permitidos);
 
         $catalogo = [
             'comedor' => [

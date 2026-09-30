@@ -60,6 +60,11 @@ Route::middleware(['auth'])->group(function () {
 
         /* Categorias */
 
+        Route::middleware(['auth'])->prefix('/admin/comedor')->group(function () {
+            Route::get('/estadisticas', [\App\Http\Controllers\HomeController::class, 'comedorEstadisticas'])
+                ->name('admin.comedor.estadisticas');
+        });
+
         //Index 
         Route::get('/maestros/categorias', [CategoriaController::class, 'index'])->name('admin.maestros.categorias.index');
 

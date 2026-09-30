@@ -14,6 +14,9 @@ Route::prefix('/becas')->group(function () {
         Route::put('/{beneficio}/toggle', [BecaBeneficioController::class, 'toggle'])->name('admin.becas.beneficios.toggle');
     });
 
+    Route::get('/estadisticas', [\App\Http\Controllers\HomeController::class, 'becasEstadisticas'])
+    ->name('admin.becas.estadisticas');
+
     // Lapsos
     Route::post('/lapsos/avanzar', [\App\Http\Controllers\beca\LapsoController::class, 'avanzar'])->name('admin.becas.lapsos.avanzar');
 
