@@ -275,6 +275,16 @@ class ConsultaController extends Controller
         $data    = $service->getDashboardData($request->all());
         $filtros = $request->validated();
 
+        if ($request->esListado()) {
+            return $exportador->listado(
+                $request->tipoReporte(),
+                $request->formato(),
+                $data,
+                $request->periodo(),
+                $filtros
+            );
+        }
+
         return match ($request->formato()) {
             'json' => response()->json([
                 'consultas'   => $data['consultas'],
@@ -282,8 +292,9 @@ class ConsultaController extends Controller
                 'fechaInicio' => $data['fechaInicio'],
                 'fechaFin'    => $data['fechaFin'],
             ]),
-            'pdf'  => $exportador->pdf($data, $request->periodo(), $request->tipoReporte(), $filtros),
-            'word' => $exportador->word($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            'pdf'   => $exportador->pdf($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            'word'  => $exportador->word($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            default => abort(400, 'Formato no soportado.'),
         };
     }
 
