@@ -3,18 +3,13 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use App\Models\Sede;
-use App\Models\Categoria;
-use App\Models\Producto;
-use App\Models\Proveedor;
-use App\Models\Compra;
-use App\Models\Lote;
 use App\Models\ExchangeRates;
 use App\Models\Rol;
 use App\Models\salud\EnvasePrimario;
 use App\Models\Becas\JornadaBeca;
-use App\Models\Becas\Beneficio;
-use Illuminate\Support\Facades\DB;
+use App\Models\Becas\SolicitudBeca;
+use App\Models\salud\Cita;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 // MÓDULO TRANSPORTE — Abdias
 use \App\Models\BusMarca;
@@ -28,11 +23,17 @@ use \App\Models\BusViaje;
 use \App\Models\BusCargaCombustible;
 use App\Services\Salud\PsicologiaHomeService;
 use App\Services\Salud\SaludHomeService;
+use App\Services\Transporte\TransporteHomeService;
+use App\Services\Comedor\ComedorHomeService;
+use App\Services\becas\BecasHomeService;
 
 class HomeController extends Controller
 {
     protected $psicologiaService;
     protected $saludService;
+    protected $transporteService;
+    protected $comedorService;
+    protected $becasService;
 
     public function __construct(
         PsicologiaHomeService $psicologiaService,
@@ -52,39 +53,65 @@ class HomeController extends Controller
 
         (new \App\AdminLTE\Filters\ModuleFilter())->asegurarSesion($userId);
 
-        $psicologiaData = $this->psicologiaService->getPacienteData();
-        $saludData = $this->saludService->getDashboardData();
-        $hoy = Carbon::now();
-        $limite = Carbon::now()->addDays(7);
-        $sedeId = Auth::user()->persona?->sede_id ?? 1;
-        $user = Auth::user();
+        Log::info('Home access diagnostic', [
+            'usuario' => [
+                'guard_id' => $guardUser?->getAuthIdentifier(),
+                'id' => $userId,
+                'username' => $user->username,
+                'id_perfil' => $user->id_perfil,
+                'role_legacy' => $user->getAttribute('role'),
+            ],
+            'guard_user_before_refresh' => $guardSnapshot,
+            'roles_eloquent_activos' => $user->roles()
+                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug'])
+                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug])
+                ->values()
+                ->all(),
+            'roles_pivote_incluyendo_borrados' => DB::table('rol_usuario')
+                ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
+                ->where('rol_usuario.id_usuario', $userId)
+                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug', 'rol.deleted_at'])
+                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug, 'deleted_at' => $role->deleted_at])
+                ->all(),
+            'permisos_sesion_antes' => $permisosAntes,
+            'permisos_sesion_despues' => [
+                'usuario_id' => session('permisos_usuario_id'),
+                'es_admin' => session('es_admin'),
+                'modulos' => session('modulos_permitidos'),
+                'menu' => session('menu_permissions_user'),
+            ],
+        ]);
 
-        $roleName = $user->role ?? null;
-        if (empty($roleName) && method_exists($user, 'roles')) {
-            $firstRole = $user->roles()->first();
-            $roleName = $firstRole?->nombre ?? null;
+        // ── Datos de cada módulo ──
+        $psicologiaData = $this->psicologiaService->getPacienteData();
+        $saludData      = $this->saludService->getDashboardData();
+        $transporteData = $this->transporteService->getDashboardData();
+        $comedorData    = $this->comedorService->getDashboardData();
+        $becasData      = $this->becasService->getDashboardData();
+
+        $psicologiaAdminData = null;
+        if ($user->tieneRol(['administrador', 'secretaria de bienestar'])) {
+            $psicologiaAdminData = $this->construirPsicologiaAdminData();
         }
 
+        $administracionData = ['secciones' => $this->construirResumenAdministracion()];
+
+        // ── Rol y permisos ──
+        $roleName = $this->resolveRoleName($user);
+
+        // Red de seguridad: si asegurarSesion() no dejó los permisos en sesión, se inicializan aquí
         if (is_null(session('modulos_permitidos')) || is_null(session('menu_permissions_user'))) {
-            (new \App\AdminLTE\Filters\ModuleFilter)->transform(['key' => 'init_check']);
+            (new \App\AdminLTE\Filters\ModuleFilter())->transform(['key' => 'init_check']);
         }
 
         if ($roleName && strtolower($roleName) === 'obrero') {
             return redirect()->route('admin.movimientos.registro_comida.index');
         }
 
-        $rol = $roleName ? Rol::where('nombre', $roleName)->first() : null;
-        $menuPermissions = $rol?->menu_permissions ?? [];
-        $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
-        $isSecretaria = $roleName && strtolower($roleName) === 'secretaria de bienestar';
-        $total_envases_primarios = EnvasePrimario::count();
-        $total_sedes             = Sede::count();
-        $total_categorias        = Categoria::count();
-        $total_productos         = Producto::count();
-        $total_proveedores       = Proveedor::count();
-        $total_compras           = Compra::count();
-        $total_jornadas_becas    = JornadaBeca::count();
-        $total_beneficios        = Beneficio::count();
+        $visibleModules = $this->construirModulosVisibles($roleName);
+
+        // ── Becas: jornadas abiertas y las que el usuario puede renovar ──
+        $hoy = Carbon::now();
 
         $jornadasActivas = JornadaBeca::where('activa', 1)
             ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
@@ -92,45 +119,221 @@ class HomeController extends Controller
             ->with(['beneficio', 'lapso'])
             ->get();
 
-        $total_lotes_vencidos = Lote::whereDate('fecha_vencimiento', '<=', $hoy)
-            ->where('estado', 1)
-            ->count();
-
-        $total_lotes_por_vencer = Lote::whereBetween(
-            'fecha_vencimiento',
-            [$hoy, $limite]
-        )->count();
+        $jornadasRenovables = $this->construirJornadasRenovables($user, $jornadasActivas);
 
         $ultimaTasa = ExchangeRates::latest()->first();
 
-        $productos_stock_minimo = Producto::select(
-            'productos.id',
-            'productos.nombre',
-            'productos.stock_minimo',
-            DB::raw('COALESCE(SUM(inventario_sede_lotes.cantidad_convertida), 0) as stock_actual')
-        )
-            ->join('lotes', 'lotes.producto_id', '=', 'productos.id')
-            ->join('inventario_sede_lotes', function ($join) use ($sedeId) {
-                $join->on('inventario_sede_lotes.lote_id', '=', 'lotes.id')
-                    ->where('inventario_sede_lotes.sede_id', '=', $sedeId);
-            })
-            ->where('productos.estado', 1)
-            ->groupBy('productos.id', 'productos.nombre', 'productos.stock_minimo')
-            ->havingRaw('SUM(inventario_sede_lotes.cantidad_convertida) <= productos.stock_minimo')
-            ->havingRaw('SUM(inventario_sede_lotes.cantidad_convertida) > 0')
-            ->orderBy('stock_actual', 'asc')
-            ->get();
+        $resumenGeneral = is_null(session('modulo_activo'))
+            ? $this->construirResumenGeneral()
+            : null;
 
-        $total_productos_stock_minimo = $productos_stock_minimo->count();
-        $total_bus_marcas            = BusMarca::count();
-        $total_bus_modelos           = BusModelo::count();
-        $total_bus_tipo_combustibles = BusTipoCombustible::count();
-        $total_bus_vehiculos = BusVehiculo::count();
-        $total_bus_rutas = BusRuta::count();
-        $total_bus_paradas = BusParada::count();
-        $total_bus_mantenimientos = BusMantenimiento::count();
-        $total_bus_viajes = BusViaje::count();
-        $total_bus_cargas = BusCargaCombustible::count();
+        // $psicologiaData se entrega de las dos formas: como variable completa
+        // y con sus claves sueltas, para que funcione con las vistas de ambas versiones.
+        return view('home', array_merge([
+            'variacion_dolar'     => $ultimaTasa?->variacion,
+            'tasa_actual'         => $ultimaTasa?->tasa,
+            'visibleModules'      => $visibleModules,
+            'saludData'           => $saludData,
+            'resumenGeneral'      => $resumenGeneral,
+            'transporteData'      => $transporteData,
+            'comedorData'         => $comedorData,
+            'becasData'           => $becasData,
+            'psicologiaData'      => $psicologiaData,
+            'psicologiaAdminData' => $psicologiaAdminData,
+            'administracionData'  => $administracionData,
+            'jornadasActivas'     => $jornadasActivas,
+            'jornadasRenovables'  => $jornadasRenovables,
+        ], $psicologiaData));
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+     |  Estadísticas por módulo (AJAX)
+     ══════════════════════════════════════════════════════════════ */
+
+    public function becasEstadisticas(Request $request)
+    {
+        $data = $this->becasService->getDashboardData([
+            'start_date'     => $request->query('start_date'),
+            'end_date'       => $request->query('end_date'),
+            'beneficio_id'   => $request->query('beneficio_id'),
+            'jornada_id'     => $request->query('jornada_id'),
+            'estado'         => $request->query('estado'),
+            'tipo_solicitud' => $request->query('tipo_solicitud'),
+            'lapso_id'       => $request->query('lapso_id'),
+        ]);
+
+        return response()->json(['resumen' => $data['resumen']]);
+    }
+
+    public function comedorEstadisticas(Request $request)
+    {
+        $data = $this->comedorService->getDashboardData([
+            'start_date' => $request->query('start_date'),
+            'end_date'   => $request->query('end_date'),
+            'pnf_id'     => $request->query('pnf_id'),
+        ]);
+
+        return response()->json(['resumen' => $data['resumen']]);
+    }
+
+    public function transporteEstadisticas(Request $request)
+    {
+        $data = $this->transporteService->getDashboardData([
+            'start_date'   => $request->query('start_date'),
+            'end_date'     => $request->query('end_date'),
+            'vehiculo_id'  => $request->query('vehiculo_id'),
+            'ruta_id'      => $request->query('ruta_id'),
+            'conductor_id' => $request->query('conductor_id'),
+            'turno'        => $request->query('turno'),
+            'estado'       => $request->query('estado'),
+        ]);
+
+        return response()->json(['resumen' => $data['resumen']]);
+    }
+
+    public function psicologiaEstadisticasGenerales(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->tieneRol(['administrador', 'secretaria de bienestar'])) {
+            abort(403, 'Solo administradores pueden acceder a las estadísticas generales.');
+        }
+
+        $fechaInicio = $request->input('start_date', Carbon::now()->subDays(30)->toDateString());
+        $fechaFin    = $request->input('end_date', Carbon::now()->toDateString());
+
+        $estado          = $request->input('estado');
+        $avanceId        = $request->input('avance_id');
+        $estadoAnimoId   = $request->input('estado_animo_id');
+        $prioridad       = $request->input('prioridad');
+        $perfilAcademico = $request->input('perfil_academico');
+        $pnf             = $request->input('pnf');
+
+        // null → agrega TODOS los psicólogos
+        $citas = Cita::obtenerEstadisticas(
+            null, $fechaInicio, $fechaFin,
+            $estado, $avanceId, $estadoAnimoId,
+            $prioridad, $perfilAcademico, $pnf
+        );
+
+        $resumen = Cita::obtenerResumenEstadistico($citas, $fechaInicio, $fechaFin, null);
+        $resumen['por_estado'] = $citas->groupBy('estado')->map->count()->toArray();
+
+        $porPsicologo = Cita::obtenerEstadisticasPorPsicologo($fechaInicio, $fechaFin);
+        $resumen['total_psicologos_activos'] = count($porPsicologo);
+
+        return response()->json([
+            'resumen'       => $resumen,
+            'por_psicologo' => $porPsicologo,
+            'fechaInicio'   => $fechaInicio,
+            'fechaFin'      => $fechaFin,
+        ]);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+     |  Constructores de datos
+     ══════════════════════════════════════════════════════════════ */
+
+    protected function construirPsicologiaAdminData(): array
+    {
+        $fechaInicio = Carbon::now()->subDays(30)->toDateString();
+        $fechaFin    = Carbon::now()->toDateString();
+
+        return [
+            'fechaInicio'  => $fechaInicio,
+            'fechaFin'     => $fechaFin,
+            'avances'      => DB::table('avances_sesion')
+                ->where('status', 1)
+                ->orderBy('nombre', 'asc')
+                ->get(),
+            'estadosAnimo' => DB::table('estado_animos')
+                ->where('status', 1)
+                ->orderBy('valor', 'asc')
+                ->get(),
+        ];
+    }
+
+    protected function construirResumenAdministracion(): array
+    {
+        return [
+            [
+                'titulo'      => 'Catálogos maestros',
+                'icon'        => 'fa-database',
+                'descripcion' => 'Datos base que alimentan todos los módulos del sistema.',
+                'funcionalidades' => [
+                    'Sedes donde opera la institución',
+                    'Categorías y tipos de producto',
+                    'Catálogo general de productos',
+                    'Proveedores que abastecen al sistema',
+                    'Programas nacionales de formación (PNF)',
+                    'Envases primarios para medicamentos',
+                ],
+            ],
+            [
+                'titulo'      => 'Operaciones',
+                'icon'        => 'fa-arrow-right-arrow-left',
+                'descripcion' => 'Registros de actividad diaria que alimentan el inventario.',
+                'funcionalidades' => [
+                    'Compras: registro y seguimiento del ciclo completo',
+                    'Movimientos: entradas y salidas del inventario',
+                    'Lotes: control de vencimientos y trazabilidad',
+                    'Registro diario del comedor',
+                    'Inventario disponible por sede',
+                    'Historial completo de operaciones',
+                ],
+            ],
+            [
+                'titulo'      => 'Configuración del sistema',
+                'icon'        => 'fa-sliders',
+                'descripcion' => 'Usuarios, roles, permisos y ajustes generales de la plataforma.',
+                'funcionalidades' => [
+                    'Gestión de usuarios y sus datos',
+                    'Roles con permisos por módulo',
+                    'Permisos granulares por acción',
+                    'Configuración general del sistema',
+                    'Gestor de archivos cargados',
+                    'Clave maestra de administración',
+                ],
+            ],
+            [
+                'titulo'      => 'Salud del sistema',
+                'icon'        => 'fa-heart-pulse',
+                'descripcion' => 'Catálogos auxiliares y datos de referencia transversal.',
+                'funcionalidades' => [
+                    'PNF y perfiles institucionales',
+                    'Tipos de producto y categorías médicas',
+                    'Consultorios y horarios de atención',
+                    'Enfermedades y estados de ánimo',
+                    'Estados, municipios y localidades',
+                    'Prioridades y avances clínicos',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Rol principal del usuario: si tiene varios, mandan los de mayor privilegio.
+     */
+    protected function resolveRoleName($user): ?string
+    {
+        if (! $user || ! method_exists($user, 'roles')) {
+            return null;
+        }
+
+        $roles = $user->roles;
+        $privilegedRole = $roles->first(function ($role) {
+            return in_array(mb_strtolower($role->nombre ?? ''), ['administrador', 'secretaria de bienestar'], true);
+        });
+
+        return $privilegedRole?->nombre ?? $roles->first()?->nombre;
+    }
+
+    protected function construirModulosVisibles(?string $roleName): array
+    {
+        $rol             = $roleName ? Rol::where('nombre', $roleName)->first() : null;
+        $menuPermissions = $rol?->menu_permissions ?? [];
+        $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
+        $isSecretaria    = $roleName && strtolower($roleName) === 'secretaria de bienestar';
 
         $menuConfig = config('adminlte.menu');
 
@@ -178,17 +381,31 @@ class HomeController extends Controller
             $visibleModules[$key] = $visible;
         }
 
-        $jornadasRenovables = collect();
-        if ($user && $user->id_persona) {
-            foreach ($jornadasActivas as $jornada) {
-                $aprobadoAnterior = \App\Models\Becas\SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
-                    ->where('estado', 1)
-                    ->where('id_lapso', '!=', $jornada->lapsos_id)
-                    ->where('id_persona', $user->id_persona)
-                    ->exists();
-                $postuladoActual = \App\Models\Becas\SolicitudBeca::where('jornada_id', $jornada->id)
-                    ->where('id_persona', $user->id_persona)
-                    ->exists();
+        return $visibleModules;
+    }
+
+    /**
+     * Jornadas activas que el usuario puede renovar: ya tuvo el beneficio aprobado
+     * en otro lapso y todavía no se ha postulado en la jornada actual.
+     */
+    protected function construirJornadasRenovables($user, $jornadasActivas)
+    {
+        $renovables = collect();
+
+        if (! $user || ! $user->id_persona) {
+            return $renovables;
+        }
+
+        foreach ($jornadasActivas as $jornada) {
+            $aprobadoAnterior = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
+                ->where('estado', 1)
+                ->where('id_lapso', '!=', $jornada->lapsos_id)
+                ->where('id_persona', $user->id_persona)
+                ->exists();
+
+            $postuladoActual = SolicitudBeca::where('jornada_id', $jornada->id)
+                ->where('id_persona', $user->id_persona)
+                ->exists();
 
                 if ($aprobadoAnterior && !$postuladoActual) {
                     $jornadasRenovables->push($jornada);
