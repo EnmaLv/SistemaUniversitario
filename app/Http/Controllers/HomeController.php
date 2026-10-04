@@ -3,17 +3,12 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use App\Models\Sede;
-use App\Models\Categoria;
-use App\Models\Producto;
-use App\Models\Proveedor;
-use App\Models\Compra;
-use App\Models\Lote;
 use App\Models\ExchangeRates;
 use App\Models\Rol;
 use App\Models\Usuario;
 use App\Models\Becas\JornadaBeca;
 use App\Models\Becas\SolicitudBeca;
+use App\Models\salud\Cita;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,12 +18,14 @@ use App\Services\Salud\SaludHomeService;
 use App\Services\Transporte\TransporteHomeService;
 use App\Services\Comedor\ComedorHomeService;
 use App\Services\becas\BecasHomeService;
-use App\Models\salud\Cita;
 
 class HomeController extends Controller
 {
     protected $psicologiaService;
     protected $saludService;
+    protected $transporteService;
+    protected $comedorService;
+    protected $becasService;
 
     public function __construct(
         PsicologiaHomeService $psicologiaService,
@@ -108,35 +105,36 @@ class HomeController extends Controller
             ],
         ]);
 
+        // ── Datos de cada módulo ──
         $psicologiaData = $this->psicologiaService->getPacienteData();
         $saludData      = $this->saludService->getDashboardData();
         $transporteData = $this->transporteService->getDashboardData();
         $comedorData    = $this->comedorService->getDashboardData();
         $becasData      = $this->becasService->getDashboardData();
+
         $psicologiaAdminData = null;
         if ($user->tieneRol(['administrador', 'secretaria de bienestar'])) {
             $psicologiaAdminData = $this->construirPsicologiaAdminData();
         }
+
         $administracionData = ['secciones' => $this->construirResumenAdministracion()];
 
+        // ── Rol y permisos ──
         $roleName = $this->resolveRoleName($user);
+
+        // Red de seguridad: si asegurarSesion() no dejó los permisos en sesión, se inicializan aquí
+        if (is_null(session('modulos_permitidos')) || is_null(session('menu_permissions_user'))) {
+            (new \App\AdminLTE\Filters\ModuleFilter())->transform(['key' => 'init_check']);
+        }
 
         if ($roleName && strtolower($roleName) === 'obrero') {
             return redirect()->route('admin.movimientos.registro_comida.index');
         }
 
-        $rol = $roleName ? Rol::where('nombre', $roleName)->first() : null;
-        $menuPermissions = $rol?->menu_permissions ?? [];
-        $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
-        $isSecretaria = $roleName && strtolower($roleName) === 'secretaria de bienestar';
-        $total_envases_primarios = EnvasePrimario::count();
-        $total_sedes             = Sede::count();
-        $total_categorias        = Categoria::count();
-        $total_productos         = Producto::count();
-        $total_proveedores       = Proveedor::count();
-        $total_compras           = Compra::count();
-        $total_jornadas_becas    = JornadaBeca::count();
-        $total_beneficios        = Beneficio::count();
+        $visibleModules = $this->construirModulosVisibles($roleName);
+
+        // ── Becas: jornadas abiertas y las que el usuario puede renovar ──
+        $hoy = Carbon::now();
 
         $jornadasActivas = JornadaBeca::where('activa', 1)
             ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
@@ -144,14 +142,7 @@ class HomeController extends Controller
             ->with(['beneficio', 'lapso'])
             ->get();
 
-        $total_lotes_vencidos = Lote::whereDate('fecha_vencimiento', '<=', $hoy)
-            ->where('estado', 1)
-            ->count();
-
-        $total_lotes_por_vencer = Lote::whereBetween(
-            'fecha_vencimiento',
-            [$hoy, $limite]
-        )->count();
+        $jornadasRenovables = $this->construirJornadasRenovables($user, $jornadasActivas);
 
         $ultimaTasa = ExchangeRates::latest()->first();
 
@@ -159,19 +150,28 @@ class HomeController extends Controller
             ? $this->construirResumenGeneral()
             : null;
 
+        // $psicologiaData se entrega de las dos formas: como variable completa
+        // y con sus claves sueltas, para que funcione con las vistas de ambas versiones.
         return view('home', array_merge([
-            'variacion_dolar' => $ultimaTasa?->variacion,
-            'tasa_actual'     => $ultimaTasa?->tasa,
-            'visibleModules'  => $visibleModules,
-            'saludData'       => $saludData,
-            'resumenGeneral'  => $resumenGeneral,
-            'transporteData'  => $transporteData,
-            'comedorData'     => $comedorData,
-            'becasData'       => $becasData,
+            'variacion_dolar'     => $ultimaTasa?->variacion,
+            'tasa_actual'         => $ultimaTasa?->tasa,
+            'visibleModules'      => $visibleModules,
+            'saludData'           => $saludData,
+            'resumenGeneral'      => $resumenGeneral,
+            'transporteData'      => $transporteData,
+            'comedorData'         => $comedorData,
+            'becasData'           => $becasData,
+            'psicologiaData'      => $psicologiaData,
             'psicologiaAdminData' => $psicologiaAdminData,
-            'administracionData' => $administracionData,
+            'administracionData'  => $administracionData,
+            'jornadasActivas'     => $jornadasActivas,
+            'jornadasRenovables'  => $jornadasRenovables,
         ], $psicologiaData));
     }
+
+    /* ══════════════════════════════════════════════════════════════
+     |  Estadísticas por módulo (AJAX)
+     ══════════════════════════════════════════════════════════════ */
 
     public function becasEstadisticas(Request $request)
     {
@@ -214,25 +214,6 @@ class HomeController extends Controller
         return response()->json(['resumen' => $data['resumen']]);
     }
 
-    protected function construirPsicologiaAdminData(): array
-    {
-        $fechaInicio = Carbon::now()->subDays(30)->toDateString();
-        $fechaFin    = Carbon::now()->toDateString();
-
-        return [
-            'fechaInicio'  => $fechaInicio,
-            'fechaFin'     => $fechaFin,
-            'avances'      => DB::table('avances_sesion')
-                ->where('status', 1)
-                ->orderBy('nombre', 'asc')
-                ->get(),
-            'estadosAnimo' => DB::table('estado_animos')
-                ->where('status', 1)
-                ->orderBy('valor', 'asc')
-                ->get(),
-        ];
-    }
-
     public function psicologiaEstadisticasGenerales(Request $request)
     {
         $user = Auth::user();
@@ -270,6 +251,29 @@ class HomeController extends Controller
             'fechaInicio'   => $fechaInicio,
             'fechaFin'      => $fechaFin,
         ]);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+     |  Constructores de datos
+     ══════════════════════════════════════════════════════════════ */
+
+    protected function construirPsicologiaAdminData(): array
+    {
+        $fechaInicio = Carbon::now()->subDays(30)->toDateString();
+        $fechaFin    = Carbon::now()->toDateString();
+
+        return [
+            'fechaInicio'  => $fechaInicio,
+            'fechaFin'     => $fechaFin,
+            'avances'      => DB::table('avances_sesion')
+                ->where('status', 1)
+                ->orderBy('nombre', 'asc')
+                ->get(),
+            'estadosAnimo' => DB::table('estado_animos')
+                ->where('status', 1)
+                ->orderBy('valor', 'asc')
+                ->get(),
+        ];
     }
 
     protected function construirResumenAdministracion(): array
@@ -330,6 +334,9 @@ class HomeController extends Controller
         ];
     }
 
+    /**
+     * Rol principal del usuario: si tiene varios, mandan los de mayor privilegio.
+     */
     protected function resolveRoleName($user): ?string
     {
         if (! $user || ! method_exists($user, 'roles')) {
@@ -397,17 +404,31 @@ class HomeController extends Controller
             $visibleModules[$key] = $visible;
         }
 
-        $jornadasRenovables = collect();
-        if ($user && $user->id_persona) {
-            foreach ($jornadasActivas as $jornada) {
-                $aprobadoAnterior = \App\Models\Becas\SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
-                    ->where('estado', 1)
-                    ->where('id_lapso', '!=', $jornada->lapsos_id)
-                    ->where('id_persona', $user->id_persona)
-                    ->exists();
-                $postuladoActual = \App\Models\Becas\SolicitudBeca::where('jornada_id', $jornada->id)
-                    ->where('id_persona', $user->id_persona)
-                    ->exists();
+        return $visibleModules;
+    }
+
+    /**
+     * Jornadas activas que el usuario puede renovar: ya tuvo el beneficio aprobado
+     * en otro lapso y todavía no se ha postulado en la jornada actual.
+     */
+    protected function construirJornadasRenovables($user, $jornadasActivas)
+    {
+        $renovables = collect();
+
+        if (! $user || ! $user->id_persona) {
+            return $renovables;
+        }
+
+        foreach ($jornadasActivas as $jornada) {
+            $aprobadoAnterior = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
+                ->where('estado', 1)
+                ->where('id_lapso', '!=', $jornada->lapsos_id)
+                ->where('id_persona', $user->id_persona)
+                ->exists();
+
+            $postuladoActual = SolicitudBeca::where('jornada_id', $jornada->id)
+                ->where('id_persona', $user->id_persona)
+                ->exists();
 
             if ($aprobadoAnterior && !$postuladoActual) {
                 $renovables->push($jornada);
