@@ -90,9 +90,103 @@
                             style="color: var(--text-main);">Descargar Word</span><span
                             class="text-[10px] text-gray-400">Todos los datos</span></div>
                 </button>
-                
+
+                {{-- Listados: abren la modal para elegir PDF o Excel --}}
+                <div class="border-t border-gray-100 dark:border-gray-800 my-1"></div>
+                <p class="px-2.5 pt-1.5 pb-0.5 text-[10px] font-bold text-gray-400">Listados</p>
+
+                <button @click="openExport = false; $dispatch('abrir-formato-listado', { tipo: 'consultas' })"
+                    class="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-left w-full">
+                    <div
+                        class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <i class="fas fa-stethoscope text-xs"></i>
+                    </div>
+                    <div class="flex flex-col"><span class="text-[12px] font-bold" style="color: var(--text-main);">Listado
+                            de consultas</span><span class="text-[10px] text-gray-400">PDF o Excel</span></div>
+                </button>
+                <button @click="openExport = false; $dispatch('abrir-formato-listado', { tipo: 'dispensaciones' })"
+                    class="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-left w-full">
+                    <div
+                        class="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center shrink-0">
+                        <i class="fas fa-pills text-xs"></i>
+                    </div>
+                    <div class="flex flex-col"><span class="text-[12px] font-bold"
+                            style="color: var(--text-main);">Medicamentos dispensados</span><span
+                            class="text-[10px] text-gray-400">PDF o Excel</span></div>
+                </button>
             </div>
         </div>
+    </div>
+</div>
+
+{{-- ═══════════ MODAL: FORMATO DEL LISTADO ═══════════ --}}
+<div x-data="{
+    abierto: false,
+    tipo: 'consultas',
+    titulos: {
+        consultas: 'Listado de consultas',
+        dispensaciones: 'Listado de medicamentos dispensados',
+    },
+    abrir(tipo) {
+        this.tipo = tipo;
+        this.abierto = true;
+        this.$nextTick(() => this.$refs.opcionPdf.focus());
+    },
+    elegir(formato) {
+        this.abierto = false;
+        window.dashboardApp.exportar(formato, this.tipo);
+    },
+}" @abrir-formato-listado.window="abrir($event.detail.tipo)"
+    @keydown.escape.window="abierto = false" @click.self="abierto = false" x-show="abierto" x-transition.opacity
+    style="display: none;"
+    class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog"
+    aria-modal="true" aria-labelledby="formato-listado-titulo">
+
+    <div class="relative w-full max-w-md rounded-2xl shadow-xl border p-6"
+        style="background-color: var(--bg-card); border-color: var(--border-color);">
+
+        <button type="button" @click="abierto = false" aria-label="Cerrar"
+            class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+
+        <h3 id="formato-listado-titulo" class="text-base font-extrabold pr-8" style="color: var(--text-main);"
+            x-text="titulos[tipo]"></h3>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Elige el formato. Se usan el período y los filtros que tienes aplicados en el panel.
+        </p>
+
+        <div class="mt-5 grid grid-cols-2 gap-3">
+            <button type="button" x-ref="opcionPdf" @click="elegir('pdf')"
+                class="group flex flex-col items-center gap-2.5 p-5 rounded-2xl border text-center hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30  focus:ring-rose-500/40 focus:border-rose-400 transition-all"
+                style="border-color: var(--border-color);">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <i class="fas fa-file-pdf text-xl"></i>
+                </span>
+                <span class="text-sm font-bold" style="color: var(--text-main);">PDF</span>
+                <span class="text-[11px] leading-snug text-gray-500 dark:text-gray-400">Para imprimir, firmar y
+                    sellar</span>
+            </button>
+
+            <button type="button" @click="elegir('excel')"
+                class="group flex flex-col items-center gap-2.5 p-5 rounded-2xl border text-center hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-all"
+                style="border-color: var(--border-color);">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <i class="fas fa-file-excel text-xl"></i>
+                </span>
+                <span class="text-sm font-bold" style="color: var(--text-main);">Excel</span>
+                <span class="text-[11px] leading-snug text-gray-500 dark:text-gray-400">Para filtrar, ordenar y
+                    calcular</span>
+            </button>
+        </div>
+
+        <button type="button" @click="abierto = false"
+            class="mt-4 w-full py-2.5 rounded-xl border text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+            style="border-color: var(--border-color); color: var(--text-main);">
+            Cancelar
+        </button>
     </div>
 </div>
 

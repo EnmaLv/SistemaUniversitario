@@ -15,6 +15,7 @@
     'onPdf' => null,
     'pdfTitle' => 'Imprimir Récipe',
     'pdfTarget' => '_blank',
+    'pdfColor' => 'rose',
 ])
 
 @php
@@ -129,30 +130,11 @@
                 @endif
             @endif
 
-            {{-- Imprimir PDF / Récipe --}}
-            @if ($pdfUrl || $onPdf)
-                @if ($onPdf)
-                    <button type="button" onclick='{!! $onPdf !!}'
-                        class="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-center flex-shrink-0"
-                        title="{{ $pdfTitle }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                    </button>
-                @else
-                    <a href="{{ $pdfUrl }}" target="{{ $pdfTarget }}" onclick="event.stopPropagation()"
-                        class="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-center flex-shrink-0"
-                        title="{{ $pdfTitle }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                    </a>
-                @endif
-            @endif
+            {{-- Reporte PDF principal --}}
+            <x-table-actions-pdf :url="$pdfUrl" :on-click="$onPdf" :title="$pdfTitle" :color="$pdfColor"
+                :target="$pdfTarget" />
 
-            {{-- Botones extra opcionales vía slot --}}
+            {{-- Botones extra (por ejemplo, más reportes con <x-table-action-pdf>) --}}
             {{ $slot }}
         </div>
     </div>

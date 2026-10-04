@@ -367,6 +367,9 @@ Route::middleware(['auth'])->group(function () {
                 // Generar Recipe
                 Route::get('/{consulta}/recipe', [ConsultaController::class, 'generarRecipePdf'])->name('recipe_pdf');
 
+                // Generar Constancia
+                Route::get('/{consulta}/constancia', [ConsultaController::class, 'generarConstanciaPdf'])->name('constancia');
+
                 // Ver detalle
                 Route::get('/{consulta}', [ConsultaController::class, 'show'])->name('show');
             });

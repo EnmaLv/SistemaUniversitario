@@ -222,6 +222,28 @@ class ConsultaController extends Controller
             ->stream($nombreArchivo);
     }
 
+    public function generarConstanciaPdf(Consulta $consulta)
+    {
+        $consulta->load(Consulta::CARGA_CONSTANCIA);
+
+        if (!$consulta->paciente) {
+            return redirect()->back()->with('error', 'La consulta no tiene un paciente asociado.');
+        }
+
+        $nombreArchivo = sprintf(
+            'constancia-%s-%s.pdf',
+            $consulta->paciente->cedula_persona ?? 'sin-cedula',
+            $consulta->fecha->format('Y-m-d')
+        );
+
+        return Pdf::loadView('admin.salud.movimientos.consultas.constancia', [
+            'consulta' => $consulta,
+            'numero'   => $consulta->numeroConstancia(),
+            'programa' => $consulta->programaDelPaciente(),
+            'emision'  => now(),
+        ])->setPaper('letter', 'portrait')->stream($nombreArchivo);
+    }
+
     /* ══════════════════════════════════════════════════════════════
      |  AJAX
      ══════════════════════════════════════════════════════════════ */
@@ -272,7 +294,6 @@ class ConsultaController extends Controller
     /* ══════════════════════════════════════════════════════════════
      |  Estadísticas
      ══════════════════════════════════════════════════════════════ */
-
     public function estadisticas(
         EstadisticasRequest $request,
         SaludHomeService $service,
@@ -281,6 +302,16 @@ class ConsultaController extends Controller
         $data    = $service->getDashboardData($request->all());
         $filtros = $request->validated();
 
+        if ($request->esListado()) {
+            return $exportador->listado(
+                $request->tipoReporte(),
+                $request->formato(),
+                $data,
+                $request->periodo(),
+                $filtros
+            );
+        }
+
         return match ($request->formato()) {
             'json' => response()->json([
                 'consultas'   => $data['consultas'],
@@ -288,8 +319,9 @@ class ConsultaController extends Controller
                 'fechaInicio' => $data['fechaInicio'],
                 'fechaFin'    => $data['fechaFin'],
             ]),
-            'pdf'  => $exportador->pdf($data, $request->periodo(), $request->tipoReporte(), $filtros),
-            'word' => $exportador->word($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            'pdf'   => $exportador->pdf($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            'word'  => $exportador->word($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            default => abort(400, 'Formato no soportado.'),
         };
     }
 

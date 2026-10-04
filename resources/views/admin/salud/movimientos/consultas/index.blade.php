@@ -244,7 +244,7 @@
                                                 <span
                                                     class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-900">
                                                     <i class="fas fa-prescription"></i> Falta dispensar
-                                                </span>    
+                                                </span>
                                             @else
                                                 <span
                                                     class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
@@ -259,7 +259,11 @@
                                                 : null" :pdf-url="!in_array($paso, ['receta', 'dispensacion'])
                                                 ? route('admin.salud.movimientos.consultas.recipe_pdf', $data)
                                                 : null"
-                                            pdf-title="Imprimir Récipe" />
+                                            pdf-title="Imprimir récipe" pdf-color="rose">
+
+                                            <x-table-actions-pdf :url="route('admin.salud.movimientos.consultas.constancia', $data)" title="Constancia de asistencia"
+                                                color="teal" />
+                                        </x-table-actions>
                                     </x-table-row>
                                 @empty
                                     <tr>
