@@ -21,6 +21,7 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use ZipArchive;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class HistoriaController extends Controller
 {
@@ -261,16 +262,47 @@ class HistoriaController extends Controller
     public function destroySeccion($seccionId)
     {
         $seccion = SeccionPersonalizada::obtenerPorId($seccionId);
-        if (!$seccion) abort(404);
+        if (!$seccion) {
+            abort(404);
+        }
 
         $historia = HistoriaClinica::obtenerPorId($seccion->historia_clinica_id);
+        if (!$historia) {
+            abort(404, 'Historia clínica no encontrada.');
+        }
 
-        if (!$historia || $historia->psicologo_id != Auth::id()) {
-            abort(403);
+        $userId = (int) Auth::id();
+        $esDueno = (int) $historia->psicologo_id === $userId;
+
+        $tieneCitas = DB::table('citas')
+            ->where('psicologo_id', $userId)
+            ->where('user_id', $historia->user_id)
+            ->exists();
+
+        if (!$esDueno && !$tieneCitas) {
+            abort(403, 'No tienes permiso para eliminar esta sección.');
         }
 
         $titulo = $seccion->titulo;
-        SeccionPersonalizada::eliminar($seccionId);
+
+        DB::transaction(function () use ($seccionId) {
+            // 1) Borrar primero los segmentos hijos
+            DB::table('historia_segmentos_personalizados')
+                ->where('seccion_id', $seccionId)
+                ->delete();
+
+            // 2) Ahora la sección
+            DB::table('historia_secciones_personalizadas')
+                ->where('id', $seccionId)
+                ->delete();
+        });
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Sección \"{$titulo}\" eliminada.",
+            ]);
+        }
 
         return back()->with('success', "Sección \"{$titulo}\" eliminada.");
     }

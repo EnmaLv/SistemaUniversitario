@@ -42,7 +42,7 @@ class Notification extends Model
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $psicologos = Usuario::all()->filter(fn($usuario) => $usuario->tieneRol(['psicologo', 'administrador', 'admin']));
+        $psicologos = Usuario::all()->filter(fn($usuario) => $usuario->tieneRol('psicologo'));
 
         $replacements = [];
         foreach ($psicologos as $psi) {

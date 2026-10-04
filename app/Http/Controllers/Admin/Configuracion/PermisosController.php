@@ -42,7 +42,7 @@ class PermisosController extends Controller
         if ($auth && $auth->id_usuario == $usuario->id_usuario && $auth->roles->contains('nombre', 'Administrador')) {
             return redirect()->route('admin.configuracion.permisos.index')->withErrors(['permisos' => 'No puedes editar tus propios permisos. Pide a otro Administrador que lo haga.']);
         }
-        $menu = config('adminlte.menu', []);
+        $menu = config('menu_routes', []);
 
         $extra = is_string($usuario->extra_permissions) ? json_decode($usuario->extra_permissions, true) : ($usuario->extra_permissions ?? []);
         $allow = $extra['allow'] ?? [];

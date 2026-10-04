@@ -37,7 +37,9 @@
             @break
 
             @case('psicologia')
-                @if (auth()->user()->tieneRol('paciente'))
+                @if (auth()->user()->tieneRol(['administrador', 'secretaria de bienestar']))
+                    @include('components.psicologia-admin-home')
+                @elseif (auth()->user()->tieneRol('paciente'))
                     @include('components.estudiante.psicologia-home')
                 @else
                     @include('components.psicologia-home')

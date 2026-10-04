@@ -16,7 +16,10 @@
                 </div>
 
                 <div class="relative">
-                    <input type="text" placeholder="Buscar en chats..."
+                    <input
+                        type="text"
+                        x-model="searchQuery"
+                        placeholder="Buscar chats o usuarios..."
                         class="w-full pl-10 pr-4 py-2.5 rounded-full border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 transition-all placeholder-gray-400"
                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color); color: var(--text-main);">
                     <svg class="w-4 h-4 absolute left-3.5 top-3 text-gray-400" fill="none" stroke="currentColor"
@@ -45,7 +48,7 @@
             </div>
 
             <div class="flex-1 overflow-y-auto px-2 pb-3 custom-scrollbar">
-                <template x-for="contact in contacts" :key="contact.id">
+                <template x-for="contact in allVisibleContacts" :key="contact.id">
                     <button @click="selectContact(contact)"
                         class="w-full flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer transition-all duration-150 text-left group"
                         :class="selectedContact && selectedContact.id === contact.id
@@ -89,15 +92,28 @@
                     </button>
                 </template>
 
-                <template x-if="contacts.length === 0 && !isLoading">
+                <template x-if="allVisibleContacts.length === 0 && !isLoading && !isSearchingUsers">
                     <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
                         <div class="w-16 h-16 rounded-full bg-red-50 dark:bg-red-950/30 text-red-500 flex items-center justify-center mb-3">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <p class="text-sm font-bold" style="color: var(--text-main);">Sin conversaciones</p>
+                        <p class="text-sm font-bold" style="color: var(--text-main);">
+                            <span x-show="searchQuery">Sin resultados para "<span x-text="searchQuery"></span>"</span>
+                            <span x-show="!searchQuery">Sin conversaciones</span>
+                        </p>
+                        <p class="text-xs text-gray-400 mt-1"
+                            x-show="searchQuery && searchQuery.length >= 2">
+                            Escribe al menos 2 letras. Solo puedes chatear con personas autorizadas.
+                        </p>
+                    </div>
+                </template>
+
+                <template x-if="isSearchingUsers">
+                    <div class="flex items-center justify-center py-6">
+                        <div class="w-3 h-3 border-2 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
                     </div>
                 </template>
             </div>
@@ -336,6 +352,7 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('chatComponent', () => ({
             selectedContact: null,
+            searchQuery: '',
             contacts: @json($contactsData),
             filter: 'todos',
             messages: [],
@@ -344,20 +361,57 @@
             currentEchoChannel: null,
             showEmojiPicker: false,
 
+            // Búsqueda global
+            searchResults: [],
+            isSearchingUsers: false,
+
+            /* ---------- getters ---------- */
+            get filteredContacts() {
+                let list = this.contacts;
+                if (this.filter === 'no_leidos') {
+                    list = list.filter(c => (c.unreadCount || 0) > 0);
+                }
+                const q = (this.searchQuery || '').trim().toLowerCase();
+                if (!q) return list;
+                return list.filter(c =>
+                    (c.name || '').toLowerCase().includes(q) ||
+                    (c.lastMessage || '').toLowerCase().includes(q)
+                );
+            },
+
+            get allVisibleContacts() {
+                const q = (this.searchQuery || '').trim();
+                if (!q) return this.filteredContacts;
+
+                const localIds = new Set(this.filteredContacts.map(c => String(c.id)));
+                const extra = this.searchResults.filter(r => !localIds.has(String(r.id)));
+                return [...this.filteredContacts, ...extra];
+            },
+
+            /* ---------- init ---------- */
             init() {
+                // debounce manual de búsqueda (UNA sola vez)
+                let t = null;
+                this.$watch('searchQuery', (val) => {
+                    clearTimeout(t);
+                    t = setTimeout(() => this.buscarGlobal(val), 300);
+                });
+
+                // notificaciones globales
                 if (window.Echo) {
                     window.Echo.private('App.Models.Usuario.' + {{ auth()->id() ?? 'null' }})
                         .listen('.MessageSent', (e) => {
                             if (!this.selectedContact || this.selectedContact.id != e.sender_id) {
-                                let contactIndex = this.contacts.findIndex(c => c.id == e.sender_id);
-                                if (contactIndex !== -1) {
-                                    let contact = this.contacts[contactIndex];
-                                    contact.lastMessage = e.body;
-                                    contact.time = e.time;
-                                    contact.unreadCount += 1;
+                                let idx = this.contacts.findIndex(c => c.id == e.sender_id);
+                                if (idx !== -1) {
+                                    let c = this.contacts[idx];
+                                    c.lastMessage = e.body;
+                                    c.time = e.time;
+                                    c.unreadCount = (c.unreadCount || 0) + 1;
 
-                                    this.contacts.splice(contactIndex, 1);
-                                    this.contacts.unshift(contact);
+                                    this.contacts.splice(idx, 1);
+                                    this.contacts.unshift(c);
+                                    this.contacts = [...this.contacts];
                                 }
                             }
                             if (window.recalculateChatBadge) {
@@ -375,12 +429,32 @@
                 }, 30000);
             },
 
+            /* ---------- búsqueda server-side ---------- */
+            buscarGlobal(query) {
+                const q = (query || '').trim();
+                this.searchResults = [];
+                if (q.length < 2) return;
+                if (this.filteredContacts.length > 0) return; // ya hay locales
+
+                this.isSearchingUsers = true;
+                axios.get('/mensajes/buscar-usuarios', { params: { q } })
+                    .then(res => { this.searchResults = res.data || []; })
+                    .catch(() => { this.searchResults = []; })
+                    .finally(() => { this.isSearchingUsers = false; });
+            },
+
+            /* ---------- acciones ---------- */
             selectContact(contact) {
                 this.selectedContact = contact;
                 contact.unreadCount = 0;
                 this.messages = [];
                 this.fetchMessages();
 
+                if (contact.is_new) {
+                    contact.is_new = false;
+                    const exists = this.contacts.some(c => String(c.id) === String(contact.id));
+                    if (!exists) this.contacts = [contact, ...this.contacts];
+                }
                 if (window.recalculateChatBadge) {
                     window.recalculateChatBadge(this.contacts);
                 }
@@ -388,13 +462,9 @@
 
             fetchMessages() {
                 this.isLoading = true;
+                if (this.currentEchoChannel) window.Echo.leave(this.currentEchoChannel);
 
-                if (this.currentEchoChannel) {
-                    window.Echo.leave(this.currentEchoChannel);
-                }
-                axios.post('/mensajes/ping', {
-                    chat_activo_user_id: this.selectedContact.id
-                }).catch(() => {});
+                axios.post('/mensajes/ping', { chat_activo_user_id: this.selectedContact.id }).catch(() => {});
                 axios.get(`/mensajes/${this.selectedContact.id}`)
                     .then(response => {
                         this.messages = response.data.messages;
@@ -405,40 +475,17 @@
                             window.Echo.private(this.currentEchoChannel)
                                 .listen('.MessageSent', (e) => {
                                     if (e.sender_id != {{ auth()->id() ?? 'null' }}) {
-                                        this.messages.push({
-                                            id: e.id,
-                                            body: e.body,
-                                            is_mine: false,
-                                            time: e.time
-                                        });
+                                        this.messages.push({ id: e.id, body: e.body, is_mine: false, time: e.time });
                                         this.scrollToBottom();
-
-                                        let contactIndex = this.contacts.findIndex(c => c.id === this.selectedContact.id);
-                                        if (contactIndex !== -1) {
-                                            let contact = this.contacts[contactIndex];
-                                            contact.lastMessage = e.body;
-                                            contact.time = e.time;
-                                            contact.unread = true;
-
-                                            this.contacts.splice(contactIndex, 1);
-                                            this.contacts.unshift(contact);
-                                        }
-
-                                        if (window.recalculateChatBadge) {
-                                            window.recalculateChatBadge(this.contacts);
-                                        }
                                     }
                                 });
                         }
                     })
-                    .finally(() => {
-                        this.isLoading = false;
-                    });
+                    .finally(() => { this.isLoading = false; });
             },
 
             sendMessage() {
                 if (!this.newMessage.trim() || !this.selectedContact) return;
-
                 let text = this.newMessage;
                 this.newMessage = '';
 
@@ -448,28 +495,26 @@
                         this.messages = [...this.messages];
                         this.scrollToBottom();
 
-                        let contactIndex = this.contacts.findIndex(c => c.id === this.selectedContact.id);
-                        if (contactIndex !== -1) {
-                            let contact = this.contacts[contactIndex];
-                            contact.lastMessage = text;
-                            contact.time = 'Ahora';
-
-                            this.contacts.splice(contactIndex, 1);
-                            this.contacts.unshift(contact);
+                        let idx = this.contacts.findIndex(c => c.id === this.selectedContact.id);
+                        if (idx !== -1) {
+                            let c = this.contacts[idx];
+                            c.lastMessage = text;
+                            c.time = 'Ahora';
+                            this.contacts.splice(idx, 1);
+                            this.contacts.unshift(c);
+                            this.contacts = [...this.contacts];
+                        } else {
+                            this.contacts = [{ ...this.selectedContact, lastMessage: text, time: 'Ahora' }, ...this.contacts];
                         }
                     });
             },
 
-            insertEmoji(emoji) {
-                this.newMessage += emoji;
-            },
+            insertEmoji(emoji) { this.newMessage += emoji; },
 
             scrollToBottom() {
                 this.$nextTick(() => {
-                    const container = document.getElementById('messages-container');
-                    if (container) {
-                        container.scrollTop = container.scrollHeight;
-                    }
+                    const c = document.getElementById('messages-container');
+                    if (c) c.scrollTop = c.scrollHeight;
                 });
             }
         }));

@@ -1,10 +1,186 @@
 <x-app-layout>
 
     <script>
-        const _routeDesvincular = @js(route('admin.psicologia.maestros.historias.enfermedad.desvincular'));
-        const _routeSeccionDestroy = @js(route('admin.psicologia.maestros.historias.secciones.destroy', 'PLACEHOLDER'));
-        const _routeSeccionReorder = @js(route('admin.psicologia.maestros.historias.secciones.reorder', 'PLACEHOLDER'));
-        const _csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        window._historiaRoutes = {
+            desvincular:     @js(route('admin.psicologia.maestros.historias.enfermedad.desvincular')),
+            seccionDestroy:  @js(route('admin.psicologia.maestros.historias.secciones.destroy', 'PLACEHOLDER')),
+            seccionReorder:  @js(route('admin.psicologia.maestros.historias.secciones.reorder', 'PLACEHOLDER')),
+            vincular:        @js(route('admin.psicologia.maestros.historias.enfermedad.vincular')),
+            csrf:            document.querySelector('meta[name="csrf-token"]')?.content || '',
+            historiaId:      {{ $historia->id }},
+        };
+
+        window._historiaConfig = {
+            vinculados: @js($enfermedadesVinculadas->mapWithKeys(fn($items, $key) => [
+                $key => $items->map(fn($v) => ['link_id' => $v->link_id, 'nombre' => $v->nombre]),
+            ])),
+            seccionesTitulos: @js($seccionesPersonalizadas->pluck('titulo')->values()->toArray()),
+        };
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('historiaShow', () => ({
+                showStats: false,
+                isEditing: true,
+                hasUnsavedChanges: false,
+                showUnsavedModal: false,
+                pendingUrl: null,
+                vinculados: window._historiaConfig.vinculados,
+                searchQuery: '',
+                seccionesTitulos: window._historiaConfig.seccionesTitulos,
+
+                matchesSearch(title) {
+                    if (!this.searchQuery) return true;
+                    const normalize = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    return normalize(title).includes(normalize(this.searchQuery));
+                },
+
+                hasVisibleSections() {
+                    if (!this.searchQuery) return this.seccionesTitulos.length > 0;
+                    const normalize = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    const q = normalize(this.searchQuery);
+                    return this.seccionesTitulos.some(title => normalize(title).includes(q));
+                },
+
+                init() {
+                    window.addEventListener('beforeunload', (e) => {
+                        if (this.hasUnsavedChanges) {
+                            e.preventDefault();
+                            e.returnValue = '';
+                        }
+                    });
+
+                    document.addEventListener('click', (e) => {
+                        const link = e.target.closest('a');
+                        if (link && link.href && !link.href.includes('#') && link.target !== '_blank' && !link.hasAttribute('download')) {
+                            if (e.target.closest('[x-show="showUnsavedModal"]')) return;
+                            if (this.hasUnsavedChanges) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                this.pendingUrl = link.href;
+                                this.showUnsavedModal = true;
+                            }
+                        }
+                    }, { capture: true });
+                },
+
+                confirmLeave() {
+                    this.hasUnsavedChanges = false;
+                    if (this.pendingUrl) window.location.href = this.pendingUrl;
+                },
+
+                desvincular(linkId) {
+                    AppModal.confirm('Confirmar', '¿Desvincular esta condición?').then((confirmed) => {
+                        if (!confirmed) return;
+                        fetch(window._historiaRoutes.desvincular, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': window._historiaRoutes.csrf,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ link_id: linkId })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.hasUnsavedChanges = true;
+                                for (const key in this.vinculados) {
+                                    this.vinculados[key] = this.vinculados[key].filter(v => v.link_id !== linkId);
+                                }
+                            }
+                        });
+                    });
+                },
+
+                deleteSection(id) {
+                    AppModal.confirm('Atención', '¿Estás seguro de eliminar esta sección? Se perderán todos los segmentos y datos guardados.').then((confirmed) => {
+                        if (!confirmed) return;
+
+                        const url = window._historiaRoutes.seccionDestroy.replace('PLACEHOLDER', id);
+                        fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': window._historiaRoutes.csrf,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(async (res) => {
+                            if (!res.ok) {
+                                const text = await res.text();
+                                console.error('[deleteSection] HTTP ' + res.status, text);
+                                AppModal.alert('Error', 'No se pudo eliminar (HTTP ' + res.status + '). Revisa la consola.');
+                                return;
+                            }
+                            this.hasUnsavedChanges = false;
+                            window.location.reload();
+                        })
+                        .catch((err) => {
+                            console.error('[deleteSection] fetch error:', err);
+                            AppModal.alert('Error', 'Error de red al eliminar.');
+                        });
+                    });
+                },
+
+                reorderSection(id, direction) {
+                    const url = window._historiaRoutes.seccionReorder.replace('PLACEHOLDER', id);
+                    fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': window._historiaRoutes.csrf,
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ direccion: direction })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const seccionActual = document.getElementById('seccion-' + id);
+                            if (seccionActual) {
+                                if (direction === 'up' && seccionActual.previousElementSibling?.classList.contains('seccion-dinamica')) {
+                                    seccionActual.parentNode.insertBefore(seccionActual, seccionActual.previousElementSibling);
+                                } else if (direction === 'down' && seccionActual.nextElementSibling?.classList.contains('seccion-dinamica')) {
+                                    seccionActual.parentNode.insertBefore(seccionActual.nextElementSibling, seccionActual);
+                                }
+                            }
+                        } else {
+                            AppModal.alert('Error', 'Error al reordenar la sección.');
+                        }
+                    });
+                },
+
+                vincular(enfermedadId, contexto) {
+                    fetch(window._historiaRoutes.vincular, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': window._historiaRoutes.csrf,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            historia_clinica_id: window._historiaRoutes.historiaId,
+                            enfermedad_id: enfermedadId,
+                            contexto: contexto
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (!this.vinculados[contexto]) this.vinculados[contexto] = [];
+                            this.vinculados[contexto].push({
+                                link_id: data.link_id,
+                                nombre: data.nombre
+                            });
+                            this.hasUnsavedChanges = true;
+                            this.$dispatch('linked-' + contexto);
+                        } else {
+                            AppModal.alert('Error', 'Error al vincular: ' + (data.message || 'Desconocido'));
+                        }
+                    });
+                }
+            }));
+        });
     </script>
     <style>
         .seccion-dinamica:first-of-type .btn-subir {
@@ -24,152 +200,7 @@
         }
     </style>
     @php $tab = request()->query('tab', 'expediente'); @endphp
-    <div class="pt-8 pb-12 min-h-[calc(100vh-4rem)] overflow-x-hidden" x-data="{
-        showStats: false,
-        isEditing: true,
-        hasUnsavedChanges: false,
-        showUnsavedModal: false,
-        pendingUrl: null,
-        vinculados: @js($enfermedadesVinculadas->mapWithKeys(fn($items, $key) => [$key => $items->map(fn($v) => ['link_id' => $v->link_id, 'nombre' => $v->nombre])])),
-        searchQuery: '',
-        seccionesTitulos: @js($seccionesPersonalizadas->pluck('titulo')->values()->toArray()),
-        matchesSearch(title) {
-            if (!this.searchQuery) return true;
-            const normalize = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            return normalize(title).includes(normalize(this.searchQuery));
-        },
-        hasVisibleSections() {
-            if (!this.searchQuery) return this.seccionesTitulos.length > 0;
-            const normalize = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            const q = normalize(this.searchQuery);
-            return this.seccionesTitulos.some(title => normalize(title).includes(q));
-        },
-    
-        init() {
-            window.addEventListener('beforeunload', (e) => {
-                if (this.hasUnsavedChanges) {
-                    e.preventDefault();
-                    e.returnValue = '';
-                }
-            });
-    
-            document.addEventListener('click', (e) => {
-                let link = e.target.closest('a');
-                if (link && link.href && !link.href.includes('#') && link.target !== '_blank' && !link.hasAttribute('download')) {
-                    if (e.target.closest('[x-show=\'showUnsavedModal\']')) return;
-                    if (this.hasUnsavedChanges) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.pendingUrl = link.href;
-                        this.showUnsavedModal = true;
-                    }
-                }
-            }, { capture: true });
-        },
-        confirmLeave() {
-            this.hasUnsavedChanges = false;
-            if (this.pendingUrl) {
-                window.location.href = this.pendingUrl;
-            }
-        },
-        desvincular(linkId) {
-            AppModal.confirm('Confirmar', '¿Desvincular esta condición?').then((confirmed) => {
-                if (!confirmed) return;
-                fetch(_routeDesvincular, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': _csrfToken,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ link_id: linkId })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            this.hasUnsavedChanges = true;
-                            for (let key in this.vinculados) {
-                                this.vinculados[key] = this.vinculados[key].filter(v => v.link_id !== linkId);
-                            }
-                        }
-                    });
-            });
-        },
-        deleteSection(id) {
-            AppModal.confirm('Atención', '¿Estás seguro de eliminar esta sección? Se perderán todos los segmentos y datos guardados.').then((confirmed) => {
-                if (!confirmed) return;
-                let url = _routeSeccionDestroy.replace('PLACEHOLDER', id);
-                fetch(url, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': _csrfToken,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(res => {
-                        this.hasUnsavedChanges = false;
-                        window.location.reload();
-                    });
-            });
-        },
-        reorderSection(id, direction) {
-            let url = _routeSeccionReorder.replace('PLACEHOLDER', id);
-            fetch(url, {
-                    method: 'PATCH',
-                    headers: {
-                        'X-CSRF-TOKEN': _csrfToken,
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ direccion: direction })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        let seccionActual = document.getElementById('seccion-' + id);
-                        if (seccionActual) {
-                            if (direction === 'up' && seccionActual.previousElementSibling && seccionActual.previousElementSibling.classList.contains('seccion-dinamica')) {
-                                seccionActual.parentNode.insertBefore(seccionActual, seccionActual.previousElementSibling);
-                            } else if (direction === 'down' && seccionActual.nextElementSibling && seccionActual.nextElementSibling.classList.contains('seccion-dinamica')) {
-                                seccionActual.parentNode.insertBefore(seccionActual.nextElementSibling, seccionActual);
-                            }
-                        }
-                    } else {
-                        AppModal.alert('Error', 'Error al reordenar la sección.');
-                    }
-                });
-        },
-        vincular(enfermedadId, contexto) {
-            fetch(@js(route('admin.psicologia.maestros.historias.enfermedad.vincular')), {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': _csrfToken,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        historia_clinica_id: {{ $historia->id }},
-                        enfermedad_id: enfermedadId,
-                        contexto: contexto
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        if (!this.vinculados[contexto]) this.vinculados[contexto] = [];
-                        this.vinculados[contexto].push({
-                            link_id: data.link_id,
-                            nombre: data.nombre
-                        });
-                        this.hasUnsavedChanges = true;
-                        this.$dispatch('linked-' + contexto);
-                    } else {
-                        AppModal.alert('Error', 'Error al vincular: ' + (data.message || 'Desconocido'));
-                    }
-                });
-        }
-    }">
+    <div class="pt-8 pb-12 min-h-[calc(100vh-4rem)] overflow-x-hidden" x-data="historiaShow">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             <div class="mb-6">

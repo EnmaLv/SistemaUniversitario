@@ -1,28 +1,26 @@
 @php
     use App\AdminLTE\Filters\ModuleFilter;
 
-    if (auth()->check() && is_null(session('modulos_permitidos'))) {
-        (new ModuleFilter())->inicializarSesion(auth()->id());
+    if (auth()->check()) {
+        (new ModuleFilter())->asegurarSesion(auth()->id());
     }
 
-    $moduloActivo      = session('modulo_activo');
+    $moduloActivo = session('modulo_activo');
     $modulosPermitidos = session('modulos_permitidos', []);
 
-    $isPsico      = $esPsicologia ?? in_array($moduloActivo, ['psicologia', 'salud']);
+    $isPsico = $esPsicologia ?? in_array($moduloActivo, ['psicologia', 'salud']);
     $sidebarHover = $isPsico ? 'hover:bg-indigo-600/30' : 'hover:bg-[#623739]';
-    $btnSelectBg  = $isPsico
+    $btnSelectBg = $isPsico
         ? 'bg-indigo-600/20 hover:bg-indigo-600/40 border-indigo-500/30'
         : 'bg-white/20 hover:bg-[#623739] border-white/20';
-    $activeItemBg = $isPsico
-        ? 'bg-indigo-600/40 ring-1 ring-indigo-400/40'
-        : 'bg-[#623739] ring-1 ring-white/20';
+    $activeItemBg = $isPsico ? 'bg-indigo-600/40 ring-1 ring-indigo-400/40' : 'bg-[#623739] ring-1 ring-white/20';
     $moduloConfig = [
-        'administracion' => ['icon' => 'fas fa-cog',           'label' => 'Administración'],
-        'comedor'        => ['icon' => 'fas fa-utensils',      'label' => 'Comedor'],
-        'salud'          => ['icon' => 'fas fa-heartbeat',     'label' => 'Salud'],
-        'psicologia'     => ['icon' => 'fas fa-brain',         'label' => 'Psicología'],
-        'beca'           => ['icon' => 'fas fa-graduation-cap','label' => 'Beca'],
-        'transporte'     => ['icon' => 'fas fa-bus',           'label' => 'Transporte'],
+        'administracion' => ['icon' => 'fas fa-cog', 'label' => 'Administración'],
+        'comedor' => ['icon' => 'fas fa-utensils', 'label' => 'Comedor'],
+        'salud' => ['icon' => 'fas fa-heartbeat', 'label' => 'Salud'],
+        'psicologia' => ['icon' => 'fas fa-brain', 'label' => 'Psicología'],
+        'beca' => ['icon' => 'fas fa-graduation-cap', 'label' => 'Beca'],
+        'transporte' => ['icon' => 'fas fa-bus', 'label' => 'Transporte'],
     ];
     $fallbackConf = ['icon' => 'fas fa-cubes', 'label' => 'Módulo'];
 
@@ -36,12 +34,12 @@
     class="hidden lg:flex lg:flex-col h-full border-r shadow-sm py-3 flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto invisible-scrollbar z-20 relative"
     x-data="{ activeSection: '{{ request()->segment(2) ?? request()->segment(1) }}' }">
 
-    <div class="flex items-center px-3 h-12 mb-2"
-        :class="sidebarOpen ? 'justify-between' : 'justify-center'">
+    <div class="flex items-center px-3 h-12 mb-2" :class="sidebarOpen ? 'justify-between' : 'justify-center'">
         <a href="{{ Route::has('home') ? route('home') : url('/') }}"
             class="flex items-center gap-3 transition-colors overflow-hidden group rounded-lg p-1.5 {{ $sidebarHover }}"
             :class="sidebarOpen ? 'flex' : 'hidden'" title="Inicio">
-            <div class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-white flex-shrink-0 group-hover:bg-white/20 transition-all">
+            <div
+                class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-white flex-shrink-0 group-hover:bg-white/20 transition-all">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-5.5a1.5 1.5 0 0 0-3 0V21H4a1 1 0 0 1-1-1V9.5z" />
                 </svg>
@@ -59,7 +57,7 @@
     </div>
 
     <div class="mx-3 mb-3 border-t border-white/15"></div>
-    @if (! $moduloActivo)
+    @if (!$moduloActivo)
         <div class="mx-3 mb-3 flex flex-col gap-0.5">
             @forelse ($modulosDisponibles as $mod)
                 @php $conf = $moduloConfig[$mod->key] ?? $fallbackConf; @endphp
@@ -71,8 +69,7 @@
                     <button type="submit"
                         class="w-full flex items-center gap-3 h-10 rounded-lg transition-all duration-200
                             text-white/85 hover:bg-white/10 hover:text-white"
-                        :class="sidebarOpen ? 'px-3' : 'justify-center px-0'"
-                        title="{{ $mod->nombre }}">
+                        :class="sidebarOpen ? 'px-3' : 'justify-center px-0'" title="{{ $mod->nombre }}">
 
                         <i class="{{ $conf['icon'] }} w-5 text-center flex-shrink-0 text-sm"></i>
 
@@ -128,32 +125,31 @@
 
     <nav class="flex flex-col gap-1 px-3 flex-1">
         @canModule('comedor')
-            @includeIf('layouts.sidebar.comedor')
+        @includeIf('layouts.sidebar.comedor')
         @endcanModule
 
         @canModule('transporte')
-            @includeIf('layouts.sidebar.transporte')
+        @includeIf('layouts.sidebar.transporte')
         @endcanModule
 
         @canModule('salud')
-            @includeIf('layouts.sidebar.salud')
+        @includeIf('layouts.sidebar.salud')
         @endcanModule
 
         @canModule('psicologia')
-            @includeIf('layouts.sidebar.psicologia')
+        @includeIf('layouts.sidebar.psicologia')
         @endcanModule
 
         @canModule('beca')
-            @includeIf('layouts.sidebar.becas')
+        @includeIf('layouts.sidebar.becas')
         @endcanModule
 
         @canModule('administracion')
-            @includeIf('layouts.sidebar.administracion')
+        @includeIf('layouts.sidebar.administracion')
         @endcanModule
 
         <div class="mt-auto px-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-            <button type="button"
-                @if (!request()->routeIs('chat.*')) @click="$dispatch('toggle-chat')" @endif
+            <button type="button" @if (!request()->routeIs('chat.*')) @click="$dispatch('toggle-chat')" @endif
                 class="group flex items-center gap-3 h-11 w-full rounded-xl transition-all duration-200 relative"
                 :class="[
                     (isChatOpen || {{ request()->routeIs('chat.*') ? 'true' : 'false' }}) ?
@@ -166,19 +162,20 @@
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span class="sidebar-text text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300"
+                <span
+                    class="sidebar-text text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300"
                     :class="sidebarOpen ? 'opacity-100 max-w-[160px]' : 'opacity-0 max-w-0'">Mensajes</span>
                 @php $unreadMsgs = \App\Models\Usuario::contarMensajesNoLeidos(auth()->id()); @endphp
-                <span class="chat-badge absolute -top-0.5 min-w-[18px] h-[18px] px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold border-2 border-white dark:border-gray-800 shadow"
-                    data-count="{{ $unreadMsgs }}"
-                    style="{{ $unreadMsgs > 0 ? '' : 'display: none;' }}">
+                <span
+                    class="chat-badge absolute -top-0.5 min-w-[18px] h-[18px] px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold border-2 border-white dark:border-gray-800 shadow"
+                    data-count="{{ $unreadMsgs }}" style="{{ $unreadMsgs > 0 ? '' : 'display: none;' }}">
                     {{ $unreadMsgs > 99 ? '99+' : $unreadMsgs }}
                 </span>
             </button>
         </div>
 
         <script>
-            window.updateChatBadge = function (count) {
+            window.updateChatBadge = function(count) {
                 const badge = document.querySelector('.chat-badge');
                 if (!badge) return;
                 if (count === undefined) {
@@ -189,14 +186,14 @@
                 badge.style.display = count > 0 ? '' : 'none';
             };
 
-            window.incrementChatBadge = function (by = 1) {
+            window.incrementChatBadge = function(by = 1) {
                 const badge = document.querySelector('.chat-badge');
                 if (!badge) return;
                 const current = parseInt(badge.dataset.count || '0', 10);
                 window.updateChatBadge(current + by);
             };
 
-            window.recalculateChatBadge = function (contacts) {
+            window.recalculateChatBadge = function(contacts) {
                 if (!Array.isArray(contacts)) return;
                 const total = contacts.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
                 window.updateChatBadge(total);

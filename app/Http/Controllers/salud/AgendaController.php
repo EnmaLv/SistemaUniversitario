@@ -23,7 +23,7 @@ class AgendaController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        if (!$user || !$user->tieneRol(['psicologo', 'administrador', 'admin'])) {
+        if (!$user || !$user->tieneRol('psicologo')) {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
 
@@ -48,7 +48,7 @@ class AgendaController extends Controller
         $user = $this->verificarAcceso();
         $psicologoId = $user->id_usuario;
 
-        if ($user->tieneRol(['administrador', 'admin']) && $request->has('psicologo_id')) {
+        if ($user->tieneRol('psicologo') && $request->has('psicologo_id')) {
             $psicologoId = $request->input('psicologo_id');
         }
 
@@ -209,7 +209,7 @@ class AgendaController extends Controller
 
         $psicologoId = $request->input('psicologo_id', $user->id_usuario);
 
-        if ($user->tieneRol(['psicologo']) && !$user->tieneRol(['administrador', 'admin']) && $user->id_usuario != $psicologoId) {
+        if ($user->tieneRol('psicologo') && $user->id_usuario != $psicologoId) {
             abort(403);
         }
 
@@ -302,14 +302,14 @@ class AgendaController extends Controller
         $psicologoId = $user->id_usuario;
         $psicologo = $user;
 
-        if ($user->tieneRol(['administrador']) && $request->has('psicologo_id')) {
+        if ($user->tieneRol(['psicologo']) && $request->has('psicologo_id')) {
             $psicologoId = $request->input('psicologo_id');
             $psicologo = Usuario::find($psicologoId);
 
             if (!$psicologo) {
                 abort(404, 'Psicólogo no encontrado');
             }
-        } elseif (!$user->tieneRol(['psicologo', 'administrador'])) {
+        } elseif (!$user->tieneRol('psicologo')) {
             abort(403, 'Solo los psicólogos pueden exportar su agenda.');
         }
 

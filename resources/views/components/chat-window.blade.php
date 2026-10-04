@@ -18,8 +18,48 @@
         currentEchoChannel: null,
         showEmojiPicker: false,
 
+        searchQuery: '',
+        searchResults: [],
+        isSearchingUsers: false,
+
+        get filteredContacts() {
+            const q = (this.searchQuery || '').trim().toLowerCase();
+            if (!q) return this.contacts;
+            return this.contacts.filter(c =>
+                (c.name || '').toLowerCase().includes(q) ||
+                (c.lastMessage || '').toLowerCase().includes(q)
+            );
+        },
+
+        get allVisibleContacts() {
+            const q = (this.searchQuery || '').trim();
+            if (!q) return this.filteredContacts;
+            const localIds = new Set(this.filteredContacts.map(c => String(c.id)));
+            const extra = this.searchResults.filter(r => !localIds.has(String(r.id)));
+            return [...this.filteredContacts, ...extra];
+        },
+
+        buscarGlobal(query) {
+            const q = (query || '').trim();
+            this.searchResults = [];
+            if (q.length < 2) return;
+            if (this.filteredContacts.length > 0) return;
+
+            this.isSearchingUsers = true;
+            axios.get('/mensajes/buscar-usuarios', { params: { q } })
+                .then(res => { this.searchResults = res.data || []; })
+                .catch(() => { this.searchResults = []; })
+                .finally(() => { this.isSearchingUsers = false; });
+        },
+
         init() {
             this.fetchContacts();
+
+            let t = null;
+            this.$watch('searchQuery', (val) => {
+                clearTimeout(t);
+                t = setTimeout(() => this.buscarGlobal(val), 300);
+            });
 
             if (window.Echo) {
                 window.Echo.private('App.Models.Usuario.' + {{ auth()->id() ?? 'null' }})
@@ -200,7 +240,9 @@
         <div x-show="view === 'list'" class="h-full flex flex-col">
             <div class="px-3 py-3">
                 <div class="relative">
-                    <input type="text" placeholder="Buscar en mensajes..."
+                    <input type="text"
+                        x-model="searchQuery"
+                        placeholder="Buscar chats o usuarios..."
                         class="w-full pl-10 pr-4 py-2.5 rounded-full border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 transition-all placeholder-gray-400"
                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color); color: var(--text-main);">
                     <svg class="w-4 h-4 absolute left-3.5 top-3 text-gray-400" fill="none" stroke="currentColor"
@@ -214,7 +256,7 @@
             <div class="flex-1 overflow-y-auto px-2 pb-2 no-scrollbar">
                 <div class="px-3 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider">Recientes</div>
 
-                <template x-for="contact in contacts" :key="contact.id">
+                <template x-for="contact in allVisibleContacts" :key="contact.id">
                     <button @click="selectContact(contact)"
                         class="w-full flex items-center gap-3 p-2.5 rounded-2xl cursor-pointer transition-all duration-150 text-left hover:bg-red-50/60 dark:hover:bg-red-950/20 group">
 
@@ -249,7 +291,7 @@
                     </button>
                 </template>
 
-                <template x-if="contacts.length === 0 && !isLoading">
+                <template x-if="allVisibleContacts.length === 0 && !isLoading && !isSearchingUsers">
                     <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
                         <div class="w-16 h-16 rounded-full bg-red-50 dark:bg-red-950/30 text-red-500 flex items-center justify-center mb-3">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
