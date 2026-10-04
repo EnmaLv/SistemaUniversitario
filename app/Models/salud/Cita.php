@@ -51,7 +51,7 @@ class Cita extends Model
 
     public function scopePorPsicologo(Builder $query, $psicologoId): Builder
     {
-        return $query->where('psicologo_id', $psicologoId);
+        return $query->when($psicologoId, fn ($q) => $q->where('psicologo_id', $psicologoId));
     }
 
     public function scopePorPaciente(Builder $query, $pacienteId): Builder
@@ -665,7 +665,7 @@ class Cita extends Model
             }
 
             $psicologo = Usuario::find($validated['psicologo_id']);
-            if (!$psicologo || !$psicologo->tieneRol(['psicologo', 'administrador'])) {
+            if (!$psicologo || !$psicologo->tieneRol('psicologo')) {
                 return [false, 'Selecciona un psicólogo válido.', null];
             }
 
@@ -866,8 +866,7 @@ class Cita extends Model
                 }
 
                 $actor = 'paciente';
-                if ($user->tieneRol('admin')) $actor = 'admin';
-                if ($user->tieneRol(['psicologo', 'administrador'])) $actor = 'psicologo';
+                if ($user->tieneRol('psicologo')) $actor = 'psicologo';
 
                 if ($actor === 'psicologo' || $actor === 'admin') {
                     if ($cita->estado !== 'confirmada') {
@@ -940,7 +939,7 @@ class Cita extends Model
                 }
 
                 $user = Usuario::find($userId);
-                if (!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario) {
+                if (!$user || !$user->tieneRol('psicologo') || $cita->psicologo_id !== $user->id_usuario) {
                     return [false, 'Error: Usuario no autorizado para esta acción.'];
                 }
 
@@ -1941,5 +1940,37 @@ class Cita extends Model
     public static function eliminarFisicamente($id)
     {
         return self::where('id', $id)->delete();
+    }
+
+    public static function obtenerEstadisticasPorPsicologo($fechaInicio, $fechaFin)
+    {
+        return self::select('psicologo_id', DB::raw('count(*) as total'))
+            ->with('psicologo.persona')
+            ->where(function ($q) use ($fechaInicio, $fechaFin) {
+                $q->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                ->orWhereBetween('created_at', [
+                    $fechaInicio . ' 00:00:00',
+                    $fechaFin . ' 23:59:59',
+                ]);
+            })
+            ->groupBy('psicologo_id')
+            ->orderByDesc('total')
+            ->get()
+            ->map(function ($item) {
+                $nombre = 'Sin asignar';
+                if ($item->psicologo && $item->psicologo->persona) {
+                    $nombre = trim(
+                        ($item->psicologo->persona->nombre_persona ?? '') . ' ' .
+                        ($item->psicologo->persona->apellido_persona ?? '')
+                    );
+                }
+                return [
+                    'id'     => $item->psicologo_id,
+                    'nombre' => $nombre ?: 'Sin asignar',
+                    'total'  => (int) $item->total,
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

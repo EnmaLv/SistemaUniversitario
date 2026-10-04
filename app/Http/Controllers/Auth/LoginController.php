@@ -43,9 +43,10 @@ class LoginController extends Controller
             return redirect()->route('admin.configuracion.master_key.form');
         }
 
+        $request->session()->forget('pending_admin_id');
         AuthFacade::login($usuario);
+        $request->session()->regenerate();
         $destino = (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($usuario->id_usuario ?? $usuario->id);
         return redirect()->intended($destino);
     }
-    
 }

@@ -31,7 +31,12 @@ class PermissionFilter implements FilterInterface
         }
 
         foreach ($user->roles ?? [] as $r) {
-            if (isset($r->nombre) && mb_strtolower($r->nombre) === 'administrador') {
+            $nombreRol = mb_strtolower($r->nombre ?? '');
+            $slugRol = mb_strtolower($r->slug ?? '');
+            if (
+                in_array($nombreRol, ['administrador', 'secretaria de bienestar'], true)
+                || in_array($slugRol, ['administrador', 'secretaria-de-bienestar'], true)
+            ) {
                 return $item;
             }
         }
@@ -59,7 +64,7 @@ class PermissionFilter implements FilterInterface
 
         if (is_string($item) || isset($item['header'])) {
             $headerText = is_string($item) ? $item : $item['header'];
-            $menu = config('adminlte.menu', []);
+            $menu = config('menu_routes.php', []);
             $found = false;
             $visible = false;
             foreach ($menu as $m) {

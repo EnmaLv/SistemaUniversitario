@@ -33,6 +33,7 @@ use App\Http\Controllers\salud\CategoriaMedicamentoController;
 use App\Http\Controllers\salud\EnvasePrimarioController;
 use App\Http\Controllers\salud\MedicamentoController;
 use App\Http\Controllers\ModuloController;
+use App\Http\Controllers\salud\ChatController;
 use App\Http\Controllers\salud\ConsultorioController;
 use App\Http\Controllers\salud\EnfermedadController;
 use App\Http\Controllers\salud\HorarioConsultorioController;
@@ -46,6 +47,18 @@ use App\Models\Usuario;
 Route::get('/', function () {
     $hasEmployees = Usuario::count() > 0;
     return view('landing_uptp', compact('hasEmployees'));
+});
+
+Route::get('/admin/psicologia/estadisticas-generales', [HomeController::class, 'psicologiaEstadisticasGenerales'])
+    ->middleware(['auth'])
+    ->name('admin.psicologia.estadisticas.generales');
+
+Route::middleware('auth')->prefix('mensajes')->group(function () {
+Route::get('/contactos/lista', [ChatController::class, 'fetchContacts'])->name('chat.contactos');
+Route::get('/buscar-usuarios',  [ChatController::class, 'buscarUsuarios'])->name('chat.buscarUsuarios');
+Route::post('/ping',            [ChatController::class, 'ping'])->name('chat.ping');
+Route::get('/{targetUserId}',   [ChatController::class, 'fetchMessages'])->name('chat.mensajes');
+Route::post('/{targetUserId}',  [ChatController::class, 'sendMessage'])->name('chat.enviar');
 });
 
 Route::middleware(['auth'])->group(function () {

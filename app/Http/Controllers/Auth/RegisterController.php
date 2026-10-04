@@ -79,17 +79,16 @@ class RegisterController extends Controller
     {
         if (!$user) return false;
 
-        $roleField = strtolower($user->role ?? '');
-        if ($roleField === 'administrador') return true;
-
         try {
-            if ($user->roles()->whereRaw("LOWER(nombre) = ?", ['administrador'])->exists()) {
-                return true;
-            }
+            return $user->roles()
+                ->where(function ($query) {
+                    $query->whereRaw('LOWER(nombre) = ?', ['administrador'])
+                        ->orWhereRaw('LOWER(slug) = ?', ['administrador']);
+                })
+                ->exists();
         } catch (\Throwable $e) {
+            return false;
         }
-
-        return false;
     }
 
     protected function validator(array $data)
@@ -179,8 +178,7 @@ class RegisterController extends Controller
                 }
             }
         } catch (\Throwable $e) {
-            $role = Usuario::join('perfil', 'usuario.id_perfil', '=', 'perfil.id_perfil')->where('perfil.nombre_perfil', 'Administrador')->count() === 0 ? 'Administrador' : 'Obrero';
-            $usuario->role = $role;
+            throw $e;
         }
 
         if (!empty($data['master_key'])) {

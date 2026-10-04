@@ -16,7 +16,7 @@ class PublicacionController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        if (!$user || !$user->tieneRol(['psicologo', 'administrador', 'admin'])) {
+        if (!$user || !$user->tieneRol('psicologo')) {
             return redirect()->back()->with('error', 'Acceso no autorizado.');
         }
 
@@ -34,7 +34,7 @@ class PublicacionController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        if (!$user || !$user->tieneRol(['psicologo', 'administrador', 'admin'])) {
+        if (!$user || !$user->tieneRol('psicologo')) {
             return redirect()->back()->with('error', 'Acceso no autorizado.');
         }
 
@@ -45,7 +45,7 @@ class PublicacionController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        if (!$user || !$user->tieneRol(['psicologo', 'administrador', 'admin'])) {
+        if (!$user || !$user->tieneRol('psicologo')) {
             return redirect()->back()->with('error', 'Acceso no autorizado.');
         }
 
@@ -108,7 +108,7 @@ class PublicacionController extends Controller
         $user = Auth::user();
         $publicacion = Publicacion::findById($id);
 
-        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol(['administrador', 'admin']))) {
+        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol('psicologo'))) {
             return redirect()->route('admin.psicologia.maestros.publicaciones.index')->with('error', 'Acceso denegado.');
         }
 
@@ -121,7 +121,7 @@ class PublicacionController extends Controller
         $user = Auth::user();
         $publicacion = Publicacion::findById($id);
 
-        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol(['administrador', 'admin']))) {
+        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol(['psicologo']))) {
             return redirect()->route('admin.psicologia.maestros.publicaciones.index')->with('error', 'Acceso denegado.');
         }
 
@@ -146,7 +146,7 @@ class PublicacionController extends Controller
         $user = Auth::user();
         $publicacion = Publicacion::findById($id);
 
-        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol(['administrador', 'admin']))) {
+        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol('psicologo'))) {
             return redirect()->route('admin.psicologia.maestros.publicaciones.index')->with('error', 'Acceso denegado.');
         }
 

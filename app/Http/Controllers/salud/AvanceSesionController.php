@@ -14,7 +14,7 @@ class AvanceSesionController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        $rolesPermitidos = ['psicologo', 'administrador'];
+        $rolesPermitidos = 'psicologo';
 
         if (!$user || !$user->tieneRol($rolesPermitidos)) {
             abort(403, 'No tienes permisos para acceder a esta sección.');

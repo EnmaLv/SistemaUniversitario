@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Schema;
 
 class ModuleFilter implements FilterInterface
 {
+    private const SESSION_VERSION = 2;
+
     public function transform($item)
     {
         $user = Auth::user();
@@ -21,9 +23,7 @@ class ModuleFilter implements FilterInterface
             return false;
         }
 
-        if (is_null(session('modulos_permitidos')) || is_null(session('menu_permissions_user'))) {
-            $this->inicializarSesion($userId);
-        }
+        $this->asegurarSesion($userId);
 
         $permitidos      = session('modulos_permitidos', []);
         $menuPermissions = session('menu_permissions_user', []);
@@ -58,6 +58,8 @@ class ModuleFilter implements FilterInterface
             'menu_permissions_user',
             'es_admin',
             'modulo_activo',
+            'permisos_usuario_id',
+            'permisos_version',
         ]);
 
         $this->inicializarSesion($userId);
@@ -71,6 +73,25 @@ class ModuleFilter implements FilterInterface
         return route('home');
     }
 
+    public function asegurarSesion($userId): void
+    {
+        $cambioUsuario = (int) session('permisos_usuario_id') !== (int) $userId;
+
+        if ($cambioUsuario) {
+            session()->forget('modulo_activo');
+        }
+
+        if (
+            is_null(session('modulos_permitidos'))
+            || is_null(session('menu_permissions_user'))
+            || $cambioUsuario
+            || (int) session('permisos_version') !== self::SESSION_VERSION
+        ) {
+            session()->forget('modulo_activo');
+            $this->inicializarSesion($userId);
+        }
+    }
+
     public function inicializarSesion($userId)
     {
         $modulesTable = Schema::hasTable('modulos')
@@ -82,6 +103,8 @@ class ModuleFilter implements FilterInterface
                 'modulos_permitidos'    => [],
                 'menu_permissions_user' => [],
                 'es_admin'              => false,
+                'permisos_usuario_id'   => $userId,
+                'permisos_version'      => self::SESSION_VERSION,
             ]);
             return;
         }
@@ -89,6 +112,7 @@ class ModuleFilter implements FilterInterface
         $roles = DB::table('rol_usuario')
             ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
             ->where('rol_usuario.id_usuario', $userId)
+            ->whereNull('rol.deleted_at')
             ->get();
 
         if ($roles->isEmpty()) {
@@ -96,6 +120,8 @@ class ModuleFilter implements FilterInterface
                 'modulos_permitidos'    => [],
                 'menu_permissions_user' => [],
                 'es_admin'              => false,
+                'permisos_usuario_id'   => $userId,
+                'permisos_version'      => self::SESSION_VERSION,
             ]);
             return;
         }
@@ -137,6 +163,8 @@ class ModuleFilter implements FilterInterface
             'modulos_permitidos'    => $permitidos,
             'menu_permissions_user' => $menuPermissions,
             'es_admin'              => $esAdmin,
+            'permisos_usuario_id'   => $userId,
+            'permisos_version'      => self::SESSION_VERSION,
         ]);
     }
 }

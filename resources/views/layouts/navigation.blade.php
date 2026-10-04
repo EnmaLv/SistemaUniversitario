@@ -323,10 +323,10 @@
                             class="group flex items-center gap-3 px-3 py-1.5 rounded-full {{ $navHoverBg }} transition-all border border-white/10 focus:outline-none">
                             <div class="text-right">
                                 <div class="text-sm font-semibold text-white leading-tight">
-                                    {{ Auth::user()?->persona?->nombre_persona ?? (Auth::user()?->nombres ?? Auth::user()?->name ?? 'Usuario') }}
+                                    {{ Auth::user()?->persona?->nombre_persona ?? (Auth::user()?->nombres ?? (Auth::user()?->name ?? 'Usuario')) }}
                                 </div>
                                 <div class="text-xs text-gray-300 leading-tight">
-                                    {{ ucfirst(Auth::user()->role ?? 'Usuario') }}
+                                    {{ Auth::user()?->roles?->pluck('nombre')->filter()->join(', ') ?: 'Usuario' }}
                                 </div>
                             </div>
 

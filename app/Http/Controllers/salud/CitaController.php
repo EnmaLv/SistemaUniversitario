@@ -26,7 +26,7 @@ class CitaController extends Controller
         $user = Auth::user();
         abort_if(!$user, 403);
 
-        if ($user->tieneRol(['psicologo', 'administrador'])) {
+        if ($user->tieneRol('psicologo')) {
             $citas = Cita::obtenerCitasGlobales();
             return view('admin.psicologia.maestros.citas.index', compact('citas'));
         }
@@ -216,7 +216,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
+        $this->verificarPsicologoDueno($cita);
 
         $avances = \Illuminate\Support\Facades\DB::table('avances_sesion')->orderBy('nombre', 'asc')->get();
         $estadosAnimo = \Illuminate\Support\Facades\DB::table('estado_animos')->orderBy('valor', 'asc')->get();
@@ -465,19 +465,39 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
 
-        abort_if(!$user || (!$user->tieneRol('paciente') && !$user->tieneRol('psicologo') && !$user->tieneRol('administrador')), 403);
+        abort_if(
+            !$user
+            || (!$user->tieneRol('paciente')
+                && !$user->tieneRol('psicologo')),
+            403,
+            'No autorizado para ver esta cita.'
+        );
 
-        if ($user->tieneRol('administrador')) return;
+        // Comparaciones explícitas con cast a int para evitar mismatch string/int
+        $userId          = (int) $user->id_usuario;
+        $citaUserId      = (int) $cita->user_id;
+        $citaPsicologoId = $cita->psicologo_id ? (int) $cita->psicologo_id : null;
 
-        if ($user->tieneRol('paciente') && $cita->user_id !== $user->id_usuario) {
-            abort(403);
-        }
-
-        if ($user->tieneRol(['psicologo', 'administrador'])) {
-            if ($cita->psicologo_id && $cita->psicologo_id !== $user->id_usuario && $cita->estado !== 'pendiente') {
-                abort(403);
+        // Paciente: solo sus propias citas
+        if ($user->tieneRol('paciente')) {
+            if ($citaUserId !== $userId) {
+                abort(403, 'No puedes ver citas de otros pacientes.');
             }
+            return;
         }
+
+        // Psicólogo: sus propias citas siempre; citas ajenas solo si están pendientes
+        if ($user->tieneRol('psicologo')) {
+            $esMismoPsicologo = ($citaPsicologoId === $userId);
+            $esPendiente      = ($cita->estado === 'pendiente');
+
+            if (!$esMismoPsicologo && !$esPendiente) {
+                abort(403, 'Esta cita no te pertenece.');
+            }
+            return;
+        }
+
+        abort(403);
     }
 
     public function updatePriority(Request $request, $citaId)
@@ -487,7 +507,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
+        $this->verificarPsicologoDueno($cita);
 
         $validated = $request->validate([
             'prioridad' => 'required|string|max:50',
@@ -522,8 +542,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
-
+        $this->verificarPsicologoDueno($cita);
         $marcarRealizada = ($cita->estado === 'confirmada');
         $isManual = ($cita->motivo === 'Nota de Evolución (Manual)');
         $requireFields = $marcarRealizada && !$isManual;
@@ -668,8 +687,8 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
 
+        $this->verificarPsicologoDueno($cita);
         $validated = request()->validate([
             'motivo_rechazo' => 'nullable|string|max:1000',
         ]);
@@ -689,10 +708,13 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || (!$user->tieneRol('paciente') && !$user->tieneRol('administrador')), 403);
 
-        if (!$user->tieneRol('administrador') && $cita->user_id !== $user->id_usuario) {
-            abort(403);
+        $this->verificarPsicologoDueno($cita);
+        if (
+            !$user->tieneRol('psicologo')
+            && (int) $cita->user_id !== (int) $user->id_usuario
+        ) {
+            abort(403, 'No puedes ver esta cita.');
         }
 
         [$isPass, $message] = Cita::cancelar($cita->id, $user->id_usuario, $request->input('motivo_cancelacion'));
@@ -714,8 +736,8 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
 
+        $this->verificarPsicologoDueno($cita);
         $validated = $request->validate([
             'motivo_cancelacion' => 'nullable|string|max:1000',
         ]);
@@ -735,8 +757,8 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
 
+        $this->verificarPsicologoDueno($cita);
         [$isPass, $message] = Cita::posponer($cita->id, $user->id_usuario);
 
         return response()->json([
@@ -752,8 +774,8 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
 
+        $this->verificarPsicologoDueno($cita);
         $validated = $request->validate([
             'fecha' => 'required|date',
             'bloque' => 'required|string|max:255',
@@ -776,8 +798,8 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
 
+        $this->verificarPsicologoDueno($cita);
         $fecha = $request->input('fecha');
         if (!$fecha) {
             return response()->json(['status' => 'error', 'message' => 'La fecha es obligatoria']);
@@ -798,10 +820,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || (!$user->tieneRol(['psicologo', 'administrador']) && !$user->tieneRol('administrador')), 403);
-        if ($user->tieneRol(['psicologo', 'administrador']) && $cita->psicologo_id !== $user->id_usuario) {
-            abort(403);
-        }
+        $this->verificarPsicologoDueno($cita); 
 
         $validated = $request->validate([
             'fecha' => 'required|date',
@@ -830,8 +849,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
-
+        $this->verificarPsicologoDueno($cita);
         if ($cita->estado !== 'confirmada') {
             return response()->json([
                 'status' => 'error',
@@ -862,11 +880,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || (!$user->tieneRol(['psicologo', 'administrador']) && !$user->tieneRol('administrador')), 403);
-
-        if ($user->tieneRol(['psicologo', 'administrador']) && $cita->psicologo_id !== $user->id_usuario) {
-            abort(403);
-        }
+        $this->verificarPsicologoDueno($cita);
 
         [$isPass, $message] = Cita::marcarNoAsistio($cita->id);
 
@@ -915,6 +929,27 @@ class CitaController extends Controller
         return response()->json($citas);
     }
 
+    private function verificarPsicologoDueno($cita, ?string $mensaje = null): void
+    {
+        /** @var Usuario $user */
+        $user = Auth::user();
+
+        abort_if(
+            !$user || !$user->tieneRol('psicologo'),
+            403,
+            $mensaje ?? 'No autorizado.'
+        );
+
+        $userId   = (int) $user->id_usuario;
+        $citaPsi  = $cita->psicologo_id ? (int) $cita->psicologo_id : null;
+
+        abort_if(
+            $citaPsi !== $userId,
+            403,
+            $mensaje ?? 'Esta cita no te pertenece.'
+        );
+    }
+
     public function enviarPropuesta($citaId)
     {
         $cita = Cita::obtenerDetalle($citaId);
@@ -922,8 +957,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
-
+        $this->verificarPsicologoDueno($cita);
         [$isPass, $message] = Cita::enviarPropuesta($cita->id);
 
         return response()->json([
@@ -939,7 +973,8 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol('paciente') || $cita->user_id !== $user->id_usuario, 403);
+        abort_if(!$user || !$user->tieneRol('paciente'), 403, 'No autorizado.');
+        abort_if((int) $cita->user_id !== (int) $user->id_usuario, 403, 'Esta cita no te pertenece.');
 
         $validated = $request->validate([
             'opcion' => 'required|in:cualquier_dia,sugerencia_aceptada,rechazada,aceptada',
@@ -969,7 +1004,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
+        $this->verificarPsicologoDueno($cita);
         abort_if($cita->estado !== 'realizada', 400, 'La constancia solo se puede generar de citas realizadas.');
         abort_if($cita->motivo === 'Nota de Evolución (Manual)', 400, 'No se puede generar constancia de asistencia para notas manuales.');
 
@@ -998,7 +1033,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
+        $this->verificarPsicologoDueno($cita);
         abort_if($cita->motivo !== 'Nota de Evolución (Manual)', 400, 'Solo se pueden eliminar notas de evolución creadas manualmente.');
 
         $cita->update(['status' => 0]);
@@ -1013,7 +1048,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol(['psicologo', 'administrador']) || $cita->psicologo_id !== $user->id_usuario, 403);
+        $this->verificarPsicologoDueno($cita);
 
         [$isPass, $message] = Cita::ocultarMensajeCancelacion($citaId);
 

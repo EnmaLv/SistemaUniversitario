@@ -16,17 +16,23 @@ class CheckMenuPermission
             return $next($request);
         }
 
+        // Admin / Secretaria → acceso total
         foreach ($user->roles ?? [] as $r) {
-            if (isset($r->nombre) && in_array(mb_strtolower($r->nombre), ['administrador', 'secretaria de bienestar'])) {
+            $nombreRol = mb_strtolower($r->nombre ?? '');
+            $slugRol   = mb_strtolower($r->slug ?? '');
+            if (
+                in_array($nombreRol, ['administrador', 'secretaria de bienestar'], true)
+                || in_array($slugRol, ['administrador', 'secretaria-de-bienestar'], true)
+            ) {
                 return $next($request);
             }
         }
 
+        // Rutas siempre permitidas
         $allowedPaths = [
             'admin/configuracion/master-key',
             'admin/configuracion/master-key/verify',
         ];
-        $routeName = $request->route() ? $request->route()->getName() : null;
         $allowedRouteNames = [
             'admin.configuracion.master_key.form',
             'admin.configuracion.master_key.verify',
@@ -35,58 +41,41 @@ class CheckMenuPermission
             'admin.becas.lapsos.avanzar',
         ];
 
+        $routeName   = $request->route() ? $request->route()->getName() : null;
         $currentPath = ltrim($request->path(), '/');
+
         if (in_array($currentPath, $allowedPaths) || ($routeName && in_array($routeName, $allowedRouteNames))) {
             return $next($request);
         }
 
-        $rolePatterns = collect($user->roles)->pluck('menu_permissions')->flatten()->filter()->unique()->values()->all();
+        // ─── Permisos efectivos ───
+        $rolePermissions = collect($user->roles)
+            ->pluck('menu_permissions')
+            ->flatten()
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
-        $menu = config('adminlte.menu', []);
-        $keyToPatterns = [];
-        $collector = function ($items) use (&$collector, &$keyToPatterns) {
-            foreach ($items as $it) {
-                if (isset($it['submenu']) && is_array($it['submenu'])) {
-                    $collector($it['submenu']);
-                }
-                $key = $it['key'] ?? null;
-                $patterns = [];
-                if (!empty($it['active']) && is_array($it['active'])) {
-                    $patterns = array_merge($patterns, $it['active']);
-                }
-                if (!empty($it['url'])) {
-                    $patterns[] = ltrim($it['url'], '/');
-                }
-                if (!empty($it['route'])) {
-                    $patterns[] = $it['route'];
-                }
-                if ($key && ! empty($patterns)) {
-                    $keyToPatterns[$key] = array_values(array_unique($patterns));
-                }
-            }
-        };
-        $collector($menu);
-
-        $expandedRolePatterns = [];
-        foreach ($rolePatterns as $p) {
-            if (isset($keyToPatterns[$p])) {
-                foreach ($keyToPatterns[$p] as $pat) {
-                    $expandedRolePatterns[] = $pat;
-                }
-            } else {
-                $expandedRolePatterns[] = $p;
-            }
-        }
-        $rolePatterns = array_values(array_unique($expandedRolePatterns));
-        $extra = is_array($user->extra_permissions ?? null) ? $user->extra_permissions : (is_string($user->extra_permissions) ? json_decode($user->extra_permissions, true) : []);
+        $extra     = is_array($user->extra_permissions ?? null)
+            ? $user->extra_permissions
+            : (is_string($user->extra_permissions ?? null) ? json_decode($user->extra_permissions, true) : []);
         $userAllow = $extra['allow'] ?? [];
-        $userDeny = $extra['deny'] ?? [];
+        $userDeny  = $extra['deny'] ?? [];
 
-        $expandUser = function ($arr) use ($keyToPatterns) {
+        // ─── Mapa key → rutas (config nuevo) ───
+        $keyToPatterns = config('menu_routes', []);
+
+        // Expande keys a patrones de ruta.
+        // Si una key no está mapeada, se usa tal cual como patrón
+        // (útil para keys que literalmente son nombres de ruta).
+        $expand = function (array $arr) use ($keyToPatterns): array {
             $out = [];
             foreach ($arr as $p) {
                 if (isset($keyToPatterns[$p])) {
-                    foreach ($keyToPatterns[$p] as $pat) $out[] = $pat;
+                    foreach ($keyToPatterns[$p] as $pat) {
+                        $out[] = $pat;
+                    }
                 } else {
                     $out[] = $p;
                 }
@@ -94,42 +83,31 @@ class CheckMenuPermission
             return array_values(array_unique($out));
         };
 
-        $userAllow = $expandUser($userAllow);
-        $userDeny = $expandUser($userDeny);
+        $rolePatterns = $expand($rolePermissions);
+        $userAllow    = $expand($userAllow);
+        $userDeny     = $expand($userDeny);
 
-        $path = ltrim($request->path(), '/');
-        $routeName = $request->route() ? $request->route()->getName() : null;
-
+        // Deny gana siempre
         foreach ($userDeny as $p) {
-            if (Str::is($p, $path) || ($routeName && Str::is($p, $routeName))) {
+            if (Str::is($p, $currentPath) || ($routeName && Str::is($p, $routeName))) {
                 abort(403);
             }
         }
 
+        // Allow específico del usuario
         foreach ($userAllow as $p) {
-            if (Str::is($p, $path) || ($routeName && Str::is($p, $routeName))) {
+            if (Str::is($p, $currentPath) || ($routeName && Str::is($p, $routeName))) {
                 return $next($request);
             }
         }
 
-        if (! empty($rolePatterns)) {
-            foreach ($rolePatterns as $p) {
-                if (Str::is($p, $path) || ($routeName && Str::is($p, $routeName))) {
-                    return $next($request);
-                }
-
-                if (Str::is($p . '*', $path) || ($routeName && Str::is($p . '*', $routeName))) {
-                    return $next($request);
-                }
-
-                if (Str::contains($path, $p) || ($routeName && Str::contains($routeName, $p))) {
-                    return $next($request);
-                }
+        // Permisos heredados del rol
+        foreach ($rolePatterns as $p) {
+            if (Str::is($p, $currentPath) || ($routeName && Str::is($p, $routeName))) {
+                return $next($request);
             }
-
-            abort(403);
         }
 
-        return $next($request);
+        abort(403);
     }
 }

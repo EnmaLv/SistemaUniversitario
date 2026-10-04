@@ -37,6 +37,7 @@ class AdminMasterKeyController extends Controller
         if ($user->verifyMasterKey($request->input('master_key'))) {
             session()->forget('pending_admin_id');
             Auth::loginUsingId($user->id_usuario ?? $user->id);
+            $request->session()->regenerate();
             $destino = (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($user->id_usuario ?? $user->id);
             return redirect()->intended($destino);
         }

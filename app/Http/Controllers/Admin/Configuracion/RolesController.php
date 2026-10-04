@@ -28,8 +28,9 @@ class RolesController extends Controller
 
     public function create()
     {
-        $menu = config('adminlte.menu', []);
+        $menu    = config('menu_permissions', []);
         $modulos = Modulo::where('activo', 1)->get();
+
         return view('admin.configuracion.roles.create', compact('menu', 'modulos'));
     }
 
@@ -70,12 +71,13 @@ class RolesController extends Controller
 
     public function edit($id)
     {
-        $rol = Rol::findOrFail($id);
-        $menu = config('adminlte.menu', []);
+        $rol     = Rol::findOrFail($id);
+        $menu    = config('menu_permissions', []);
         $modulos = Modulo::where('activo', 1)->get();
 
         $protected = ['Empleado', 'Obrero', 'Administrador'];
         $isProtected = in_array(strtolower($rol->nombre ?? ''), array_map('strtolower', $protected));
+
         return view('admin.configuracion.roles.edit', compact('rol', 'menu', 'modulos', 'isProtected'));
     }
 
@@ -99,19 +101,13 @@ class RolesController extends Controller
         ]);
 
         if (($rol->nombre ?? '') === 'Administrador') {
-            $menu = config('adminlte.menu', []);
+            // El rol admin obtiene TODOS los permisos declarados en el config
             $all = [];
-            $collector = function ($items) use (&$collector, &$all) {
-                foreach ($items as $it) {
-                    if (isset($it['submenu'])) {
-                        $collector($it['submenu']);
-                    } else {
-                        $val = $it['key'] ?? ($it['url'] ?? ($it['route'] ?? null));
-                        if ($val) $all[] = $val;
-                    }
+            foreach (config('menu_permissions', []) as $group) {
+                foreach (array_keys($group['items'] ?? []) as $key) {
+                    $all[] = $key;
                 }
-            };
-            $collector($menu);
+            }
             $data['menu_permissions'] = array_values(array_unique($all));
         } else {
             $data['menu_permissions'] = array_values($data['menu_permissions'] ?? []);
@@ -122,23 +118,29 @@ class RolesController extends Controller
                     $data['menu_permissions'][] = 'admin/modulos/seleccionar';
                 }
             } else {
-                $data['menu_permissions'] = array_values(array_diff($data['menu_permissions'], ['admin/modulos/seleccionar']));
+                $data['menu_permissions'] = array_values(
+                    array_diff($data['menu_permissions'], ['admin/modulos/seleccionar'])
+                );
             }
         }
 
         $rol->update([
-            'nombre' => $data['nombre'],
-            'descripcion' => $data['descripcion'],
-            'menu_permissions' => $data['menu_permissions']
+            'nombre'           => $data['nombre'],
+            'descripcion'      => $data['descripcion'],
+            'menu_permissions' => $data['menu_permissions'],
         ]);
 
         $rol->modulos()->sync($request->input('modulos', []));
 
-        if (auth()->user() && method_exists(auth()->user(), 'roles') && auth()->user()->roles->contains('id_rol', $rol->id_rol)) {
+        if (auth()->user()
+            && method_exists(auth()->user(), 'roles')
+            && auth()->user()->roles->contains('id_rol', $rol->id_rol)) {
             session()->forget(['modulos_permitidos', 'menu_permissions_user', 'es_admin']);
         }
 
-        return redirect()->route('admin.configuracion.roles.index')->with('success', 'Rol actualizado exitosamente');
+        return redirect()
+            ->route('admin.configuracion.roles.index')
+            ->with('success', 'Rol actualizado exitosamente');
     }
 
     public function destroy($id)

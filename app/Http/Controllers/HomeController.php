@@ -5,16 +5,20 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\ExchangeRates;
 use App\Models\Rol;
+use App\Models\Usuario;
 use App\Models\Becas\JornadaBeca;
-use App\Models\Becas\Beneficio;
 use App\Models\Becas\SolicitudBeca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\Salud\PsicologiaHomeService;
 use App\Services\Salud\SaludHomeService;
 use App\Services\Transporte\TransporteHomeService;
 use App\Services\Comedor\ComedorHomeService;
 use App\Services\becas\BecasHomeService;
+use App\Models\salud\Cita;
+
 class HomeController extends Controller
 {
     protected $psicologiaService;
@@ -28,31 +32,91 @@ class HomeController extends Controller
         SaludHomeService $saludService,
         TransporteHomeService $transporteService,
         ComedorHomeService $comedorService,
-        BecasHomeService $becasService,
+        BecasHomeService $becasService
     ) {
         $this->middleware('auth');
-        $this->psicologiaService     = $psicologiaService;
-        $this->saludService          = $saludService;
-        $this->transporteService     = $transporteService;
-        $this->comedorService        = $comedorService;
-        $this->becasService          = $becasService;
+        $this->psicologiaService = $psicologiaService;
+        $this->saludService      = $saludService;
+        $this->transporteService = $transporteService;
+        $this->comedorService    = $comedorService;
+        $this->becasService      = $becasService;
     }
 
     public function index()
     {
+        $guardUser = Auth::user();
+        $user = Usuario::query()->findOrFail(Auth::id());
+        $guardSnapshot = [
+            'id' => $guardUser?->getAuthIdentifier(),
+        ];
+
+        if ($guardUser instanceof Usuario) {
+            $guardSnapshot += [
+                'persona_id' => $guardUser->id_persona,
+                'persona_relation_loaded' => $guardUser->relationLoaded('persona'),
+                'persona_relation_id' => $guardUser->relationLoaded('persona')
+                    ? $guardUser->getRelation('persona')?->id_persona
+                    : null,
+                'roles_relation_loaded' => $guardUser->relationLoaded('roles'),
+                'roles' => $guardUser->relationLoaded('roles')
+                    ? $guardUser->getRelation('roles')->pluck('nombre')->all()
+                    : null,
+            ];
+        }
+
+        $user->load(['persona', 'roles']);
+        Auth::guard()->setUser($user);
+        $userId = $user->id_usuario;
+        $permisosAntes = [
+            'usuario_id' => session('permisos_usuario_id'),
+            'es_admin' => session('es_admin'),
+            'modulos' => session('modulos_permitidos'),
+            'menu' => session('menu_permissions_user'),
+        ];
+
+        (new \App\AdminLTE\Filters\ModuleFilter())->asegurarSesion($userId);
+
+        Log::info('Home access diagnostic', [
+            'usuario' => [
+                'guard_id' => $guardUser?->getAuthIdentifier(),
+                'id' => $userId,
+                'username' => $user->username,
+                'id_perfil' => $user->id_perfil,
+                'role_legacy' => $user->getAttribute('role'),
+            ],
+            'guard_user_before_refresh' => $guardSnapshot,
+            'roles_eloquent_activos' => $user->roles()
+                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug'])
+                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug])
+                ->values()
+                ->all(),
+            'roles_pivote_incluyendo_borrados' => DB::table('rol_usuario')
+                ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
+                ->where('rol_usuario.id_usuario', $userId)
+                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug', 'rol.deleted_at'])
+                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug, 'deleted_at' => $role->deleted_at])
+                ->all(),
+            'permisos_sesion_antes' => $permisosAntes,
+            'permisos_sesion_despues' => [
+                'usuario_id' => session('permisos_usuario_id'),
+                'es_admin' => session('es_admin'),
+                'modulos' => session('modulos_permitidos'),
+                'menu' => session('menu_permissions_user'),
+            ],
+        ]);
+
         $psicologiaData = $this->psicologiaService->getPacienteData();
         $saludData      = $this->saludService->getDashboardData();
         $transporteData = $this->transporteService->getDashboardData();
         $comedorData    = $this->comedorService->getDashboardData();
         $becasData      = $this->becasService->getDashboardData();
+        $psicologiaAdminData = null;
+        if ($user->tieneRol(['administrador', 'secretaria de bienestar'])) {
+            $psicologiaAdminData = $this->construirPsicologiaAdminData();
+        }
         $administracionData = ['secciones' => $this->construirResumenAdministracion()];
 
-        $user     = Auth::user();
         $roleName = $this->resolveRoleName($user);
-
-        if (is_null(session('modulos_permitidos')) || is_null(session('menu_permissions_user'))) {
-            (new \App\AdminLTE\Filters\ModuleFilter)->transform(['key' => 'init_check']);
-        }
 
         if ($roleName && strtolower($roleName) === 'obrero') {
             return redirect()->route('admin.movimientos.registro_comida.index');
@@ -70,25 +134,23 @@ class HomeController extends Controller
         $jornadasRenovables = $this->obtenerJornadasRenovables($user, $jornadasActivas);
 
         $ultimaTasa = ExchangeRates::latest()->first();
+
         $resumenGeneral = is_null(session('modulo_activo'))
             ? $this->construirResumenGeneral()
             : null;
 
-        return view(
-            'home',
-            array_merge([
-                'variacion_dolar' => $ultimaTasa?->variacion,
-                'tasa_actual'     => $ultimaTasa?->tasa,
-                'visibleModules'  => $visibleModules,
-                'saludData'       => $saludData,
-                'resumenGeneral'  => $resumenGeneral,
-                'transporteData'  => $transporteData,
-                'comedorData'     => $comedorData,
-                'becasData'       => $becasData,
-                'administracionData' => $administracionData,
-                'psicologiaData'       => $psicologiaData
-            ])
-        );
+        return view('home', array_merge([
+            'variacion_dolar' => $ultimaTasa?->variacion,
+            'tasa_actual'     => $ultimaTasa?->tasa,
+            'visibleModules'  => $visibleModules,
+            'saludData'       => $saludData,
+            'resumenGeneral'  => $resumenGeneral,
+            'transporteData'  => $transporteData,
+            'comedorData'     => $comedorData,
+            'becasData'       => $becasData,
+            'psicologiaAdminData' => $psicologiaAdminData,
+            'administracionData' => $administracionData,
+        ], $psicologiaData));
     }
 
     public function becasEstadisticas(Request $request)
@@ -132,15 +194,134 @@ class HomeController extends Controller
         return response()->json(['resumen' => $data['resumen']]);
     }
 
-    protected function resolveRoleName($user): ?string
+    protected function construirPsicologiaAdminData(): array
     {
-        $roleName = $user->role ?? null;
+        $fechaInicio = Carbon::now()->subDays(30)->toDateString();
+        $fechaFin    = Carbon::now()->toDateString();
 
-        if (empty($roleName) && method_exists($user, 'roles')) {
-            $roleName = optional($user->roles()->first())->nombre;
+        return [
+            'fechaInicio'  => $fechaInicio,
+            'fechaFin'     => $fechaFin,
+            'avances'      => DB::table('avances_sesion')
+                ->where('status', 1)
+                ->orderBy('nombre', 'asc')
+                ->get(),
+            'estadosAnimo' => DB::table('estado_animos')
+                ->where('status', 1)
+                ->orderBy('valor', 'asc')
+                ->get(),
+        ];
+    }
+
+    public function psicologiaEstadisticasGenerales(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->tieneRol(['administrador', 'secretaria de bienestar'])) {
+            abort(403, 'Solo administradores pueden acceder a las estadísticas generales.');
         }
 
-        return $roleName;
+        $fechaInicio = $request->input('start_date', Carbon::now()->subDays(30)->toDateString());
+        $fechaFin    = $request->input('end_date', Carbon::now()->toDateString());
+
+        $estado          = $request->input('estado');
+        $avanceId        = $request->input('avance_id');
+        $estadoAnimoId   = $request->input('estado_animo_id');
+        $prioridad       = $request->input('prioridad');
+        $perfilAcademico = $request->input('perfil_academico');
+        $pnf             = $request->input('pnf');
+
+        // null → agrega TODOS los psicólogos
+        $citas = Cita::obtenerEstadisticas(
+            null, $fechaInicio, $fechaFin,
+            $estado, $avanceId, $estadoAnimoId,
+            $prioridad, $perfilAcademico, $pnf
+        );
+
+        $resumen = Cita::obtenerResumenEstadistico($citas, $fechaInicio, $fechaFin, null);
+        $resumen['por_estado'] = $citas->groupBy('estado')->map->count()->toArray();
+
+        $porPsicologo = Cita::obtenerEstadisticasPorPsicologo($fechaInicio, $fechaFin);
+        $resumen['total_psicologos_activos'] = count($porPsicologo);
+
+        return response()->json([
+            'resumen'       => $resumen,
+            'por_psicologo' => $porPsicologo,
+            'fechaInicio'   => $fechaInicio,
+            'fechaFin'      => $fechaFin,
+        ]);
+    }
+
+    protected function construirResumenAdministracion(): array
+    {
+        return [
+            [
+                'titulo'      => 'Catálogos maestros',
+                'icon'        => 'fa-database',
+                'descripcion' => 'Datos base que alimentan todos los módulos del sistema.',
+                'funcionalidades' => [
+                    'Sedes donde opera la institución',
+                    'Categorías y tipos de producto',
+                    'Catálogo general de productos',
+                    'Proveedores que abastecen al sistema',
+                    'Programas nacionales de formación (PNF)',
+                    'Envases primarios para medicamentos',
+                ],
+            ],
+            [
+                'titulo'      => 'Operaciones',
+                'icon'        => 'fa-arrow-right-arrow-left',
+                'descripcion' => 'Registros de actividad diaria que alimentan el inventario.',
+                'funcionalidades' => [
+                    'Compras: registro y seguimiento del ciclo completo',
+                    'Movimientos: entradas y salidas del inventario',
+                    'Lotes: control de vencimientos y trazabilidad',
+                    'Registro diario del comedor',
+                    'Inventario disponible por sede',
+                    'Historial completo de operaciones',
+                ],
+            ],
+            [
+                'titulo'      => 'Configuración del sistema',
+                'icon'        => 'fa-sliders',
+                'descripcion' => 'Usuarios, roles, permisos y ajustes generales de la plataforma.',
+                'funcionalidades' => [
+                    'Gestión de usuarios y sus datos',
+                    'Roles con permisos por módulo',
+                    'Permisos granulares por acción',
+                    'Configuración general del sistema',
+                    'Gestor de archivos cargados',
+                    'Clave maestra de administración',
+                ],
+            ],
+            [
+                'titulo'      => 'Salud del sistema',
+                'icon'        => 'fa-heart-pulse',
+                'descripcion' => 'Catálogos auxiliares y datos de referencia transversal.',
+                'funcionalidades' => [
+                    'PNF y perfiles institucionales',
+                    'Tipos de producto y categorías médicas',
+                    'Consultorios y horarios de atención',
+                    'Enfermedades y estados de ánimo',
+                    'Estados, municipios y localidades',
+                    'Prioridades y avances clínicos',
+                ],
+            ],
+        ];
+    }
+
+    protected function resolveRoleName($user): ?string
+    {
+        if (! $user || ! method_exists($user, 'roles')) {
+            return null;
+        }
+
+        $roles = $user->roles;
+        $privilegedRole = $roles->first(function ($role) {
+            return in_array(mb_strtolower($role->nombre ?? ''), ['administrador', 'secretaria de bienestar'], true);
+        });
+
+        return $privilegedRole?->nombre ?? $roles->first()?->nombre;
     }
 
     protected function construirModulosVisibles(?string $roleName): array
@@ -227,70 +408,11 @@ class HomeController extends Controller
         return $renovables;
     }
 
-
-    protected function construirResumenAdministracion(): array
-    {
-        return [
-            [
-                'titulo'      => 'Catálogos maestros',
-                'icon'        => 'fa-database',
-                'descripcion' => 'Datos base que alimentan todos los módulos del sistema.',
-                'funcionalidades' => [
-                    'Sedes donde opera la institución',
-                    'Categorías y tipos de producto',
-                    'Catálogo general de productos',
-                    'Proveedores que abastecen al sistema',
-                    'Programas nacionales de formación (PNF)',
-                    'Envases primarios para medicamentos',
-                ],
-            ],
-            [
-                'titulo'      => 'Operaciones',
-                'icon'        => 'fa-arrow-right-arrow-left',
-                'descripcion' => 'Registros de actividad diaria que alimentan el inventario.',
-                'funcionalidades' => [
-                    'Compras: registro y seguimiento del ciclo completo',
-                    'Movimientos: entradas y salidas del inventario',
-                    'Lotes: control de vencimientos y trazabilidad',
-                    'Registro diario del comedor',
-                    'Inventario disponible por sede',
-                    'Historial completo de operaciones',
-                ],
-            ],
-            [
-                'titulo'      => 'Configuración del sistema',
-                'icon'        => 'fa-sliders',
-                'descripcion' => 'Usuarios, roles, permisos y ajustes generales de la plataforma.',
-                'funcionalidades' => [
-                    'Gestión de usuarios y sus datos',
-                    'Roles con permisos por módulo',
-                    'Permisos granulares por acción',
-                    'Configuración general del sistema',
-                    'Gestor de archivos cargados',
-                    'Clave maestra de administración',
-                ],
-            ],
-            [
-                'titulo'      => 'Salud del sistema',
-                'icon'        => 'fa-heart-pulse',
-                'descripcion' => 'Catálogos auxiliares y datos de referencia transversal.',
-                'funcionalidades' => [
-                    'PNF y perfiles institucionales',
-                    'Tipos de producto y categorías médicas',
-                    'Consultorios y horarios de atención',
-                    'Enfermedades y estados de ánimo',
-                    'Estados, municipios y localidades',
-                    'Prioridades y avances clínicos',
-                ],
-            ],
-        ];
-    }
-
     protected function construirResumenGeneral(): array
     {
-        $permitidos = session('modulos_permitidos', []);
-        $esAdmin    = session('es_admin', false);
-        $puedeVer   = fn($key) => $esAdmin || in_array($key, $permitidos);
+        $permitidos = is_array(session('modulos_permitidos')) ? session('modulos_permitidos') : [];
+        $esAdmin    = (bool) (session('es_admin', false) ?? false);
+        $puedeVer   = fn($key) => $esAdmin || in_array($key, $permitidos, true);
 
         $catalogo = [
             'comedor' => [
