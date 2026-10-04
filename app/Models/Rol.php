@@ -17,6 +17,7 @@ class Rol extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
+        'slug',
         'menu_permissions',
     ];
 

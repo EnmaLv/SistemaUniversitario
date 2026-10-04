@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Configuracion;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Models\Rol;
 use App\Models\Usuario;
 use App\Models\Modulo;
@@ -36,8 +37,11 @@ class RolesController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge(['slug' => Str::slug($request->input('nombre', ''))]);
+
         $data = $request->validate([
             'nombre' => 'required|string|unique:rol,nombre',
+            'slug' => 'required|string|unique:rol,slug',
             'descripcion' => 'nullable|string',
             'menu_permissions' => 'nullable|array',
             'modulos' => 'nullable|array',
@@ -60,6 +64,7 @@ class RolesController extends Controller
 
         $rol = Rol::create([
             'nombre' => $data['nombre'],
+            'slug' => $data['slug'],
             'descripcion' => $data['descripcion'],
             'menu_permissions' => $data['menu_permissions']
         ]);
@@ -89,8 +94,11 @@ class RolesController extends Controller
             return back()->withErrors(['roles' => 'El rol ' . $rol->nombre . ' está protegido y no puede editarse.']);
         }
 
+        $request->merge(['slug' => Str::slug($request->input('nombre', ''))]);
+
         $data = $request->validate([
             'nombre' => 'required|string|unique:rol,nombre,' . $rol->id_rol . ',id_rol',
+            'slug' => 'required|string|unique:rol,slug,' . $rol->id_rol . ',id_rol',
             'descripcion' => 'nullable|string',
             'menu_permissions' => 'nullable|array',
             'modulos' => 'nullable|array',
@@ -126,15 +134,18 @@ class RolesController extends Controller
 
         $rol->update([
             'nombre'           => $data['nombre'],
+            'slug'             => $data['slug'],
             'descripcion'      => $data['descripcion'],
             'menu_permissions' => $data['menu_permissions'],
         ]);
 
         $rol->modulos()->sync($request->input('modulos', []));
 
-        if (auth()->user()
+        if (
+            auth()->user()
             && method_exists(auth()->user(), 'roles')
-            && auth()->user()->roles->contains('id_rol', $rol->id_rol)) {
+            && auth()->user()->roles->contains('id_rol', $rol->id_rol)
+        ) {
             session()->forget(['modulos_permitidos', 'menu_permissions_user', 'es_admin']);
         }
 
