@@ -22,41 +22,30 @@ class InventarioSedeLoteController extends Controller
     public function show($id, Request $request)
     {
         $buscar = $request->input('buscar');
-        $activo = $request->input('estado');
+        $activo = $request->has('estado') ? (int) $request->input('estado') : 1;
 
-        $query = InventarioSedeLote::query();
+        $query = InventarioSedeLote::query()
+            ->where('sede_id', $id)
+            ->with(['lote.producto', 'lote.proveedor']);
 
-        // Buscar por lote o producto
         if ($buscar) {
-            $query->where(function($q) use ($buscar) {
-                // Código de lote
-                $q->whereHas('lote', function($l) use ($buscar){
+            $query->where(function ($q) use ($buscar) {
+                $q->whereHas('lote', function ($l) use ($buscar) {
                     $l->where('codigo_lote', 'like', "%{$buscar}%");
-                });
-
-                // Nombre del producto
-                $q->orWhereHas('lote.producto', function($p) use ($buscar){
+                })->orWhereHas('lote.producto', function ($p) use ($buscar) {
                     $p->where('nombre', 'like', "%{$buscar}%");
                 });
             });
         }
 
-        // Filtrar por estado
-        if ($activo !== null && $activo !== '') {
-            $query->where('estado', (int)$activo);
-        }
+        $query->whereHas('lote', function ($l) use ($activo) {
+            $l->where('estado', $activo);
+        });
 
-        // Filtrar por sede específica
-        $query->where('sede_id', $id);
-
-        // Ejecutar consulta
-        $sede = $query
-            ->with(['lote.producto', 'lote.proveedor'])
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $sede = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         $sedes = Sede::withCount('inventarioSedeLotes')->get();
 
-        return view('admin.movimientos.sedes_lotes.show', compact('sede', 'sedes', 'buscar'));
+        return view('admin.movimientos.sedes_lotes.show', compact('sede', 'sedes', 'buscar', 'activo'));
     }
 }

@@ -26,7 +26,7 @@ class LoteController extends Controller
                 $unidadId = $lote->producto->unidad_id;
 
                 foreach ($lote->inventarioSedeLotes as $inv) {
-                    if ($inv->cantidad_convertida <= 0) {
+                    if ($inv->cantidad_gramos <= 0) {
                         continue;
                     }
 
@@ -37,14 +37,14 @@ class LoteController extends Controller
                         'tipo_movimiento' => 'MERMA',
                         'unidad_id'       => $unidadId,
                         'cantidad'        => 0,
-                        'cantidad_convertida' => $inv->cantidad_convertida,
+                        'cantidad_gramos' => $inv->cantidad_gramos,
                         'fecha'           => now(),
                         'observaciones'   => 'Producto vencido – merma manual'
                     ]);
 
                     $inv->update([
                         'cantidad'        => 0,
-                        'cantidad_convertida' => 0
+                        'cantidad_gramos' => 0
                     ]);
                 }
 
@@ -80,7 +80,7 @@ class LoteController extends Controller
                     ->selectRaw('COALESCE(SUM(cantidad), 0)')
                     ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
                     ->where('inventario_sede_lotes.sede_id', $sedeId),
-                'cantidad_convertida_sede' => DB::table('inventario_sede_lotes')
+                'cantidad_gramos_sede' => DB::table('inventario_sede_lotes')
                     ->selectRaw('COALESCE(SUM(cantidad_convertida), 0)')
                     ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
                     ->where('inventario_sede_lotes.sede_id', $sedeId)

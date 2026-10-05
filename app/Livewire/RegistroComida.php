@@ -402,7 +402,7 @@ class RegistroComida extends Component
                         $tomarGramos = min($pendiente, $dispGramos);
 
                         $inv->cantidad_convertida -= $tomarGramos;
-                        $inv->cantidad = max(0, $inv->cantidad_convertida / $pesoUnidad);
+                        $inv->cantidad = max(0, (int) floor($inv->cantidad_convertida / $pesoUnidad));
                         $inv->save();
 
                         $lote = $inv->lote;
