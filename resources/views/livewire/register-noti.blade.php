@@ -22,6 +22,39 @@
                 </p>
             </div>
 
+            @if ($horarioPermitido && $tipoComidaLabel)
+                <div class="px-5 py-3 border-b flex items-center justify-between gap-3"
+                    style="border-color: var(--border-color); background-color: rgba(16,185,129,0.05);">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            @if ($tipoComidaActual === 'desayuno')
+                                <i class="fas fa-mug-saucer text-sm"></i>
+                            @elseif ($tipoComidaActual === 'almuerzo')
+                                <i class="fas fa-utensils text-sm"></i>
+                            @else
+                                <i class="fas fa-moon text-sm"></i>
+                            @endif
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                                Turno activo
+                            </p>
+                            <p class="text-sm font-extrabold truncate" style="color: var(--text-main);">
+                                {{ $tipoComidaLabel }} · {{ $ventanaActual }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                            Disponibles
+                        </p>
+                        <p class="text-sm font-extrabold" style="color: var(--text-main);">
+                            {{ $racionesDisponibles }} / {{ $racionesServidas }}
+                        </p>
+                    </div>
+                </div>
+            @endif
+
             <div class="p-5">
 
                 <form wire:submit.prevent="save" autocomplete="off">
@@ -39,7 +72,7 @@
                                 style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                 <i class="fas fa-id-card text-sm"></i>
                             </span>
-                            <input type="tel" id="cedula" wire:model="cedula" @disabled(!$receta_diario || !$enableInput)
+                            <input type="tel" id="cedula" wire:model="cedula" @disabled(!$enableInput)
                                 placeholder="Ej: 12345678" maxlength="8" inputmode="numeric" autocomplete="off"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);">
@@ -87,29 +120,75 @@
                     </div>
                 @endif
 
-                @if (!$receta_diario)
+                @if (!$horarioPermitido)
+                    <div
+                        class="mt-4 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 flex items-start gap-2">
+                        <i class="fas fa-clock text-amber-600 dark:text-amber-400 mt-0.5 text-sm"></i>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                                Fuera del horario de servicio
+                            </p>
+                            <p class="mt-1 text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                                {{ $mensajeHorario }}
+                            </p>
+
+                            @if ($proximoHorario)
+                                <div class="mt-3 pt-3 border-t border-amber-200/60 dark:border-amber-800/60">
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                                        Próxima comida
+                                    </p>
+                                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                                        <strong>{{ $proximoHorario['label'] }}</strong>
+                                        a las {{ $proximoHorario['hora'] }}
+                                        @if (!empty($proximoHorario['manana']))
+                                            (mañana)
+                                        @endif
+                                    </p>
+                                </div>
+                            @endif
+
+                            <div class="mt-3 pt-3 border-t border-amber-200/60 dark:border-amber-800/60 space-y-1.5">
+                                <p class="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-1.5">
+                                    Horarios de servicio
+                                </p>
+                                <div class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+                                    <i class="fas fa-mug-saucer text-[10px] w-3"></i>
+                                    <span><strong>Desayuno:</strong> 9:00 – 10:00</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+                                    <i class="fas fa-utensils text-[10px] w-3"></i>
+                                    <span><strong>Almuerzo:</strong> 12:00 – 14:00</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
+                                    <i class="fas fa-moon text-[10px] w-3"></i>
+                                    <span><strong>Cena:</strong> 18:00 – 20:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @elseif (!$receta_diario)
                     <div
                         class="mt-4 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 flex items-start gap-2">
                         <i class="fas fa-utensils text-amber-600 dark:text-amber-400 mt-0.5 text-sm"></i>
                         <div>
                             <p class="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                                Sin registro de comidas
+                                Sin recetas registradas
                             </p>
                             <p class="mt-1 text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                                Debes registrar el menú del día antes de poder pasar lista de estudiantes.
+                                Debes registrar las recetas de <strong>{{ $tipoComidaLabel }}</strong> antes de poder pasar lista de estudiantes.
                             </p>
                         </div>
                     </div>
-                @elseif (!$enableInput)
+                @elseif (!$enableInput && $racionesDisponibles <= 0)
                     <div
                         class="mt-4 p-3 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 flex items-start gap-2">
                         <i class="fas fa-lock text-rose-600 dark:text-rose-400 mt-0.5 text-sm"></i>
                         <div>
                             <p class="text-xs font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">
-                                Jornada cerrada
+                                Raciones agotadas
                             </p>
                             <p class="mt-1 text-xs text-rose-700 dark:text-rose-400 leading-relaxed">
-                                El día ya fue finalizado. No se pueden registrar más estudiantes.
+                                Ya se sirvieron todas las raciones de {{ $tipoComidaLabel }} para hoy.
                             </p>
                         </div>
                     </div>

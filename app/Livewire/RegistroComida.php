@@ -16,11 +16,61 @@ class RegistroComida extends Component
     public $showNotification = false;
     public $notification = ['type' => 'success', 'message' => ''];
     public $desayuno_registrado = false;
-    public $horarioPermitido;
+    public $horarioPermitido = false;
     public $alertInventario = null;
     public $alertLimite = null;
     public $inventarioError = null;
     public $inventarioAdvertencias = [];
+
+    public $tipoComidaActual = null;
+    public $tipoComidaLabel = '';
+    public $ventanaActual = null;
+    public $mensajeHorario = null;
+    public $proximoHorario = null;
+
+    protected function getVentanas(): array
+    {
+        return [
+            'desayuno' => ['inicio' => '09:00', 'fin' => '10:00', 'label' => 'Desayuno'],
+            'almuerzo' => ['inicio' => '12:00', 'fin' => '14:00', 'label' => 'Almuerzo'],
+            'cena'     => ['inicio' => '18:00', 'fin' => '20:00', 'label' => 'Cena'],
+        ];
+    }
+
+    protected function determinarTipoComidaActual(): ?string
+    {
+        $hora = now()->format('H:i');
+        foreach ($this->getVentanas() as $tipo => $ventana) {
+            if ($hora >= $ventana['inicio'] && $hora <= $ventana['fin']) {
+                return $tipo;
+            }
+        }
+        return null;
+    }
+
+    protected function calcularProximoHorario(): ?array
+    {
+        $horaActual = now()->format('H:i');
+        $ventanas = $this->getVentanas();
+
+        foreach ($ventanas as $tipo => $ventana) {
+            if ($horaActual < $ventana['inicio']) {
+                return [
+                    'tipo'  => $tipo,
+                    'label' => $ventana['label'],
+                    'hora'  => $ventana['inicio'],
+                ];
+            }
+        }
+
+        $primerTipo = array_key_first($ventanas);
+        return [
+            'tipo'  => $primerTipo,
+            'label' => $ventanas[$primerTipo]['label'],
+            'hora'  => $ventanas[$primerTipo]['inicio'],
+            'manana' => true,
+        ];
+    }
 
     public function updated($property)
     {
@@ -51,26 +101,53 @@ class RegistroComida extends Component
 
     public function mount()
     {
-        $this->checkDesayunoStatus();
-        if (empty($this->desayunos_agregados)) {
+        $this->checkEstadoActual();
+        if (!$this->desayuno_registrado && empty($this->desayunos_agregados)) {
             $this->addDesayuno();
         }
     }
 
-    public function checkDesayunoStatus()
+    public function checkEstadoActual()
     {
-        $hoy = now()->toDateString();
-        $registroHoy = DetalleRegistroDiario::whereDate('created_at', $hoy)->exists();
+        $hoy  = now()->toDateString();
+        $tipo = $this->determinarTipoComidaActual();
+        $this->tipoComidaActual = $tipo;
 
-        $hora = now()->format('H:i');
-        $this->horarioPermitido = $hora >= '00:00' && $hora <= '23:59';
-        $this->desayuno_registrado = $registroHoy;
+        $ventanas = $this->getVentanas();
 
-        if ($this->desayuno_registrado) {
-            $detalles = DetalleRegistroDiario::whereDate('created_at', $hoy)->get(['receta_id', 'cantidad_servido']);
-            $this->desayunos_agregados = $detalles->map(function ($item) {
-                return ['receta_id' => $item->receta_id, 'cantidad' => $item->cantidad_servido];
-            })->toArray();
+        if ($tipo) {
+            $this->tipoComidaLabel  = $ventanas[$tipo]['label'];
+            $this->ventanaActual    = $ventanas[$tipo]['inicio'] . ' - ' . $ventanas[$tipo]['fin'];
+            $this->mensajeHorario   = null;
+            $this->proximoHorario   = null;
+            $this->horarioPermitido = true;
+        } else {
+            $this->tipoComidaLabel  = '';
+            $this->ventanaActual    = null;
+            $this->mensajeHorario   = 'Actualmente no hay ninguna comida activa.';
+            $this->proximoHorario   = $this->calcularProximoHorario();
+            $this->horarioPermitido = false;
+        }
+
+        $this->desayuno_registrado = false;
+        $this->desayunos_agregados = [];
+
+        if ($tipo) {
+            $registroActual = DetalleRegistroDiario::whereDate('created_at', $hoy)
+                ->where('tipo_comida', $tipo)
+                ->exists();
+
+            $this->desayuno_registrado = $registroActual;
+
+            if ($registroActual) {
+                $detalles = DetalleRegistroDiario::whereDate('created_at', $hoy)
+                    ->where('tipo_comida', $tipo)
+                    ->get(['receta_id', 'cantidad_servido']);
+
+                $this->desayunos_agregados = $detalles->map(function ($item) {
+                    return ['receta_id' => $item->receta_id, 'cantidad' => $item->cantidad_servido];
+                })->toArray();
+            }
         }
     }
 
@@ -100,10 +177,6 @@ class RegistroComida extends Component
         $this->inventarioAdvertencias = [];
     }
 
-    /**
-     * Resuelve la cantidad por unidad (en gramos base) de un ingrediente.
-     * Intenta varios campos en orden, devuelve 0 si no hay ninguno válido.
-     */
     protected function resolverCantidadPorUnidad($ingrediente): float
     {
         $candidatos = [
@@ -213,14 +286,22 @@ class RegistroComida extends Component
         $this->inventarioAdvertencias = [];
         $this->resetErrorBag();
 
-        $hora = now()->format('H:i');
-        if (!($hora >= '00:00' && $hora <= '23:59')) {
-            $this->addError('hora', 'El registro no está permitido en este horario.');
+        $tipo = $this->determinarTipoComidaActual();
+
+        if (!$tipo) {
+            $this->addError('horario', $this->mensajeHorario ?? 'Actualmente no hay ninguna comida activa.');
             return;
         }
 
-        if (DetalleRegistroDiario::whereDate('created_at', now()->toDateString())->exists()) {
-            $this->addError('existe', 'El registro de comidas de hoy ya fue guardado.');
+        $this->tipoComidaActual = $tipo;
+        $this->tipoComidaLabel  = $this->getVentanas()[$tipo]['label'];
+
+        $yaRegistrado = DetalleRegistroDiario::whereDate('created_at', now()->toDateString())
+            ->where('tipo_comida', $tipo)
+            ->exists();
+
+        if ($yaRegistrado) {
+            $this->addError('existe', "El registro de {$this->tipoComidaLabel} de hoy ya fue guardado.");
             return;
         }
 
@@ -279,6 +360,7 @@ class RegistroComida extends Component
 
                 DetalleRegistroDiario::create([
                     'receta_id'        => $recetaId,
+                    'tipo_comida'      => $tipo,
                     'cantidad_servido' => $cantidadServido,
                     'fecha'            => now(),
                 ]);
@@ -342,7 +424,7 @@ class RegistroComida extends Component
                             'cantidad'            => $cantidadEnUnidad,
                             'cantidad_convertida' => $tomarGramos,
                             'fecha'               => now(),
-                            'observaciones'       => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones)",
+                            'observaciones'       => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
                         ]);
 
                         $pendiente -= $tomarGramos;
@@ -360,7 +442,7 @@ class RegistroComida extends Component
             $this->inventarioError = null;
             $this->inventarioAdvertencias = $advertencias;
 
-            $mensajeExito = 'Los registros de comida del día fueron guardados correctamente.';
+            $mensajeExito = "El registro de {$this->tipoComidaLabel} fue guardado correctamente.";
             if (!empty($advertencias)) {
                 $mensajeExito .= ' Algunos ingredientes no se descontaron (ver avisos).';
             }

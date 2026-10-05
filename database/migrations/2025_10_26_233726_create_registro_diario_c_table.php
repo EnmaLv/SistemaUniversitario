@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('id_persona_pnf')
                 ->constrained('persona_pnf', 'id_persona_pnf')
                 ->onDelete('cascade');
+            $table->string('tipo_comida', 20)->default('desayuno');
             $table->date('fecha_regis_diario_c');
             $table->time('hora')->nullable();
             $table->timestamps();
