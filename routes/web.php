@@ -275,11 +275,7 @@ Route::middleware(['auth'])->group(function () {
 
         //Rutas para Consultas
         Route::get('consultas/reportes', [ReporteController::class, 'index'])->name('admin.consultas.reportes.index');
-
-        //Rutas para Configuracion
-        Route::get('configuracion', [AdminController::class, 'index'])->name('admin.configuracion.index');
-
-
+        
         /* Rutas de direcciones */
 
         Route::get('/estado', function () {

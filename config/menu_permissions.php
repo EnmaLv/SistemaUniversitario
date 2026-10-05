@@ -84,7 +84,6 @@ return [
             'categorias_medicamentos'  => 'Categorías de medicamentos',
             'medicamentos'             => 'Medicamentos',
             'enfermedades'             => 'Enfermedades',
-            'enfermedades_salud'       => 'Enfermedades (Salud)',
             'consultorios'             => 'Consultorios',
             'horarios'                 => 'Horarios de atención',
             'consultas'                => 'Consultas médicas',

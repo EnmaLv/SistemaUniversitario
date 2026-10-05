@@ -1,452 +1,636 @@
-<div class="rd-wrapper">
-    <!-- Formulario de registro diario -->
-    <div class="grid grid-cols-1 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] gap-3 items-start">
-        <!-- Left: Cedula buscador -->
-        <div class="rd-card rd-card-search rounded-2xl border shadow-sm overflow-hidden" style="background-color: var(--bg-card); border-color: var(--border-color);">
-            <div class="rd-card-headerr border-b px-5 py-4" style="border-color: var(--border-color);">
-                <h2 class="rd-title">Registro Diario</h2>
-                <p class="rd-sub">Escanea el código de barras del carnet para registrar la entrada</p>
+<div class="space-y-5" x-data="{
+    finalizarModal: false,
+    abrirModal() { this.finalizarModal = true },
+    cerrarModal() { this.finalizarModal = false }
+}" @open-modal.window="abrirModal()"
+    @finalizar-dia-guardado.window="cerrarModal()">
+
+    @include('components.alert')
+
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] gap-5 items-start">
+
+        <div class="rounded-2xl border shadow-sm overflow-hidden lg:sticky lg:top-20"
+            style="background-color: var(--bg-card); border-color: var(--border-color);">
+
+            <div class="px-5 py-4 border-b" style="border-color: var(--border-color);">
+                <h2 class="text-base font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                    <i class="fas fa-qrcode text-red-700 dark:text-red-500"></i>
+                    Registro diario
+                </h2>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    Escanea el carnet del estudiante para registrar su entrada al comedor.
+                </p>
             </div>
 
-            <div class="rd-card-body px-5 py-5">
-                <form wire:submit.prevent="save" class="rd-search-form" autocomplete="off">
-                    @csrf
-                    <div style="display: flex;gap: 10px;align-items: center; justify-content: space-between;">
-                        <label for="cedula" class="sr-only">Cédula</label>
-                        <input type="tel" id="cedula" wire:model.defer="cedula" @disabled(!$receta_diario || !$enableInput)
-                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 @error('cedula') rd-input-error @enderror" placeholder="Ej: 12345678"
-                            maxlength="8" inputmode="numeric" autofocus @if (!$enableInput)
-                                style="cursor: not-allowed;"
-                            @endif/>
+            <div class="p-5">
 
-                        <button class="rd-btn rd-btn-primary inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:bg-red-900" type="submit" @disabled(!$enableInput)
-                         aria-label="Buscar"  @if(!$enableInput) style="opacity: .8; cursor: not-allowed;" @endif>Buscar</button>
+                <form wire:submit.prevent="save" autocomplete="off">
+                    @csrf
+
+                    <label for="cedula"
+                        class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                        Cédula del estudiante
+                    </label>
+
+                    <div class="flex items-stretch gap-2">
+                        <div class="flex-1 flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('cedula') border-rose-400 @enderror"
+                            style="border-color: var(--border-color);">
+                            <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
+                                style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
+                                <i class="fas fa-id-card text-sm"></i>
+                            </span>
+                            <input type="tel" id="cedula" wire:model="cedula" @disabled(!$receta_diario || !$enableInput)
+                                placeholder="Ej: 12345678" maxlength="8" inputmode="numeric" autocomplete="off"
+                                class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main);">
+                        </div>
+
+                        <button type="submit" @disabled(!$enableInput)
+                            class="inline-flex items-center justify-center rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-4 shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                            title="Buscar y registrar">
+                            <i class="fas fa-check"></i>
+                        </button>
                     </div>
-                    <small class="text-muted d-block mt-1">
-                        Solo números, máximo 8 dígitos. <br />
-                        También puedes escribir el número manualmente si es necesario.
-                    </small>
+
+                    <p
+                        class="mt-2 text-[11px] text-gray-400 dark:text-gray-500 flex items-start gap-1.5 leading-relaxed">
+                        <i class="fas fa-info-circle mt-0.5 opacity-60"></i>
+                        <span>Solo números, máximo 8 dígitos. El campo mantiene el foco para lectores QR.</span>
+                    </p>
 
                     @error('cedula')
-                        <div class="rd-error mt-2">{{ $message }}</div>
+                        <div
+                            class="mt-3 p-2.5 rounded-lg border border-rose-200 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 flex items-start gap-2">
+                            <i class="fas fa-exclamation-circle text-rose-600 dark:text-rose-400 mt-0.5 text-xs"></i>
+                            <p class="text-xs font-semibold text-rose-700 dark:text-rose-300">{{ $message }}</p>
+                        </div>
                     @enderror
                 </form>
 
-                <!-- Notificación como toast (Livewire controla showNotification) -->
-                <div class="rd-toast-holder">
-                    @if ($showNotification && isset($notification['message']))
-                        <div class="rd-toast rd-toast-{{ $notification['type'] ?? 'info' }}" role="status"
-                            aria-live="polite">
-                            <div class="rd-toast-body">
-                                @php
-                                    if ($notification['type'] == 'success') {
-                                        $type = 'exito';
-                                    } else {
-                                        $type = 'error';
-                                    }
-                                @endphp
-                                <strong>{{ ucfirst($type) }}</strong>
-                                <span>{{ $notification['message'] }}</span>
-                            </div>
-                            <button class="rd-toast-close" aria-label="Cerrar"
-                                wire:click="$set('showNotification', false)">×</button>
+                @if ($limiteAlcanzado)
+                    <div
+                        class="mt-4 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 flex items-start gap-2">
+                        <i class="fas fa-triangle-exclamation text-amber-600 dark:text-amber-400 mt-0.5 text-sm"></i>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                                Límite alcanzado
+                            </p>
+                            <p class="mt-1 text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                                {{ $limiteAlcanzado }}
+                            </p>
                         </div>
-                    @endif
-                </div>
+                        <button type="button" wire:click="$set('limiteAlcanzado', null)"
+                            class="w-6 h-6 rounded flex items-center justify-center text-amber-500 hover:text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors shrink-0"
+                            title="Descartar">
+                            <i class="fas fa-times text-[10px]"></i>
+                        </button>
+                    </div>
+                @endif
+
+                @if (!$receta_diario)
+                    <div
+                        class="mt-4 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 flex items-start gap-2">
+                        <i class="fas fa-utensils text-amber-600 dark:text-amber-400 mt-0.5 text-sm"></i>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                                Sin registro de comidas
+                            </p>
+                            <p class="mt-1 text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                                Debes registrar el menú del día antes de poder pasar lista de estudiantes.
+                            </p>
+                        </div>
+                    </div>
+                @elseif (!$enableInput)
+                    <div
+                        class="mt-4 p-3 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 flex items-start gap-2">
+                        <i class="fas fa-lock text-rose-600 dark:text-rose-400 mt-0.5 text-sm"></i>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">
+                                Jornada cerrada
+                            </p>
+                            <p class="mt-1 text-xs text-rose-700 dark:text-rose-400 leading-relaxed">
+                                El día ya fue finalizado. No se pueden registrar más estudiantes.
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($showNotification && isset($notification['message']))
+                    @php
+                        $type = $notification['type'] ?? 'info';
+                        $palette = [
+                            'success' => [
+                                'border' => 'border-emerald-200 dark:border-emerald-800/60',
+                                'bg' => 'bg-emerald-50 dark:bg-emerald-950/30',
+                                'icon' => 'fa-circle-check text-emerald-600 dark:text-emerald-400',
+                                'label' => 'text-emerald-800 dark:text-emerald-300',
+                                'text' => 'text-emerald-700 dark:text-emerald-400',
+                            ],
+                            'danger' => [
+                                'border' => 'border-rose-200 dark:border-rose-800/60',
+                                'bg' => 'bg-rose-50 dark:bg-rose-950/30',
+                                'icon' => 'fa-circle-xmark text-rose-600 dark:text-rose-400',
+                                'label' => 'text-rose-800 dark:text-rose-300',
+                                'text' => 'text-rose-700 dark:text-rose-400',
+                            ],
+                        ][$type] ?? [
+                            'border' => 'border-sky-200 dark:border-sky-800/60',
+                            'bg' => 'bg-sky-50 dark:bg-sky-950/30',
+                            'icon' => 'fa-circle-info text-sky-600 dark:text-sky-400',
+                            'label' => 'text-sky-800 dark:text-sky-300',
+                            'text' => 'text-sky-700 dark:text-sky-400',
+                        ];
+                    @endphp
+
+                    <div wire:key="notif-{{ md5($notification['message'] . microtime()) }}" x-data="{ visible: true }"
+                        x-init="setTimeout(() => { visible = false;
+                            $wire.set('showNotification', false); }, 4500)" x-show="visible" x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="mt-4 p-3 rounded-xl border {{ $palette['border'] }} {{ $palette['bg'] }} flex items-start gap-2">
+                        <i class="fas {{ $palette['icon'] }} mt-0.5 text-sm"></i>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-black uppercase tracking-wider {{ $palette['label'] }}">
+                                {{ $type === 'success' ? 'Registro exitoso' : 'Aviso' }}
+                            </p>
+                            <p class="mt-1 text-xs {{ $palette['text'] }} leading-relaxed break-words">
+                                {{ $notification['message'] }}
+                            </p>
+                        </div>
+                        <button type="button" @click="visible = false; $wire.set('showNotification', false)"
+                            class="w-6 h-6 rounded flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity shrink-0">
+                            <i class="fas fa-times text-[10px]"></i>
+                        </button>
+                    </div>
+                @endif
             </div>
 
-            <div class="rd-card-footer text-center">
-                <small class="text-muted">Mantén tu carnet a mano</small>
+            <div class="px-5 py-3 border-t"
+                style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                <p class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+                    <i class="fas fa-shield-alt opacity-60"></i>
+                    Mantén tu carnet a mano y verifica los datos antes de confirmar.
+                </p>
             </div>
         </div>
 
-        <!-- Right: Buscador, filtros y tabla -->
-        <div class="rd-card rd-card-list rounded-2xl border shadow-sm overflow-hidden" style="height: 100%; background-color: var(--bg-card); border-color: var(--border-color);">
-            <div class="rd-card-header rd-header-space" style="display:flex; flex-direction:column; align-items:stretch; gap:16px;">
-                <div class="shrink-0">
-                    <h3 class="rd-title-sm">Registros</h3>
-                    <p class="rd-sub-sm">Últimos movimientos del día</p>
-                </div>
+        <div class="rounded-2xl border shadow-sm overflow-hidden"
+            style="background-color: var(--bg-card); border-color: var(--border-color);">
 
-                <div class="flex items-center justify-between gap-6">
-                    <div class="rd-actions shrink-0" style="display:flex; align-items:center; gap:8px; min-width:0;">
-                    <form action="{{ route('admin.movimientos.registro_diario.index') }}" method="GET"
-                        class="rd-search-inline flex items-center gap-2 shrink-0" style="flex-wrap:nowrap;" role="search">
-                        <input name="buscar" value="{{ $buscar ?? '' }}" class="rd-search-input h-10 w-56"
-                            placeholder="Nombre, apellido o PNF" id="search" />
-                        <button class="rd-btn rd-btn-primary inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-red-900" type="submit" title="Buscar">
-                            <i class="fas fa-search text-xs"></i>
-                            <span>Buscar</span>
-                        </button>
-                    </form>
+            <div class="p-5 sm:p-6 border-b" style="border-color: var(--border-color);">
 
-                    <button class="rd-icon-btn h-10 w-10 shrink-0"   aria-expanded="false"
-                        aria-controls="filters" title="Filtros">
-                        <i class="fas fa-filter"></i>
-                    </button>
+                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+
+                    <div class="shrink-0">
+                        <h3 class="text-lg font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                            <i class="fas fa-list-check text-red-700 dark:text-red-500"></i>
+                            Registros del día
+                        </h3>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Historial de ingresos al comedor.
+                        </p>
                     </div>
 
-                    <div class="flex shrink-0 items-center justify-end gap-2">
-                    @if ($showBtnFinalizar)
-                        <button class="rd-btn rd-btn-alter order-3 inline-flex h-10 min-w-[136px] items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-red-900" title="Finalizar Día" id="finalizarDia">
-                            <i class="fas fa-sun"></i>
-                            Finalizar Dia
-                        </button>  
-                    @endif
-                    <!-- Modal Finalizar Dia -->
-                    <div wire:ignore.self class="hidden rd-modal-overlay" id="modalFinalizarDia" tabindex="-1" aria-hidden="true">
-                        <div class="rd-modal-dialog">
-                            <div class="modal-content rd-card rd-modal-content border-0">
-                                <div class="modal-header border-bottom-0 pt-4 px-4">
-                                    <h5 class="rd-title-sm" style="font-size: 1.25rem;">
-                                        <i class="fas fa-file-signature me-2" style="color: var(--color-tertiary);"></i>
-                                        Reporte de Cierre de Jornada
-                                    </h5>
-                                </div>
-                                
-                                <form wire:submit.prevent="finalizarDia" id="formFinalizarDia">
-                                    <div class="modal-body px-4">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="rd-label mb-2">Fecha de Cierre</label>
-                                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group bg-light">
-                                                    <span><i class="fas fa-calendar-day"></i></span>
-                                                    <input wire:model="fecha" type="date" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" id="fechaCierre" readonly >
-                                                </div>
-                                            </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
 
-                                            <div class="col-md-6 mb-3">
-                                                <label class="rd-label mb-2">Cantidad Sobrante</label>
-                                                <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
-                                                    <span><i class="fas fa-utensils"></i></span>
-                                                    <input wire:model="sobrante" type="number" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" id="cantidadSobrante" placeholder="0" min="0" required readonly>
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div class="relative flex-1 min-w-[200px] sm:w-64">
+                            <i
+                                class="fas fa-search absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none text-sm"></i>
+                            <input type="text" name="buscar" value="{{ $buscar }}"
+                                wire:model.live.debounce.400ms="buscar" placeholder="Nombre, apellido o PNF…"
+                                style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 transition-all placeholder-gray-400">
+                        </div>
 
-                                        <div class="mb-3">
-                                            <label class="rd-label mb-2">Motivo del Cierre</label>
-                                            <select wire:model="motivo" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input w-100" id="motivoCierre" >
-                                                <option value="">Seleccione el motivo...</option>
+                        <button type="button" x-data="{ open: false }"
+                            @click="open = !open; document.getElementById('filtros-diario').classList.toggle('hidden')"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition-all hover:bg-gray-50 dark:hover:bg-white/5 shrink-0"
+                            style="border-color: var(--border-color); color: var(--text-main);"
+                            title="Filtros por fecha">
+                            <i class="fas fa-filter text-xs"></i>
+                            <span class="hidden sm:inline">Fechas</span>
+                        </button>
 
-                                                <option value="Baja personal">Baja asistencia del personal operativo</option>
-                                                <option value="Suspension actividades">Suspensión de actividades académicas (paros, asambleas, elecciones)</option>
-                                                <option value="Horario reducido">Reducción de jornada académica</option>
-                                                <option value="Baja asistencia estudiantil">Baja asistencia estudiantil no prevista</option>
-                                                <option value="Cambio horario estudiantes">Cambio inesperado en horarios académicos</option>
-                                                <option value="Sobreestimacion demanda">Sobreestimación de la demanda diaria</option>
-                                                <option value="Entrega tardia">Entrega tardía de alimentos preparados</option>
-                                                <option value="Emergencia">Emergencia o contingencia (climática, sanitaria, seguridad)</option>
-                                                <option value="Otro">Otro (especificar en observaciones)</option>
-                                            </select>
-                                            @error('motivo')
-                                                <div class="text-danger small">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                        <a href="{{ route('admin.movimientos.registro_diario.export_excel', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 text-sm font-extrabold shadow-sm transition-all hover:bg-emerald-100 dark:hover:bg-emerald-950/50 active:scale-[0.98] shrink-0"
+                            target="_blank" rel="noopener" title="Exportar a Excel">
+                            <i class="fas fa-file-excel text-xs"></i>
+                            <span class="hidden sm:inline">Excel</span>
+                        </a>
 
-                                        <div class="mb-3">
-                                            <label class="rd-label mb-2">Acción Tomada con el Sobrante</label>
-                                            <div class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20-group">
-                                                <span><i class="fas fa-hand-holding-heart"></i></span>
-                                                <input wire:model="accion" type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input" id="accionTomada" placeholder="Ej: Donación, refrigeración, descarte..." >
-                                            </div>
-                                            @error('accion')
-                                                <div class="text-danger small">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
+                        <a href="{{ route('admin.movimientos.registro_diario.export_pdf', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 px-4 py-2.5 text-sm font-extrabold shadow-sm transition-all hover:bg-rose-100 dark:hover:bg-rose-950/50 active:scale-[0.98] shrink-0"
+                            target="_blank" rel="noopener" title="Exportar a PDF">
+                            <i class="fas fa-file-pdf text-xs"></i>
+                            <span class="hidden sm:inline">PDF</span>
+                        </a>
 
-                                    <div class="modal-footer border-top-0 pb-4 px-4 gap-2">
-                                        <button type="button" id="cancelarFinalizarDia"
-                                            class="rd-btn inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-700 px-4 py-2.5 text-sm font-extrabold text-red-400 transition hover:bg-red-950/50">
-                                            Cancelar
-                                        </button>
-                                        <button type="submit" id="btnConfirmarCierre"
-                                            class="rd-btn inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-800 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-red-900">
-                                            <i class="fas fa-save text-xs"></i> Guardar y Finalizar
-                                        </button>
-                                    </div>
-                                </form>
+                        @if ($showBtnFinalizar)
+                            <button type="button" @click="abrirModal()"
+                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-4 py-2.5 shadow-md transition-all active:scale-[0.98] shrink-0"
+                                title="Finalizar la jornada del día">
+                                <i class="fas fa-sun text-xs"></i>
+                                <span class="hidden sm:inline">Finalizar día</span>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
+                <div id="filtros-diario" class="hidden mt-4">
+                    <div class="rounded-xl border p-4"
+                        style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                            <div>
+                                <label
+                                    class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5">
+                                    Desde
+                                </label>
+                                <input type="date" wire:model.live="fecha_desde" max="{{ date('Y-m-d') }}"
+                                    style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 transition-all">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5">
+                                    Hasta
+                                </label>
+                                <input type="date" wire:model.live="fecha_hasta" max="{{ date('Y-m-d') }}"
+                                    style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 transition-all">
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button"
+                                    wire:click="$set('fecha_desde', '{{ date('Y-m-d') }}'); $set('fecha_hasta', '{{ date('Y-m-d') }}'); $set('buscar', '')"
+                                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition-all hover:bg-gray-50 dark:hover:bg-white/5"
+                                    style="border-color: var(--border-color); color: var(--text-main);">
+                                    <i class="fas fa-rotate-left text-xs"></i>
+                                    Limpiar
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    
-
-                    <div class="rd-export-group order-1 flex shrink-0 items-center gap-2" style="display:flex; flex-direction:row; align-items:center; gap:8px;">
-                        <a href="{{ route('admin.movimientos.registro_diario.export_excel', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
-                            class="rd-btn rd-btn-alter inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-emerald-700 bg-[#071b16] px-4 py-2.5 text-sm font-extrabold shadow-sm transition hover:bg-[#0a241d]"
-                            style="color: #34d399 !important;" title="Exportar Excel"><i class="fas fa-file-excel"
-                                style="color: #34d399 !important;"></i>
-                            Excel</a>
-
-                        <a href="{{ route('admin.movimientos.registro_diario.export_pdf', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
-                            class="rd-btn rd-btn-alter inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-red-700 bg-[#22090d] px-4 py-2.5 text-sm font-extrabold shadow-sm transition hover:bg-[#2d0b11]"
-                            style="color: #f87171 !important;" title="Exportar PDF"><i class="fas fa-file-pdf"
-                                style="color: #f87171 !important;"></i>
-                            PDF</a>
-                    </div>
-                    <span class="order-2 mx-2 h-10 w-px bg-red-900/60" aria-hidden="true"></span>
-                    </div>
-                </div> 
-            </div>
-
-            <div class="collapse" id="filters">
-                <div class="rd-filters rounded-2xl border p-3 shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
-                    <form action="{{ route('admin.movimientos.registro_diario.index') }}" method="GET"
-                        class="rd-filters-form">
-                        <div class="rd-filter-row">
-                            <label>Desde</label>
-                            <input type="date" name="fecha_desde" id="fecha_desde" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" max="{{ date('Y-m-d') }}"value="{{ request("fecha_desde") }}"/>
-                        </div>
-                        <div class="rd-filter-row">
-                            <label>Hasta</label>
-                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                                max="{{ date('Y-m-d') }}" value="{{ request("fecha_hasta") }}"/>
-                        </div>
-                        <div class="rd-filter-actions">
-                            <button class="rd-btn rd-btn-primary" type="submit">Aplicar</button>
-                            <button type="button" class="rd-btn rd-btn-default"
-                                onclick="window.location='{{ route('admin.movimientos.registro_diario.index') }}'">Limpiar</button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
-            <div class="rd-card-body rd-list-body p-0">
-                <div class="rd-list">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
-                                <th class="px-6 py-4 text-center" style="width: 80px;">#</th>
-                                <th class="px-6 py-4 text-center">Nombre</th>
-                                <th class="px-6 py-4 text-center">Apellido</th>
-                                <th class="px-6 py-4 text-center">PNF</th>
-                                <th class="px-6 py-4 text-center">Registrado</th>
-                                <th class="px-6 py-4 text-center" style="width: 140px;">Estado</th>
-                                <th class="px-6 py-4 text-center" style="width: 120px;">Acciones</th>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b text-[11px] font-black uppercase tracking-wider"
+                            style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                            <th class="px-6 py-4 text-center" style="width:80px; color: var(--text-main);">#</th>
+                            <th class="px-6 py-4 text-left" style="color: var(--text-main);">Estudiante</th>
+                            <th class="px-6 py-4 text-left" style="color: var(--text-main);">PNF</th>
+                            <th class="px-6 py-4 text-center" style="width:140px; color: var(--text-main);">Registrado
+                            </th>
+                            <th class="px-6 py-4 text-center" style="width:130px; color: var(--text-main);">Estado
+                            </th>
+                            <th class="px-6 py-4 text-center" style="width:100px; color: var(--text-main);">Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm font-medium">
+                        @forelse ($data as $registro)
+                            <x-table-row :id="$registro->id" class="border-b"
+                                style="border-color: var(--border-color);">
+
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center justify-center w-8 h-8 text-xs font-black rounded-lg border"
+                                        style="border-color: var(--border-color); color: var(--text-main);">
+                                        {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                                    </span>
+                                </td>
+
+                                <td class="px-6 py-4 whitespace-nowrap" style="color: var(--text-main);">
+                                    <div class="flex items-center gap-2.5">
+                                        <span
+                                            class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-500 flex items-center justify-center shrink-0">
+                                            <i class="fas fa-user text-xs"></i>
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="font-bold truncate">{{ $registro->nombre_persona }}</p>
+                                            <p class="text-[11px] text-gray-400 dark:text-gray-500 truncate">
+                                                {{ $registro->apellido_persona }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                    {{ $registro->nombre_pnf ?? '—' }}
+                                </td>
+
+                                <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                    <i class="far fa-calendar mr-1.5 opacity-60"></i>
+                                    {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                </td>
+
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                                        <i class="fas fa-check-circle"></i>
+                                        Aprobado
+                                    </span>
+                                </td>
+
+                                <x-table-actions :id="$registro->id" :show="false" :edit="false"
+                                    :toggle="false">
+                                    <a href="{{ route('admin.movimientos.registro_diario.show', $registro->id) }}"
+                                        onclick="event.stopPropagation()"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors"
+                                        title="Ver detalle">
+                                        <i class="fas fa-eye text-xs"></i>
+                                    </a>
+                                </x-table-actions>
+                            </x-table-row>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-16 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div
+                                            class="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800/60 flex items-center justify-center">
+                                            <i
+                                                class="fas fa-clipboard-list text-2xl text-gray-300 dark:text-gray-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold" style="color: var(--text-main);">
+                                                Sin registros
+                                            </p>
+                                            <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                                                @if ($buscar)
+                                                    No se encontraron registros para «{{ $buscar }}».
+                                                @else
+                                                    Aún no se ha registrado ningún ingreso en este período.
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody class="text-xs font-medium">
-                            @forelse ($data as $registro)
-                                <x-table-row :id="$registro->id" class="border-b" style="border-color: var(--border-color);">
-                                    <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
-                                            {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap font-bold" style="color: var(--text-main);">
-                                        {{ $registro->nombre_persona }}
-                                    </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
-                                        {{ $registro->apellido_persona }}
-                                    </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $registro->nombre_pnf }}
-                                    </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        <span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-[#071b16] border border-emerald-700 shadow-sm"
-                                            style="color: #34d399 !important;">
-                                            <i class="fas fa-check-circle" style="color: #34d399 !important;"></i> Aprobado
-                                        </span>
-                                    </td>
-                                    <x-table-actions :id="$registro->id" :show="false" :edit="false" :toggle="false">
-                                        <a href="{{ route('admin.movimientos.registro_diario.show', $registro->id) }}"
-                                            onclick="event.stopPropagation()"
-                                            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-500 hover:bg-sky-100 dark:hover:bg-sky-950/50 transition-colors"
-                                            title="Ver detalle">
-                                            <i class="fas fa-eye text-xs"></i>
-                                        </a>
-                                    </x-table-actions>
-                                </x-table-row>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
-                                        No hay registros
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="flex justify-center border-t p-4" style="border-color: var(--border-color);">
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if ($data->hasPages())
+                <div class="px-6 py-4 border-t flex justify-center"
+                    style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
                     {{ $data->onEachSide(1)->links('components.pagination-livewire') }}
                 </div>
+            @endif
+        </div>
+    </div>
+
+    <div x-show="finalizarModal" x-cloak x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background-color: rgba(0,0,0,0.65); backdrop-filter: blur(4px);" @click.self="cerrarModal()"
+        @keydown.escape.window="cerrarModal()">
+
+        <div class="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            style="background-color: var(--bg-card); border-color: var(--border-color);">
+
+            <div class="px-5 py-4 border-b flex items-center justify-between"
+                style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                <div>
+                    <h3 class="text-base font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                        <i class="fas fa-file-signature text-red-700 dark:text-red-500"></i>
+                        Reporte de cierre de jornada
+                    </h3>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Registra el sobrante del día y la acción tomada.
+                    </p>
+                </div>
+                <button type="button" @click="cerrarModal()"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shrink-0"
+                    title="Cerrar">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
             </div>
+
+            <form wire:submit.prevent="finalizarDia">
+                <div class="p-5 space-y-4">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                        <div>
+                            <label
+                                class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                                Fecha de cierre
+                            </label>
+                            <div class="flex items-stretch rounded-xl border overflow-hidden opacity-75"
+                                style="border-color: var(--border-color);">
+                                <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
+                                    style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
+                                    <i class="fas fa-calendar-day text-sm"></i>
+                                </span>
+                                <input wire:model="fecha" type="date" readonly
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none cursor-not-allowed">
+                            </div>
+                            @error('fecha')
+                                <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                                Raciones sobrantes
+                            </label>
+                            <div class="flex items-stretch rounded-xl border overflow-hidden opacity-75"
+                                style="border-color: var(--border-color);">
+                                <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
+                                    style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
+                                    <i class="fas fa-utensils text-sm"></i>
+                                </span>
+                                <input wire:model="sobrante" type="number" readonly min="0"
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                    class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none cursor-not-allowed">
+                            </div>
+                            @error('sobrante')
+                                <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                            Motivo del cierre
+                        </label>
+                        <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('motivo') border-rose-400 @enderror"
+                            style="border-color: var(--border-color);">
+                            <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
+                                style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
+                                <i class="fas fa-clipboard-list text-sm"></i>
+                            </span>
+                            <select wire:model="motivo"
+                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                <option value="">— Seleccione el motivo —</option>
+                                <option value="Baja personal">Baja asistencia del personal operativo</option>
+                                <option value="Suspension actividades">Suspensión de actividades académicas (paros,
+                                    asambleas, elecciones)</option>
+                                <option value="Horario reducido">Reducción de jornada académica</option>
+                                <option value="Baja asistencia estudiantil">Baja asistencia estudiantil no prevista
+                                </option>
+                                <option value="Cambio horario estudiantes">Cambio inesperado en horarios académicos
+                                </option>
+                                <option value="Sobreestimacion demanda">Sobreestimación de la demanda diaria</option>
+                                <option value="Entrega tardia">Entrega tardía de alimentos preparados</option>
+                                <option value="Emergencia">Emergencia o contingencia (climática, sanitaria, seguridad)
+                                </option>
+                                <option value="Otro">Otro (especificar en observaciones)</option>
+                            </select>
+                        </div>
+                        @error('motivo')
+                            <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                            Acción tomada con el sobrante
+                        </label>
+                        <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('accion') border-rose-400 @enderror"
+                            style="border-color: var(--border-color);">
+                            <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
+                                style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
+                                <i class="fas fa-hand-holding-heart text-sm"></i>
+                            </span>
+                            <input wire:model="accion" type="text"
+                                placeholder="Ej: Donación, refrigeración, descarte…"
+                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                        </div>
+                        @error('accion')
+                            <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="px-5 py-4 border-t flex items-center justify-end gap-3"
+                    style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                    <button type="button" @click="cerrarModal()"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                        style="border-color: var(--border-color); color: var(--text-main);">
+                        <i class="fas fa-times text-xs"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold shadow-md active:scale-[0.98] transition-all">
+                        <i class="fas fa-save text-xs"></i>
+                        Guardar y finalizar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-@push('js')
+@push('scripts')
     <script>
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('swal', data => {
-                console.log(data);
-                Swal.fire({
-                    title: data[0].title,
-                    text: data[0].text,
-                    icon: data[0].icon,
-                    confirmButtonText: 'Aceptar',
-                    timer: 5000,
-                    timerProgressBar: true,
-                });
-            });
-        });
-        document.addEventListener('livewire:initialized', () => {
-            let isNotificationVisible = false;
-            let hideTimeout = null;
+        document.addEventListener('livewire:init', () => {
 
-            @this.on('notify-saved', () => {
-                // Si ya hay una notificación visible, no hacer nada
-                if (isNotificationVisible) {
-                    return;
-                }
-
-                isNotificationVisible = true;
-
-                // Ocultar después de 3 segundos
-                hideTimeout = setTimeout(() => {
-                    @this.set('showNotification', false);
-                    isNotificationVisible = false;
-                }, 3000);
-            });
-
-            // Limpiar el estado cuando la notificación se oculta
-            @this.on('notify-hidden', () => {
-                isNotificationVisible = false;
-                if (hideTimeout) {
-                    clearTimeout(hideTimeout);
+            Livewire.on('swal', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: data.title,
+                        text: data.text,
+                        icon: data.icon,
+                        confirmButtonColor: '#991b1b',
+                        confirmButtonText: 'Aceptar',
+                        timer: 5000,
+                        timerProgressBar: true,
+                    });
+                } else {
+                    alert((data.title || '') + '\n\n' + (data.text || ''));
                 }
             });
 
-            Livewire.on('notify-inventario', () => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Inventario insuficiente',
-                    text: @this.get('alertInventario'),
-                });
+            Livewire.on('notify-limite', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+                const mensaje = data?.message || 'Se alcanzó el límite de raciones.';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Límite alcanzado',
+                        text: mensaje,
+                        confirmButtonColor: '#991b1b',
+                        confirmButtonText: 'Entendido',
+                    });
+                }
             });
 
-            Livewire.on('notify-limite', () => {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Límite alcanzado',
-                    text: @this.get('alertLimite'),
-                });
+            Livewire.on('finalizar-dia-guardado', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: data.icon || 'success',
+                        title: data.title || '¡Listo!',
+                        text: data.text || '',
+                        confirmButtonColor: '#991b1b',
+                        timer: 3500,
+                        timerProgressBar: true,
+                    });
+                } else {
+                    alert((data.title || '') + '\n\n' + (data.text || ''));
+                }
             });
         });
 
-        // Evento para el input de cédula
-        const inputCedula = document.getElementById('cedula');
-        const inputSearch = document.getElementById('search');
+        (function() {
+            function isTypingInAnotherField() {
+                const a = document.activeElement;
+                if (!a) return false;
+                const tag = a.tagName;
+                if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') return false;
+                return a.id !== 'cedula';
+            }
 
-        //No cargar el script si esta en blur
-        const bgBlur = document.querySelector(".rd-blur");
-        if (!bgBlur) {
-            if (inputCedula) {
-                let blockCedulaFocus = false;
-    
-                const focusCedulaSafely = () => {
-                    const isModalOpen = document.querySelector('#modalFinalizarDia.show');
-                    if (blockCedulaFocus || isModalOpen) return;
-                    inputCedula.focus({
-                        preventScroll: true
-                    });
-                };
-    
-                // Focus inicial
-                focusCedulaSafely();
-    
-                if (inputSearch) {
-                    inputSearch.addEventListener('focus', () => {
-                        blockCedulaFocus = true;
-                    });
-                    inputSearch.addEventListener('blur', () => {
-                        blockCedulaFocus = false;
-                        focusCedulaSafely();
-                    });
-                }
-    
-                // Escuchar click en el contenedor principal
-                const root = document.querySelector('.content-wrapper') || document.body;
-                root.addEventListener('click', (event) => {
-                    if (inputSearch && (event.target === inputSearch || inputSearch.contains(event.target))) {
-                        return;
-                    }
-                    focusCedulaSafely();
-                });
-    
-                // Re-enfocar cuando la ventana retorne, respetando el focus del search
-                window.addEventListener('focus', () => {
-                    focusCedulaSafely();
-                });
-                //Limites del input
-                inputCedula.addEventListener('input', function(e) {
-                    // Remover caracteres no numéricos
-                    this.value = this.value.replace(/[^0-9]/g, '');
-        
-                    // Limitar a 8 dígitos máximo
-                    if (this.value.length > 8) {
-                        this.value = this.value.slice(0, 8);
-                    }
+            function isModalOpen() {
+                const modal = document.querySelector('[x-show="finalizarModal"]');
+                if (!modal) return false;
+                return modal.getAttribute('style')?.includes('display: block') === true ||
+                    (modal.style.display !== 'none' && !modal.style.display);
+            }
+
+            function focusCedula() {
+                const cedula = document.getElementById('cedula');
+                if (!cedula || cedula.disabled) return;
+                if (isTypingInAnotherField()) return;
+                if (isModalOpen()) return;
+                cedula.focus({
+                    preventScroll: true
                 });
             }
-        }
 
+            document.addEventListener('DOMContentLoaded', () => setTimeout(focusCedula, 150));
+            document.addEventListener('livewire:navigated', () => setTimeout(focusCedula, 150));
 
-        const finalizarModal = document.getElementById('modalFinalizarDia');
-        document.addEventListener('DOMContentLoaded', () => {
-            //Script para el boton de finalizarDia
-            const finalizarBtn = document.querySelector('#finalizarDia')
-            if (!finalizarBtn || !finalizarModal) return;
-
-            finalizarBtn.addEventListener('click', function() {
-                //Mostramos una alerta de confirmacion
-                Swal.fire({
-                    title: '¿Estas seguro de finalizar el dia?',
-                    icon: 'warning',
-                    text: 'Al finalizar el dia, no podras registrar mas estudiantes',
-                    showCancelButton: true,
-                    confirmButtonText: 'Si, finalizar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        //emitimos el evento
-                        @this.openModal();
-                    }
-                });
+            document.addEventListener('click', (e) => {
+                const t = e.target;
+                if (!t) return;
+                if (t.closest('input, textarea, select, button, a, label, [contenteditable="true"]')) return;
+                focusCedula();
             });
 
-            const cerrarModal = () => {
-                finalizarModal.classList.add('hidden');
-                finalizarModal.setAttribute('aria-hidden', 'true');
-            };
+            window.addEventListener('focus', () => focusCedula());
 
-            document.querySelector('#cancelarFinalizarDia')?.addEventListener('click', cerrarModal);
-
-            // Escuchamos el evento que viene del servidor (PHP)
-            Livewire.on('openModal', () => {
-                finalizarModal.classList.remove('hidden');
-                finalizarModal.setAttribute('aria-hidden', 'false');
+            document.addEventListener('input', (e) => {
+                if (e.target && e.target.id === 'cedula') {
+                    let v = e.target.value.replace(/[^0-9]/g, '');
+                    if (v.length > 8) v = v.slice(0, 8);
+                    if (v !== e.target.value) e.target.value = v;
+                }
             });
-            
-            Livewire.on('finalizar-dia-guardado', (event) => {
-                const message = event[0] ?? event;
-                cerrarModal();
-                Swal.fire({
-                    icon: message.icon,
-                    title: message.title,
-                    text: message.text,
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            });
-        });
-
-
-
+        })();
     </script>
 @endpush

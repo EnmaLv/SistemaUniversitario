@@ -1,160 +1,219 @@
-@extends('layouts.app')
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="
-            background: var(--bg-card);
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-            border: 1px solid var(--border-color);
-         ">
+            @include('components.alert')
 
-        <!-- Texto principal -->
-        <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
-                Vista detallada del Registro
-            </h1>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                        Vista detallada del registro
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span>
+                        · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
+                </div>
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-muted);">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-
-        <!-- Imagen + Fecha -->
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600; font-size:0.95rem; color:var(--text-main);">
-                    {{ \Carbon\Carbon::now()->format('d/m/Y') }}
-                </span>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('admin.movimientos.registro_diario.index') }}"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                        style="border-color: var(--border-color); color: var(--text-main);">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Volver
+                    </a>
+                </div>
             </div>
 
-            <div
-                style="
-                width:46px;
-                height:46px;
-                border-radius:12px;
-                overflow:hidden;
-                box-shadow:0 4px 12px rgba(15,23,42,0.08);
-            ">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%; height:100%; object-fit:cover;">
-            </div>
-        </div>
+            @php
+                $edad = \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->age;
+            @endphp
 
-    </div>
-@stop
+            <div class="space-y-5">
 
-@php
-    //Formatear la edad para que se actualize dinamicamente
-    $edad = \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->age;
-@endphp
+                <div class="rounded-2xl border shadow-sm p-6 sm:p-8"
+                    style="background-color: var(--bg-card); border-color: var(--border-color);">
 
-@section('content')
-    <div class="registro-layout">
-        <section class="profile-hero rd-card">
-            <div class="profile-hero__content">
-                <p class="hero-eyebrow">Registro diario · {{ $registro->nombre_pnf }}</p>
-                <h2 class="hero-title">Ficha del estudiante</h2>
-                <p class="hero-text">
-                    <strong>
-                        {{ $registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona }}
-                    </strong>
-                    fue registrado en el sistema con la información detallada a continuación.
-                </p>
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
 
-            </div>
-
-            <div class="profile-hero__actions">
-                <a href="{{ url()->previous() }}" class="rd-btn rd-btn-default">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
-            </div>
-        </section>
-
-        <section class="info-grid">
-            <article class="info-card rd-card">
-                <header>
-                    <h3><i class="fas fa-user-circle"></i> Datos personales</h3>
-                    <span class="section-hint">Identidad del estudiante</span>
-                </header>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="info-label">Nombre completo</span>
-                        <p class="info-value">
-                            {{ $registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona }}
-                        </p>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Cédula</span>
-                        <p class="info-value">{{ $registro->cedula_persona }}</p>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Género</span>
-                        <p class="info-value">{{ $registro->genero_persona }}</p>
-                    </div>
-                    <div class="info-item info-item-inline">
-                        <div>
-                            <span class="info-label">Fecha de nacimiento</span>
-                            <p class="info-value">
-                                {{ \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->format('d/m/Y') }}</p>
-                        </div>
-                        <div>
-                            <span class="info-label">Edad</span>
-                            <p class="info-value">{{ $edad }} años</p>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-black uppercase tracking-wider text-red-700 dark:text-red-500">
+                                Registro diario · {{ $registro->nombre_pnf ?? 'Sin PNF' }}
+                            </p>
+                            <h2 class="mt-2 text-xl sm:text-2xl font-extrabold" style="color: var(--text-main);">
+                                Ficha del estudiante
+                            </h2>
+                            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">
+                                <strong style="color: var(--text-main);">
+                                    {{ trim($registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona) }}
+                                </strong>
+                                fue registrado en el sistema con la información detallada a continuación.
+                            </p>
                         </div>
                     </div>
                 </div>
-            </article>
 
-            <article class="info-card rd-card">
-                <header>
-                    <h3><i class="fas fa-address-book"></i> Contacto y PNF</h3>
-                    <span class="section-hint">Medios para ubicar al estudiante</span>
-                </header>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="info-label">Teléfono</span>
-                        <p class="info-value">{{ $registro->telefono_persona }}</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                    <div class="rounded-2xl border shadow-sm overflow-hidden"
+                        style="background-color: var(--bg-card); border-color: var(--border-color);">
+
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                            <h3 class="text-sm font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                                <i class="fas fa-user-circle text-red-700 dark:text-red-500"></i>
+                                Datos personales
+                            </h3>
+                            <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                Identidad del estudiante
+                            </p>
+                        </div>
+
+                        <div class="p-6 space-y-4">
+
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                    Nombre completo
+                                </p>
+                                <p class="text-sm font-bold" style="color: var(--text-main);">
+                                    {{ trim($registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona) }}
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                        Cédula
+                                    </p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ $registro->cedula_persona ?? '—' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                        Género
+                                    </p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ $registro->genero_persona ?? '—' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                        Fecha de nacimiento
+                                    </p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->format('d/m/Y') }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                        Edad
+                                    </p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ $edad }} años
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Correo electrónico</span>
-                        <p class="info-value">{{ $registro->email_persona }}</p>
+
+                    <div class="rounded-2xl border shadow-sm overflow-hidden"
+                        style="background-color: var(--bg-card); border-color: var(--border-color);">
+
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                            <h3 class="text-sm font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                                <i class="fas fa-address-book text-red-700 dark:text-red-500"></i>
+                                Contacto y PNF
+                            </h3>
+                            <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                Medios para ubicar al estudiante
+                            </p>
+                        </div>
+
+                        <div class="p-6 space-y-4">
+
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                    Teléfono
+                                </p>
+                                <p class="text-sm font-bold" style="color: var(--text-main);">
+                                    {{ $registro->telefono_persona ?? '—' }}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                    Correo electrónico
+                                </p>
+                                <p class="text-sm font-bold break-all" style="color: var(--text-main);">
+                                    {{ $registro->email_persona ?? '—' }}
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                        PNF asociado
+                                    </p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ $registro->nombre_pnf ?? '—' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                        Semestre
+                                    </p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ $registro->semestre_persona ?? '—' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">PNF asociado</span>
-                        <p class="info-value">{{ $registro->nombre_pnf }}</p>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Semestre</span>
-                        <p class="info-value">{{ $registro->semestre_persona }}</p>
+
+                    <div class="lg:col-span-2 rounded-2xl border shadow-sm overflow-hidden"
+                        style="background-color: var(--bg-card); border-color: var(--border-color);">
+
+                        <div class="px-6 py-4 border-b" style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
+                            <h3 class="text-sm font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                                <i class="fas fa-clock text-red-700 dark:text-red-500"></i>
+                                Registro del sistema
+                            </h3>
+                            <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                                Fecha y hora oficial
+                            </p>
+                        </div>
+
+                        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                    Fecha de registro
+                                </p>
+                                <p class="text-sm font-bold" style="color: var(--text-main);">
+                                    {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                </p>
+                                <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+                                    Información tomada del formulario enviado.
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">
+                                    Hora registrada
+                                </p>
+                                <p class="text-sm font-bold" style="color: var(--text-main);">
+                                    {{ $registro->hora ?? '—' }}
+                                </p>
+                                <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+                                    Corresponde a la hora exacta de creación.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </article>
-
-            <article class="info-card rd-card registro-card">
-                <header>
-                    <h3><i class="fas fa-clock"></i> Registro del sistema</h3>
-                    <span class="section-hint">Fecha y hora oficial</span>
-                </header>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="info-label">Fecha de registro</span>
-                        <p class="info-value">{{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
-                        </p>
-                        <small class="info-helper">Información tomada del formulario enviado.</small>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Hora registrada</span>
-                        <p class="info-value">{{ $registro->hora }}</p>
-                        <small class="info-helper">Corresponde a la hora exacta de creación.</small>
-                    </div>
-                </div>
-            </article>
-        </section>
+            </div>
+        </div>
     </div>
-@endsection
-
-@section('css')
-    <link rel="stylesheet" href="{{ asset('css/show-noti-register.css') }}">
-@endsection
+</x-app-layout>

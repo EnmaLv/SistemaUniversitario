@@ -19,6 +19,8 @@ class Archivos extends Component
     public $archivo;
     public $archivoKey;
     public $buscar = '';
+    public $procesando = false;
+    
 
     protected $rules = [
         'archivo' => 'required|file|mimes:xlsx,xls,pdf,txt|max:10240',
@@ -148,10 +150,13 @@ class Archivos extends Component
     {
         $this->validate();
 
+        $this->procesando = true;
+        $this->dispatch('archivo-procesando');
+
         DB::beginTransaction();
 
         try {
-            $ruta = $this->archivo->store('informacion', 'public');
+            $ruta     = $this->archivo->store('informacion', 'public');
             $fullPath = storage_path('app/public/' . $ruta);
 
             $spreadsheet = IOFactory::load($fullPath);
@@ -161,7 +166,6 @@ class Archivos extends Component
                 throw new \Exception('El archivo cargado está vacío.');
             }
 
-            // Buscar dinámicamente la fila de encabezados en las primeras 10 filas
             $headerRow = null;
             foreach ($rows as $index => $row) {
                 $rowString = Str::ascii(implode(' ', array_values($row)));
@@ -189,20 +193,19 @@ class Archivos extends Component
 
             $cedulasProcesadas = [];
             $stats = [
-                'total' => 0,
-                'insertados' => 0,
-                'actualizados' => 0,
-                'omitidos_fecha' => 0,
-                'omitidos_cedula' => 0,
-                'omitidos_duplicados' => 0
+                'total'               => 0,
+                'insertados'          => 0,
+                'actualizados'        => 0,
+                'omitidos_fecha'      => 0,
+                'omitidos_cedula'     => 0,
+                'omitidos_duplicados' => 0,
             ];
 
             foreach ($rows as $row) {
                 $stats['total']++;
 
-                // Extraer solo dígitos numéricos de la cédula
                 $cedulaRaw = $getValue('cedula', $row);
-                $cedula = preg_replace('/\D/', '', $cedulaRaw);
+                $cedula    = preg_replace('/\D/', '', $cedulaRaw);
 
                 if (!$cedula) {
                     $stats['omitidos_cedula']++;
@@ -217,7 +220,7 @@ class Archivos extends Component
                 $cedulasProcesadas[] = $cedula;
 
                 $fechaNacimiento = $this->parseFechaNacimiento($getValue('fecha_nacimiento', $row));
-                $edad = $fechaNacimiento ? Carbon::parse($fechaNacimiento)->age : null;
+                $edad            = $fechaNacimiento ? Carbon::parse($fechaNacimiento)->age : null;
 
                 if (!$fechaNacimiento) {
                     $stats['omitidos_fecha']++;
@@ -235,18 +238,18 @@ class Archivos extends Component
                 $persona = Persona::updateOrCreate(
                     ['cedula_persona' => $cedula],
                     [
-                        'nombre_persona'            => $getValue('nombre', $row),
-                        'segundo_nombre_persona'    => $getValue('segundo_nombre', $row) ?: null,
-                        'apellido_persona'          => $getValue('apellido', $row),
-                        'segundo_apellido_persona'  => $getValue('segundo_apellido', $row) ?: null,
-                        'telefono_persona'          => $telefono ?: null,
-                        'genero_persona'            => $sexo,
-                        'edad_persona'              => $edad,
-                        'fecha_nacimiento_persona'  => $fechaNacimiento,
-                        'email_persona'             => $getValue('email', $row) ?: null,
-                        'semestre_persona'          => $getValue('semestre', $row) ?: null,
-                        'id_perfil'                 => 2,
-                        'id_sede'                   => 1,
+                        'nombre_persona'           => $getValue('nombre', $row),
+                        'segundo_nombre_persona'   => $getValue('segundo_nombre', $row) ?: null,
+                        'apellido_persona'         => $getValue('apellido', $row),
+                        'segundo_apellido_persona' => $getValue('segundo_apellido', $row) ?: null,
+                        'telefono_persona'         => $telefono ?: null,
+                        'genero_persona'           => $sexo,
+                        'edad_persona'             => $edad,
+                        'fecha_nacimiento_persona' => $fechaNacimiento,
+                        'email_persona'            => $getValue('email', $row) ?: null,
+                        'semestre_persona'         => $getValue('semestre', $row) ?: null,
+                        'id_perfil'                => 2,
+                        'id_sede'                  => 1,
                     ]
                 );
 
@@ -268,20 +271,35 @@ class Archivos extends Component
 
             Archivo::create([
                 'info_estudiantes' => 'Estudiantes UPTP - ' . now()->format('Y-m-d H:i:s'),
-                'fecha' => now()->toDateString(),
-                'estado' => 'Procesado',
+                'fecha'            => now()->toDateString(),
+                'estado'           => 'Procesado',
             ]);
 
             DB::commit();
 
             $this->reset('archivo');
             $this->archivoKey = rand();
+            $this->dispatch('archivo-limpiar');
 
-            $this->dispatch('swal', icon: 'success', title: '¡Éxito!', text: 'Procesado: ' . $stats['insertados'] . ' nuevos y ' . $stats['actualizados'] . ' actualizados.');
+            $this->dispatch(
+                'swal',
+                icon: 'success',
+                title: '¡Procesamiento exitoso!',
+                text: "Se procesaron {$stats['total']} filas · {$stats['insertados']} nuevos · {$stats['actualizados']} actualizados · {$stats['omitidos_cedula']} sin cédula."
+            );
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
-            $this->dispatch('swal', icon: 'error', title: 'Error', text: 'Error al procesar: ' . $e->getMessage());
+
+            $this->dispatch(
+                'swal',
+                icon: 'error',
+                title: 'Error al procesar',
+                text: $e->getMessage()
+            );
+        } finally {
+            $this->procesando = false;
+            $this->dispatch('archivo-finalizado');
         }
     }
 

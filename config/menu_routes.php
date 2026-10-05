@@ -35,7 +35,6 @@ return [
     'roles'                  => ['admin.configuracion.roles.*'],
     'permisos'               => ['admin.configuracion.permisos.*'],
     'archivos'               => ['admin.configuracion.archivos.*'],
-    'configuracion'          => ['admin.configuracion.index'],
 
     /* ═══════════════════ COMEDOR ═══════════════════ */
     'comedor'                 => ['home'],

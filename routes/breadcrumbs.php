@@ -243,14 +243,8 @@ Breadcrumbs::for('admin.consultas.reportes.index', function (Trail $trail) {
     $trail->push('Reportes', route('admin.consultas.reportes.index'));
 });
 
-// Configuración
-Breadcrumbs::for('admin.configuracion.index', function (Trail $trail) {
-    $trail->parent('home');
-    $trail->push('Configuración', route('admin.configuracion.index'));
-});
-
 Breadcrumbs::for('admin.configuracion.persona.index', function (Trail $trail) {
-    $trail->parent('admin.configuracion.index');
+    $trail->parent('home');
     $trail->push('Estudiante', route('admin.configuracion.persona.index'));
 });
 
@@ -281,7 +275,7 @@ Breadcrumbs::for('admin.configuracion.indexar.index', function (Trail $trail) {
 
 //Configuracion Empleados
 Breadcrumbs::for('admin.configuracion.empleados.index', function (Trail $trail) {
-    $trail->parent('admin.configuracion.index');
+    $trail->parent('home');
     $trail->push('Empleados', route('admin.configuracion.empleados.index'));
 });
 
@@ -297,7 +291,7 @@ Breadcrumbs::for('admin.configuracion.empleados.edit', function (Trail $trail, $
 
 //Configuracion Permisos
 Breadcrumbs::for('admin.configuracion.permisos.index', function (Trail $trail) {
-    $trail->parent('admin.configuracion.index');
+    $trail->parent('home');
     $trail->push('Permisos', route('admin.configuracion.permisos.index'));
 });
 
@@ -308,7 +302,7 @@ Breadcrumbs::for('admin.configuracion.permisos.edit', function (Trail $trail, $i
 
 //Configuracion Roles
 Breadcrumbs::for('admin.configuracion.roles.index', function (Trail $trail) {
-    $trail->parent('admin.configuracion.index');
+    $trail->parent('home');
     $trail->push('Roles', route('admin.configuracion.roles.index'));
 });
 
@@ -324,7 +318,7 @@ Breadcrumbs::for('admin.configuracion.roles.edit', function (Trail $trail, $id) 
 
 //Configuracion Archivo
 Breadcrumbs::for('admin.configuracion.archivos.index', function (Trail $trail) {
-    $trail->parent('admin.configuracion.index');
+    $trail->parent('home');
     $trail->push('Archivo', route('admin.configuracion.archivos.index'));
 });
 

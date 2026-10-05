@@ -44,6 +44,7 @@ class RegisterNoti extends Component
     public $desayuno_registrado = false;
     public $desayuno_del_dia = null;
     public $horarioPermitido;
+    public $limiteAlcanzado = null;
 
     public $enableInput = true;
     public $showBtnFinalizar = true;
@@ -61,38 +62,39 @@ class RegisterNoti extends Component
     public $motivo;
     public $accion;
     public $registradosHoy;
+
     public function finalizarDia()
     {
         $validated = $this->validate([
-            'fecha' => 'required|date',
+            'fecha'    => 'required|date',
             'sobrante' => 'required|numeric',
-            'motivo' => 'required|string',
-            'accion' => 'required|string'
+            'motivo'   => 'required|string',
+            'accion'   => 'required|string',
         ], [
-            'fecha.required' => 'La fecha es requerida',
-            'fecha.date' => 'La fecha no es válida',
+            'fecha.required'    => 'La fecha es requerida',
+            'fecha.date'        => 'La fecha no es válida',
             'sobrante.required' => 'La cantidad sobrante es requerida',
-            'sobrante.numeric' => 'La cantidad sobrante debe ser un número',
-            'motivo.required' => 'El motivo es requerido',
-            'accion.required' => 'La acción es requerida'
+            'sobrante.numeric'  => 'La cantidad sobrante debe ser un número',
+            'motivo.required'   => 'El motivo es requerido',
+            'accion.required'   => 'La acción es requerida',
         ]);
 
         SobranteComedor::create([
-            'fecha' => $validated['fecha'],
+            'fecha'             => $validated['fecha'],
             'cantidad_sobrante' => $validated['sobrante'],
-            'motivo' => $validated['motivo'],
-            'accion_tomada' => $validated['accion'],
-            'created_at' => now(),
-            'updated_at' => now()
+            'motivo'            => $validated['motivo'],
+            'accion_tomada'     => $validated['accion'],
+            'created_at'        => now(),
+            'updated_at'        => now(),
         ]);
 
-        $this->enableInput = false;
+        $this->enableInput      = false;
         $this->showBtnFinalizar = false;
 
         $this->dispatch('finalizar-dia-guardado', [
-            'icon' => 'success',
-            'title' => 'Exito!',
-            'text' => 'El cierre de jornada se ha registrado Exitosamente.'
+            'icon'  => 'success',
+            'title' => '¡Cierre registrado!',
+            'text'  => 'El cierre de jornada se ha guardado correctamente.',
         ]);
     }
 
@@ -123,18 +125,18 @@ class RegisterNoti extends Component
 
         if (!$detalleHoy) {
             $this->notification = [
-                'type' => 'danger',
-                'message' => 'Debe registrar el desayuno y la cantidad servida antes de registrar estudiantes.'
+                'type'    => 'danger',
+                'message' => 'Debe registrar el desayuno y la cantidad servida antes de registrar estudiantes.',
             ];
-            $this->showNotification();
+            $this->showNotification = true;
             return;
         }
 
         $registradosHoy = Registro_diario::where('fecha_regis_diario_c', date('Y-m-d'))->count();
 
         if ($registradosHoy >= $detalleHoy->cantidad_servido) {
-            $this->alertLimite = "Ya se alcanzó el límite de {$detalleHoy->cantidad_servido} raciones. No se pueden registrar más estudiantes.";
-            $this->dispatch('notify-limite');
+            $this->limiteAlcanzado = "Ya se alcanzó el límite de {$detalleHoy->cantidad_servido} raciones. No se pueden registrar más estudiantes.";
+            $this->dispatch('notify-limite', message: $this->limiteAlcanzado);
             return;
         }
 
@@ -142,27 +144,33 @@ class RegisterNoti extends Component
 
         $DatosHistorial = [
             'cedula' => $this->cedula,
-            'fecha' => date('Y-m-d'),
-            'hora' => date('H:i:s'),
+            'fecha'  => date('Y-m-d'),
+            'hora'   => date('H:i:s'),
         ];
-        $persona = Persona::where('cedula_persona', $this->cedula)->where('estado', true)->where('id_perfil', 2)->first();
+
+        $persona = Persona::where('cedula_persona', $this->cedula)
+            ->where('estado', true)
+            ->where('id_perfil', 2)
+            ->first();
 
         if ($persona) {
-            $is_register = Registro_diario::where('id_persona', $persona->id_persona)->where('fecha_regis_diario_c', date('Y-m-d'))->exists();
+
+            $is_register = Registro_diario::where('id_persona', $persona->id_persona)
+                ->where('fecha_regis_diario_c', date('Y-m-d'))
+                ->exists();
 
             if ($is_register) {
                 $this->notification = [
-                    'type' => 'danger',
-                    'message' => "El estudiante {$persona->nombre_persona} {$persona->apellido_persona} ya se registro hoy"
+                    'type'    => 'danger',
+                    'message' => "El estudiante {$persona->nombre_persona} {$persona->apellido_persona} ya se registró hoy.",
                 ];
 
-                $DatosHistorial['nombre'] = $persona->nombre_persona;
-                $DatosHistorial['estado'] = 'Rechazado';
-                $DatosHistorial['observacion'] = 'El estudiante ya se registro hoy';
+                $DatosHistorial['nombre']      = $persona->nombre_persona;
+                $DatosHistorial['estado']      = 'Rechazado';
+                $DatosHistorial['observacion'] = 'El estudiante ya se registró hoy';
 
-                $this->showNotification();
+                $this->showNotification = true;
                 $this->cedula = '';
-
                 $this->dispatch('cedula-validada', datos: $DatosHistorial);
                 return;
             }
@@ -173,36 +181,37 @@ class RegisterNoti extends Component
                 $personaPnf = PersonaPnf::where('id_persona', $persona->id_persona)->first();
 
                 if (!$personaPnf) {
-                    throw new Exception('El estudiante no tiene un PNF asignado');
+                    throw new Exception('El estudiante no tiene un PNF asignado.');
                 }
 
                 DB::table('registro_diario_c')->insert([
-                    'id_persona' => $persona->id_persona,
-                    'id_persona_pnf' => $personaPnf->id_persona_pnf,
+                    'id_persona'           => $persona->id_persona,
+                    'id_persona_pnf'       => $personaPnf->id_persona_pnf,
                     'fecha_regis_diario_c' => date('Y-m-d'),
-                    'hora' => date('H:i:s'),
+                    'hora'                 => date('H:i:s'),
                 ]);
 
                 DB::commit();
+
                 $this->recalcularSobrante();
+
                 if ($this->sobrante == 0) {
                     $this->showBtnFinalizar = false;
-                    $this->enableInput = false;
+                    $this->enableInput      = false;
                     $this->dispatch('swal', [
-                        'type' => 'success',
-                        'title' => 'Exito!',
-                        'text' => 'Se alcanzó el límite de raciones!',
-                        'icon' => 'success'
+                        'title' => '¡Límite alcanzado!',
+                        'text'  => 'Se alcanzó el límite de raciones para hoy.',
+                        'icon'  => 'success',
                     ]);
                 }
 
                 $this->notification = [
-                    'type' => 'success',
-                    'message' => "El estudiante {$persona->nombre_persona} {$persona->apellido_persona} se registró exitosamente!"
+                    'type'    => 'success',
+                    'message' => "El estudiante {$persona->nombre_persona} {$persona->apellido_persona} se registró exitosamente.",
                 ];
 
-                $DatosHistorial['nombre'] = $persona->nombre_persona;
-                $DatosHistorial['estado'] = 'Aprobado';
+                $DatosHistorial['nombre']      = $persona->nombre_persona;
+                $DatosHistorial['estado']      = 'Aprobado';
                 $DatosHistorial['observacion'] = 'Registro exitoso';
 
                 $this->dispatch('cedula-validada', datos: $DatosHistorial);
@@ -211,12 +220,12 @@ class RegisterNoti extends Component
                 DB::rollBack();
 
                 $this->notification = [
-                    'type' => 'danger',
-                    'message' => "No se pudo registrar al estudiante: " . $e->getMessage()
+                    'type'    => 'danger',
+                    'message' => "No se pudo registrar al estudiante: " . $e->getMessage(),
                 ];
 
-                $DatosHistorial['nombre'] = $persona->nombre_persona ?? 'Sin nombre';
-                $DatosHistorial['estado'] = 'Rechazado';
+                $DatosHistorial['nombre']      = $persona->nombre_persona ?? 'Sin nombre';
+                $DatosHistorial['estado']      = 'Rechazado';
                 $DatosHistorial['observacion'] = $e->getMessage();
 
                 $this->dispatch('cedula-validada', datos: $DatosHistorial);
@@ -224,15 +233,14 @@ class RegisterNoti extends Component
         } else {
 
             $this->notification = [
-                'type' => 'danger',
-                'message' => 'No se encontró un registro para la cédula: ' . $this->cedula
+                'type'    => 'danger',
+                'message' => 'No se encontró un registro para la cédula: ' . $this->cedula,
             ];
         }
 
-        $this->showNotification();
+        $this->showNotification = true;
         $this->cedula = '';
-
-        $this->dispatch('notify-saved');
+        $this->limiteAlcanzado = null;
     }
 
     public function showNotification()
