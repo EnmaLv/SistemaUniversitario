@@ -144,6 +144,7 @@ class HistoriaController extends Controller
         $user = Auth::user();
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
+        $this->autorizarPaciente((int) $paciente->id_usuario);
 
         $categoriaFiltro = $this->resolverCategoria($request);
         $tipo = $request->get('tipo', $categoriaFiltro);
@@ -213,6 +214,9 @@ class HistoriaController extends Controller
             'contexto' => 'required|string',
         ]);
 
+        $historia = HistoriaClinica::findOrFail($request->historia_clinica_id);
+        $this->autorizarPaciente((int) $historia->user_id);
+
         $result = HistoriaClinica::vincularEnfermedad($request->historia_clinica_id, $request->enfermedad_id, $request->contexto);
         return response()->json($result);
     }
@@ -222,6 +226,11 @@ class HistoriaController extends Controller
         $request->validate([
             'link_id' => 'required'
         ]);
+
+        $historiaId = DB::table('historia_enfermedad')->where('id', $request->link_id)->value('historia_clinica_id');
+        $historia = $historiaId ? HistoriaClinica::find($historiaId) : null;
+        abort_if(!$historia, 404);
+        $this->autorizarPaciente((int) $historia->user_id);
 
         HistoriaClinica::desvincularEnfermedad($request->link_id);
 
@@ -236,9 +245,16 @@ class HistoriaController extends Controller
         abort_if(!$paciente, 404);
         $historia = HistoriaClinica::obtenerPorPaciente($paciente->id);
         abort_if(!$historia, 404);
+        $this->autorizarPaciente((int) $historia->user_id);
 
-        SegmentoPersonalizado::actualizarSegmentosExtra($request->segmentos_extra);
-        SegmentoPersonalizado::actualizarMetadata($request->segmentos_metadata);
+        $segmentosPropios = array_flip(DB::table('historia_segmentos_personalizados as segmento')
+            ->join('historia_secciones_personalizadas as seccion', 'seccion.id', '=', 'segmento.seccion_id')
+            ->where('seccion.historia_clinica_id', $historia->id)
+            ->pluck('segmento.id')
+            ->all());
+
+        SegmentoPersonalizado::actualizarSegmentosExtra(array_intersect_key((array) $request->segmentos_extra, $segmentosPropios));
+        SegmentoPersonalizado::actualizarMetadata(array_intersect_key((array) $request->segmentos_metadata, $segmentosPropios));
 
         return back()->with('success', 'Historia clínica actualizada correctamente.');
     }
@@ -253,6 +269,7 @@ class HistoriaController extends Controller
         ]);
 
         $historia = HistoriaClinica::obtenerPorPacienteOrFail($pacienteId);
+        $this->autorizarPaciente((int) $historia->user_id);
 
         SeccionPersonalizada::crear($historia, $request->all());
 
@@ -803,5 +820,20 @@ class HistoriaController extends Controller
         $pdf .= "startxref\n$xrefStart\n%%EOF";
 
         return $pdf;
+    }
+
+    private function autorizarPaciente(int $pacienteId): void
+    {
+        /** @var Usuario $user */
+        $user = Auth::user();
+        if ($user->esSuperAdmin()) {
+            return;
+        }
+
+        $userId = (int) $user->id_usuario;
+        $tieneRelacion = DB::table('citas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists()
+            || DB::table('historia_clinicas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists();
+
+        abort_unless($tieneRelacion, 403, 'No tienes acceso al expediente de este paciente.');
     }
 }

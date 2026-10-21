@@ -8,31 +8,26 @@ class MediaController extends Controller
 {
     public function showPublicacionMedia($filename)
     {
-        $path = storage_path('app/public/publicaciones/' . $filename);
-
-        if (!file_exists($path)) {
-            abort(404);
-        }
-
-        $type = mime_content_type($path);
-
-        return response()->file($path, [
-            'Content-Type' => $type
-        ]);
+        return $this->servir('publicaciones', $filename);
     }
 
     public function showProfilePhoto($filename)
     {
-        $path = storage_path('app/public/profile-photos/' . $filename);
+        return $this->servir('profile-photos', $filename);
+    }
 
-        if (!file_exists($path)) {
+    private function servir(string $carpeta, string $filename)
+    {
+        $base = realpath(storage_path('app/public/' . $carpeta));
+        $path = $base ? realpath($base . DIRECTORY_SEPARATOR . basename($filename)) : false;
+
+        if (!$path || !str_starts_with($path, $base . DIRECTORY_SEPARATOR) || !is_file($path)) {
             abort(404);
         }
 
-        $type = mime_content_type($path);
-
         return response()->file($path, [
-            'Content-Type' => $type
+            'Content-Type' => mime_content_type($path),
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 }

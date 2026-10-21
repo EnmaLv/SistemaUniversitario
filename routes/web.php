@@ -241,8 +241,6 @@ Route::middleware(['auth'])->group(function () {
 
         /* Registro Diario */
 
-        Route::get('/movimientos/registro_diario', [RegistroDiarioController::class, 'index'])->name('admin.movimientos.registro_diario.index');
-
         Route::get('/movimientos/registro_diario/export-pdf', [RegistroDiarioController::class, 'exportPdf'])->name('admin.movimientos.registro_diario.export_pdf');
 
         Route::get('/movimientos/registro_diario/export-excel', [RegistroDiarioController::class, 'exportExcel'])->name('admin.movimientos.registro_diario.export_excel');
@@ -300,14 +298,16 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/configuracion/archivos', [ArchivoController::class, 'index'])->name('admin.configuracion.archivos.index');
         Route::get('/configuracion/archivos/ver/{archivo}', function ($archivo) {
-            $path = storage_path('app/public/' . $archivo);
+            $base = realpath(storage_path('app/public'));
+            $path = $base ? realpath($base . DIRECTORY_SEPARATOR . $archivo) : false;
 
-            abort_unless(file_exists($path), 404);
+            abort_unless($path && str_starts_with($path, $base . DIRECTORY_SEPARATOR) && is_file($path), 404);
 
             return response()->file($path, [
-                'Content-Disposition' => 'inline'
+                'Content-Disposition' => 'inline',
+                'X-Content-Type-Options' => 'nosniff',
             ]);
-        })->where('archivo', '.*');
+        })->where('archivo', '.*')->name('admin.configuracion.archivos.ver');
 
         // SALUD        
 
@@ -430,7 +430,9 @@ Route::post('/tasa/ignorar-hoy', function (\Illuminate\Http\Request $request) {
     session()->put('tasa_ignorada_hasta', now()->toDateString());
     return response()->json(['ok' => true]);
 })->middleware('auth')->name('tasa.ignorar');
-Route::post('/admin/maestros/productos/actualizar-tasa', [ProductoController::class, 'actualizarTasaDolar'])->name('productos.actualizar.tasa');
+Route::post('/admin/maestros/productos/actualizar-tasa', [ProductoController::class, 'actualizarTasaDolar'])
+    ->middleware(['auth', \App\Http\Middleware\CheckMenuPermission::class])
+    ->name('productos.actualizar.tasa');
 
 Route::prefix('/admin')->group(function () {
 
@@ -478,8 +480,4 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/mensajes', [\App\Http\Controllers\salud\ChatController::class, 'index'])->name('chat.index');
-    Route::get('/mensajes/contactos/lista', [\App\Http\Controllers\salud\ChatController::class, 'fetchContacts'])->name('chat.contacts');
-    Route::post('/mensajes/ping', [\App\Http\Controllers\salud\ChatController::class, 'ping'])->name('chat.ping');
-    Route::get('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'fetchMessages'])->name('chat.fetch');
-    Route::post('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'sendMessage'])->name('chat.store');
 });

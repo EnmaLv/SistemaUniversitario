@@ -108,7 +108,7 @@ class PublicacionController extends Controller
         $user = Auth::user();
         $publicacion = Publicacion::findById($id);
 
-        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol('psicologo'))) {
+        if (!$publicacion || ((int) $publicacion->psicologo_id !== (int) $user->id_usuario && !$user->esSuperAdmin())) {
             return redirect()->route('admin.psicologia.maestros.publicaciones.index')->with('error', 'Acceso denegado.');
         }
 
@@ -121,7 +121,7 @@ class PublicacionController extends Controller
         $user = Auth::user();
         $publicacion = Publicacion::findById($id);
 
-        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol(['psicologo']))) {
+        if (!$publicacion || ((int) $publicacion->psicologo_id !== (int) $user->id_usuario && !$user->esSuperAdmin())) {
             return redirect()->route('admin.psicologia.maestros.publicaciones.index')->with('error', 'Acceso denegado.');
         }
 
@@ -146,7 +146,7 @@ class PublicacionController extends Controller
         $user = Auth::user();
         $publicacion = Publicacion::findById($id);
 
-        if (!$publicacion || ($publicacion->psicologo_id != $user->id_usuario && !$user->tieneRol('psicologo'))) {
+        if (!$publicacion || ((int) $publicacion->psicologo_id !== (int) $user->id_usuario && !$user->esSuperAdmin())) {
             return redirect()->route('admin.psicologia.maestros.publicaciones.index')->with('error', 'Acceso denegado.');
         }
 

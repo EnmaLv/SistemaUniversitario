@@ -11,7 +11,6 @@ use App\Models\Becas\SolicitudBeca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Services\Salud\PsicologiaHomeService;
 use App\Services\Salud\SaludHomeService;
 use App\Services\Transporte\TransporteHomeService;
@@ -44,66 +43,12 @@ class HomeController extends Controller
 
     public function index()
     {
-        $guardUser = Auth::user();
         $user = Usuario::query()->findOrFail(Auth::id());
-        $guardSnapshot = [
-            'id' => $guardUser?->getAuthIdentifier(),
-        ];
-
-        if ($guardUser instanceof Usuario) {
-            $guardSnapshot += [
-                'persona_id' => $guardUser->id_persona,
-                'persona_relation_loaded' => $guardUser->relationLoaded('persona'),
-                'persona_relation_id' => $guardUser->relationLoaded('persona')
-                    ? $guardUser->getRelation('persona')?->id_persona
-                    : null,
-                'roles_relation_loaded' => $guardUser->relationLoaded('roles'),
-                'roles' => $guardUser->relationLoaded('roles')
-                    ? $guardUser->getRelation('roles')->pluck('nombre')->all()
-                    : null,
-            ];
-        }
-
         $user->load(['persona', 'roles']);
         Auth::guard()->setUser($user);
         $userId = $user->id_usuario;
-        $permisosAntes = [
-            'usuario_id' => session('permisos_usuario_id'),
-            'es_admin' => session('es_admin'),
-            'modulos' => session('modulos_permitidos'),
-            'menu' => session('menu_permissions_user'),
-        ];
 
         (new \App\AdminLTE\Filters\ModuleFilter())->asegurarSesion($userId);
-
-        Log::info('Home access diagnostic', [
-            'usuario' => [
-                'guard_id' => $guardUser?->getAuthIdentifier(),
-                'id' => $userId,
-                'username' => $user->username,
-                'id_perfil' => $user->id_perfil,
-                'role_legacy' => $user->getAttribute('role'),
-            ],
-            'guard_user_before_refresh' => $guardSnapshot,
-            'roles_eloquent_activos' => $user->roles()
-                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug'])
-                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug])
-                ->values()
-                ->all(),
-            'roles_pivote_incluyendo_borrados' => DB::table('rol_usuario')
-                ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
-                ->where('rol_usuario.id_usuario', $userId)
-                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug', 'rol.deleted_at'])
-                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug, 'deleted_at' => $role->deleted_at])
-                ->all(),
-            'permisos_sesion_antes' => $permisosAntes,
-            'permisos_sesion_despues' => [
-                'usuario_id' => session('permisos_usuario_id'),
-                'es_admin' => session('es_admin'),
-                'modulos' => session('modulos_permitidos'),
-                'menu' => session('menu_permissions_user'),
-            ],
-        ]);
 
         $psicologiaData = $this->psicologiaService->getPacienteData();
         $saludData      = $this->saludService->getDashboardData();

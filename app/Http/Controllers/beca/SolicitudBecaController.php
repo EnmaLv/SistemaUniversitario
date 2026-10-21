@@ -153,7 +153,12 @@ class SolicitudBecaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
         try {
-            $this->solicitudService->crearSolicitud($request->validated());
+            $datos = $request->validated();
+            if (!$user->puedeAlguna(['solicitud', 'solicitudes_becas'], 'crear')) {
+                $datos['id_persona'] = $user->id_persona;
+            }
+
+            $this->solicitudService->crearSolicitud($datos);
             
             if(!$user || $user->tieneRol(['paciente', 'becario', 'estudiante'])){
                 return redirect()

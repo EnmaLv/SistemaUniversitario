@@ -114,7 +114,7 @@
                                         :status="$envase->estado" 
                                         :show="false" 
                                         :on-edit="'abrirModalEditarEnvasePrimario(' .
-                                            json_encode($envase) .
+                                            json_encode($envase, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) .
                                             ', `' .
                                             route('admin.salud.maestros.envases_primarios.update', $envase->id) .
                                             '`)'" 

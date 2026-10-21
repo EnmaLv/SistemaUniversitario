@@ -46,7 +46,7 @@
                                 <td>{{ $producto->categoria->nombre }}</td>
                                 <td>{{ $producto->codigo }}</td>
                                 <td>{{ $producto->nombre }}</td>
-                                <td>{!! $producto->descripcion !!}</td>
+                                <td>{!! \App\Support\Seguridad\HtmlSeguro::limpiar($producto->descripcion) !!}</td>
                                 <td>
                                     <img src="{{ asset('storage/' . $producto->imagen) }}" class="img-thumbnail"
                                         alt="{{ $producto->nombre }}"

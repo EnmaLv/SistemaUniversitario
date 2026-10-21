@@ -677,6 +677,12 @@
     </div>
 
     <script>
+        function escaparHtmlCita(valor) {
+            const div = document.createElement('div');
+            div.textContent = valor ?? '';
+            return div.innerHTML;
+        }
+
         let currentHistoryData = [];
         let currentStartDate = '{{ now()->subMonth()->toDateString() }}';
         let currentEndDate = '{{ now()->toDateString() }}';
@@ -928,7 +934,7 @@
                     </div>
                     <div class="col-span-2">
                         <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1">Motivo de Solicitud</p>
-                        <p class="text-sm font-medium text-slate-600 dark:text-gray-300 italic leading-relaxed">"${cita.motivo || 'No especificado'}"</p>
+                        <p class="text-sm font-medium text-slate-600 dark:text-gray-300 italic leading-relaxed">"${escaparHtmlCita(cita.motivo || 'No especificado')}"</p>
                     </div>
             `;
 

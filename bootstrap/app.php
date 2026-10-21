@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
 
         $middleware->append(IgnorarTasaHoy::class);
+        $middleware->append(\App\Http\Middleware\CabecerasSeguridad::class);
 
         $middleware->web(append: [
             CheckTasaActualizada::class,
@@ -39,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tasa.actualizada' => CheckTasaActualizada::class,
+            'permiso.api' => \App\Http\Middleware\VerificarPermisoApi::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

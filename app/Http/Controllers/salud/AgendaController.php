@@ -48,7 +48,7 @@ class AgendaController extends Controller
         $user = $this->verificarAcceso();
         $psicologoId = $user->id_usuario;
 
-        if ($user->tieneRol('psicologo') && $request->has('psicologo_id')) {
+        if ($user->esSuperAdmin() && $request->has('psicologo_id')) {
             $psicologoId = $request->input('psicologo_id');
         }
 
@@ -197,7 +197,8 @@ class AgendaController extends Controller
 
     public function dailyCitas(Request $request)
     {
-        $psicologoId = $request->input('psicologo_id', Auth::id());
+        $user = $this->verificarAcceso();
+        $psicologoId = $user->esSuperAdmin() ? $request->input('psicologo_id', $user->id_usuario) : $user->id_usuario;
         $fecha = $request->input('fecha');
 
         return response()->json(Cita::obtenerCitasDiariasJson($psicologoId, $fecha));
@@ -302,7 +303,7 @@ class AgendaController extends Controller
         $psicologoId = $user->id_usuario;
         $psicologo = $user;
 
-        if ($user->tieneRol(['psicologo']) && $request->has('psicologo_id')) {
+        if ($user->esSuperAdmin() && $request->has('psicologo_id')) {
             $psicologoId = $request->input('psicologo_id');
             $psicologo = Usuario::find($psicologoId);
 

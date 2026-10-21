@@ -141,7 +141,7 @@
                     <div class="rounded-xl border p-5 text-sm leading-relaxed"
                         style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02); color: var(--text-main);">
                         @if ($producto->descripcion)
-                            {!! $producto->descripcion !!}
+                            {!! \App\Support\Seguridad\HtmlSeguro::limpiar($producto->descripcion) !!}
                         @else
                             <div class="flex items-center gap-2 text-gray-400 italic">
                                 <i class="fas fa-info-circle"></i>

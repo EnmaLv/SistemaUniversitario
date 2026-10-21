@@ -1173,7 +1173,7 @@
                         propInfo.classList.add('bg-rose-50', 'dark:bg-rose-950/40', 'border-rose-200',
                             'dark:border-rose-800/60', 'text-rose-700', 'dark:text-rose-400');
                         let rejectedReason = cita.motivo_rechazo_propuesta ?
-                            `<strong>Motivo:</strong> ${cita.motivo_rechazo_propuesta}<br>` : '';
+                            `<strong>Motivo:</strong> ${Utils.escapeHtml(cita.motivo_rechazo_propuesta)}<br>` : '';
                         let rejectedBlocks = propList.length > 0 ?
                             `<strong>Bloques descartados:</strong> ${propList.map(Utils.formatAmPm).join(', ')}<br>` :
                             '';
@@ -2417,7 +2417,7 @@
                                         ${cita.hora !== 'S/H' ? cita.hora.split(':')[0] : '--'}
                                     </div>
                                     <div>
-                                        <p class="text-sm font-black text-gray-900 dark:text-white leading-none mb-1.5">${cita.paciente}</p>
+                                        <p class="text-sm font-black text-gray-900 dark:text-white leading-none mb-1.5">${Utils.escapeHtml(cita.paciente)}</p>
                                         <p class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">${cita.hora}</p>
                                     </div>
                                 </div>

@@ -26,6 +26,8 @@ return [
 
     'segundos_aviso_inactividad' => (int) env('SEGURIDAD_SEGUNDOS_AVISO_INACTIVIDAD', 60),
 
+    'proxies_confiables' => env('SEGURIDAD_PROXIES_CONFIABLES', '*'),
+
     'bitacora' => [
         'habilitada' => (bool) env('SEGURIDAD_BITACORA_HABILITADA', true),
 

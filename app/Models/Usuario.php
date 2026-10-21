@@ -35,7 +35,7 @@ class Usuario extends Authenticatable
         'infracciones_reset_at',
     ];
 
-    protected $hidden = ['password', 'master_key'];
+    protected $hidden = ['password', 'master_key', 'security_questions', 'remember_token'];
 
     protected $casts = [
         'security_questions'     => 'array',

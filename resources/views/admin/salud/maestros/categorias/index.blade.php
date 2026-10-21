@@ -117,7 +117,7 @@
                                     {{-- Componente de Acciones --}}
                                     <x-table-actions :id="$categoria->id" baseUrl="admin/salud/maestros/categorias"
                                         :status="$categoria->activo" :show="false" :on-edit="'abrirModalEditarCategoria(' .
-                                            json_encode($categoria) .
+                                            json_encode($categoria, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) .
                                             ', `' .
                                             route('admin.salud.maestros.categorias.update', $categoria->id) .
                                             '`)'" />

@@ -112,7 +112,7 @@ class Persona extends Model
         } 
         catch (Exception $e) {
             DB::rollBack();
-            dd($e->getMessage());
+            report($e);
             return false;
         }
     }

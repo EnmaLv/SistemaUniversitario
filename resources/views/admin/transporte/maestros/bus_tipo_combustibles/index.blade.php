@@ -89,7 +89,7 @@
                                     </td>
                                     <x-table-actions :id="$tipo->id"
                                         baseUrl="admin/transporte/maestros/bus_tipo_combustibles" :show="false"
-                                        :toggle="false" :on-edit="'abrirModalEditarTipo(' . json_encode($tipo) . ')'">
+                                        :toggle="false" :on-edit="'abrirModalEditarTipo(' . json_encode($tipo, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
                                         @if ($tipo->estado)
                                             <form
                                                 action="{{ route('admin.transporte.maestros.bus_tipo_combustibles.destroy', $tipo) }}"

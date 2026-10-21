@@ -923,10 +923,21 @@ class CitaController extends Controller
             'estado' => $c->estado,
             'cancelado_por' => $c->cancelado_por ?? null,
             'motivo' => $c->motivo,
-            'notas' => $c->notas
+            'notas' => $this->notasVisiblesParaPaciente($c->notas)
         ]);
 
         return response()->json($citas);
+    }
+
+    private function notasVisiblesParaPaciente($notas): ?string
+    {
+        $datos = is_string($notas) ? json_decode($notas, true) : null;
+
+        if (!is_array($datos) || empty($datos['avance_estado'])) {
+            return null;
+        }
+
+        return json_encode(['avance_estado' => $datos['avance_estado']]);
     }
 
     private function verificarPsicologoDueno($cita, ?string $mensaje = null): void

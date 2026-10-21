@@ -71,7 +71,7 @@
                                 baseUrl="admin/transporte/maestros/bus_marcas"
                                 :show="false"
                                 :toggle="false"
-                                :on-edit="'abrirModalEditarMarca(' . json_encode($marca) . ')'"
+                                :on-edit="'abrirModalEditarMarca(' . json_encode($marca, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'"
                             >
                                 @if ($marca->estado)
                                     <form action="{{ route('admin.transporte.maestros.bus_marcas.destroy', $marca) }}" method="POST" class="inline">

@@ -1113,15 +1113,14 @@ class Cita extends Model
         }
 
         $prioridadesList = count($orderedPrioridades) > 0 ? $orderedPrioridades : ['crítica', 'alta', 'media', 'baja'];
+        $prioridadesList = array_values($prioridadesList);
         $caseSql = "CASE prioridad ";
         foreach ($prioridadesList as $index => $prio) {
-            $val = $index + 1;
-            $escapedPrio = addslashes($prio);
-            $caseSql .= "WHEN '{$escapedPrio}' THEN {$val} ";
+            $caseSql .= "WHEN ? THEN " . ($index + 1) . " ";
         }
         $caseSql .= "ELSE " . (count($prioridadesList) + 1) . " END";
 
-        $paginator = $query->orderByRaw($caseSql)
+        $paginator = $query->orderByRaw($caseSql, $prioridadesList)
             ->latest('created_at')
             ->paginate($perPage);
 

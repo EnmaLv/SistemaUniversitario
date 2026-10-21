@@ -16,7 +16,7 @@
     @endif
     </p>
     
-    <p><a href="{{ route('admin.psicologia.maestros.chat.index') }}" style="padding: 10px 15px; background-color: #0284c7; color: white; text-decoration: none; border-radius: 5px;">Ir a mis Mensajes</a></p>
+    <p><a href="{{ route('chat.index') }}" style="padding: 10px 15px; background-color: #0284c7; color: white; text-decoration: none; border-radius: 5px;">Ir a mis Mensajes</a></p>
     
     <p>Gracias,</p>
     <p>Equipo de Psicoguía</p>

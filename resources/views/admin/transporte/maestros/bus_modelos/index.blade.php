@@ -63,7 +63,7 @@
                                 @endif
                             </td>
                             <x-table-actions :id="$modelo->id" baseUrl="admin/transporte/maestros/bus_modelos" :show="false" :toggle="false"
-                                :on-edit="'abrirModalEditarModelo(' . json_encode($modelo) . ')'">
+                                :on-edit="'abrirModalEditarModelo(' . json_encode($modelo, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
                                     @if ($modelo->estado)
                                         <form action="{{ route('admin.transporte.maestros.bus_modelos.destroy', $modelo) }}" method="POST" class="inline">
                                             @csrf @method('DELETE')

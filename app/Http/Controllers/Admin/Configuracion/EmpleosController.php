@@ -126,7 +126,7 @@ class EmpleosController extends Controller
         if ($request->boolean('modificar_seguridad')) {
 
             if ($request->filled('password')) {
-                $usuario->password = Hash::make($request->input('password'));
+                $usuario->password = $request->input('password');
             }
 
             if ($request->has('security_questions')) {
@@ -161,6 +161,12 @@ class EmpleosController extends Controller
 
         $role = $request->input('role', null);
         $newRoleIds = $request->has('role') ? ($role ? [$role] : []) : null;
+
+        if (is_array($newRoleIds) && !Auth::user()->esSuperAdmin()) {
+            $otorgaSuperAdmin = Rol::whereIn('id_rol', $newRoleIds)->get()->contains(fn ($rol) => $rol->esSuperAdmin());
+            $quitaSuperAdmin = $usuario->roles->contains(fn ($rol) => $rol->esSuperAdmin());
+            abort_if($otorgaSuperAdmin || $quitaSuperAdmin, 403, 'Solo un superadministrador puede otorgar o retirar roles de superadministrador.');
+        }
 
         $adminRol = Rol::where('nombre', 'Administrador')->first();
         if ($adminRol) {

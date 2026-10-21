@@ -32,7 +32,7 @@ class NewMessageNotification extends Notification implements ShouldQueue
             'sender_id' => $this->message->sender_id,
             'sender_name' => $sender ? $sender->name : 'Usuario',
             'body' => $this->message->body,
-            'url' => route('admin.psicologia.maestros.chat.index') . '?user=' . $this->message->sender_id,
+            'url' => route('chat.index') . '?user=' . $this->message->sender_id,
         ];
     }
 }
