@@ -6,18 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\BusMarca;
+use App\Models\BusModelo;
+use App\Support\Transporte\FormatoApiTransporte;
 
 class BusMarcaApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = BusMarca::orderBy('nombre');
+        $query = BusMarca::orderBy('nombre_mav');
 
         if ($request->has('estado')) {
-            $query->where('estado', $request->boolean('estado') ? 1 : 0);
+            $query->where('status_id', $request->boolean('estado') ? 1 : 2);
         }
 
-        $marcas = $query->get();
+        $marcas = $query->get()->map(fn ($marca) => FormatoApiTransporte::marca($marca))->values();
 
         return response()->json([
             'success' => true,
@@ -28,18 +30,18 @@ class BusMarcaApiController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:100|unique:marcas,nombre',
+            'nombre' => 'required|string|max:100|unique:marca_vehiculo,nombre_mav,NULL,id_mav,deleted_at,NULL',
         ]);
 
         $marca = BusMarca::create([
-            'nombre' => ucfirst(trim($validated['nombre'])),
-            'estado' => 1,
+            'nombre_mav' => ucfirst(trim($validated['nombre'])),
+            'status_id'  => 1,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Marca creada correctamente.',
-            'data'    => $marca,
+            'data'    => FormatoApiTransporte::marca($marca->refresh()),
         ], 201);
     }
 
@@ -47,42 +49,42 @@ class BusMarcaApiController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $marca,
+            'data'    => FormatoApiTransporte::marca($marca),
         ]);
     }
 
     public function update(Request $request, BusMarca $marca): JsonResponse
     {
         $validated = $request->validate([
-            'nombre' => "required|string|max:100|unique:marcas,nombre,{$marca->id}",
+            'nombre' => "required|string|max:100|unique:marca_vehiculo,nombre_mav,{$marca->id_mav},id_mav,deleted_at,NULL",
         ]);
 
         $marca->update([
-            'nombre' => ucfirst(trim($validated['nombre'])),
+            'nombre_mav' => ucfirst(trim($validated['nombre'])),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Marca actualizada correctamente.',
-            'data'    => $marca->fresh(),
+            'data'    => FormatoApiTransporte::marca($marca->fresh()),
         ]);
     }
 
     public function toggle(BusMarca $marca): JsonResponse
     {
-        if ($marca->modelos()->exists()) {
+        if (BusModelo::where('mav_id', $marca->id_mav)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se puede inactivar: esta marca tiene modelos asociados.',
             ], 422);
         }
 
-        $marca->update(['estado' => $marca->estado ? 0 : 1]);
+        $marca->update(['status_id' => (int) $marca->status_id === 1 ? 2 : 1]);
 
         return response()->json([
             'success' => true,
-            'message' => $marca->estado ? 'Marca activada.' : 'Marca desactivada.',
-            'data'    => $marca->fresh(),
+            'message' => (int) $marca->status_id === 1 ? 'Marca activada.' : 'Marca desactivada.',
+            'data'    => FormatoApiTransporte::marca($marca->fresh()),
         ]);
     }
 }

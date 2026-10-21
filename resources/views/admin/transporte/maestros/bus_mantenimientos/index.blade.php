@@ -60,22 +60,22 @@
                 </thead>
                 <tbody>
                     @forelse($mantenimientos as $m)
-                        <x-table-row :id="$m->id">
+                        <x-table-row :id="$m->id_mnv">
                             <td class="text-center">
                                 {{ ($mantenimientos->currentPage() - 1) * $mantenimientos->perPage() + $loop->iteration }}
                             </td>
-                            <td class="text-center"><strong>{{ $m->vehiculo->placa ?? '-' }}</strong></td>
-                            <td class="text-center">{{ $m->titulo }}</td>
+                            <td class="text-center"><strong>{{ $m->vehiculo->placa_vtr ?? '-' }}</strong></td>
+                            <td class="text-center">{{ $m->titulo_mnv }}</td>
                             <td class="text-center">
-                                @if($m->tipo === 'preventivo')
+                                @if($m->tipo_mnv === 'preventivo')
                                     <span class="rd-badge rd-badge-success">Preventivo</span>
                                 @else
                                     <span class="rd-badge rd-badge-danger">Correctivo</span>
                                 @endif
                             </td>
-                            <td class="text-center">{{ $m->fecha->format('d/m/Y') }}</td>
+                            <td class="text-center">{{ $m->fecha_mnv->format('d/m/Y') }}</td>
                             <td class="text-center">
-                                {{ $m->costo ? number_format($m->costo, 2) : '-' }}
+                                {{ $m->costo_mnv ? number_format($m->costo_mnv, 2) : '-' }}
                             </td>
                             <td class="text-center">{!! $m->estado_badge !!}</td>
                             <td class="text-center">

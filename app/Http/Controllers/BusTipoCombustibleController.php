@@ -17,7 +17,7 @@ class BusTipoCombustibleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre'      => 'required|string|max:100|unique:tipo_combustibles,nombre',
+            'nombre'      => 'required|string|max:100|unique:tipo_combustible,nombre_tcb',
             'descripcion' => 'nullable|string|max:255',
         ]);
 
@@ -27,9 +27,9 @@ class BusTipoCombustibleController extends Controller
             'success' => true,
             'message' => 'Tipo de combustible registrado correctamente.',
             'tipo'    => [
-                'id'          => $tipo->id,
-                'nombre'      => $tipo->nombre,
-                'descripcion' => $tipo->descripcion,
+                'id'          => $tipo->id_tcb,
+                'nombre'      => $tipo->nombre_tcb,
+                'descripcion' => $tipo->descripcion_tcb,
                 'estado'      => true,
             ],
         ];
@@ -46,7 +46,7 @@ class BusTipoCombustibleController extends Controller
     public function update(Request $request, BusTipoCombustible $busTipoCombustible)
     {
         $validated = $request->validate([
-            'nombre'      => 'required|string|max:100|unique:tipo_combustibles,nombre,' . $busTipoCombustible->id,
+            'nombre'      => 'required|string|max:100|unique:tipo_combustible,nombre_tcb,' . $busTipoCombustible->id_tcb . ',id_tcb',
             'descripcion' => 'nullable|string|max:255',
         ]);
 
@@ -57,10 +57,10 @@ class BusTipoCombustibleController extends Controller
             'success' => true,
             'message' => 'Tipo de combustible actualizado correctamente.',
             'tipo'    => [
-                'id'          => $busTipoCombustible->id,
-                'nombre'      => $busTipoCombustible->nombre,
-                'descripcion' => $busTipoCombustible->descripcion,
-                'estado'      => $busTipoCombustible->estado,
+                'id'          => $busTipoCombustible->id_tcb,
+                'nombre'      => $busTipoCombustible->nombre_tcb,
+                'descripcion' => $busTipoCombustible->descripcion_tcb,
+                'estado'      => $busTipoCombustible->estaActivo(),
             ],
         ];
 
@@ -75,7 +75,7 @@ class BusTipoCombustibleController extends Controller
 
     public function destroy(Request $request, BusTipoCombustible $busTipoCombustible)
     {
-        $busTipoCombustible->update(['estado' => 0]);
+        $busTipoCombustible->update(['status_id' => BusTipoCombustible::STATUS_INACTIVO]);
         $message = 'Tipo de combustible inactivado correctamente.';
 
         if ($request->expectsJson()) {
@@ -89,7 +89,7 @@ class BusTipoCombustibleController extends Controller
 
     public function activar(Request $request, BusTipoCombustible $busTipoCombustible)
     {
-        $busTipoCombustible->update(['estado' => 1]);
+        $busTipoCombustible->update(['status_id' => BusTipoCombustible::STATUS_ACTIVO]);
         $message = 'Tipo de combustible activado correctamente.';
 
         if ($request->expectsJson()) {

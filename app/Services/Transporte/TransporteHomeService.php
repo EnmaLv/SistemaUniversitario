@@ -29,8 +29,8 @@ class TransporteHomeService
             'vehiculoId'  => $filtros['vehiculo_id'] ?? null,
             'viajes'      => $viajes,
             'resumen'     => $resumen,
-            'vehiculos'   => BusVehiculo::where('activo', 1)->orderBy('placa')->get(['id', 'placa']),
-            'rutas'       => BusRuta::where('estado', 1)->orderBy('nombre')->get(['id', 'nombre']),
+            'vehiculos'   => BusVehiculo::activos()->orderBy('placa_vtr')->get(['id_vtr', 'placa_vtr']),
+            'rutas'       => BusRuta::activos()->orderBy('nombre_rtr')->get(['id_rtr', 'nombre_rtr']),
             'conductores' => $this->conductoresElegibles(),
         ];
     }
@@ -46,25 +46,25 @@ class TransporteHomeService
             'conductor.persona',
             'cargasCombustible',
         ])
-            ->whereBetween('fecha_inicio', [$inicio . ' 00:00:00', $fin . ' 23:59:59']);
+            ->whereBetween('fecha_inicio_vjt', [$inicio . ' 00:00:00', $fin . ' 23:59:59']);
 
         if (!empty($f['vehiculo_id'])) {
-            $query->where('vehiculo_id', $f['vehiculo_id']);
+            $query->where('vtr_id', $f['vehiculo_id']);
         }
         if (!empty($f['ruta_id'])) {
-            $query->where('bus_ruta_id', $f['ruta_id']);
+            $query->where('rtr_id', $f['ruta_id']);
         }
         if (!empty($f['conductor_id'])) {
-            $query->where('conductor_id', $f['conductor_id']);
+            $query->where('conductor_use_id', $f['conductor_id']);
         }
         if (!empty($f['turno'])) {
-            $query->where('turno', $f['turno']);
+            $query->where('turno_vjt', $f['turno']);
         }
         if (!empty($f['estado'])) {
-            $query->where('estado', $f['estado']);
+            $query->where('estado_viaje_vjt', $f['estado']);
         }
 
-        return $query->orderBy('fecha_inicio', 'desc')->get();
+        return $query->orderBy('fecha_inicio_vjt', 'desc')->get();
     }
 
     /**
@@ -133,30 +133,30 @@ class TransporteHomeService
 
         foreach ($viajes as $v) {
             // Estado y turno
-            if (isset($resumen['por_estado'][$v->estado])) {
-                $resumen['por_estado'][$v->estado]++;
+            if (isset($resumen['por_estado'][$v->estado_viaje_vjt])) {
+                $resumen['por_estado'][$v->estado_viaje_vjt]++;
             }
-            if (isset($resumen['por_turno'][$v->turno])) {
-                $resumen['por_turno'][$v->turno]++;
+            if (isset($resumen['por_turno'][$v->turno_vjt])) {
+                $resumen['por_turno'][$v->turno_vjt]++;
             }
 
             // Totales
-            $resumen['total_km']        += (float) $v->distancia_km;
-            $resumen['total_litros']    += (float) $v->litros_gastados;
-            $resumen['total_pasajeros'] += (int) $v->pasajeros;
+            $resumen['total_km']        += (float) $v->distancia_km_vjt;
+            $resumen['total_litros']    += (float) $v->litros_gastados_vjt;
+            $resumen['total_pasajeros'] += (int) $v->total_pasajeros_vjt;
 
-            if ($v->hubo_desvio) {
+            if ($v->hubo_desvio_vjt) {
                 $resumen['viajes_con_desvio']++;
             }
 
             // Costo de combustible de este viaje
             if ($v->relationLoaded('cargasCombustible')) {
-                $resumen['total_costo_combustible'] += (float) $v->cargasCombustible->sum('total');
+                $resumen['total_costo_combustible'] += (float) $v->cargasCombustible->sum('total_ccb');
             }
 
             // Agrupaciones temporales
-            if ($v->fecha_inicio) {
-                $fecha = Carbon::parse($v->fecha_inicio);
+            if ($v->fecha_inicio_vjt) {
+                $fecha = Carbon::parse($v->fecha_inicio_vjt);
 
                 $semanaKey = $fecha->format('W-Y');
                 $flujoSemanal[$semanaKey] = ($flujoSemanal[$semanaKey] ?? 0) + 1;
@@ -165,21 +165,21 @@ class TransporteHomeService
                 $horasBloques[$bloque] = ($horasBloques[$bloque] ?? 0) + 1;
 
                 $diaKey = $fecha->format('Y-m-d');
-                $pasajerosPorDia[$diaKey] = ($pasajerosPorDia[$diaKey] ?? 0) + (int) $v->pasajeros;
+                $pasajerosPorDia[$diaKey] = ($pasajerosPorDia[$diaKey] ?? 0) + (int) $v->total_pasajeros_vjt;
             }
 
             // Agrupaciones por ruta / vehículo / conductor
-            $nombreRuta = $v->ruta->nombre ?? 'Sin ruta';
-            $rutasSet[$nombreRuta] = ($rutasSet[$nombreRuta] ?? 0) + (int) $v->pasajeros;
+            $nombreRuta = $v->ruta->nombre_rtr ?? 'Sin ruta';
+            $rutasSet[$nombreRuta] = ($rutasSet[$nombreRuta] ?? 0) + (int) $v->total_pasajeros_vjt;
 
-            $placa = $v->vehiculo->placa ?? 'Sin placa';
-            $vehiculosSet[$placa] = ($vehiculosSet[$placa] ?? 0) + (float) $v->distancia_km;
+            $placa = $v->vehiculo->placa_vtr ?? 'Sin placa';
+            $vehiculosSet[$placa] = ($vehiculosSet[$placa] ?? 0) + (float) $v->distancia_km_vjt;
 
             if ($v->conductor && $v->conductor->persona) {
                 $nombreCond = trim(
                     ($v->conductor->persona->nombres_per ?? '') . ' ' .
                     ($v->conductor->persona->apellidos_per ?? '')
-                ) ?: ('Conductor #' . $v->conductor_id);
+                ) ?: ('Conductor #' . $v->conductor_use_id);
                 $conductoresSet[$nombreCond] = ($conductoresSet[$nombreCond] ?? 0) + 1;
             }
         }
@@ -223,10 +223,10 @@ class TransporteHomeService
         $resumen['conductores'] = $conductoresSet;
 
         // Mantenimientos (fuera del rango de viajes)
-        $resumen['mantenimientos']['pendiente']  = BusMantenimiento::where('estado', 'pendiente')->count();
-        $resumen['mantenimientos']['en_proceso'] = BusMantenimiento::where('estado', 'en_proceso')->count();
-        $resumen['mantenimientos']['completado'] = BusMantenimiento::where('estado', 'completado')->count();
-        $resumen['total_costo_mantenimiento']    = (float) BusMantenimiento::sum('costo');
+        $resumen['mantenimientos']['pendiente']  = BusMantenimiento::where('estado_mnv', 'pendiente')->count();
+        $resumen['mantenimientos']['en_proceso'] = BusMantenimiento::where('estado_mnv', 'en_proceso')->count();
+        $resumen['mantenimientos']['completado'] = BusMantenimiento::where('estado_mnv', 'completado')->count();
+        $resumen['total_costo_mantenimiento']    = (float) BusMantenimiento::sum('costo_mnv');
 
         // Promedio semanal
         $semanas = 1;
@@ -244,7 +244,7 @@ class TransporteHomeService
             $prevFin    = $inicio->copy()->subDay();
             $prevInicio = $prevFin->copy()->subDays($dias);
 
-            $prev = BusViaje::whereBetween('fecha_inicio', [
+            $prev = BusViaje::whereBetween('fecha_inicio_vjt', [
                 $prevInicio->toDateString() . ' 00:00:00',
                 $prevFin->toDateString() . ' 23:59:59',
             ])->count();

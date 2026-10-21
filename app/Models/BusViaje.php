@@ -3,81 +3,89 @@
 namespace App\Models;
 
 use App\Traits\PerteneceASedePorRelacion;
-use Illuminate\Database\Eloquent\Model;
+use App\Traits\RegistraAutoria;
 use Carbon\Carbon;
-use App\Models\BusVehiculo;
-use App\Models\BusRuta;
-use App\Models\Usuario;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusViaje extends Model
 {
     use PerteneceASedePorRelacion;
+    use RegistraAutoria;
+    use SoftDeletes;
 
     protected $relacionSede = 'vehiculo';
 
-    protected $table = 'bus_viajes';
+    protected $table = 'viaje_transporte';
+
+    protected $primaryKey = 'id_vjt';
 
     protected $fillable = [
-        'vehiculo_id',
-        'bus_ruta_id',
-        'conductor_id',
-        'turno',
-        'firebase_id',
-        'fecha_inicio',
-        'km_inicio',
-        'km_fin',
-        'distancia_km',
-        'litros_gastados',
-        'pasajeros',
-        'hubo_desvio',
-        'motivo_desvio',
-        'estado',
+        'vtr_id',
+        'rtr_id',
+        'conductor_use_id',
+        'turno_vjt',
+        'firebase_id_vjt',
+        'fecha_inicio_vjt',
+        'km_inicio_vjt',
+        'km_fin_vjt',
+        'distancia_km_vjt',
+        'litros_gastados_vjt',
+        'total_pasajeros_vjt',
+        'hubo_desvio_vjt',
+        'motivo_desvio_vjt',
+        'estado_viaje_vjt',
+        'status_id',
     ];
 
     protected $casts = [
-        'fecha_inicio'   => 'datetime',
-        'fecha_fin'    => 'datetime',
-        'hubo_desvio'    => 'boolean',
-        'km_inicio'       => 'decimal:2',
-        'km_fin'          => 'decimal:2',
-        'distancia_km'   => 'decimal:2',
-        'litros_gastados' => 'decimal:2',
-        'pasajeros'      => 'integer',
+        'fecha_inicio_vjt'    => 'datetime',
+        'hubo_desvio_vjt'     => 'boolean',
+        'km_inicio_vjt'       => 'decimal:2',
+        'km_fin_vjt'          => 'decimal:2',
+        'distancia_km_vjt'    => 'decimal:2',
+        'litros_gastados_vjt' => 'decimal:2',
+        'total_pasajeros_vjt' => 'integer',
     ];
 
     public function gpsLogs()
     {
-        return $this->hasMany(BusGpsLog::class, 'bus_viaje_id');
+        return $this->hasMany(BusGpsLog::class, 'vjt_id', 'id_vjt');
     }
 
     public function vehiculo()
     {
-        return $this->belongsTo(BusVehiculo::class, 'vehiculo_id');
+        return $this->belongsTo(BusVehiculo::class, 'vtr_id', 'id_vtr');
     }
 
     public function ruta()
     {
-        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+        return $this->belongsTo(BusRuta::class, 'rtr_id', 'id_rtr');
     }
 
     public function busRuta()
     {
-        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+        return $this->belongsTo(BusRuta::class, 'rtr_id', 'id_rtr');
     }
 
     public function conductor()
     {
-        return $this->belongsTo(Usuario::class, 'conductor_id', 'id_use');
+        return $this->belongsTo(Usuario::class, 'conductor_use_id', 'id_use');
     }
 
     public function cargasCombustible()
     {
-        return $this->hasMany(BusCargaCombustible::class, 'bus_viaje_id');
+        return $this->hasMany(BusCargaCombustible::class, 'vjt_id', 'id_vjt');
+    }
+
+    public function pasajerosRegistrados()
+    {
+        return $this->hasMany(ViajePasajero::class, 'vjt_id', 'id_vjt');
     }
 
     public function getEstadoBadgeAttribute(): string
     {
-        return match($this->estado) {
+        return match ($this->estado_viaje_vjt) {
             'programado' => '<span class="rd-badge rd-badge-warning">Programado</span>',
             'en_curso'   => '<span class="rd-badge rd-badge-info">En Curso</span>',
             'finalizado' => '<span class="rd-badge rd-badge-success">Finalizado</span>',
@@ -90,10 +98,10 @@ class BusViaje extends Model
     {
         return self::query()
             ->with(['vehiculo', 'ruta', 'conductor'])
-            ->when($buscar, fn ($q) => $q
-                ->whereHas('vehiculo', fn ($q2) => $q2->where('placa', 'like', "%{$buscar}%"))
-                ->orWhereHas('ruta', fn ($q2) => $q2->where('nombre', 'like', "%{$buscar}%")))
-            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('estado', $estado))
+            ->when($buscar, fn ($q) => $q->where(fn ($sub) => $sub
+                ->whereHas('vehiculo', fn ($q2) => $q2->where('placa_vtr', 'like', "%{$buscar}%"))
+                ->orWhereHas('ruta', fn ($q2) => $q2->where('nombre_rtr', 'like', "%{$buscar}%"))))
+            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('estado_viaje_vjt', $estado))
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
@@ -107,12 +115,13 @@ class BusViaje extends Model
     public static function actualizarViaje(self $viaje, array $datos): self
     {
         $viaje->update($datos);
+
         return $viaje;
     }
 
     public function scopeDelConductor($query, $conductorId)
     {
-        return $query->where('conductor_id', $conductorId);
+        return $query->where($this->qualifyColumn('conductor_use_id'), $conductorId);
     }
 
     public static function calcularTurnoActual(): string

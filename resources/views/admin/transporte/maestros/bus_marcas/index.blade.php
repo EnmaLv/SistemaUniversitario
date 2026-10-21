@@ -47,14 +47,14 @@
                 </thead>
                 <tbody>
                     @forelse($marcas as $marca)
-                        <x-table-row :id="$marca->id" data-id="{{ $marca->id }}">
+                        <x-table-row :id="$marca->id_mav" data-id="{{ $marca->id_mav }}">
                             <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
                                 {{ ($marcas->currentPage() - 1) * $marcas->perPage() + $loop->iteration }}
                             </td>
-                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $marca->nombre }}</td>
-                            <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $marca->descripcion ?: 'Sin descripción' }}</td>
+                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $marca->nombre_mav }}</td>
+                            <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $marca->descripcion_mav ?: 'Sin descripción' }}</td>
                             <td class="whitespace-nowrap px-6 py-4 text-center">
-                                @if ($marca->estado)
+                                @if ($marca->estaActivo())
                                     <span
                                         class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400">
                                         <i class="fas fa-check-circle"></i> Activo
@@ -67,13 +67,13 @@
                                 @endif
                             </td>
                             <x-table-actions
-                                :id="$marca->id"
+                                :id="$marca->id_mav"
                                 baseUrl="admin/transporte/maestros/bus_marcas"
                                 :show="false"
                                 :toggle="false"
-                                :on-edit="'abrirModalEditarMarca(' . json_encode($marca, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'"
+                                :on-edit="'abrirModalEditarMarca(' . json_encode(['id' => $marca->id_mav, 'nombre' => $marca->nombre_mav, 'descripcion' => $marca->descripcion_mav], JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'"
                             >
-                                @if ($marca->estado)
+                                @if ($marca->estaActivo())
                                     <form action="{{ route('admin.transporte.maestros.bus_marcas.destroy', $marca) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" onclick="event.stopPropagation(); confirmAccion(event, this, 'inactivar', 'marca')"

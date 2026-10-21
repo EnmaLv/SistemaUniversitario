@@ -121,7 +121,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($vehiculos as $vh)
-                <option value="{{ $vh->id }}">{{ $vh->placa }}</option>
+                <option value="{{ $vh->id_vtr }}">{{ $vh->placa_vtr }}</option>
             @endforeach
         </select>
     </div>
@@ -132,7 +132,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todas</option>
             @foreach ($rutas as $r)
-                <option value="{{ $r->id }}">{{ $r->nombre }}</option>
+                <option value="{{ $r->id_rtr }}">{{ $r->nombre_rtr }}</option>
             @endforeach
         </select>
     </div>

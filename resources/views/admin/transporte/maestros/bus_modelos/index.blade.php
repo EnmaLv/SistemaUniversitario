@@ -48,23 +48,23 @@
                 </thead>
                 <tbody>
                     @forelse($modelos as $modelo)
-                        <x-table-row :id="$modelo->id" data-id="{{ $modelo->id }}">
+                        <x-table-row :id="$modelo->id_mov" data-id="{{ $modelo->id_mov }}">
                             <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
                                 {{ ($modelos->currentPage() - 1) * $modelos->perPage() + $loop->iteration }}
                             </td>
-                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->busMarca->nombre ?? 'Sin marca' }}</td>
-                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->nombre }}</td>
-                            <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $modelo->descripcion ?: 'Sin descripción' }}</td>
+                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->busMarca->nombre_mav ?? 'Sin marca' }}</td>
+                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->nombre_mov }}</td>
+                            <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $modelo->descripcion_mov ?: 'Sin descripción' }}</td>
                             <td class="whitespace-nowrap px-6 py-4 text-center">
-                                @if ($modelo->estado)
+                                @if ($modelo->estaActivo())
                                     <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activo</span>
                                 @else
                                     <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactivo</span>
                                 @endif
                             </td>
-                            <x-table-actions :id="$modelo->id" baseUrl="admin/transporte/maestros/bus_modelos" :show="false" :toggle="false"
-                                :on-edit="'abrirModalEditarModelo(' . json_encode($modelo, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
-                                    @if ($modelo->estado)
+                            <x-table-actions :id="$modelo->id_mov" baseUrl="admin/transporte/maestros/bus_modelos" :show="false" :toggle="false"
+                                :on-edit="'abrirModalEditarModelo(' . json_encode(['id' => $modelo->id_mov, 'nombre' => $modelo->nombre_mov, 'descripcion' => $modelo->descripcion_mov, 'marca_id' => $modelo->mav_id, 'marca_nombre' => $modelo->busMarca->nombre_mav ?? null], JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
+                                    @if ($modelo->estaActivo())
                                         <form action="{{ route('admin.transporte.maestros.bus_modelos.destroy', $modelo) }}" method="POST" class="inline">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-rose-100 hover:text-rose-500 dark:hover:bg-rose-950/50"
@@ -117,7 +117,7 @@
                                 <select name="marca_id" class="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-0" style="color:var(--text-main);">
                                     <option value="">-- Seleccione una marca --</option>
                                     @foreach ($marcas as $marca)
-                                        <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
+                                        <option value="{{ $marca->id_mav }}">{{ $marca->nombre_mav }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -168,7 +168,7 @@
                                 <select id="editMarca" name="marca_id" class="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-0" style="color:var(--text-main);">
                                     <option value="">-- Seleccione una marca --</option>
                                     @foreach ($marcas as $marca)
-                                        <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
+                                        <option value="{{ $marca->id_mav }}">{{ $marca->nombre_mav }}</option>
                                     @endforeach
                                 </select>
                             </div>

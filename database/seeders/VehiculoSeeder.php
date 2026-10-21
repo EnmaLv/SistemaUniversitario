@@ -82,43 +82,43 @@ class VehiculoSeeder extends Seeder
         $insertados = 0;
 
         foreach ($vehiculos as $v) {
-            $modeloId = DB::table('modelos')
-                ->join('marcas', 'marcas.id', '=', 'modelos.marca_id')
-                ->where('marcas.nombre', $v['marca'])
-                ->where('modelos.nombre', $v['modelo'])
-                ->value('modelos.id');
+            $modeloId = DB::table('modelo_vehiculo')
+                ->join('marca_vehiculo', 'marca_vehiculo.id_mav', '=', 'modelo_vehiculo.mav_id')
+                ->where('marca_vehiculo.nombre_mav', $v['marca'])
+                ->where('modelo_vehiculo.nombre_mov', $v['modelo'])
+                ->value('modelo_vehiculo.id_mov');
 
-            $combustibleId = DB::table('tipo_combustibles')
-                ->where('nombre', $v['tipo_combustible'])
-                ->value('id');
+            $combustibleId = DB::table('tipo_combustible')
+                ->where('nombre_tcb', $v['tipo_combustible'])
+                ->value('id_tcb');
 
             if (!$modeloId || !$combustibleId) {
                 $this->command->warn("Vehículo omitido (placa {$v['placa']}): modelo o combustible no encontrado.");
                 continue;
             }
 
-            DB::table('vehiculos')->updateOrInsert(
-                ['placa' => $v['placa']],
+            DB::table('vehiculo_transporte')->updateOrInsert(
+                ['placa_vtr' => $v['placa']],
                 [
-                    'modelo_id'                 => $modeloId,
-                    'anio'                      => $v['anio'],
-                    'color'                     => $v['color'],
-                    'peso'                      => $v['peso'],
-                    'cantidad_pasajeros'        => $v['cantidad_pasajeros'],
-                    'tipo_combustible_id'       => $combustibleId,
-                    'cantidad_cilindros'        => $v['cantidad_cilindros'],
-                    'capacidad_tanque_litros'   => $v['capacidad_tanque_litros'],
-                    'nivel_combustible_actual'  => $v['nivel_combustible_actual'],
-                    'consumo_urbano'            => $v['consumo_urbano'],
-                    'consumo_carretera'         => $v['consumo_carretera'],
-                    'consumo_relenti'           => $v['consumo_relenti'],
-                    'km_actual'                 => $v['km_actual'],
-                    'km_proximo_mantenimiento'  => $v['km_proximo_mantenimiento'],
-                    'sed_id'                   => $sedeId,
-                    'activo'                    => $v['activo'],
-                    'estado'                    => $v['estado'],
-                    'created_at'                => now(),
-                    'updated_at'                => now(),
+                    'mov_id'                       => $modeloId,
+                    'anio_vtr'                     => $v['anio'],
+                    'color_vtr'                    => $v['color'],
+                    'peso_vtr'                     => $v['peso'],
+                    'capacidad_pasajeros_vtr'      => $v['cantidad_pasajeros'],
+                    'tcb_id'                       => $combustibleId,
+                    'cantidad_cilindros_vtr'       => $v['cantidad_cilindros'],
+                    'capacidad_tanque_litros_vtr'  => $v['capacidad_tanque_litros'],
+                    'nivel_combustible_actual_vtr' => $v['nivel_combustible_actual'],
+                    'consumo_urbano_vtr'           => $v['consumo_urbano'],
+                    'consumo_carretera_vtr'        => $v['consumo_carretera'],
+                    'consumo_ralenti_vtr'          => $v['consumo_relenti'],
+                    'km_actual_vtr'                => $v['km_actual'],
+                    'km_proximo_mantenimiento_vtr' => $v['km_proximo_mantenimiento'],
+                    'sed_id'                       => $sedeId,
+                    'status_id'                    => $v['activo'] ? 1 : 2,
+                    'estado_operativo_vtr'         => $v['estado'],
+                    'created_at'                   => now(),
+                    'updated_at'                   => now(),
                 ]
             );
 

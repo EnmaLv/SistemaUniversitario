@@ -2,36 +2,43 @@
 
 namespace App\Models;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ViajePasajero extends Model
 {
-    protected $table = 'viaje_pasajeros';
-    public $timestamps = false;
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'pasajero_viaje_transporte';
+
+    protected $primaryKey = 'id_pvt';
 
     protected $fillable = [
-        'bus_viaje_id',
-        'persona_id',
-        'bus_parada_id',
-        'escaneado_at',
+        'vjt_id',
+        'per_id',
+        'ptr_id',
+        'escaneado_at_pvt',
+        'status_id',
     ];
 
     protected $casts = [
-        'escaneado_at' => 'datetime',
+        'escaneado_at_pvt' => 'datetime',
     ];
 
     public function busViaje()
     {
-        return $this->belongsTo(BusViaje::class, 'bus_viaje_id');
+        return $this->belongsTo(BusViaje::class, 'vjt_id', 'id_vjt');
     }
 
     public function persona()
     {
-        return $this->belongsTo(Persona::class, 'persona_id');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
     public function busParada()
     {
-        return $this->belongsTo(BusParada::class, 'bus_parada_id');
+        return $this->belongsTo(BusParada::class, 'ptr_id', 'id_ptr');
     }
 }

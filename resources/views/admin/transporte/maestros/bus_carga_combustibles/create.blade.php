@@ -44,10 +44,10 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_vehiculo_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione VehÃ­culo --</option>
                                 @foreach($vehiculos as $v)
-                                    <option value="{{ $v->id }}" {{ old('bus_vehiculo_id') == $v->id ? 'selected' : '' }}
-                                        data-combustible="{{ $v->tipo_combustible_id }}"
-                                        data-km="{{ $v->km_actual }}">
-                                        {{ $v->placa }} â€ {{ $v->modelo->nombre ?? '' }} (KM: {{ number_format($v->km_actual, 0) }})
+                                    <option value="{{ $v->id_vtr }}" {{ old('bus_vehiculo_id') == $v->id_vtr ? 'selected' : '' }}
+                                        data-combustible="{{ $v->tcb_id }}"
+                                        data-km="{{ $v->km_actual_vtr }}">
+                                        {{ $v->placa_vtr }} â€ {{ $v->modelo->nombre_mov ?? '' }} (KM: {{ number_format($v->km_actual_vtr, 0) }})
                                     </option>
                                 @endforeach
                             </select>
@@ -65,8 +65,8 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_viaje_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione Viaje --</option>
                                 @foreach($viajes as $viaje)
-                                    <option value="{{ $viaje->id }}" {{ old('bus_viaje_id') == $viaje->id ? 'selected' : '' }}>
-                                        #{{ $viaje->id }} | {{ $viaje->vehiculo->placa ?? '' }} - {{ $viaje->ruta->nombre ?? '' }} ({{ $viaje->fecha_inicio ? $viaje->fecha_inicio->format('d/m/Y') : 'Prog.' }})
+                                    <option value="{{ $viaje->id_vjt }}" {{ old('bus_viaje_id') == $viaje->id_vjt ? 'selected' : '' }}>
+                                        #{{ $viaje->id_vjt }} | {{ $viaje->vehiculo->placa_vtr ?? '' }} - {{ $viaje->ruta->nombre_rtr ?? '' }} ({{ $viaje->fecha_inicio_vjt ? $viaje->fecha_inicio_vjt->format('d/m/Y') : 'Prog.' }})
                                     </option>
                                 @endforeach
                             </select>
@@ -84,8 +84,8 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_tipo_combustible_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione Tipo --</option>
                                 @foreach($tipos as $tipo)
-                                    <option value="{{ $tipo->id }}" {{ old('bus_tipo_combustible_id') == $tipo->id ? 'selected' : '' }}>
-                                        {{ $tipo->nombre }}
+                                    <option value="{{ $tipo->id_tcb }}" {{ old('bus_tipo_combustible_id') == $tipo->id_tcb ? 'selected' : '' }}>
+                                        {{ $tipo->nombre_tcb }}
                                     </option>
                                 @endforeach
                             </select>

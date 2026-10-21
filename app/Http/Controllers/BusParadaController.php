@@ -7,10 +7,10 @@ use Illuminate\Http\Request;
 
 class BusParadaController extends Controller
 {
-    private function rules(int $excludeId = null): array
+    private function rules(?int $excludeId = null): array
     {
         return [
-            'nombre'    => 'required|string|max:100|unique:bus_paradas,nombre,' . $excludeId,
+            'nombre'    => 'required|string|max:100|unique:parada_transporte,nombre_ptr,' . ($excludeId ?? 'NULL') . ',id_ptr',
             'lat'       => 'required|numeric|between:-90,90',
             'lng'       => 'required|numeric|between:-180,180',
             'direccion' => 'nullable|string|max:255',
@@ -44,7 +44,7 @@ class BusParadaController extends Controller
 
     public function update(Request $request, BusParada $busParada)
     {
-        $validated = $request->validate($this->rules($busParada->id));
+        $validated = $request->validate($this->rules($busParada->id_ptr));
         BusParada::actualizarParada($busParada, $validated);
 
         return redirect()->route('admin.transporte.maestros.bus_paradas.index')
@@ -53,7 +53,7 @@ class BusParadaController extends Controller
 
     public function destroy(BusParada $busParada)
     {
-        $busParada->update(['estado' => 0]);
+        $busParada->update(['status_id' => BusParada::STATUS_INACTIVO]);
         return redirect()
             ->route('admin.transporte.maestros.bus_paradas.index')
             ->with('success', 'Parada inactivada correctamente.');
@@ -61,7 +61,7 @@ class BusParadaController extends Controller
 
     public function activar(BusParada $busParada)
     {
-        $busParada->update(['estado' => 1]);
+        $busParada->update(['status_id' => BusParada::STATUS_ACTIVO]);
         return redirect()
             ->route('admin.transporte.maestros.bus_paradas.index')
             ->with('success', 'Parada activada correctamente.');
@@ -69,9 +69,9 @@ class BusParadaController extends Controller
 
     public function verificarNombre(Request $request)
     {
-        $query = BusParada::where('nombre', trim($request->nombre));
+        $query = BusParada::where('nombre_ptr', trim($request->nombre));
         if ($request->exclude) {
-            $query->where('id', '!=', $request->exclude);
+            $query->where('id_ptr', '!=', $request->exclude);
         }
         return response()->json(['existe' => $query->exists()]);
     }

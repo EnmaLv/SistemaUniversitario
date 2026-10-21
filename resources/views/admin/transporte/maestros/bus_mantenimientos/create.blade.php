@@ -44,8 +44,8 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_vehiculo_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione --</option>
                                 @foreach($vehiculos as $vehiculo)
-                                    <option value="{{ $vehiculo->id }}" {{ old('bus_vehiculo_id') == $vehiculo->id ? 'selected' : '' }}>
-                                        {{ $vehiculo->placa }} â€ {{ $vehiculo->modelo->nombre ?? '' }}
+                                    <option value="{{ $vehiculo->id_vtr }}" {{ old('bus_vehiculo_id') == $vehiculo->id_vtr ? 'selected' : '' }}>
+                                        {{ $vehiculo->placa_vtr }} â€ {{ $vehiculo->modelo->nombre_mov ?? '' }}
                                     </option>
                                 @endforeach
                             </select>

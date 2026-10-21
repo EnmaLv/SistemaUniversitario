@@ -29,15 +29,15 @@ class BusParadaSeeder extends Seeder
         ];
 
         foreach ($paradas as $parada) {
-            DB::table('bus_paradas')->updateOrInsert(
-                ['nombre' => $parada['nombre']],
+            DB::table('parada_transporte')->updateOrInsert(
+                ['nombre_ptr' => $parada['nombre']],
                 [
-                    'lat'        => $parada['lat'],
-                    'lng'        => $parada['lng'],
-                    'direccion'  => $parada['direccion'],
-                    'estado'     => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'lat_ptr'       => $parada['lat'],
+                    'lng_ptr'       => $parada['lng'],
+                    'direccion_ptr' => $parada['direccion'],
+                    'status_id'     => 1,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
                 ]
             );
         }

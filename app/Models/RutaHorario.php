@@ -2,25 +2,28 @@
 
 namespace App\Models;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RutaHorario extends Model
 {
-    protected $table = 'ruta_horarios';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'horario_ruta_transporte';
+
+    protected $primaryKey = 'id_hrt';
 
     protected $fillable = [
-        'bus_ruta_id',
-        'hora_salida',
-        'tipo_viaje',
-        'estado'
-    ];
-
-    protected $casts = [
-        'estado' => 'boolean',
+        'rtr_id',
+        'hora_salida_hrt',
+        'tipo_viaje_hrt',
+        'status_id',
     ];
 
     public function ruta()
     {
-        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+        return $this->belongsTo(BusRuta::class, 'rtr_id', 'id_rtr');
     }
 }

@@ -19,13 +19,13 @@ class MarcaSeeder extends Seeder
         ];
 
         foreach ($marcas as $marca) {
-            DB::table('marcas')->updateOrInsert(
-                ['nombre' => $marca['nombre']],
+            DB::table('marca_vehiculo')->updateOrInsert(
+                ['nombre_mav' => $marca['nombre']],
                 [
-                    'descripcion' => $marca['descripcion'],
-                    'estado'      => 1,
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
+                    'descripcion_mav' => $marca['descripcion'],
+                    'status_id'       => 1,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
                 ]
             );
         }

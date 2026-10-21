@@ -10,7 +10,7 @@
                     <span class="journey-page-icon"><i class="fas fa-bus"></i></span>
                     <div>
                         <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">
-                            Editar viaje #{{ $busViaje->id }}
+                            Editar viaje #{{ $busViaje->id_vjt }}
                         </h1>
                         <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400 sm:text-sm">
                             Modifica la unidad, ruta o conductor asignado para este viaje.
@@ -56,9 +56,9 @@
                                     <select name="vehiculo_id" required>
                                         <option value="">-- Seleccionar vehículo --</option>
                                         @foreach ($vehiculos as $vehiculo)
-                                            <option value="{{ $vehiculo->id }}"
-                                                {{ old('vehiculo_id', $busViaje->vehiculo_id) == $vehiculo->id ? 'selected' : '' }}>
-                                                {{ $vehiculo->unidad ?? 'Unidad sin nombre' }} — {{ $vehiculo->placa }}
+                                            <option value="{{ $vehiculo->id_vtr }}"
+                                                {{ old('vehiculo_id', $busViaje->vtr_id) == $vehiculo->id_vtr ? 'selected' : '' }}>
+                                                {{ $vehiculo->unidad ?? 'Unidad sin nombre' }} — {{ $vehiculo->placa_vtr }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -78,11 +78,11 @@
                                     <select name="bus_ruta_id" id="rutaSelect" required>
                                         <option value="">-- Seleccionar ruta --</option>
                                         @foreach ($rutas as $ruta)
-                                            <option value="{{ $ruta->id }}"
-                                                data-distancia="{{ $ruta->distancia_km }}"
+                                            <option value="{{ $ruta->id_rtr }}"
+                                                data-distancia="{{ $ruta->distancia_km_rtr }}"
                                                 data-paradas="{{ $ruta->paradas->count() }}"
-                                                {{ old('bus_ruta_id', $busViaje->bus_ruta_id) == $ruta->id ? 'selected' : '' }}>
-                                                {{ $ruta->nombre }} ({{ $ruta->distancia_km }} km)
+                                                {{ old('bus_ruta_id', $busViaje->rtr_id) == $ruta->id_rtr ? 'selected' : '' }}>
+                                                {{ $ruta->nombre_rtr }} ({{ $ruta->distancia_km_rtr }} km)
                                             </option>
                                         @endforeach
                                     </select>
@@ -103,7 +103,7 @@
                                         <option value="">-- Seleccionar chofer --</option>
                                         @foreach ($conductores as $conductor)
                                             <option value="{{ $conductor->id_use }}"
-                                                {{ old('conductor_id', $busViaje->conductor_id) == $conductor->id_use ? 'selected' : '' }}>
+                                                {{ old('conductor_id', $busViaje->conductor_use_id) == $conductor->id_use ? 'selected' : '' }}>
                                                 {{ $conductor->persona->nombres_per ?? '' }}
                                                 {{ $conductor->persona->apellidos_per ?? '' }}
                                             </option>
@@ -123,13 +123,13 @@
                                 <div class="journey-input mt-1">
                                     <span><i class="fas fa-clock"></i></span>
                                     <select name="turno" id="turnoSelect" required>
-                                        <option value="mañana" {{ old('turno', $busViaje->turno) === 'mañana' ? 'selected' : '' }}>
+                                        <option value="mañana" {{ old('turno', $busViaje->turno_vjt) === 'mañana' ? 'selected' : '' }}>
                                             Mañana · 06:00 AM – 12:59 PM
                                         </option>
-                                        <option value="tarde" {{ old('turno', $busViaje->turno) === 'tarde' ? 'selected' : '' }}>
+                                        <option value="tarde" {{ old('turno', $busViaje->turno_vjt) === 'tarde' ? 'selected' : '' }}>
                                             Tarde · 01:00 PM – 05:59 PM
                                         </option>
-                                        <option value="noche" {{ old('turno', $busViaje->turno) === 'noche' ? 'selected' : '' }}>
+                                        <option value="noche" {{ old('turno', $busViaje->turno_vjt) === 'noche' ? 'selected' : '' }}>
                                             Noche · 06:00 PM – 11:59 PM
                                         </option>
                                     </select>
@@ -197,12 +197,12 @@
 
                         <div class="flex flex-wrap items-center gap-3">
                             @php
-                                $estadoBadge = match ($busViaje->estado) {
+                                $estadoBadge = match ($busViaje->estado_viaje_vjt) {
                                     'programado' => ['Programado', 'amber'],
                                     'en_curso'   => ['En curso', 'blue'],
                                     'finalizado' => ['Finalizado', 'emerald'],
                                     'cancelado'  => ['Cancelado', 'rose'],
-                                    default      => [ucfirst($busViaje->estado), 'gray'],
+                                    default      => [ucfirst($busViaje->estado_viaje_vjt), 'gray'],
                                 };
                             @endphp
                             <span class="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold
@@ -212,7 +212,7 @@
                             </span>
                             <span class="text-xs text-gray-500 dark:text-gray-400">
                                 Firebase ID:
-                                <code style="color:var(--text-main);">{{ $busViaje->firebase_id ?? 'N/A' }}</code>
+                                <code style="color:var(--text-main);">{{ $busViaje->firebase_id_vjt ?? 'N/A' }}</code>
                             </span>
                         </div>
                     </section>
@@ -341,16 +341,19 @@
     </style>
 
     <script>
-        window.RUTAS_DATA = @json($rutas->mapWithKeys(function ($r) {
-            return [$r->id => [
-                'distancia' => $r->distancia_km,
-                'paradas'   => $r->paradas->count(),
-                'horarios'  => $r->horarios->map(fn($h) => [
-                    'hora' => $h->hora_salida,
-                    'tipo' => $h->tipo_viaje,
-                ])->values(),
-            ]];
-        }));
+        @php
+            $rutasData = $rutas->mapWithKeys(fn ($r) => [
+                $r->id_rtr => [
+                    'distancia' => $r->distancia_km_rtr,
+                    'paradas'   => $r->paradas->count(),
+                    'horarios'  => $r->horarios->map(fn ($h) => [
+                        'hora' => $h->hora_salida_hrt,
+                        'tipo' => $h->tipo_viaje_hrt,
+                    ])->values(),
+                ],
+            ]);
+        @endphp
+        window.RUTAS_DATA = @json($rutasData);
 
         document.addEventListener('DOMContentLoaded', function () {
             const rutaSelect  = document.getElementById('rutaSelect');

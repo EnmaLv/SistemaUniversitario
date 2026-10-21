@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 class BusMantenimientoController extends Controller
 {
-    private function rules(int $excludeId = null): array
+    private function rules(?int $excludeId = null): array
     {
         return [
-            'bus_vehiculo_id' => 'required|exists:bus_vehiculos,id',
+            'bus_vehiculo_id' => 'required|exists:vehiculo_transporte,id_vtr',
             'tipo'            => 'required|in:preventivo,correctivo',
             'titulo'          => 'required|string|max:150',
             'descripcion'     => 'nullable|string|max:2000',
@@ -36,7 +36,7 @@ class BusMantenimientoController extends Controller
 
     public function create()
     {
-        $vehiculos = BusVehiculo::where('activo', 1)->orderBy('placa')->get();
+        $vehiculos = BusVehiculo::activos()->with('modelo')->orderBy('placa_vtr')->get();
         return view('admin.transporte.maestros.bus_mantenimientos.create', compact('vehiculos'));
     }
 
@@ -51,14 +51,14 @@ class BusMantenimientoController extends Controller
 
     public function edit(BusMantenimiento $busMantenimiento)
     {
-        $vehiculos = BusVehiculo::where('activo', 1)->orderBy('placa')->get();
+        $vehiculos = BusVehiculo::activos()->with('modelo')->orderBy('placa_vtr')->get();
         return view('admin.transporte.maestros.bus_mantenimientos.edit',
             compact('busMantenimiento', 'vehiculos'));
     }
 
     public function update(Request $request, BusMantenimiento $busMantenimiento)
     {
-        $validated = $request->validate($this->rules($busMantenimiento->id));
+        $validated = $request->validate($this->rules($busMantenimiento->id_mnv));
         BusMantenimiento::actualizarMantenimiento($busMantenimiento, $validated);
         return redirect()
             ->route('admin.transporte.maestros.bus_mantenimientos.index')

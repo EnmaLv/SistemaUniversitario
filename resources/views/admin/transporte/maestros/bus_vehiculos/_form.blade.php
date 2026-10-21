@@ -12,7 +12,7 @@
 
     // Valor viejo o del modelo
     $v = fn(string $campo, $default = null) =>
-        old($campo, optional($vehiculo)->{$campo} ?? $default);
+        old($campo, optional($vehiculo)->{\App\Models\BusVehiculo::COLUMNAS_FORMULARIO[$campo] ?? $campo} ?? $default);
 @endphp
 
 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -70,9 +70,9 @@
                             class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all @error('modelo_id') is-invalid @enderror">
                             <option value="" selected disabled>-- Seleccione --</option>
                             @foreach ($modelos as $modelo)
-                                <option value="{{ $modelo->id }}"
-                                    {{ $v('modelo_id') == $modelo->id ? 'selected' : '' }}>
-                                    {{ $modelo->busMarca->nombre ?? '' }} - {{ $modelo->nombre }}
+                                <option value="{{ $modelo->id_mov }}"
+                                    {{ $v('modelo_id') == $modelo->id_mov ? 'selected' : '' }}>
+                                    {{ $modelo->busMarca->nombre_mav ?? '' }} - {{ $modelo->nombre_mov }}
                                 </option>
                             @endforeach
                         </select>
@@ -227,9 +227,9 @@
                             class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all @error('tipo_combustible_id') is-invalid @enderror">
                             <option value="" selected disabled>-- Seleccione --</option>
                             @foreach ($tipos as $tipo)
-                                <option value="{{ $tipo->id }}"
-                                    {{ $v('tipo_combustible_id') == $tipo->id ? 'selected' : '' }}>
-                                    {{ $tipo->nombre }}
+                                <option value="{{ $tipo->id_tcb }}"
+                                    {{ $v('tipo_combustible_id') == $tipo->id_tcb ? 'selected' : '' }}>
+                                    {{ $tipo->nombre_tcb }}
                                 </option>
                             @endforeach
                         </select>
@@ -476,7 +476,7 @@
                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                         <option value="">-- Seleccione una marca --</option>
                         @foreach ($marcas as $marca)
-                            <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
+                            <option value="{{ $marca->id_mav }}">{{ $marca->nombre_mav }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -771,7 +771,7 @@
     // ===== Verificación de placa en tiempo real =====
     let placaTimer = null;
     const inputPlaca = document.querySelector('[name="placa"]');
-    const excludeId  = {{ $vehiculo->id ?? 'null' }};
+    const excludeId  = {{ $vehiculo->id_vtr ?? 'null' }};
     if (inputPlaca) {
         inputPlaca.addEventListener('input', function() {
             const val = this.value.trim();

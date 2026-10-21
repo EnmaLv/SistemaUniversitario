@@ -54,39 +54,39 @@
                         </thead>
                         <tbody class="divide-y text-xs font-medium">
                             @forelse($rutas as $ruta)
-                                <x-table-row :id="$ruta->id">
+                                <x-table-row :id="$ruta->id_rtr">
                                     <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
                                         {{ ($rutas->currentPage() - 1) * $rutas->perPage() + $loop->iteration }}
                                     </td>
-                                    <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $ruta->nombre }}</td>
+                                    <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $ruta->nombre_rtr }}</td>
                                     <td class="px-6 py-4 text-center" style="color:var(--text-main);">
                                         @if ($ruta->paradas && $ruta->paradas->isNotEmpty())
-                                            {{ $ruta->paradas->first()->nombre }}
+                                            {{ $ruta->paradas->first()->nombre_ptr }}
                                             <i class="fas fa-arrow-right mx-1" style="color:var(--color-primary);"></i>
-                                            {{ $ruta->paradas->last()->nombre }}
+                                            {{ $ruta->paradas->last()->nombre_ptr }}
                                         @else
                                             <span style="color:var(--text-muted);">Sin paradas trazadas</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $ruta->distancia_km }} km</td>
+                                    <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $ruta->distancia_km_rtr }} km</td>
                                     <td class="px-6 py-4 text-center">
                                         @forelse($ruta->horarios as $horario)
-                                            <span class="rd-badge m-1 inline-flex items-center gap-1 text-[10px] {{ $horario->tipo_viaje === 'entrada' ? 'rd-badge-success' : 'rd-badge-danger' }}">
-                                                {{ substr($horario->hora_salida, 0, 5) }}
-                                                {{ $horario->tipo_viaje === 'entrada' ? 'Entrada' : 'Salida' }}
+                                            <span class="rd-badge m-1 inline-flex items-center gap-1 text-[10px] {{ $horario->tipo_viaje_hrt === 'entrada' ? 'rd-badge-success' : 'rd-badge-danger' }}">
+                                                {{ substr($horario->hora_salida_hrt, 0, 5) }}
+                                                {{ $horario->tipo_viaje_hrt === 'entrada' ? 'Entrada' : 'Salida' }}
                                             </span>
                                         @empty
                                             <span style="color:var(--text-muted);">Sin horarios</span>
                                         @endforelse
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-center">
-                                        @if ($ruta->estado)
+                                        @if ($ruta->estaActivo())
                                             <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activa</span>
                                         @else
                                             <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactiva</span>
                                         @endif
                                     </td>
-                                    <x-table-actions :id="$ruta->id" baseUrl="admin/transporte/maestros/bus_rutas" :status="$ruta->estado" :show="false" />
+                                    <x-table-actions :id="$ruta->id_rtr" baseUrl="admin/transporte/maestros/bus_rutas" :status="$ruta->status_id == 1" :show="false" />
                                 </x-table-row>
                             @empty
                                 <tr>

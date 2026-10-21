@@ -16,7 +16,7 @@ class BusMarcaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre'      => 'required|string|max:100|unique:marcas,nombre',
+            'nombre'      => 'required|string|max:100|unique:marca_vehiculo,nombre_mav',
             'descripcion' => 'nullable|string|max:255',
         ]);
 
@@ -26,9 +26,9 @@ class BusMarcaController extends Controller
             'success' => true,
             'message' => 'Marca registrada correctamente.',
             'marca'   => [
-                'id'          => $marca->id,
-                'nombre'      => $marca->nombre,
-                'descripcion' => $marca->descripcion,
+                'id'          => $marca->id_mav,
+                'nombre'      => $marca->nombre_mav,
+                'descripcion' => $marca->descripcion_mav,
                 'estado'      => true,
             ],
         ]);
@@ -37,7 +37,7 @@ class BusMarcaController extends Controller
     public function update(Request $request, BusMarca $busMarca)
     {
         $validated = $request->validate([
-            'nombre'      => 'required|string|max:100|unique:marcas,nombre,' . $busMarca->id,
+            'nombre'      => 'required|string|max:100|unique:marca_vehiculo,nombre_mav,' . $busMarca->id_mav . ',id_mav',
             'descripcion' => 'nullable|string|max:255',
         ]);
 
@@ -48,23 +48,23 @@ class BusMarcaController extends Controller
             'success' => true,
             'message' => 'Marca actualizada correctamente.',
             'marca'   => [
-                'id'          => $busMarca->id,
-                'nombre'      => $busMarca->nombre,
-                'descripcion' => $busMarca->descripcion,
-                'estado'      => $busMarca->estado,
+                'id'          => $busMarca->id_mav,
+                'nombre'      => $busMarca->nombre_mav,
+                'descripcion' => $busMarca->descripcion_mav,
+                'estado'      => $busMarca->estaActivo(),
             ],
         ]);
     }
 
     public function destroy(BusMarca $busMarca)
     {
-        $busMarca->update(['estado' => 0]);
+        $busMarca->update(['status_id' => BusMarca::STATUS_INACTIVO]);
         return response()->json(['success' => true, 'message' => 'Marca inactivada correctamente.']);
     }
 
     public function activar(BusMarca $busMarca)
     {
-        $busMarca->update(['estado' => 1]);
+        $busMarca->update(['status_id' => BusMarca::STATUS_ACTIVO]);
         return response()->json(['success' => true, 'message' => 'Marca activada correctamente.']);
     }
 }

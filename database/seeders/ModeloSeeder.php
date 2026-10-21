@@ -39,7 +39,7 @@ class ModeloSeeder extends Seeder
         $total = 0;
 
         foreach ($modelos as $marcaNombre => $items) {
-            $marcaId = DB::table('marcas')->where('nombre', $marcaNombre)->value('id');
+            $marcaId = DB::table('marca_vehiculo')->where('nombre_mav', $marcaNombre)->value('id_mav');
 
             if (!$marcaId) {
                 $this->command->warn("Marca no encontrada: {$marcaNombre} — se omiten sus modelos.");
@@ -47,13 +47,13 @@ class ModeloSeeder extends Seeder
             }
 
             foreach ($items as $item) {
-                DB::table('modelos')->updateOrInsert(
-                    ['marca_id' => $marcaId, 'nombre' => $item['nombre']],
+                DB::table('modelo_vehiculo')->updateOrInsert(
+                    ['mav_id' => $marcaId, 'nombre_mov' => $item['nombre']],
                     [
-                        'descripcion' => $item['descripcion'],
-                        'estado'      => 1,
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
+                        'descripcion_mov' => $item['descripcion'],
+                        'status_id'       => 1,
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
                     ]
                 );
                 $total++;

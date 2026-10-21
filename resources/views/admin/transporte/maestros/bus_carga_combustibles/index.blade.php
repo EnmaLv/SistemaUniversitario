@@ -33,8 +33,8 @@
                             onchange="this.form.submit()">
                             <option value="">Todos los vehículos</option>
                             @foreach($vehiculos as $v)
-                                <option value="{{ $v->id }}" {{ request('vehiculo_id') == $v->id ? 'selected' : '' }}>
-                                    {{ $v->placa }}
+                                <option value="{{ $v->id_vtr }}" {{ request('vehiculo_id') == $v->id_vtr ? 'selected' : '' }}>
+                                    {{ $v->placa_vtr }}
                                 </option>
                             @endforeach
                         </select>
@@ -64,22 +64,22 @@
                 </thead>
                 <tbody>
                     @forelse($cargas as $c)
-                        <x-table-row :id="$c->id">
+                        <x-table-row :id="$c->id_ccb">
                             <td class="text-center">
                                 {{ ($cargas->currentPage() - 1) * $cargas->perPage() + $loop->iteration }}
                             </td>
-                            <td class="text-center">{{ $c->fecha ? $c->fecha->format('d/m/Y') : '-' }}</td>
-                            <td class="text-center"><strong>{{ $c->vehiculo->placa ?? '-' }}</strong></td>
+                            <td class="text-center">{{ $c->fecha_ccb ? $c->fecha_ccb->format('d/m/Y') : '-' }}</td>
+                            <td class="text-center"><strong>{{ $c->vehiculo->placa_vtr ?? '-' }}</strong></td>
                             <td class="text-center">
-                                <span class="rd-badge rd-badge-info">{{ $c->tipoCombustible->nombre ?? '-' }}</span>
+                                <span class="rd-badge rd-badge-info">{{ $c->tipoCombustible->nombre_tcb ?? '-' }}</span>
                             </td>
                             <td class="text-center">{{ $c->boca_numero }}</td>
-                            <td class="text-center"><strong>{{ number_format($c->litros, 2) }} L</strong></td>
-                            <td class="text-center">${{ number_format($c->precio_litros, 2) }}</td>
+                            <td class="text-center"><strong>{{ number_format($c->litros_ccb, 2) }} L</strong></td>
+                            <td class="text-center">${{ number_format($c->precio_litro_ccb, 2) }}</td>
                             <td class="text-center" style="color:var(--color-primary);font-weight:700;">
-                                ${{ number_format($c->total, 2) }}
+                                ${{ number_format($c->total_ccb, 2) }}
                             </td>
-                            <td class="text-center">{{ number_format($c->km_al_cargar, 1) }} km</td>
+                            <td class="text-center">{{ number_format($c->km_al_cargar_ccb, 1) }} km</td>
                             <td class="text-center">
                                 <div class="rd-action-group">
                                     <a href="{{ route('admin.transporte.maestros.bus_carga_combustibles.edit', $c) }}"

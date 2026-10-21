@@ -6,34 +6,37 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\BusModelo;
+use App\Models\BusVehiculo;
+use App\Support\Transporte\FormatoApiTransporte;
 
 class BusModeloApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = BusModelo::with('busMarca')->orderBy('nombre');
+        $query = BusModelo::with('busMarca')->orderBy('nombre_mov');
 
         if ($request->filled('marca_id')) {
-            $query->where('marca_id', $request->integer('marca_id'));
+            $query->where('mav_id', $request->integer('marca_id'));
         }
 
         if ($request->filled('estado')) {
-            $query->where('estado', $request->boolean('estado') ? 1 : 0);
+            $query->where('status_id', $request->boolean('estado') ? 1 : 2);
         }
 
-        return response()->json(['success' => true, 'data' => $query->get()]);
+        $modelos = $query->get()->map(fn ($modelo) => FormatoApiTransporte::modelo($modelo))->values();
+
+        return response()->json(['success' => true, 'data' => $modelos]);
     }
 
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'marca_id' => 'required|integer|exists:marcas,id',
+            'marca_id' => 'required|integer|exists:marca_vehiculo,id_mav,deleted_at,NULL',
             'nombre'   => 'required|string|max:100',
         ]);
 
-        // Nombre único por marca
-        $existe = BusModelo::where('marca_id', $validated['marca_id'])
-            ->where('nombre', ucfirst(trim($validated['nombre'])))
+        $existe = BusModelo::where('mav_id', $validated['marca_id'])
+            ->where('nombre_mov', ucfirst(trim($validated['nombre'])))
             ->exists();
 
         if ($existe) {
@@ -44,57 +47,56 @@ class BusModeloApiController extends Controller
         }
 
         $modelo = BusModelo::create([
-            'marca_id' => $validated['marca_id'],
-            'nombre'   => ucfirst(trim($validated['nombre'])),
-            'estado'   => 1,
+            'mav_id'     => $validated['marca_id'],
+            'nombre_mov' => ucfirst(trim($validated['nombre'])),
+            'status_id'  => 1,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Modelo creado correctamente.',
-            'data'    => $modelo->load('busMarca'),
+            'data'    => FormatoApiTransporte::modelo($modelo->refresh()->load('busMarca')),
         ], 201);
     }
 
     public function show(BusModelo $modelo): JsonResponse
     {
-        return response()->json(['success' => true, 'data' => $modelo->load('busMarca')]);
+        return response()->json(['success' => true, 'data' => FormatoApiTransporte::modelo($modelo->load('busMarca'))]);
     }
 
     public function update(Request $request, BusModelo $modelo): JsonResponse
     {
         $validated = $request->validate([
-            'marca_id' => 'required|integer|exists:marcas,id',
+            'marca_id' => 'required|integer|exists:marca_vehiculo,id_mav,deleted_at,NULL',
             'nombre'   => 'required|string|max:100',
         ]);
 
         $modelo->update([
-            'marca_id' => $validated['marca_id'],
-            'nombre'   => ucfirst(trim($validated['nombre'])),
+            'mav_id'     => $validated['marca_id'],
+            'nombre_mov' => ucfirst(trim($validated['nombre'])),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Modelo actualizado.',
-            'data'    => $modelo->fresh()->load('busMarca'),
+            'data'    => FormatoApiTransporte::modelo($modelo->fresh()->load('busMarca')),
         ]);
     }
 
     public function toggle(BusModelo $modelo): JsonResponse
     {
-        $modelo->update(['estado' => $modelo->estado ? 0 : 1]);
+        $modelo->update(['status_id' => (int) $modelo->status_id === 1 ? 2 : 1]);
 
         return response()->json([
             'success' => true,
-            'message' => $modelo->estado ? 'Modelo activado.' : 'Modelo desactivado.',
-            'data'    => $modelo->fresh()->load('busMarca'),
+            'message' => (int) $modelo->status_id === 1 ? 'Modelo activado.' : 'Modelo desactivado.',
+            'data'    => FormatoApiTransporte::modelo($modelo->fresh()->load('busMarca')),
         ]);
     }
 
     public function destroy(BusModelo $modelo): JsonResponse
     {
-        // Verificar que no tenga vehículos asociados
-        if ($modelo->vehiculos()->exists()) {
+        if (BusVehiculo::todasLasSedes()->where('mov_id', $modelo->id_mov)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se puede eliminar: tiene vehículos asociados.',

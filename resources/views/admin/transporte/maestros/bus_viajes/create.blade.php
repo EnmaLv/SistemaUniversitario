@@ -56,9 +56,9 @@
                                     <select name="vehiculo_id" required>
                                         <option value="">-- Seleccionar vehículo --</option>
                                         @foreach ($vehiculos as $vehiculo)
-                                            <option value="{{ $vehiculo->id }}"
-                                                {{ old('vehiculo_id') == $vehiculo->id ? 'selected' : '' }}>
-                                                {{ $vehiculo->unidad ?? 'Unidad sin nombre' }} — {{ $vehiculo->placa }}
+                                            <option value="{{ $vehiculo->id_vtr }}"
+                                                {{ old('vehiculo_id') == $vehiculo->id_vtr ? 'selected' : '' }}>
+                                                {{ $vehiculo->unidad ?? 'Unidad sin nombre' }} — {{ $vehiculo->placa_vtr }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -78,11 +78,11 @@
                                     <select name="bus_ruta_id" id="rutaSelect" required>
                                         <option value="">-- Seleccionar ruta --</option>
                                         @foreach ($rutas as $ruta)
-                                            <option value="{{ $ruta->id }}"
-                                                data-distancia="{{ $ruta->distancia_km }}"
+                                            <option value="{{ $ruta->id_rtr }}"
+                                                data-distancia="{{ $ruta->distancia_km_rtr }}"
                                                 data-paradas="{{ $ruta->paradas->count() }}"
-                                                {{ old('bus_ruta_id') == $ruta->id ? 'selected' : '' }}>
-                                                {{ $ruta->nombre }} ({{ $ruta->distancia_km }} km)
+                                                {{ old('bus_ruta_id') == $ruta->id_rtr ? 'selected' : '' }}>
+                                                {{ $ruta->nombre_rtr }} ({{ $ruta->distancia_km_rtr }} km)
                                             </option>
                                         @endforeach
                                     </select>
@@ -358,13 +358,13 @@
     @php
         $rutasData = $rutas->mapWithKeys(function ($r) {
             return [
-                $r->id => [
-                    'distancia' => $r->distancia_km,
+                $r->id_rtr => [
+                    'distancia' => $r->distancia_km_rtr,
                     'paradas'   => $r->paradas->count(),
                     'horarios'  => $r->horarios->map(function ($h) {
                         return [
-                            'hora' => $h->hora_salida,
-                            'tipo' => $h->tipo_viaje,
+                            'hora' => $h->hora_salida_hrt,
+                            'tipo' => $h->tipo_viaje_hrt,
                         ];
                     })->values(),
                 ],

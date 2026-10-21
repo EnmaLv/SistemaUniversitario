@@ -81,7 +81,7 @@
 
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                     @forelse($viajes as $viaje)
-                        <x-table-row :id="$viaje->id">
+                        <x-table-row :id="$viaje->id_vjt">
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <span
                                     class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
@@ -93,16 +93,16 @@
                                 style="color: var(--text-main);">
                                 <span class="inline-flex items-center gap-1.5">
                                     <i class="fas fa-bus text-red-600 dark:text-red-500"></i>
-                                    {{ $viaje->vehiculo->placa ?? 'N/A' }}
+                                    {{ $viaje->vehiculo->placa_vtr ?? 'N/A' }}
                                 </span>
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <div class="font-bold" style="color: var(--text-main);">
-                                    {{ $viaje->ruta->nombre ?? 'N/A' }}
+                                    {{ $viaje->ruta->nombre_rtr ?? 'N/A' }}
                                 </div>
                                 <div class="text-[11px] text-gray-400">
-                                    {{ $viaje->ruta->distancia_km ?? '0' }} km
+                                    {{ $viaje->ruta->distancia_km_rtr ?? '0' }} km
                                 </div>
                             </td>
 
@@ -118,17 +118,17 @@
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                @if ($viaje->turno === 'mañana')
+                                @if ($viaje->turno_vjt === 'mañana')
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
                                         Mañana
                                     </span>
-                                @elseif($viaje->turno === 'tarde')
+                                @elseif($viaje->turno_vjt === 'tarde')
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-lg bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
                                         Tarde
                                     </span>
-                                @elseif($viaje->turno === 'noche')
+                                @elseif($viaje->turno_vjt === 'noche')
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 text-[10px] font-black rounded-lg bg-slate-800 text-slate-100 dark:bg-slate-900 dark:text-slate-200">
                                         Noche
@@ -140,26 +140,26 @@
 
                             <td
                                 class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400 font-semibold">
-                                {{ $viaje->fecha_inicio ? $viaje->fecha_inicio->format('d/m/Y h:i A') : $viaje->created_at->format('d/m/Y h:i A') }}
+                                {{ $viaje->fecha_inicio_vjt ? $viaje->fecha_inicio_vjt->format('d/m/Y h:i A') : $viaje->created_at->format('d/m/Y h:i A') }}
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                @if ($viaje->estado === 'programado')
+                                @if ($viaje->estado_viaje_vjt === 'programado')
                                     <span
                                         class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
                                         Programado
                                     </span>
-                                @elseif($viaje->estado === 'en_curso')
+                                @elseif($viaje->estado_viaje_vjt === 'en_curso')
                                     <span
                                         class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 pulse-badge">
                                         <i class="fas fa-satellite-dish"></i> En Curso
                                     </span>
-                                @elseif($viaje->estado === 'finalizado')
+                                @elseif($viaje->estado_viaje_vjt === 'finalizado')
                                     <span
                                         class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                                         Finalizado
                                     </span>
-                                @elseif($viaje->estado === 'cancelado')
+                                @elseif($viaje->estado_viaje_vjt === 'cancelado')
                                     <span
                                         class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
                                         Cancelado
@@ -167,34 +167,34 @@
                                 @endif
                             </td>
 
-                            <x-table-actions :id="$viaje->id" baseUrl="admin/transporte/maestros/bus_viajes"
-                                :status="$viaje->estado !== 'inactivo'" :toggle="false" :edit="$viaje->estado === 'programado'" :show="false">
+                            <x-table-actions :id="$viaje->id_vjt" baseUrl="admin/transporte/maestros/bus_viajes"
+                                :status="$viaje->estado_viaje_vjt !== 'inactivo'" :toggle="false" :edit="$viaje->estado_viaje_vjt === 'programado'" :show="false">
 
-                                @if (in_array($viaje->estado, ['programado', 'en_curso']))
-                                    <button type="button" onclick="abrirModalCancelar({{ $viaje->id }})"
+                                @if (in_array($viaje->estado_viaje_vjt, ['programado', 'en_curso']))
+                                    <button type="button" onclick="abrirModalCancelar({{ $viaje->id_vjt }})"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
                                         title="Cancelar Viaje">
                                         <i class="fas fa-ban text-xs"></i>
                                     </button>
                                 @endif
 
-                                @if (in_array($viaje->estado, ['programado', 'en_curso']))
-                                    <button type="button" onclick="confirmarEliminar({{ $viaje->id }})"
+                                @if (in_array($viaje->estado_viaje_vjt, ['programado', 'en_curso']))
+                                    <button type="button" onclick="confirmarEliminar({{ $viaje->id_vjt }})"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors"
                                         title="Eliminar Viaje">
                                         <i class="fas fa-trash-alt text-xs"></i>
                                     </button>
                                 @endif
 
-                                <a href="{{ url('admin/transporte/maestros/bus_viajes/' . $viaje->id) }}"
+                                <a href="{{ url('admin/transporte/maestros/bus_viajes/' . $viaje->id_vjt) }}"
                                     onclick="event.stopPropagation()"
                                     class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-500 hover:bg-sky-100 dark:hover:bg-sky-950/50 transition-colors"
                                     title="Ver en Mapa">
                                     <i class="fas fa-map-marked-alt text-xs"></i>
                                 </a>
 
-                                <form id="form-eliminar-{{ $viaje->id }}"
-                                    action="{{ route('admin.transporte.maestros.bus_viajes.destroy', $viaje->id) }}"
+                                <form id="form-eliminar-{{ $viaje->id_vjt }}"
+                                    action="{{ route('admin.transporte.maestros.bus_viajes.destroy', $viaje->id_vjt) }}"
                                     method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')

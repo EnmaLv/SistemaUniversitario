@@ -43,7 +43,7 @@
                 <div class="alert alert-danger mb-5"><b>{{ $errors->first('error') }}</b></div>
             @endif
 
-            <form action="{{ route('admin.transporte.maestros.bus_rutas.update', $busRuta->id) }}" method="POST"
+            <form action="{{ route('admin.transporte.maestros.bus_rutas.update', $busRuta->id_rtr) }}" method="POST"
                 class="route-create-form space-y-5 rd-prevent-double-submit">
                 @csrf
                 @method('PUT')
@@ -76,7 +76,7 @@
                                     <input type="text" name="nombre" id="inputNombre"
                                         class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input @error('nombre') border-red-300 @enderror"
                                         placeholder="Ej: Zona Sur - Directo"
-                                        value="{{ old('nombre', $busRuta->nombre) }}" maxlength="100" required
+                                        value="{{ old('nombre', $busRuta->nombre_rtr) }}" maxlength="100" required
                                         style="border-color:var(--border-color); background-color:var(--input-bg); color:var(--text-main);">
                                 </div>
                                 <div id="errorNombreUnico" class="text-danger mt-1" style="display:none;"></div>
@@ -92,7 +92,7 @@
                                             <input type="number" name="distancia_km" id="inputDistancia" step="0.01"
                                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input"
                                                 placeholder="Calculando..."
-                                                value="{{ old('distancia_km', $busRuta->distancia_km) }}" min="0.1"
+                                                value="{{ old('distancia_km', $busRuta->distancia_km_rtr) }}" min="0.1"
                                                 required readonly
                                                 style="border-color:var(--border-color); background-color:var(--input-bg); color:var(--text-main);">
                                         </div>
@@ -157,9 +157,9 @@
                             <div class="form-group mb-0">
                                 <textarea name="descripcion" class="route-textarea" rows="3" maxlength="1000"
                                     placeholder="Ej: Transporte a la zona sur, pasando por la avenida principal..."
-                                    style="border-color:var(--border-color); background-color:var(--input-bg); color:var(--text-main);">{{ old('descripcion', $busRuta->descripcion) }}</textarea>
+                                    style="border-color:var(--border-color); background-color:var(--input-bg); color:var(--text-main);">{{ old('descripcion', $busRuta->getRawOriginal('descripcion_rtr')) }}</textarea>
                                 <div class="mt-1 text-right text-xs text-gray-500">
-                                    {{ strlen(old('descripcion', $busRuta->descripcion ?? '')) }}/1000</div>
+                                    {{ strlen(old('descripcion', $busRuta->getRawOriginal('descripcion_rtr') ?? '')) }}/1000</div>
                             </div>
                         </div>
                     </div>
@@ -446,7 +446,8 @@
 
                     // Cargar paradas: primero old(), si no, las de la BD
                     const oldParadas = @json(old('paradas'));
-                    const paradasRutaDb = @json($busRuta->paradas);
+                    @php($paradasRutaDb = $busRuta->paradas->map(fn ($parada) => ['id' => $parada->id_ptr])->values())
+                    const paradasRutaDb = @json($paradasRutaDb);
 
                     if (oldParadas && oldParadas.length > 0) {
                         oldParadas.forEach(id => {
@@ -645,7 +646,8 @@
 
                     // Cargar horarios: old() si hay, si no los de la BD
                     const oldHorarios = @json(old('horarios'));
-                    const horariosDb = @json($busRuta->horarios);
+                    @php($horariosDb = $busRuta->horarios->map(fn ($horario) => ['hora_salida' => substr($horario->hora_salida_hrt, 0, 5), 'tipo_viaje' => $horario->tipo_viaje_hrt])->values())
+                    const horariosDb = @json($horariosDb);
 
                     if (oldHorarios && Object.keys(oldHorarios).length > 0) {
                         Object.values(oldHorarios).forEach(h => {

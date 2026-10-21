@@ -27,11 +27,11 @@
                 <div>
                     <div class="flex items-center gap-3 flex-wrap">
                         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
-                            {{ $busViaje->ruta->nombre ?? 'Ruta N/A' }}
+                            {{ $busViaje->ruta->nombre_rtr ?? 'Ruta N/A' }}
                         </h1>
-                        <span id="badgeEstado" data-estado="{{ $busViaje->estado }}"
+                        <span id="badgeEstado" data-estado="{{ $busViaje->estado_viaje_vjt }}"
                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider
-                            {{ match ($busViaje->estado) {
+                            {{ match ($busViaje->estado_viaje_vjt) {
                                 'programado' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
                                 'en_curso' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
                                 'finalizado' => 'bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400',
@@ -39,22 +39,22 @@
                                 default => 'bg-gray-100 text-gray-600',
                             } }}">
                             <span id="badgeEstadoDot"
-                                class="w-1.5 h-1.5 rounded-full {{ $busViaje->estado === 'en_curso' ? 'bg-emerald-500 animate-pulse' : 'bg-current' }}"></span>
-                            <span id="badgeEstadoTexto">{{ ucfirst(str_replace('_', ' ', $busViaje->estado)) }}</span>
+                                class="w-1.5 h-1.5 rounded-full {{ $busViaje->estado_viaje_vjt === 'en_curso' ? 'bg-emerald-500 animate-pulse' : 'bg-current' }}"></span>
+                            <span id="badgeEstadoTexto">{{ ucfirst(str_replace('_', ' ', $busViaje->estado_viaje_vjt)) }}</span>
                         </span>
-                        @if ($busViaje->hubo_desvio)
+                        @if ($busViaje->hubo_desvio_vjt)
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400">
                                 <i class="fas fa-exclamation-triangle"></i> Desvío reportado
                             </span>
                         @endif
                     </div>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        ID Firebase: <code class="font-bold text-sky-600 dark:text-sky-400">{{ $busViaje->firebase_id }}</code>
-                        &middot; Turno: <span class="font-bold capitalize">{{ $busViaje->turno }}</span>
+                        ID Firebase: <code class="font-bold text-sky-600 dark:text-sky-400">{{ $busViaje->firebase_id_vjt }}</code>
+                        &middot; Turno: <span class="font-bold capitalize">{{ $busViaje->turno_vjt }}</span>
                     </p>
-                    @if ($busViaje->hubo_desvio && $busViaje->motivo_desvio)
+                    @if ($busViaje->hubo_desvio_vjt && $busViaje->motivo_desvio_vjt)
                         <p class="mt-1 text-xs text-orange-600 dark:text-orange-400">
-                            <i class="fas fa-comment-dots mr-1"></i> Motivo reportado por el conductor: "{{ $busViaje->motivo_desvio }}"
+                            <i class="fas fa-comment-dots mr-1"></i> Motivo reportado por el conductor: "{{ $busViaje->motivo_desvio_vjt }}"
                         </p>
                     @endif
                 </div>
@@ -71,7 +71,7 @@
                     <span class="text-[11px] font-black uppercase tracking-wider text-gray-400">Pasajeros a bordo</span>
                     <div class="flex items-center justify-between mt-1">
                         <h3 id="metricPasajeros" class="text-2xl font-extrabold" style="color: var(--text-main);">
-                            {{ $busViaje->pasajeros ?? 0 }}
+                            {{ $busViaje->total_pasajeros_vjt ?? 0 }}
                         </h3>
                         <i class="fas fa-users text-sky-500/60 text-xl"></i>
                     </div>
@@ -82,7 +82,7 @@
                     <span class="text-[11px] font-black uppercase tracking-wider text-gray-400">Estado del viaje</span>
                     <div class="flex items-center justify-between mt-1">
                         <h3 id="metricEstadoTexto" class="text-lg font-extrabold" style="color: var(--text-main);">
-                            {{ ucfirst(str_replace('_', ' ', $busViaje->estado)) }}
+                            {{ ucfirst(str_replace('_', ' ', $busViaje->estado_viaje_vjt)) }}
                         </h3>
                         <i class="fas fa-route text-sky-500/60 text-xl"></i>
                     </div>
@@ -157,11 +157,11 @@
                             style="background-color: rgba(0,0,0,0.02); border: 1px solid var(--border-color);">
                             <div class="flex justify-between">
                                 <span class="text-gray-400 font-semibold">Placa:</span>
-                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->placa ?? 'N/A' }}</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->placa_vtr ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-400 font-semibold">Combustible:</span>
-                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->tipoCombustible->nombre ?? 'N/A' }}</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->tipoCombustible->nombre_tcb ?? 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
@@ -184,11 +184,11 @@
                                     </div>
                                     <div class="min-w-0">
                                         <div class="font-bold text-xs truncate" style="color: var(--text-main);">
-                                            {{ $parada->nombre }}
+                                            {{ $parada->nombre_ptr }}
                                         </div>
-                                        @if ($parada->lat && $parada->lng)
+                                        @if ($parada->lat_ptr && $parada->lng_ptr)
                                             <small class="text-[11px] text-gray-400">
-                                                {{ number_format((float) $parada->lat, 4) }}, {{ number_format((float) $parada->lng, 4) }}
+                                                {{ number_format((float) $parada->lat_ptr, 4) }}, {{ number_format((float) $parada->lng_ptr, 4) }}
                                             </small>
                                         @else
                                             <small class="text-[11px] font-bold text-rose-500">
@@ -212,9 +212,9 @@
 
     <script>
     (function () {
-        const viajeId = "{{ $busViaje->id }}";
+        const viajeId = "{{ $busViaje->id_vjt }}";
         const gpsLogsUrl = "{{ route('admin.transporte.maestros.bus_viajes.gps-logs', $busViaje) }}";
-        let estadoActual = "{{ $busViaje->estado }}";
+        let estadoActual = "{{ $busViaje->estado_viaje_vjt }}";
 
         let currentBusLat = 9.5468743;
         let currentBusLng = -69.1926348;
@@ -238,9 +238,10 @@
 
         let busMarker = L.marker([currentBusLat, currentBusLng], { icon: busIcon })
             .addTo(map)
-            .bindPopup(`<b>{{ $busViaje->vehiculo->placa ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
+            .bindPopup(`<b>{{ $busViaje->vehiculo->placa_vtr ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
 
-        const paradasData = @json($busViaje->ruta->paradas ?? []);
+        @php($paradasData = ($busViaje->ruta?->paradas ?? collect())->map(fn ($parada) => ['id' => $parada->id_ptr, 'nombre' => $parada->nombre_ptr, 'lat' => $parada->lat_ptr, 'lng' => $parada->lng_ptr])->values())
+        const paradasData = @json($paradasData);
         const routePoints = [];
 
         if (Array.isArray(paradasData) && paradasData.length > 0) {
@@ -331,7 +332,7 @@
 
             busMarker.getPopup().setContent(`
                 <div class="text-center">
-                    <strong class="text-sky-600">{{ $busViaje->vehiculo->placa ?? 'Autobús' }}</strong><br>
+                    <strong class="text-sky-600">{{ $busViaje->vehiculo->placa_vtr ?? 'Autobús' }}</strong><br>
                     Velocidad: <b>${parseFloat(velocidad).toFixed(1)} km/h</b>
                 </div>
             `);

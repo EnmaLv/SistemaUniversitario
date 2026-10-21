@@ -23,7 +23,7 @@
 @section('content')
     <div class="rd-card p-4">
         <div class="rd-card-header mb-3">
-            <h3 class="rd-title-sm">Editar â€ <span style="color:var(--color-primary)">{{ $busMantenimiento->titulo }}</span></h3>
+            <h3 class="rd-title-sm">Editar â€ <span style="color:var(--color-primary)">{{ $busMantenimiento->titulo_mnv }}</span></h3>
             <a href="{{ route('admin.transporte.maestros.bus_mantenimientos.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
@@ -45,9 +45,9 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_vehiculo_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione --</option>
                                 @foreach($vehiculos as $vehiculo)
-                                    <option value="{{ $vehiculo->id }}"
-                                        {{ old('bus_vehiculo_id', $busMantenimiento->bus_vehiculo_id) == $vehiculo->id ? 'selected' : '' }}>
-                                        {{ $vehiculo->placa }} â€ {{ $vehiculo->modelo->nombre ?? '' }}
+                                    <option value="{{ $vehiculo->id_vtr }}"
+                                        {{ old('bus_vehiculo_id', $busMantenimiento->vtr_id) == $vehiculo->id_vtr ? 'selected' : '' }}>
+                                        {{ $vehiculo->placa_vtr }} â€ {{ $vehiculo->modelo->nombre_mov ?? '' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -62,8 +62,8 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-wrench"></i></span>
                             <select name="tipo"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('tipo') border-red-300 @enderror">
-                                <option value="preventivo" {{ old('tipo', $busMantenimiento->tipo) == 'preventivo' ? 'selected' : '' }}>Preventivo</option>
-                                <option value="correctivo" {{ old('tipo', $busMantenimiento->tipo) == 'correctivo' ? 'selected' : '' }}>Correctivo</option>
+                                <option value="preventivo" {{ old('tipo', $busMantenimiento->tipo_mnv) == 'preventivo' ? 'selected' : '' }}>Preventivo</option>
+                                <option value="correctivo" {{ old('tipo', $busMantenimiento->tipo_mnv) == 'correctivo' ? 'selected' : '' }}>Correctivo</option>
                             </select>
                         </div>
                         @error('tipo') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -76,9 +76,9 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-info-circle"></i></span>
                             <select name="estado"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('estado') border-red-300 @enderror">
-                                <option value="pendiente"  {{ old('estado', $busMantenimiento->estado) == 'pendiente'  ? 'selected' : '' }}>Pendiente</option>
-                                <option value="en_proceso" {{ old('estado', $busMantenimiento->estado) == 'en_proceso' ? 'selected' : '' }}>En Proceso</option>
-                                <option value="completado" {{ old('estado', $busMantenimiento->estado) == 'completado' ? 'selected' : '' }}>Completado</option>
+                                <option value="pendiente"  {{ old('estado', $busMantenimiento->estado_mnv) == 'pendiente'  ? 'selected' : '' }}>Pendiente</option>
+                                <option value="en_proceso" {{ old('estado', $busMantenimiento->estado_mnv) == 'en_proceso' ? 'selected' : '' }}>En Proceso</option>
+                                <option value="completado" {{ old('estado', $busMantenimiento->estado_mnv) == 'completado' ? 'selected' : '' }}>Completado</option>
                             </select>
                         </div>
                         @error('estado') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -95,7 +95,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-heading"></i></span>
                             <input type="text" name="titulo"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('titulo') border-red-300 @enderror"
-                                value="{{ old('titulo', $busMantenimiento->titulo) }}"
+                                value="{{ old('titulo', $busMantenimiento->titulo_mnv) }}"
                                 maxlength="150" oninput="this.value=this.value.slice(0,150)">
                         </div>
                         @error('titulo') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -112,7 +112,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-calendar-alt"></i></span>
                             <input type="date" name="fecha"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('fecha') border-red-300 @enderror"
-                                value="{{ old('fecha', $busMantenimiento->fecha->format('Y-m-d')) }}"
+                                value="{{ old('fecha', $busMantenimiento->fecha_mnv->format('Y-m-d')) }}"
                                 max="{{ date('Y-m-d') }}">
                         </div>
                         @error('fecha') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -125,7 +125,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-dollar-sign"></i></span>
                             <input type="number" name="costo" step="0.01"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('costo') border-red-300 @enderror"
-                                value="{{ old('costo', $busMantenimiento->costo) }}"
+                                value="{{ old('costo', $busMantenimiento->costo_mnv) }}"
                                 min="0" max="9999999"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,10)">
                         </div>
@@ -139,7 +139,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-road"></i></span>
                             <input type="number" name="km_al_servicio" step="0.01"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('km_al_servicio') border-red-300 @enderror"
-                                value="{{ old('km_al_servicio', $busMantenimiento->km_al_servicio) }}"
+                                value="{{ old('km_al_servicio', $busMantenimiento->km_al_servicio_mnv) }}"
                                 min="0" max="9999999"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,10)">
                         </div>
@@ -157,7 +157,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-tachometer-alt"></i></span>
                             <input type="number" name="proximo_km" step="0.01"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('proximo_km') border-red-300 @enderror"
-                                value="{{ old('proximo_km', $busMantenimiento->proximo_km) }}"
+                                value="{{ old('proximo_km', $busMantenimiento->proximo_km_mnv) }}"
                                 min="0" max="9999999"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,10)">
                         </div>
@@ -171,7 +171,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-calendar-check"></i></span>
                             <input type="date" name="proxima_fecha"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('proxima_fecha') border-red-300 @enderror"
-                                value="{{ old('proxima_fecha', $busMantenimiento->proxima_fecha?->format('Y-m-d')) }}">
+                                value="{{ old('proxima_fecha', $busMantenimiento->proxima_fecha_mnv?->format('Y-m-d')) }}">
                         </div>
                         @error('proxima_fecha') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
                     </div>
@@ -187,8 +187,8 @@
                             class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('descripcion') border-red-300 @enderror"
                             maxlength="2000"
                             oninput="this.value=this.value.slice(0,2000); document.getElementById('contadorDesc').textContent=this.value.length"
-                            style="resize:none;">{{ old('descripcion', $busMantenimiento->getRawOriginal('descripcion')) }}</textarea>
-                        <small class="text-muted"><span id="contadorDesc">{{ strlen($busMantenimiento->getRawOriginal('descripcion') ?? '') }}</span>/2000 caracteres</small>
+                            style="resize:none;">{{ old('descripcion', $busMantenimiento->getRawOriginal('descripcion_mnv')) }}</textarea>
+                        <small class="text-muted"><span id="contadorDesc">{{ strlen($busMantenimiento->getRawOriginal('descripcion_mnv') ?? '') }}</span>/2000 caracteres</small>
                         @error('descripcion') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
                     </div>
                 </div>

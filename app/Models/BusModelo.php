@@ -3,25 +3,33 @@
 namespace App\Models;
 
 use App\Traits\ConvierteAMayusculasNoEloquent;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusModelo extends Model
 {
     use ConvierteAMayusculasNoEloquent;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table    = 'modelos';
-    protected $fillable = ['marca_id', 'nombre', 'descripcion', 'estado'];
+    protected $table = 'modelo_vehiculo';
 
-    protected $casts = [
-        'estado' => 'boolean',
-    ];
+    protected $primaryKey = 'id_mov';
+
+    protected $fillable = ['mav_id', 'nombre_mov', 'descripcion_mov', 'status_id'];
 
     public function busMarca()
     {
-        return $this->belongsTo(BusMarca::class, 'marca_id');
+        return $this->belongsTo(BusMarca::class, 'mav_id', 'id_mav');
     }
 
-    public function getDescripcionAttribute($value): string
+    public function vehiculos()
+    {
+        return $this->hasMany(BusVehiculo::class, 'mov_id', 'id_mov');
+    }
+
+    public function getDescripcionMovAttribute($value): string
     {
         return $value ?? 'Ninguna';
     }
@@ -30,9 +38,9 @@ class BusModelo extends Model
     {
         return self::query()
             ->with('busMarca')
-            ->when($buscar, fn ($q) => $q->where('nombre', 'like', "%{$buscar}%"))
-            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('estado', $estado))
-            ->orderBy('nombre')
+            ->when($buscar, fn ($q) => $q->where('nombre_mov', 'like', "%{$buscar}%"))
+            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('status_id', (int) $estado === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO))
+            ->orderBy('nombre_mov')
             ->paginate(10)
             ->withQueryString();
     }
@@ -40,19 +48,19 @@ class BusModelo extends Model
     public static function crearModelo(array $datos)
     {
         return self::create([
-            'marca_id' => $datos['marca_id'],
-            'nombre'   => $datos['nombre'],
-            'descripcion'  => $datos['descripcion'] ?? null,
-            'estado'   => 1,
+            'mav_id'          => $datos['marca_id'],
+            'nombre_mov'      => $datos['nombre'],
+            'descripcion_mov' => $datos['descripcion'] ?? null,
+            'status_id'       => self::STATUS_ACTIVO,
         ]);
     }
 
     public static function actualizarModelo(BusModelo $modelo, array $datos)
     {
         $modelo->update([
-            'marca_id' => $datos['marca_id'],
-            'nombre'   => $datos['nombre'],
-            'descripcion'  => $datos['descripcion'] ?? null,
+            'mav_id'          => $datos['marca_id'],
+            'nombre_mov'      => $datos['nombre'],
+            'descripcion_mov' => $datos['descripcion'] ?? null,
         ]);
 
         return $modelo;

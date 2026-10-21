@@ -64,18 +64,18 @@
                         </thead>
                         <tbody>
                             @forelse($tipos as $tipo)
-                                <x-table-row :id="$tipo->id" data-id="{{ $tipo->id }}">
+                                <x-table-row :id="$tipo->id_tcb" data-id="{{ $tipo->id_tcb }}">
                                     <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
                                         {{ ($tipos->currentPage() - 1) * $tipos->perPage() + $loop->iteration }}
                                     </td>
                                     <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">
-                                        {{ $tipo->nombre }}
+                                        {{ $tipo->nombre_tcb }}
                                     </td>
                                     <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
-                                        {{ $tipo->descripcion ?: 'Sin descripción' }}
+                                        {{ $tipo->descripcion_tcb ?: 'Sin descripción' }}
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 text-center">
-                                        @if ($tipo->estado)
+                                        @if ($tipo->estaActivo())
                                             <span
                                                 class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400">
                                                 <i class="fas fa-check-circle"></i> Activo
@@ -87,10 +87,10 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <x-table-actions :id="$tipo->id"
+                                    <x-table-actions :id="$tipo->id_tcb"
                                         baseUrl="admin/transporte/maestros/bus_tipo_combustibles" :show="false"
-                                        :toggle="false" :on-edit="'abrirModalEditarTipo(' . json_encode($tipo, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
-                                        @if ($tipo->estado)
+                                        :toggle="false" :on-edit="'abrirModalEditarTipo(' . json_encode(['id' => $tipo->id_tcb, 'nombre' => $tipo->nombre_tcb, 'descripcion' => $tipo->descripcion_tcb], JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
+                                        @if ($tipo->estaActivo())
                                             <form
                                                 action="{{ route('admin.transporte.maestros.bus_tipo_combustibles.destroy', $tipo) }}"
                                                 method="POST" class="inline">

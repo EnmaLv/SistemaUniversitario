@@ -6,40 +6,42 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\BusTipoCombustible;
+use App\Models\BusVehiculo;
+use App\Support\Transporte\FormatoApiTransporte;
 
 class BusTipoCombustibleApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = BusTipoCombustible::orderBy('nombre');
+        $query = BusTipoCombustible::orderBy('nombre_tcb');
 
         if ($request->has('estado')) {
-            $query->where('estado', $request->boolean('estado') ? 1 : 0);
+            $query->where('status_id', $request->boolean('estado') ? 1 : 2);
         }
 
         return response()->json([
             'success' => true,
-            'data'    => $query->get(),
+            'data'    => $query->get()->map(fn ($tipo) => FormatoApiTransporte::tipoCombustible($tipo))->values(),
         ]);
     }
 
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'nombre'      => 'required|string|max:100|unique:tipo_combustibles,nombre',
+            'nombre'      => 'required|string|max:100|unique:tipo_combustible,nombre_tcb,NULL,id_tcb,deleted_at,NULL',
             'descripcion' => 'nullable|string|max:255',
         ]);
 
         $tipo = BusTipoCombustible::create([
-            'nombre'      => ucfirst(trim($validated['nombre'])),
-            'descripcion' => $validated['descripcion'] ?? null,
-            'estado'      => 1,
+            'nombre_tcb'      => ucfirst(trim($validated['nombre'])),
+            'descripcion_tcb' => $validated['descripcion'] ?? null,
+            'status_id'       => 1,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Tipo de combustible creado correctamente.',
-            'data'    => $tipo,
+            'data'    => FormatoApiTransporte::tipoCombustible($tipo->refresh()),
         ], 201);
     }
 
@@ -47,43 +49,43 @@ class BusTipoCombustibleApiController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $combustible,
+            'data'    => FormatoApiTransporte::tipoCombustible($combustible),
         ]);
     }
 
     public function update(Request $request, BusTipoCombustible $combustible): JsonResponse
     {
         $validated = $request->validate([
-            'nombre'      => "required|string|max:100|unique:tipo_combustibles,nombre,{$combustible->id}",
+            'nombre'      => "required|string|max:100|unique:tipo_combustible,nombre_tcb,{$combustible->id_tcb},id_tcb,deleted_at,NULL",
             'descripcion' => 'nullable|string|max:255',
         ]);
 
         $combustible->update([
-            'nombre'      => ucfirst(trim($validated['nombre'])),
-            'descripcion' => $validated['descripcion'] ?? null,
+            'nombre_tcb'      => ucfirst(trim($validated['nombre'])),
+            'descripcion_tcb' => $validated['descripcion'] ?? null,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Tipo de combustible actualizado correctamente.',
-            'data'    => $combustible->fresh(),
+            'data'    => FormatoApiTransporte::tipoCombustible($combustible->fresh()),
         ]);
     }
 
     public function toggle(BusTipoCombustible $combustible): JsonResponse
     {
-        $combustible->update(['estado' => $combustible->estado ? 0 : 1]);
+        $combustible->update(['status_id' => (int) $combustible->status_id === 1 ? 2 : 1]);
 
         return response()->json([
             'success' => true,
-            'message' => $combustible->estado ? 'Tipo de combustible activado.' : 'Tipo de combustible desactivado.',
-            'data'    => $combustible->fresh(),
+            'message' => (int) $combustible->status_id === 1 ? 'Tipo de combustible activado.' : 'Tipo de combustible desactivado.',
+            'data'    => FormatoApiTransporte::tipoCombustible($combustible->fresh()),
         ]);
     }
 
     public function destroy(BusTipoCombustible $combustible): JsonResponse
     {
-        if (method_exists($combustible, 'vehiculos') && $combustible->vehiculos()->exists()) {
+        if (BusVehiculo::todasLasSedes()->where('tcb_id', $combustible->id_tcb)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se puede eliminar: tiene vehículos asociados.',
