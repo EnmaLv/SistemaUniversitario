@@ -188,7 +188,7 @@ class SaludHomeService
                 $personaPnf = $paciente->personaPnf;
                 if ($personaPnf instanceof \Illuminate\Support\Collection) $personaPnf = $personaPnf->first();
                 if ($personaPnf && $personaPnf->pnf) {
-                    $pnfVal = $personaPnf->pnf->nombre_pnf ?? 'No especificado';
+                    $pnfVal = $personaPnf->pnf->nombre_prg ?? 'No especificado';
                 }
                 if ($pnfVal === 'Agroalimentaria') $pnfVal = 'AGROALIMENTACION';
                 if ($pnfVal === 'Electrica') $pnfVal = 'ELECTRICIDAD';

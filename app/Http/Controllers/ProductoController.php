@@ -189,12 +189,12 @@ class ProductoController extends Controller
 
             $tasa = ExchangeRates::updateOrCreate(
                 [
-                    'nombre'         => 'Oficial',
-                    'fecha_vigencia' => $fechaVigencia
+                    'nombre_tca'         => 'Oficial',
+                    'fecha_vigencia_tca' => $fechaVigencia
                 ],
                 [
-                    'fuente'   => $data['fuente'],
-                    'promedio' => $data['promedio'],
+                    'fuente_tca'   => $data['fuente'],
+                    'promedio_tca' => $data['promedio'],
                 ]
             );
 
@@ -215,7 +215,7 @@ class ProductoController extends Controller
                 $margen = $producto->precioProducto->margen ?? 0;
 
                 $precioBs = round(
-                    $precioUSD * (1 + $margen / 100) * $tasa->promedio,
+                    $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                     2
                 );
 
@@ -252,7 +252,7 @@ class ProductoController extends Controller
 
     private function procesarTasaYPrecios(?int $productoId = null)
     {
-        $tasa = ExchangeRates::orderByDesc('fecha_vigencia')->first();
+        $tasa = ExchangeRates::orderByDesc('fecha_vigencia_tca')->first();
 
         if (!$tasa) {
             throw new \Exception('No existe una tasa registrada');
@@ -284,7 +284,7 @@ class ProductoController extends Controller
             $margen = $producto->precioProducto->margen ?? 0;
 
             $precioBs = round(
-                $precioUSD * (1 + $margen / 100) * $tasa->promedio,
+                $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                 2
             );
 

@@ -12,7 +12,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EnfermedadesSeeder::class,
             DepartamentoSeeder::class,
-            EstatusSeeder::class,
             UnidadSeeder::class,
             ModulosSeeder::class,
             TipoProductoSeeder::class,

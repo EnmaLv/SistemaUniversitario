@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('exchange_rates', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre')->default('Oficial');
-            $table->string('fuente')->default('BCV');
-            $table->decimal('promedio', 12, 2);
-            $table->enum('variacion', ['subio', 'bajo', 'igual'])->default('igual');
-            $table->date('fecha_vigencia');
+        Schema::create('tasa_cambio', function (Blueprint $table) {
+            $table->id('id_tca');
+            $table->string('nombre_tca')->default('Oficial');
+            $table->string('fuente_tca')->default('BCV');
+            $table->decimal('promedio_tca', 12, 2);
+            $table->string('variacion_tca', 10)->default('igual');
+            $table->date('fecha_vigencia_tca');
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('exchange_rates');
+        Schema::dropIfExists('tasa_cambio');
     }
 };

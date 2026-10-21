@@ -37,7 +37,7 @@
 
                         <div class="min-w-0">
                             <p class="text-[11px] font-black uppercase tracking-wider text-red-700 dark:text-red-500">
-                                Registro diario · {{ $registro->nombre_pnf ?? 'Sin PNF' }}
+                                Registro diario · {{ $registro->nombre_prg ?? 'Sin PNF' }}
                             </p>
                             <h2 class="mt-2 text-xl sm:text-2xl font-extrabold" style="color: var(--text-main);">
                                 Ficha del estudiante
@@ -157,7 +157,7 @@
                                         PNF asociado
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->nombre_pnf ?? '—' }}
+                                        {{ $registro->nombre_prg ?? '—' }}
                                     </p>
                                 </div>
                                 <div>

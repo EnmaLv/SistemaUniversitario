@@ -266,9 +266,9 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione PNF</option>
                                 @foreach ($pnfs as $pnf)
-                                    <option value="{{ $pnf->id_pnf }}"
-                                        {{ old('pnf_id', request('pnf_id')) == $pnf->id_pnf ? 'selected' : '' }}>
-                                        {{ $pnf->nombre_pnf }}
+                                    <option value="{{ $pnf->id_prg }}"
+                                        {{ old('pnf_id', request('pnf_id')) == $pnf->id_prg ? 'selected' : '' }}>
+                                        {{ $pnf->nombre_prg }}
                                     </option>
                                 @endforeach
                             </select>

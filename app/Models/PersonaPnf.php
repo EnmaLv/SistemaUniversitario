@@ -10,7 +10,7 @@ class PersonaPnf extends Model
     protected $primaryKey = 'id_persona_pnf';
     protected $fillable = [
         "id_persona",
-        "id_pnf",
+        "prg_id",
         "fecha_inicio",
         "fecha_fin"
     ];
@@ -22,6 +22,6 @@ class PersonaPnf extends Model
 
     public function pnf()
     {
-        return $this->belongsTo(Pnf::class, 'id_pnf', 'id_pnf');
+        return $this->belongsTo(Pnf::class, 'prg_id', 'id_prg');
     }
 }

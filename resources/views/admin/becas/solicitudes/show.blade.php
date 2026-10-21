@@ -60,7 +60,7 @@
                         <span
                             class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">PNF</span>
                         <span class="font-bold" style="color: var(--text-main);">
-                            {{ $solicitud->persona->personaPnf->first()->pnf->nombre_pnf ?? 'No registrado' }}
+                            {{ $solicitud->persona->personaPnf->first()->pnf->nombre_prg ?? 'No registrado' }}
                         </span>
                     </div>
                     <div>

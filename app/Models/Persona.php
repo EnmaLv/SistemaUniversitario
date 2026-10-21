@@ -108,7 +108,7 @@ class Persona extends Model
             //Asignar el pnf 
             DB::table('persona_pnf')->insert([
                 'id_persona' => $personaId,
-                'id_pnf' => $data['pnfId'],
+                'prg_id' => $data['pnfId'],
                 'fecha_inicio' => Carbon::now(),
                 'fecha_fin' => Carbon::now(),
             ]);
@@ -186,7 +186,7 @@ class Persona extends Model
             DB::table('persona_pnf')->updateOrInsert(
                 ['id_persona' => $personaId], // Condición
                 [
-                    'id_pnf'       => $data['pnfId'],
+                    'prg_id'       => $data['pnfId'],
                     'fecha_inicio' => Carbon::now(), // O mantener la original si fuera necesario
                     'fecha_fin'    => Carbon::now(),
                 ]

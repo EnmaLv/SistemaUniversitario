@@ -14,13 +14,12 @@ class AuthService
     public function register(array $personaData, array $userData): Usuario
     {
         return DB::transaction(function () use ($personaData, $userData) {
-            $estatusId = $this->ensureEstatus();
             $sedeId = $this->ensureSede(); 
 
             $isFirstUser = Usuario::count() === 0;
             $perfilNombre = $isFirstUser ? 'Administrador' : 'Usuario';
 
-            $perfilObj = $this->ensurePerfil($perfilNombre, $estatusId);
+            $perfilObj = $this->ensurePerfil($perfilNombre);
             $perfilId = $perfilObj->id_perfil;
 
             if (empty($personaData['id_perfil'])) {
@@ -68,18 +67,6 @@ class AuthService
         );
     }
 
-    private function ensureEstatus(): int
-    {
-        $row = DB::table('estatus')->orderBy('id_estatus')->first();
-        if ($row) return $row->id_estatus;
-
-        return DB::table('estatus')->insertGetId([
-            'nombre_estatus' => 'Activo',
-            'created_at'     => now(),
-            'updated_at'     => now()
-        ]);
-    }
-
     private function ensureSede(): int
     {
         $row = DB::table('sede')->orderBy('id')->first();
@@ -94,14 +81,14 @@ class AuthService
         ]);
     }
 
-    private function ensurePerfil(string $nombre, int $estatusId)
+    private function ensurePerfil(string $nombre)
     {
         $row = DB::table('perfil')->where('nombre_perfil', $nombre)->first();
         if ($row) return (object)['id_perfil' => $row->id_perfil];
 
         $id = DB::table('perfil')->insertGetId([
             'nombre_perfil' => $nombre, 
-            'estado'        => true, 
+            'status_id'     => 1, 
             'created_at'    => now(), 
             'updated_at'    => now()
         ]);

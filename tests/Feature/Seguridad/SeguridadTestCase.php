@@ -35,12 +35,28 @@ abstract class SeguridadTestCase extends TestCase
         $this->iniciarTransaccion();
     }
 
+    protected static ?string $errorPreparacion = null;
+
     protected static function prepararBaseDatos(): void
     {
         if (static::$basePreparada) {
             return;
         }
 
+        if (static::$errorPreparacion !== null) {
+            throw new \RuntimeException('La base de pruebas no se pudo preparar: ' . static::$errorPreparacion);
+        }
+
+        try {
+            static::construirBaseDatos();
+        } catch (\Throwable $e) {
+            static::$errorPreparacion = $e->getMessage();
+            throw $e;
+        }
+    }
+
+    protected static function construirBaseDatos(): void
+    {
         $huella = static::huellaMigraciones();
         $archivoHuella = storage_path('framework/testing/esquema_' . DB::connection()->getDatabaseName() . '.hash');
 
@@ -53,8 +69,8 @@ abstract class SeguridadTestCase extends TestCase
 
         if (! DB::table('perfil')->exists()) {
             DB::table('perfil')->insert([
-                ['nombre_perfil' => 'Usuario', 'estado' => 1],
-                ['nombre_perfil' => 'Estudiante', 'estado' => 1],
+                ['nombre_perfil' => 'Usuario', 'status_id' => 1],
+                ['nombre_perfil' => 'Estudiante', 'status_id' => 1],
             ]);
         }
 

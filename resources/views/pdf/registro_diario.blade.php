@@ -375,7 +375,7 @@
                         <td>{{ $registro->cedula_persona ?? '—' }}</td>
                         <td>{{ $registro->nombre_persona ?? '—' }}</td>
                         <td>{{ $registro->apellido_persona ?? '—' }}</td>
-                        <td>{{ $registro->nombre_pnf ?? '—' }}</td>
+                        <td>{{ $registro->nombre_prg ?? '—' }}</td>
                         <td>{{ $registro->sector ?? '—' }}</td>
                         <td class="center">
                             @if (!empty($registro->fecha_regis_diario_c))
@@ -396,7 +396,7 @@
             @foreach ($registros_pnf as $registro)
                 <div class="item-pnf">
                     <div class="item-pnf-info">
-                        <div class="item-pnf-nombre">{{ $registro->nombre_pnf }}</div>
+                        <div class="item-pnf-nombre">{{ $registro->nombre_prg }}</div>
                         <div class="item-pnf-subtitle">Estudiantes registrados en este PNF</div>
                     </div>
 

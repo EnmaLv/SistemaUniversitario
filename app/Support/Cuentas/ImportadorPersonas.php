@@ -140,7 +140,7 @@ class ImportadorPersonas
     {
         $conPnf = DB::table('persona_pnf')
             ->whereIn('id_persona', array_values($idsPorCedula))
-            ->pluck('id_pnf', 'id_persona');
+            ->pluck('prg_id', 'id_persona');
 
         $insertar = [];
         $actualizar = [];
@@ -160,7 +160,7 @@ class ImportadorPersonas
             }
 
             if (! $conPnf->has($idPersona)) {
-                $insertar[] = ['id_persona' => $idPersona, 'id_pnf' => $idPnf, 'fecha_inicio' => $hoy, 'fecha_fin' => $hoy];
+                $insertar[] = ['id_persona' => $idPersona, 'prg_id' => $idPnf, 'fecha_inicio' => $hoy, 'fecha_fin' => $hoy];
             } elseif ($textoPnf !== '' && (int) $conPnf[$idPersona] !== $idPnf) {
                 $actualizar[$idPnf][] = $idPersona;
             }
@@ -171,7 +171,7 @@ class ImportadorPersonas
         }
 
         foreach ($actualizar as $idPnf => $idsPersona) {
-            DB::table('persona_pnf')->whereIn('id_persona', $idsPersona)->update(['id_pnf' => $idPnf]);
+            DB::table('persona_pnf')->whereIn('id_persona', $idsPersona)->update(['prg_id' => $idPnf]);
         }
     }
 
@@ -264,13 +264,13 @@ class ImportadorPersonas
 
     private function pnf(string $texto): ?int
     {
-        $this->pnfs ??= DB::table('pnf')->where('id_estatus', 1)->get(['id_pnf', 'nombre_pnf'])->all();
+        $this->pnfs ??= DB::table('programa')->where('status_id', 1)->get(['id_prg', 'nombre_prg'])->all();
 
         if ($this->pnfs === []) {
             return null;
         }
 
-        $porDefecto = collect($this->pnfs)->contains(fn ($pnf) => (int) $pnf->id_pnf === 1) ? 1 : null;
+        $porDefecto = collect($this->pnfs)->contains(fn ($pnf) => (int) $pnf->id_prg === 1) ? 1 : null;
 
         if ($texto === '') {
             return $porDefecto;
@@ -281,15 +281,15 @@ class ImportadorPersonas
         $similitudMejor = 0;
 
         foreach ($this->pnfs as $pnf) {
-            similar_text($buscado, strtoupper(Str::ascii($pnf->nombre_pnf)), $porcentaje);
+            similar_text($buscado, strtoupper(Str::ascii($pnf->nombre_prg)), $porcentaje);
 
             if ($porcentaje >= 90) {
-                return (int) $pnf->id_pnf;
+                return (int) $pnf->id_prg;
             }
 
             if ($porcentaje > $similitudMejor) {
                 $similitudMejor = $porcentaje;
-                $mejor = (int) $pnf->id_pnf;
+                $mejor = (int) $pnf->id_prg;
             }
         }
 

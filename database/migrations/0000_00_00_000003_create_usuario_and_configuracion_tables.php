@@ -30,10 +30,13 @@ return new class extends Migration
         });
 
         Schema::create('configuracion_sistema', function (Blueprint $table) {
-            $table->id();
-            $table->string('clave_parametro')->unique();
-            $table->text('valor_parametro');
+            $table->id('id_csi');
+            $table->string('clave_csi')->unique();
+            $table->text('valor_csi');
+            $table->string('tipo_dato_csi')->nullable();
+            $table->string('descripcion_csi')->nullable();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 

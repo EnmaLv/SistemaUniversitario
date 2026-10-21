@@ -47,7 +47,7 @@ class Registro_diario extends Model
             ->leftJoin('municipios', 'localidads.municipio_id', '=', 'municipios.id')
             ->leftJoin('estados', 'municipios.estado_id', '=', 'estados.id')
             ->join('persona_pnf', 'registro_diario_c.id_persona_pnf', '=', 'persona_pnf.id_persona_pnf')
-            ->join('pnf', 'persona_pnf.id_pnf', '=', 'pnf.id_pnf');
+            ->join('programa', 'persona_pnf.prg_id', '=', 'programa.id_prg');
     }
 
     public static function getRegister(int $id)
@@ -77,7 +77,7 @@ class Registro_diario extends Model
         ], 'persona');
 
         $pnfColumn = formatColumn([
-            'nombre_pnf',
+            'nombre_prg',
         ], 'pnf');
 
         $registroColumn = formatColumn([
@@ -112,7 +112,7 @@ class Registro_diario extends Model
     public static function showData(array $filter = [], bool $isPdf = false)
     {
         $query = self::relacionTable()
-            ->select('registro_diario_c.*', 'persona.nombre_persona', 'persona.apellido_persona', 'persona.cedula_persona', 'pnf.nombre_pnf', 'direccion.sector', 'direccion.calle', 'localidads.nombre_localidad', 'municipios.nombre_municipio', 'estados.nombre_estado');
+            ->select('registro_diario_c.*', 'persona.nombre_persona', 'persona.apellido_persona', 'persona.cedula_persona', 'programa.nombre_prg', 'direccion.sector', 'direccion.calle', 'localidads.nombre_localidad', 'municipios.nombre_municipio', 'estados.nombre_estado');
 
 
         //Por si hay que buscar por el input
@@ -121,7 +121,7 @@ class Registro_diario extends Model
                 $q->where('persona.nombre_persona', 'like', '%' . $filter['buscar'] . '%')
                     ->orWhere('persona.apellido_persona', 'like', '%' . $filter['buscar'] . '%')
                     ->orWhere('persona.cedula_persona', 'like', '%' . $filter['buscar'] . '%')
-                    ->orWhere('pnf.nombre_pnf', 'like', "%{$filter['buscar']}%");
+                    ->orWhere('programa.nombre_prg', 'like', "%{$filter['buscar']}%");
             });
         }
 
@@ -153,8 +153,8 @@ class Registro_diario extends Model
         //Relacionamos las tablas necesarias
         $query = self::relacionTable()
             // Obtenemos el nombre del pnf y contamos los registros por pnf
-            ->select('pnf.nombre_pnf', DB::raw('COUNT(*) as total_registros'))
-            ->groupBy('pnf.nombre_pnf')
+            ->select('programa.nombre_prg', DB::raw('COUNT(*) as total_registros'))
+            ->groupBy('programa.nombre_prg')
             ->orderBy('total_registros', 'desc');
 
         return $query->get();

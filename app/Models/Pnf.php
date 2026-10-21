@@ -3,28 +3,33 @@
 namespace App\Models;
 
 use App\Traits\ConvierteAMayusculas;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class Pnf extends Model
 {
     use ConvierteAMayusculas;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'pnf';
-    protected $id = 'id_pnf';
+    protected $table = 'programa';
+    protected $primaryKey = 'id_prg';
     protected $fillable = [
-        'id_pnf',
-        'nombre_pnf',
-        'id_estatus'
+        'codigo_prg',
+        'nombre_prg',
+        'status_id'
     ];
 
     protected $mayusculas = [
-        'nombre_pnf'
+        'nombre_prg'
     ];
 
     public function personaPnf()
     {
-        return $this->hasMany(PersonaPnf::class, 'id_pnf');
+        return $this->hasMany(PersonaPnf::class, 'prg_id', 'id_prg');
     }
 
     public static function getPnfs(Request $request)
@@ -33,52 +38,65 @@ class Pnf extends Model
 
         $query = self::query();
         if ($request->filled('buscar')) {
-            $query->where('nombre_pnf', 'LIKE', "%{$request->buscar}%");
+            $query->where('nombre_prg', 'LIKE', "%{$request->buscar}%");
         }
 
-        $estatus = $request->input('id_estatus', 1);
-        $query->where('id_estatus', (int)$estatus);
+        $estatus = $request->input('status_id', 1);
+        $query->where('status_id', (int)$estatus);
 
-        return $query->orderBy('id_pnf', 'desc')->paginate($paginacion)->withQueryString();
+        return $query->orderBy('id_prg', 'desc')->paginate($paginacion)->withQueryString();
     }
 
     public static function createPnf(Request $request, array $data = [])
     {
-        $pnf = Pnf::where('nombre_pnf', $request->nombre)->first();
+        $pnf = Pnf::where('nombre_prg', $request->nombre)->first();
         if ($pnf) {
             return redirect()->route('admin.maestros.pnf.index')->with('error', 'El PNF ya existe. Intente con otro nombre.');
         }
 
         return Pnf::create([
-            'nombre_pnf' => $request->nombre,
-            'id_estatus' => 1,
+            'codigo_prg' => self::generarCodigo($request->nombre),
+            'nombre_prg' => $request->nombre,
+            'status_id' => self::STATUS_ACTIVO,
         ]);
     }
 
     public static function updatePnf(Request $request, array $data = [])
     {
-        $pnf = Pnf::where('nombre_pnf', $request->nombre)->first();
+        $pnf = Pnf::where('nombre_prg', $request->nombre)->first();
 
-        if ($pnf && $pnf->id_pnf != $request->id && $pnf->nombre_pnf == $request->nombre) {
-            return redirect()->route('admin.maestros.pnf.edit', $pnf->id_pnf)->with('error', 'El PNF ya existe. Intente con otro nombre.');
+        if ($pnf && $pnf->id_prg != $request->id && $pnf->nombre_prg == $request->nombre) {
+            return redirect()->route('admin.maestros.pnf.edit', $pnf->id_prg)->with('error', 'El PNF ya existe. Intente con otro nombre.');
         }
 
-        return Pnf::where('id_pnf', $request->id)->update([
-            'nombre_pnf' => strtoupper($request->nombre),
-            'id_estatus' => $request->id_estatus,
+        return Pnf::where('id_prg', $request->id)->update([
+            'nombre_prg' => strtoupper($request->nombre),
+            'status_id' => $request->status_id,
         ]);
     }
 
     public static function activarPnf($id)
     {
-        $pnf = Pnf::where('id_pnf', $id)->first();
+        $pnf = Pnf::where('id_prg', $id)->first();
 
         if (!$pnf) {
             return false;
         }
-        $nuevoEstado = $pnf->id_estatus == 1 ? 2 : 1;
-        return Pnf::where('id_pnf', $id)->update([
-            'id_estatus' => $nuevoEstado
-        ]);
+        $pnf->alternarStatus();
+
+        return true;
+    }
+
+    public static function generarCodigo(string $nombre): string
+    {
+        $base = 'PNF-' . Str::upper(Str::limit(Str::slug(Str::ascii($nombre), ''), 20, ''));
+        $codigo = $base;
+        $n = 1;
+
+        while (self::withTrashed()->where('codigo_prg', $codigo)->exists()) {
+            $codigo = $base . '-' . ++$n;
+        }
+
+        return $codigo;
     }
 }

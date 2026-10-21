@@ -30,10 +30,10 @@ class CheckTasaActualizada
 
         $hoy = Carbon::today()->toDateString();
 
-        $ultimaTasa = ExchangeRates::where('nombre', 'Oficial')
-            ->whereNotNull('fecha_vigencia')
-            ->orderByDesc('fecha_vigencia')
-            ->orderByDesc('id')
+        $ultimaTasa = ExchangeRates::where('nombre_tca', 'Oficial')
+            ->whereNotNull('fecha_vigencia_tca')
+            ->orderByDesc('fecha_vigencia_tca')
+            ->orderByDesc('id_tca')
             ->first();
 
         // 3. Sin tasa: marcar flag pero NO redirigir (evita el loop)
@@ -44,7 +44,7 @@ class CheckTasaActualizada
         }
 
         // 4. Con tasa: decidir si está pendiente
-        $tasaHoy     = $ultimaTasa->fecha_vigencia === $hoy;
+        $tasaHoy     = $ultimaTasa->fecha_vigencia_tca === $hoy;
         $ignoradaHoy = session('tasa_ignorada_hasta') === $hoy;
 
         if (!$tasaHoy && !$ignoradaHoy) {

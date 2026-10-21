@@ -175,7 +175,7 @@ class HistoriaClinica extends Model
 
         if (!empty($filters['pnf'])) {
             $query->join('persona_pnf', 'persona.id_persona', '=', 'persona_pnf.id_persona')
-                  ->where('persona_pnf.id_pnf', $filters['pnf']);
+                  ->where('persona_pnf.prg_id', $filters['pnf']);
         }
 
         if (!empty($filters['edad'])) {

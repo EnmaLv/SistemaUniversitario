@@ -13,8 +13,8 @@ class DepartamentoSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('departamentos')->insert([
-            ['nombre' => 'Bienestar Estudiantil', 'descripcion' => 'Departamento encargado del bienestar de los estudiantes', 'activo' => true]
+        DB::table('departamento')->insert([
+            ['nombre_dep' => 'Bienestar Estudiantil', 'descripcion_dep' => 'Departamento encargado del bienestar de los estudiantes', 'status_id' => 1]
         ]);
     }
 }

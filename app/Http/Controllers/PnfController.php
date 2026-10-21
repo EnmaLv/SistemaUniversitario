@@ -36,7 +36,7 @@ class PnfController extends Controller
 
     public function edit($id)
     {
-        $pnf = Pnf::where('id_pnf', $id)->first();
+        $pnf = Pnf::where('id_prg', $id)->first();
         return view('admin.maestros.pnf.edit', compact('pnf'));
     }
 
@@ -44,7 +44,7 @@ class PnfController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string',
-            'id_estatus' => 'required|numeric',
+            'status_id' => 'required|in:1,2',
         ]);
 
         Pnf::updatePnf($request);
@@ -54,7 +54,7 @@ class PnfController extends Controller
 
     public function destroy($id)
     {
-        $personaPnf = PersonaPnf::where('id_pnf', $id)->first();
+        $personaPnf = PersonaPnf::where('prg_id', $id)->first();
         if ($personaPnf) {
             return redirect()->route('admin.maestros.pnf.index')->with('error', 'El PNF tiene personas asociadas. No se puede desactivar.');
         }

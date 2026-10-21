@@ -85,8 +85,8 @@ class HomeController extends Controller
             : null;
 
         return view('home', array_merge([
-            'variacion_dolar' => $ultimaTasa?->variacion,
-            'tasa_actual'     => $ultimaTasa?->tasa,
+            'variacion_dolar' => $ultimaTasa?->variacion_tca,
+            'tasa_actual'     => $ultimaTasa?->promedio_tca,
             'visibleModules'  => $visibleModules,
             'saludData'       => $saludData,
             'resumenGeneral'  => $resumenGeneral,

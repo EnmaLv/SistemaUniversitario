@@ -42,7 +42,7 @@ class ComedorHomeService
         $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c as r'), 'r.sede_id')
             ->join('persona as p', 'r.id_persona', '=', 'p.id_persona')
             ->leftJoin('persona_pnf as pp', 'r.id_persona_pnf', '=', 'pp.id_persona_pnf')
-            ->leftJoin('pnf as n', 'pp.id_pnf', '=', 'n.id_pnf')
+            ->leftJoin('programa as n', 'pp.prg_id', '=', 'n.id_prg')
             ->whereBetween('r.fecha_regis_diario_c', [$inicio, $fin])
             ->select(
                 'r.id',
@@ -53,12 +53,12 @@ class ComedorHomeService
                 'p.nombre_persona',
                 'p.apellido_persona',
                 'p.genero_persona',
-                'n.id_pnf',
-                'n.nombre_pnf'
+                'n.id_prg',
+                'n.nombre_prg'
             );
 
         if (!empty($f['pnf_id'])) {
-            $query->where('n.id_pnf', $f['pnf_id']);
+            $query->where('n.id_prg', $f['pnf_id']);
         }
 
         return $query->orderBy('r.fecha_regis_diario_c', 'desc')->get();
@@ -69,7 +69,7 @@ class ComedorHomeService
      */
     protected function pnfsDisponibles()
     {
-        return DB::table('pnf')->orderBy('nombre_pnf')->get(['id_pnf', 'nombre_pnf']);
+        return DB::table('programa')->orderBy('nombre_prg')->get(['id_prg', 'nombre_prg']);
     }
 
     /**
@@ -218,7 +218,7 @@ class ComedorHomeService
             }
 
             // PNF
-            $pnfNombre = $r->nombre_pnf ?: 'Sin PNF';
+            $pnfNombre = $r->nombre_prg ?: 'Sin PNF';
             $pnfBloques[$pnfNombre] = ($pnfBloques[$pnfNombre] ?? 0) + 1;
 
             // Fecha

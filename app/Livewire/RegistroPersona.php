@@ -233,7 +233,7 @@ class RegistroPersona extends Component
                 // Cargamos PNF
                 $personaPnf = PersonaPnf::where('id_persona', $persona->id_persona)->first();
                 if ($personaPnf) {
-                    $this->pnfId = $personaPnf->id_pnf;
+                    $this->pnfId = $personaPnf->prg_id;
                     $this->showPnf = true;
                 }
 
@@ -385,11 +385,11 @@ class RegistroPersona extends Component
             $this->genero = $persona->genero_persona;
             $this->telefono = $persona->telefono_persona;
             $this->email = $persona->email_persona;
-            $this->pnfs = DB::table('pnf')->where('id_estatus', 1)->get();
+            $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
             $this->sede = DB::table('sede')->get();
             $this->semestreId = $persona->semestre_persona;
             $this->showPnf = true;
-            $this->pnfId = $personaPnf->id_pnf;
+            $this->pnfId = $personaPnf->prg_id;
             $this->sedeId = $persona->id_sede;
 
             if (!$direccion) {
@@ -421,7 +421,7 @@ class RegistroPersona extends Component
             $this->sector = $direccion->sector;
         }
 
-        $this->pnfs = DB::table('pnf')->where('id_estatus', 1)->get();
+        $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
         $this->estadosVE = DB::table('estados')->where('status', 1)->get();
         $this->sede = DB::table('sede')->where('activo', 1)->get();
     }

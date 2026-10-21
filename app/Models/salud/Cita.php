@@ -131,7 +131,7 @@ class Cita extends Model
                     if ($pnf) {
                         $u->whereHas('persona.personaPnf', function ($pp) use ($pnf) {
                             $pp->whereHas('pnf', function ($p) use ($pnf) {
-                                $p->where('nombre_pnf', $pnf);
+                                $p->where('nombre_prg', $pnf);
                             });
                         });
                     }
@@ -158,7 +158,7 @@ class Cita extends Model
                 }
 
                 if ($personaPnf && $personaPnf->pnf) {
-                    $cita->pnf = $personaPnf->pnf->nombre_pnf ?? 'No especificado';
+                    $cita->pnf = $personaPnf->pnf->nombre_prg ?? 'No especificado';
                 }
 
                 try {
@@ -317,7 +317,7 @@ class Cita extends Model
                 }
 
                 if ($personaPnf && $personaPnf->pnf) {
-                    $pnfVal = $personaPnf->pnf->nombre_pnf ?? 'No especificado';
+                    $pnfVal = $personaPnf->pnf->nombre_prg ?? 'No especificado';
                 }
 
                 if ($pnfVal === 'Agroalimentaria') $pnfVal = 'Agroalimentacion';

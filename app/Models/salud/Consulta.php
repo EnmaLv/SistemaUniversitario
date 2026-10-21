@@ -397,7 +397,7 @@ class Consulta extends Model
                 $u->whereHas('perfil', fn($p) => $p->where('nombre_perfil', $perfil));
             }
             if ($pnf) {
-                $u->whereHas('personaPnf.pnf', fn($p) => $p->where('nombre_pnf', $pnf));
+                $u->whereHas('personaPnf.pnf', fn($p) => $p->where('nombre_prg', $pnf));
             }
         });
     }

@@ -397,7 +397,7 @@
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                    {{ $registro->nombre_pnf ?? '—' }}
+                                    {{ $registro->nombre_prg ?? '—' }}
                                 </td>
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">

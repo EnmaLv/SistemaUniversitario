@@ -15,8 +15,8 @@ return new class extends Migration
         Schema::create('perfil', function (Blueprint $table) {
             $table->id('id_perfil');
             $table->string('nombre_perfil');
-            $table->boolean('estado')->default(true);
             $table->timestamps();
+            $table->auditoria();
         });
 
         Schema::create('persona', function (Blueprint $table) {
