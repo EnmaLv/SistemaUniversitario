@@ -7,11 +7,22 @@ use App\Models\Usuario;
 use App\Support\Auditoria\Bitacora;
 use App\Support\Auditoria\FiltroPeticiones;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class AccesosDenegados
 {
     private const ATRIBUTO = 'seguridad.acceso_denegado_registrado';
+
+    public static function clave(Usuario $usuario): string
+    {
+        return 'accesos-denegados:' . $usuario->getKey();
+    }
+
+    public static function reiniciar(Usuario $usuario): void
+    {
+        Cache::forget(static::clave($usuario));
+    }
 
     public static function yaRegistrado(Request $request): bool
     {

@@ -388,6 +388,10 @@
             <span>El correo electrónico no está registrado en el sistema</span>
         </div>
 
+        @if ($errors->any())
+            <div role="alert" style="color:#b71c1c;margin-bottom:12px;font-weight:600">{{ $errors->first() }}</div>
+        @endif
+
         <form method="POST" action="{{ route('password.recover.post_email') }}">
             @csrf
             <div class="form-group">

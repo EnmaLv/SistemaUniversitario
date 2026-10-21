@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use App\Http\Middleware\CheckTasaActualizada;
 use App\Http\Middleware\IgnorarTasaHoy;
 use App\Http\Middleware\RegistrarActividad;
+use App\Http\Middleware\VerificarUsuarioBloqueado;
 use App\Support\Seguridad\AccesosDenegados;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -24,7 +25,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             CheckTasaActualizada::class,
+            VerificarUsuarioBloqueado::class,
             RegistrarActividad::class,
+        ]);
+
+        $middleware->api(append: [
+            VerificarUsuarioBloqueado::class . ':sanctum',
         ]);
 
         $middleware->trustProxies(at: '*');

@@ -7,7 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Models\Perfil;
 use App\Models\Rol;
+use App\Models\Bitacora as BitacoraModelo;
+use App\Support\Auditoria\Bitacora;
 use App\Support\Auditoria\CambiosPermisos;
+use App\Support\Seguridad\Bloqueos;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -209,7 +212,29 @@ class EmpleosController extends Controller
 
         if ($user->verifyMasterKey($request->input('master_key'))) {
             session(['master_key_validated' => true]);
-            return redirect()->route('admin.configuracion.empleados.index');
+            if ((int) $user->intentos_llave_fallidos > 0) {
+                $user->intentos_llave_fallidos = 0;
+                $user->saveQuietly();
+            }
+            Bitacora::registrar(accion: 'llave_maestra_correcta', modulo: 'administracion', observacion: 'Acceso a configuración', usuario: $user);
+
+            return redirect()->intended(route('admin.configuracion.empleados.index'));
+        }
+
+        Bitacora::registrar(
+            accion: 'llave_maestra_incorrecta',
+            modulo: 'administracion',
+            nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
+            observacion: sprintf('Acceso a configuración. Intento %d de %d', (int) $user->intentos_llave_fallidos + 1, (int) config('seguridad.max_intentos_llave', 3)),
+            usuario: $user,
+        );
+
+        if ($estado = Bloqueos::registrarFalloLlave($user)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors(['email' => Bloqueos::mensaje($estado)]);
         }
 
         return back()->withErrors(['master_key' => 'Llave maestra incorrecta']);

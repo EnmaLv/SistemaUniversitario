@@ -38,7 +38,15 @@ class Usuario extends Authenticatable
     protected $hidden = ['password', 'master_key'];
 
     protected $casts = [
-        'security_questions' => 'array',
+        'security_questions'     => 'array',
+        'bloqueado'              => 'boolean',
+        'bloqueado_hasta'        => 'datetime',
+        'bloqueado_en'           => 'datetime',
+        'ventana_bloqueos_desde' => 'datetime',
+        'ultimo_login'           => 'datetime',
+        'intentos_fallidos'      => 'integer',
+        'intentos_llave_fallidos' => 'integer',
+        'bloqueos_temporales'    => 'integer',
     ];
 
     protected ?array $permisosEfectivosCache = null;

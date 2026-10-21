@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Services\AuthService;
+use App\Support\Auditoria\Bitacora;
+use App\Support\Seguridad\Bloqueos;
+use App\Support\Seguridad\ProteccionLogin;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -18,18 +20,23 @@ class AuthApiController extends Controller
             'password' => 'required|string',
         ]);
 
-        $authService = new AuthService();
-        $usuario = $authService->validateCredentials(
-            $request->input('email'),
-            $request->input('password')
+        $resultado = ProteccionLogin::intentar(
+            (string) $request->input('email'),
+            (string) $request->input('password'),
+            (string) $request->ip(),
+            'api'
         );
 
+        $usuario = $resultado['usuario'];
         if (! $usuario) {
             return response()->json([
                 'success' => false,
-                'message' => 'Credenciales inválidas.',
+                'message' => $resultado['mensaje'],
             ], 401);
         }
+
+        Bloqueos::registrarLoginExitoso($usuario, $request);
+        Bitacora::registrar(accion: 'login_exitoso', modulo: 'autenticacion', observacion: 'API (token)', usuario: $usuario);
 
         $usuario->tokens()->where('name', 'flutter-app')->delete();
         $token   = $usuario->createToken('flutter-app')->plainTextToken;
@@ -53,6 +60,7 @@ class AuthApiController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        Bitacora::registrar(accion: 'logout', modulo: 'autenticacion', observacion: 'API (token)', usuario: $request->user());
         $request->user()->currentAccessToken()->delete();
         return response()->json(['success' => true, 'message' => 'Sesión cerrada correctamente.']);
     }

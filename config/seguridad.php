@@ -14,6 +14,8 @@ return [
 
     'max_intentos_recuperacion' => (int) env('SEGURIDAD_MAX_INTENTOS_RECUPERACION', 3),
 
+    'max_consultas_recuperacion_ip' => (int) env('SEGURIDAD_MAX_CONSULTAS_RECUPERACION_IP', 10),
+
     'minutos_validez_recuperacion' => (int) env('SEGURIDAD_MINUTOS_VALIDEZ_RECUPERACION', 10),
 
     'max_accesos_denegados' => (int) env('SEGURIDAD_MAX_ACCESOS_DENEGADOS', 10),

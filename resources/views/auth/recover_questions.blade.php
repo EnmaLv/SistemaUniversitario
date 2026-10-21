@@ -463,6 +463,10 @@
             <span>Una o más respuestas son incorrectas. Verifica e intenta nuevamente.</span>
         </div>
 
+        @if ($errors->any())
+            <div role="alert" style="color:#b71c1c;margin-bottom:12px;font-weight:600">{{ $errors->first() }}</div>
+        @endif
+
         <form method="POST" action="{{ route('password.recover.verify') }}">
             @csrf
             <div class="questions-container">

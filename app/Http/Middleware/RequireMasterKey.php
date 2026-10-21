@@ -30,6 +30,9 @@ class RequireMasterKey
             ];
 
                 if (!session('master_key_validated') && !in_array($request->path(), $allowed)) {
+                    if ($request->isMethod('GET') && ! $request->expectsJson()) {
+                        session()->put('url.intended', $request->fullUrl());
+                    }
                     return redirect()->route('admin.configuracion.master_key.form');
                 }
             }

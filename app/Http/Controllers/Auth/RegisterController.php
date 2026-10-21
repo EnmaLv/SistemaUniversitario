@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Usuario;
 use App\Models\Rol;
 use App\Services\AuthService;
+use App\Support\Auditoria\CambiosPermisos;
 use App\Models\ConfiguracionSistema;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
@@ -168,7 +169,7 @@ class RegisterController extends Controller
             }
 
             if ($assignRol) {
-                $usuario->roles()->sync([$assignRol->id_rol]);
+                CambiosPermisos::rolesUsuario($usuario, $usuario->roles()->sync([$assignRol->id_rol]), 'roles_usuario_registro');
             }
 
             if ($assignRol && $assignRol->nombre === 'Administrador' && !empty($data['master_key'])) {
