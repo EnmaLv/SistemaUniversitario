@@ -60,6 +60,7 @@ return [
             'archivos'          => 'Archivos',
             'configuracion'     => 'Configuración general',
             'bitacora'          => 'Bitácora de auditoría',
+            'seguridad_bloqueos' => 'Bloqueos de seguridad',
         ],
     ],
 

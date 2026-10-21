@@ -14,6 +14,7 @@
         'config_permisos',
         'archivos',
         'bitacora',
+        'seguridad_bloqueos',
     ];
 @endphp
 
@@ -157,7 +158,7 @@
 {{-- ==========================================
         SECCIÓN 2: ADMINISTRACIÓN DEL SISTEMA
     ========================================== --}}
-@canMenu(['config_empleados', 'config_roles', 'config_permisos', 'archivos', 'bitacora'])
+@canMenu(['config_empleados', 'config_roles', 'config_permisos', 'archivos', 'bitacora', 'seguridad_bloqueos'])
 <div class="pt-3 pb-1" :class="sidebarOpen ? 'block' : 'hidden'">
     <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-white/50">
         Administración del Sistema
@@ -225,6 +226,15 @@
             title="Bitácora de auditoría">
             <i class="fas fa-clipboard-list w-4 text-center flex-shrink-0"></i>
             <span class="truncate">Bitácora de auditoría</span>
+        </a>
+        @endcanMenu
+
+        @canMenu('seguridad_bloqueos')
+        <a href="{{ route('admin.configuracion.seguridad.bloqueos.index') }}"
+            class="flex items-center gap-2 py-1.5 px-2 text-xs rounded-lg text-white/80 hover:text-white hover:bg-[#623739] truncate"
+            title="Bloqueos de seguridad">
+            <i class="fas fa-user-lock w-4 text-center flex-shrink-0"></i>
+            <span class="truncate">Bloqueos de seguridad</span>
         </a>
         @endcanMenu
     </div>

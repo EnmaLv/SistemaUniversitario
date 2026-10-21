@@ -45,6 +45,7 @@ return [
         'admin.salud.movimientos.consultas.dispensacion'  => 'crear',
         'admin.psicologia.maestros.publicaciones.reaccionar' => 'ver',
         'notifications.readAll'                           => 'ver',
+        'admin.configuracion.seguridad.bloqueos.desbloquear' => 'activar',
     ],
 
     'rutas_libres' => [

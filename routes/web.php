@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Configuracion\BitacoraController;
 use App\Http\Controllers\Admin\Configuracion\EmpleosController;
 use App\Http\Controllers\Admin\Configuracion\PermisosController;
 use App\Http\Controllers\Admin\Configuracion\RolesController;
+use App\Http\Controllers\Admin\Configuracion\SeguridadBloqueosController;
 use App\Http\Controllers\RegistroDiarioController;
 use App\Http\Controllers\DetalleRegistroDiarioController;
 use App\Http\Controllers\PnfController;
@@ -415,6 +416,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/bitacora/exportar/csv', [BitacoraController::class, 'exportarCsv'])->name('admin.configuracion.bitacora.exportar_csv');
                 Route::get('/bitacora/exportar/pdf', [BitacoraController::class, 'exportarPdf'])->name('admin.configuracion.bitacora.exportar_pdf');
                 Route::get('/bitacora/{id}', [BitacoraController::class, 'show'])->whereNumber('id')->name('admin.configuracion.bitacora.show');
+
+                Route::get('/seguridad/bloqueos', [SeguridadBloqueosController::class, 'index'])->name('admin.configuracion.seguridad.bloqueos.index');
+                Route::put('/seguridad/bloqueos/{id}/desbloquear', [SeguridadBloqueosController::class, 'desbloquear'])->whereNumber('id')->name('admin.configuracion.seguridad.bloqueos.desbloquear');
 
                 Route::get('/master-key', [EmpleosController::class, 'masterKeyForm'])->name('admin.configuracion.master_key.form');
                 Route::post('/master-key/verify', [EmpleosController::class, 'verifyMasterKey'])->name('admin.configuracion.master_key.verify');

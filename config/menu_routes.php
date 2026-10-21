@@ -40,6 +40,7 @@ return [
     'permisos'               => ['admin.configuracion.permisos.*'],
     'archivos'               => ['admin.configuracion.archivos.*'],
     'bitacora'               => ['admin.configuracion.bitacora.*'],
+    'seguridad_bloqueos'     => ['admin.configuracion.seguridad.bloqueos.*'],
 
         /* ═══════════════════ COMEDOR ═══════════════════ */
     'comedor'                 => ['home', 'admin.comedor.estadisticas'],
