@@ -97,6 +97,10 @@
                 @endif
             @break
 
+            @case('deportes')
+                @include('components.deportes-home')
+            @break
+
             @default
                 <div
                     class="p-4 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-center gap-3">

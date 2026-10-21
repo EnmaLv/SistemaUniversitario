@@ -16,6 +16,7 @@ class ModulosSeeder extends Seeder
             ['key' => 'beca', 'nombre' => 'Beca', 'descripcion' => 'Módulo de beca'],
             ['key' => 'transporte', 'nombre' => 'Transporte', 'descripcion' => 'Módulo de transporte universitario'],
             ['key' => 'psicologia', 'nombre' => 'Psicología', 'descripcion' => 'Módulo de psicología'],
+            ['key' => 'deportes', 'nombre' => 'Deportes', 'descripcion' => 'Módulo de deportes'],
         ];
 
         foreach ($modulos as $m) {

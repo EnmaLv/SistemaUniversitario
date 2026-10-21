@@ -72,6 +72,10 @@
         @includeIf('layouts.sidebar.becas')
         @endcanModule
 
+        @canModule('deportes')
+        @includeIf('layouts.sidebar.deportes')
+        @endcanModule
+
         @canModule('administracion')
         @includeIf('layouts.sidebar.administracion')
         @endcanModule
