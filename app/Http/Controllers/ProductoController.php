@@ -79,7 +79,7 @@ class ProductoController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al crear el producto: ' . $e->getMessage());
+                ->with('error', 'Error al crear el producto: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -137,7 +137,7 @@ class ProductoController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al actualizar el producto: ' . $e->getMessage());
+                ->with('error', 'Error al actualizar el producto: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -239,7 +239,7 @@ class ProductoController extends Controller
             DB::rollBack();
 
             Log::error('Error al actualizar la tasa', [
-                'error' => $e->getMessage()
+                'error' => \App\Support\Seguridad\MensajeError::de($e)
             ]);
 
             return redirect()->back()->with(

@@ -23,5 +23,10 @@ class DefaultRolesSeeder extends Seeder
             ['nombre' => 'Obrero'],
             ['descripcion' => 'Rol por defecto Obrero']
         );
+
+        Rol::updateOrCreate(
+            ['nombre' => 'Psicólogo'],
+            ['descripcion' => 'Rol por defecto Psicólogo', 'slug' => 'psicologo']
+        );
     }
 }

@@ -5,14 +5,11 @@ namespace Tests\Feature;
 use App\Models\Becas\Beca;
 use App\Models\Persona;
 use App\Services\BecaAsignacionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class BecaAsignacionServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     public function test_it_persists_assignment_when_syncing_assignments(): void
     {
         $this->markTestIncomplete('Prueba previa a la rama de seguridad: usa App\\Models\\Becas\\Beca, que no existe en el proyecto. Reescribir con los modelos actuales.');

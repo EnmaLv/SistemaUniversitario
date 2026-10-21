@@ -23,7 +23,7 @@ class AgendaController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        if (!$user || !$user->tieneRol('psicologo')) {
+        if (!$user || !$user->esPsicologo()) {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
 
@@ -48,16 +48,12 @@ class AgendaController extends Controller
         $user = $this->verificarAcceso();
         $psicologoId = $user->id_usuario;
 
-        if ($user->esSuperAdmin() && $request->has('psicologo_id')) {
-            $psicologoId = $request->input('psicologo_id');
-        }
-
         $prioridadFilter = $request->input('prioridad');
         $q = trim((string) $request->input('q', ''));
 
         $citasPendientes = Cita::obtenerPendientes($psicologoId, $prioridadFilter, $q);
 
-        $pacientesSinCita = Usuario::obtenerPacientesSinCita($q);
+        $pacientesSinCita = Usuario::obtenerPacientesSinCita($q, $psicologoId);
 
         return view('admin.psicologia.maestros.agenda.components.pending-list', compact('citasPendientes', 'pacientesSinCita'));
     }
@@ -97,7 +93,7 @@ class AgendaController extends Controller
         }
 
         $paciente = Usuario::find($pacienteId);
-        if (!$paciente) {
+        if (!$paciente || (int) $paciente->id_usuario === (int) $user->id_usuario || !$paciente->tieneRol('paciente')) {
             return response()->json(['success' => false, 'message' => 'Paciente no válido.']);
         }
 
@@ -198,7 +194,7 @@ class AgendaController extends Controller
     public function dailyCitas(Request $request)
     {
         $user = $this->verificarAcceso();
-        $psicologoId = $user->esSuperAdmin() ? $request->input('psicologo_id', $user->id_usuario) : $user->id_usuario;
+        $psicologoId = $user->id_usuario;
         $fecha = $request->input('fecha');
 
         return response()->json(Cita::obtenerCitasDiariasJson($psicologoId, $fecha));
@@ -208,11 +204,7 @@ class AgendaController extends Controller
     {
         $user = $this->verificarAcceso();
 
-        $psicologoId = $request->input('psicologo_id', $user->id_usuario);
-
-        if ($user->tieneRol('psicologo') && $user->id_usuario != $psicologoId) {
-            abort(403);
-        }
+        $psicologoId = $user->id_usuario;
 
         $fechaInicio = $request->input('start_date', Carbon::now()->subDays(30)->toDateString());
         $fechaFin = $request->input('end_date', Carbon::now()->toDateString());
@@ -302,17 +294,6 @@ class AgendaController extends Controller
 
         $psicologoId = $user->id_usuario;
         $psicologo = $user;
-
-        if ($user->esSuperAdmin() && $request->has('psicologo_id')) {
-            $psicologoId = $request->input('psicologo_id');
-            $psicologo = Usuario::find($psicologoId);
-
-            if (!$psicologo) {
-                abort(404, 'Psicólogo no encontrado');
-            }
-        } elseif (!$user->tieneRol('psicologo')) {
-            abort(403, 'Solo los psicólogos pueden exportar su agenda.');
-        }
 
         $viewType = $request->input('view', 'week');
         $dateStr = $request->input('date');

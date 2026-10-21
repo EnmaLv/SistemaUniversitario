@@ -65,7 +65,7 @@ class LocalidadController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al verificar la localidad',
-                'error' => $e->getMessage()
+                'error' => \App\Support\Seguridad\MensajeError::de($e)
             ], 500);
         }
     }
@@ -101,7 +101,7 @@ class LocalidadController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.localidad.index')
-                ->with('error', 'Ocurrió un error al registrar la localidad: ' . $e->getMessage());
+                ->with('error', 'Ocurrió un error al registrar la localidad: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -137,7 +137,7 @@ class LocalidadController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.localidad.index')
-                ->with('error', 'Ocurrió un error al actualizar la localidad: ' . $e->getMessage());
+                ->with('error', 'Ocurrió un error al actualizar la localidad: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 

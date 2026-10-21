@@ -18,7 +18,6 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthApiController::class, 'logout'])->middleware('auth:sanctum');
 });
 
-Route::get('viajes/{viaje}/posicion', [BusViajeApiController::class, 'obtenerPosicion']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me',      [AuthApiController::class, 'me']);
@@ -56,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('paradas', [BusParadaApiController::class, 'index']);
         Route::get('sedes', [SedeController::class, 'index']);
 
+        Route::get('viajes/{viaje}/posicion', [BusViajeApiController::class, 'obtenerPosicion'])->middleware('throttle:120,1');
         Route::post('viajes/{viaje}/pasajeros', [BusViajePasajeroApiController::class, 'registrar']);
         Route::get('viajes/hoy', [BusViajeApiController::class, 'cartelera']);
         Route::get('mi-viaje-activo', [BusViajeApiController::class, 'miViajeActivo']);

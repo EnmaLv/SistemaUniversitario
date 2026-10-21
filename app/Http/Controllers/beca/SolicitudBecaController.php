@@ -15,6 +15,7 @@ use App\Models\Usuario;
 use App\Services\becas\SolicitudBecasService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SolicitudBecaController extends Controller
 {
@@ -172,7 +173,7 @@ class SolicitudBecaController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al registrar la solicitud: ' . $e->getMessage());
+                ->with('error', 'Error al registrar la solicitud: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -202,7 +203,7 @@ class SolicitudBecaController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Error al renovar la beca: ' . $e->getMessage());
+                ->with('error', 'Error al renovar la beca: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -219,6 +220,28 @@ class SolicitudBecaController extends Controller
         ])->findOrFail($id);
 
         return view('admin.becas.solicitudes.show', compact('solicitud'));
+    }
+
+    public function descargarDocumento(int $id)
+    {
+        $solicitud = SolicitudBeca::with('documento')->findOrFail($id);
+
+        /** @var Usuario $usuario */
+        $usuario = Auth::user();
+        $esPropia = (int) $solicitud->id_persona === (int) $usuario->id_persona;
+        $puedeGestionar = $usuario->puedeAlguna(['solicitud', 'solicitudes_becas'], 'exportar')
+            || $usuario->puedeAlguna(['solicitud', 'solicitudes_becas'], 'ver');
+
+        abort_unless($esPropia || $puedeGestionar, 403, 'No tienes permiso para ver este documento.');
+
+        $documento = $solicitud->documento;
+        abort_unless($documento && $documento->ruta_archivo && Storage::disk('local')->exists($documento->ruta_archivo), 404);
+
+        return Storage::disk('local')->response(
+            $documento->ruta_archivo,
+            basename($documento->ruta_archivo),
+            ['X-Content-Type-Options' => 'nosniff']
+        );
     }
 
     public function verificar(Request $request, int $id)
@@ -247,7 +270,7 @@ class SolicitudBecaController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Error al procesar la solicitud: ' . $e->getMessage());
+                ->with('error', 'Error al procesar la solicitud: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 }

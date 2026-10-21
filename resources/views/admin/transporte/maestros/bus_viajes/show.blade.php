@@ -352,7 +352,7 @@
 
         let pollingInterval;
         function consultarGPS() {
-            fetch(`/api/viajes/${viajeId}/posicion`, {
+            fetch(@json(route('admin.transporte.maestros.bus_viajes.posicion', $busViaje)), {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.json())

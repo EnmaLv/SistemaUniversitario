@@ -190,7 +190,7 @@ class Persona extends Model
             return [true, null];
         } catch (Exception $e) {
             DB::rollBack();
-            return [false, $e->getMessage()];
+            return [false, \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 

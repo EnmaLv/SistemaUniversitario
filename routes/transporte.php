@@ -79,6 +79,7 @@ Route::get('/transporte/maestros/bus_viajes/create', [BusViajeController::class,
 Route::post('/transporte/maestros/bus_viajes/store', [BusViajeController::class, 'store'])->name('admin.transporte.maestros.bus_viajes.store');
 Route::get('/transporte/maestros/bus_viajes/{busViaje}/edit', [BusViajeController::class, 'edit'])->name('admin.transporte.maestros.bus_viajes.edit');
 Route::get('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::class, 'show'])->name('admin.transporte.maestros.bus_viajes.show');
+Route::get('/transporte/maestros/bus_viajes/{busViaje}/posicion', [BusViajeController::class, 'posicion'])->name('admin.transporte.maestros.bus_viajes.posicion');
 Route::put('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::class, 'update'])->name('admin.transporte.maestros.bus_viajes.update');
 Route::delete('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::class, 'destroy'])->name('admin.transporte.maestros.bus_viajes.destroy');
 Route::post('/transporte/maestros/bus_viajes/{busViaje}/cancelar', [BusViajeController::class, 'cancelar'])->name('admin.transporte.maestros.bus_viajes.cancelar');

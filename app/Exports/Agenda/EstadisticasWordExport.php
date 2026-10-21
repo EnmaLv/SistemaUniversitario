@@ -206,12 +206,8 @@ class EstadisticasWordExport
 
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         
-        if (!file_exists(storage_path('app/public'))) {
-            mkdir(storage_path('app/public'), 0755, true);
-        }
-        
         $fileName = 'Estadisticas_Citas_' . date('Y_m_d_His') . '.docx';
-        $tempPath = storage_path('app/public/' . $fileName);
+        $tempPath = \App\Support\Archivos\Temporales::ruta($fileName);
         $objWriter->save($tempPath);
 
         return $tempPath;

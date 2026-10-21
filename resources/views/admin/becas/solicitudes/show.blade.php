@@ -106,7 +106,7 @@
                         <div>
                             <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Archivo
                                 adjunto</span>
-                            <a href="{{ asset('storage/' . $solicitud->documento->ruta_archivo) }}" target="_blank"
+                            <a href="{{ route('admin.becas.solicitudes.descargar_documento', $solicitud->id) }}" target="_blank"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900 transition-colors text-[11px] font-black uppercase tracking-wider">
                                 <i class="fas fa-file-pdf"></i> Ver Notas
                             </a>

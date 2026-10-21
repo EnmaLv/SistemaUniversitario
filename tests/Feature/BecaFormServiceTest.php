@@ -6,15 +6,12 @@ use App\Models\Becas\Beca;
 use App\Models\Persona;
 use App\Models\Usuario;
 use App\Services\BecaFormService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ViewErrorBag;
 use Tests\TestCase;
 
 class BecaFormServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     public function test_tutor_list_contains_only_people_with_roles()
     {
         $this->markTestIncomplete('Prueba previa a la rama de seguridad: inserta perfil.id_estatus y sucursals, que no existen en el esquema actual. Reescribir con las tablas actuales.');

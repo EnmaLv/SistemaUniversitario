@@ -62,7 +62,7 @@ class AccesosDenegadosTest extends SeguridadTestCase
     {
         $admin = $this->crearUsuario('Administrador');
 
-        $this->actingAs($admin)->get('/admin/master-key/manage')->assertForbidden();
+        $this->actingAs($admin)->get(route('admin.psicologia.maestros.historias.index'))->assertForbidden();
 
         $this->assertTrue(BitacoraModelo::where('usuario_id', $admin->id_usuario)->where('accion', 'acceso_denegado')->exists());
     }

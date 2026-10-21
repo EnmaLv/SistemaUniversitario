@@ -81,7 +81,7 @@ class MedicamentoController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al crear el medicamento: ' . $e->getMessage());
+                ->with('error', 'Error al crear el medicamento: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -154,7 +154,7 @@ class MedicamentoController extends Controller
             DB::rollBack();
 
             Log::error('Error al actualizar la tasa', [
-                'error' => $e->getMessage()
+                'error' => \App\Support\Seguridad\MensajeError::de($e)
             ]);
 
             return redirect()->back()->with(
@@ -224,7 +224,7 @@ class MedicamentoController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al actualizar el medicamento: ' . $e->getMessage());
+                ->with('error', 'Error al actualizar el medicamento: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 

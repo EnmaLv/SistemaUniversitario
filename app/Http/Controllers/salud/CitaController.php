@@ -26,8 +26,8 @@ class CitaController extends Controller
         $user = Auth::user();
         abort_if(!$user, 403);
 
-        if ($user->tieneRol('psicologo')) {
-            $citas = Cita::obtenerCitasGlobales();
+        if ($user->esPsicologo()) {
+            $citas = Cita::obtenerCitasGlobales(null, 10, $user->id_usuario);
             return view('admin.psicologia.maestros.citas.index', compact('citas'));
         }
 
@@ -160,8 +160,12 @@ class CitaController extends Controller
             'fecha_solicitada' => 'required|date_format:Y-m-d|after_or_equal:today',
             'motivo' => 'required|string|max:100',
             'bloques_sugeridos' => 'required|string|max:1000',
-            'prioridad' => 'nullable|string|max:50',
         ]);
+
+        $psicologo = Usuario::find($validated['psicologo_id']);
+        if (!$psicologo || !$psicologo->esPsicologo() || (int) $psicologo->id_usuario === (int) $user->id_usuario) {
+            return back()->withErrors(['psicologo_id' => 'Selecciona un psicólogo válido.'])->withInput();
+        }
 
         [$isPass, $message, $cita] = Cita::crear($user, $validated);
 
@@ -464,40 +468,15 @@ class CitaController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
+        abort_if(!$user, 403, 'No autorizado para ver esta cita.');
 
-        abort_if(
-            !$user
-            || (!$user->tieneRol('paciente')
-                && !$user->tieneRol('psicologo')),
-            403,
-            'No autorizado para ver esta cita.'
-        );
+        $userId = (int) $user->id_usuario;
 
-        // Comparaciones explícitas con cast a int para evitar mismatch string/int
-        $userId          = (int) $user->id_usuario;
-        $citaUserId      = (int) $cita->user_id;
-        $citaPsicologoId = $cita->psicologo_id ? (int) $cita->psicologo_id : null;
-
-        // Paciente: solo sus propias citas
-        if ($user->tieneRol('paciente')) {
-            if ($citaUserId !== $userId) {
-                abort(403, 'No puedes ver citas de otros pacientes.');
-            }
+        if ($user->esPsicologo() && (int) $cita->psicologo_id === $userId) {
             return;
         }
 
-        // Psicólogo: sus propias citas siempre; citas ajenas solo si están pendientes
-        if ($user->tieneRol('psicologo')) {
-            $esMismoPsicologo = ($citaPsicologoId === $userId);
-            $esPendiente      = ($cita->estado === 'pendiente');
-
-            if (!$esMismoPsicologo && !$esPendiente) {
-                abort(403, 'Esta cita no te pertenece.');
-            }
-            return;
-        }
-
-        abort(403);
+        abort_unless((int) $cita->user_id === $userId, 403, 'Esta cita no te pertenece.');
     }
 
     public function updatePriority(Request $request, $citaId)
@@ -556,7 +535,7 @@ class CitaController extends Controller
                         'redirect_template' => true
                     ], 400);
                 }
-                return redirect()->route('plantillas-globales.index')->with('error', 'Debe activar su Esquema General para el historial clínico.');
+                return redirect()->route('admin.psicologia.maestros.plantillas_globales.index')->with('error', 'Debe activar su Esquema General para el historial clínico.');
             }
         }
 
@@ -709,13 +688,7 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
 
-        $this->verificarPsicologoDueno($cita);
-        if (
-            !$user->tieneRol('psicologo')
-            && (int) $cita->user_id !== (int) $user->id_usuario
-        ) {
-            abort(403, 'No puedes ver esta cita.');
-        }
+        $this->authorizeAccess($cita);
 
         [$isPass, $message] = Cita::cancelar($cita->id, $user->id_usuario, $request->input('motivo_cancelacion'));
 
@@ -904,7 +877,7 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
 
-        if (!$user || !$user->tieneRol('paciente')) {
+        if (!$user) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
@@ -946,7 +919,7 @@ class CitaController extends Controller
         $user = Auth::user();
 
         abort_if(
-            !$user || !$user->tieneRol('psicologo'),
+            !$user || !$user->esPsicologo(),
             403,
             $mensaje ?? 'No autorizado.'
         );
@@ -984,8 +957,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || !$user->tieneRol('paciente'), 403, 'No autorizado.');
-        abort_if((int) $cita->user_id !== (int) $user->id_usuario, 403, 'Esta cita no te pertenece.');
+        abort_if(!$user || (int) $cita->user_id !== (int) $user->id_usuario, 403, 'Esta cita no te pertenece.');
 
         $validated = $request->validate([
             'opcion' => 'required|in:cualquier_dia,sugerencia_aceptada,rechazada,aceptada',

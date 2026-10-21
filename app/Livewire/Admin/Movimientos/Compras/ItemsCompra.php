@@ -158,7 +158,7 @@ class ItemsCompra extends Component
             $this->dispatch(
                 'mostrar-alerta',
                 icono: 'error',
-                mensaje: 'Error: ' . $e->getMessage()
+                mensaje: 'Error: ' . \App\Support\Seguridad\MensajeError::de($e)
             );
         }
     }
@@ -205,7 +205,7 @@ class ItemsCompra extends Component
             $this->dispatch(
                 'mostrar-alerta',
                 icono: 'error',
-                mensaje: 'Error: ' . $e->getMessage()
+                mensaje: 'Error: ' . \App\Support\Seguridad\MensajeError::de($e)
             );
         }
     }

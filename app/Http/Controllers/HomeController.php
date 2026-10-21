@@ -180,11 +180,13 @@ class HomeController extends Controller
         $citas = Cita::obtenerEstadisticas(
             null, $fechaInicio, $fechaFin,
             $estado, $avanceId, $estadoAnimoId,
-            $prioridad, $perfilAcademico, $pnf
+            $prioridad, $perfilAcademico, $pnf,
+            true
         );
 
         $resumen = Cita::obtenerResumenEstadistico($citas, $fechaInicio, $fechaFin, null);
         $resumen['por_estado'] = $citas->groupBy('estado')->map->count()->toArray();
+        unset($resumen['avances_pacientes'], $resumen['prioridades_pacientes'], $resumen['estados_animo_pacientes']);
 
         $porPsicologo = Cita::obtenerEstadisticasPorPsicologo($fechaInicio, $fechaFin);
         $resumen['total_psicologos_activos'] = count($porPsicologo);

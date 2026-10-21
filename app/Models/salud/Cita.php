@@ -79,9 +79,10 @@ class Cita extends Model
         return $query->where('estado', 'realizada');
     }
 
-    public static function obtenerCitasGlobales($estado = null, $cantidad = 10)
+    public static function obtenerCitasGlobales($estado = null, $cantidad = 10, $psicologoId = null)
     {
         $paginator = self::with(['paciente.persona', 'psicologo.persona'])
+            ->where('psicologo_id', $psicologoId)
             ->porEstado($estado)
             ->latest('created_at')
             ->paginate($cantidad);
@@ -101,9 +102,13 @@ class Cita extends Model
         return $paginator;
     }
 
-    public static function obtenerEstadisticas($psicologoId, $fechaInicio, $fechaFin, $estado = null, $avanceId = null, $estadoAnimoId = null, $prioridad = null, $perfilAcademico = null, $pnf = null)
+    public static function obtenerEstadisticas($psicologoId, $fechaInicio, $fechaFin, $estado = null, $avanceId = null, $estadoAnimoId = null, $prioridad = null, $perfilAcademico = null, $pnf = null, bool $todosLosPsicologos = false)
     {
-        $query = self::with('paciente')->porPsicologo($psicologoId);
+        $query = self::with('paciente');
+
+        if (!$todosLosPsicologos) {
+            $query->where('psicologo_id', $psicologoId);
+        }
 
         if ($fechaInicio && $fechaFin) {
             $query->where(function ($q) use ($fechaInicio, $fechaFin) {
@@ -434,10 +439,11 @@ class Cita extends Model
         $user = Usuario::find($userId);
         if (!$user) return;
         $notifiable = new \App\Models\salud\NotifiableUser();
-        foreach ((array) $user as $key => $value) {
-            $notifiable->{$key} = $value;
-        }
-        $notifiable->name = trim($user->persona->nombre_persona . ' ' . $user->persona->apellido_persona);
+        $notifiable->id = $user->id_usuario;
+        $notifiable->email = $user->persona->email_persona ?? $user->username;
+        $notifiable->nombres = $user->persona->nombre_persona ?? '';
+        $notifiable->apellidos = $user->persona->apellido_persona ?? '';
+        $notifiable->name = trim($notifiable->nombres . ' ' . $notifiable->apellidos);
         $notifiable->notify($notification);
     }
 
@@ -609,10 +615,12 @@ class Cita extends Model
         DB::transaction(function () use ($userId) {
             $prioridad = self::evaluarPrioridadBasePaciente($userId);
 
-            self::porPaciente($userId)
+            $ids = self::porPaciente($userId)
                 ->pendientes()
                 ->limit(10)
-                ->update(['prioridad' => $prioridad]);
+                ->pluck('id');
+
+            self::whereIn('id', $ids)->update(['prioridad' => $prioridad]);
         });
     }
 
@@ -665,7 +673,7 @@ class Cita extends Model
             }
 
             $psicologo = Usuario::find($validated['psicologo_id']);
-            if (!$psicologo || !$psicologo->tieneRol('psicologo')) {
+            if (!$psicologo || !$psicologo->esPsicologo()) {
                 return [false, 'Selecciona un psicólogo válido.', null];
             }
 
@@ -772,7 +780,7 @@ class Cita extends Model
                 return [true, 'Cita confirmada con éxito. El paciente ha sido notificado.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error interno al confirmar la cita: ' . $e->getMessage()];
+            return [false, 'Error interno al confirmar la cita: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -800,7 +808,7 @@ class Cita extends Model
                 return [true, 'La solicitud de cita ha sido rechazada correctamente.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error al procesar el rechazo: ' . $e->getMessage()];
+            return [false, 'Error al procesar el rechazo: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -818,7 +826,7 @@ class Cita extends Model
                 return [true, 'La cita ha sido marcada como realizada exitosamente.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error interno al marcar como realizada: ' . $e->getMessage()];
+            return [false, 'Error interno al marcar como realizada: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -839,7 +847,7 @@ class Cita extends Model
                 return [true, 'Cita marcada como "no asistió". Se han procesado las penalizaciones correspondientes.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error al procesar la inasistencia: ' . $e->getMessage()];
+            return [false, 'Error al procesar la inasistencia: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -865,8 +873,7 @@ class Cita extends Model
                     return [false, 'Error: Usuario no identificado.'];
                 }
 
-                $actor = 'paciente';
-                if ($user->tieneRol('psicologo')) $actor = 'psicologo';
+                $actor = (int) $cita->psicologo_id === (int) $user->id_usuario ? 'psicologo' : 'paciente';
 
                 if ($actor === 'psicologo' || $actor === 'admin') {
                     if ($cita->estado !== 'confirmada') {
@@ -925,7 +932,7 @@ class Cita extends Model
                 return [true, 'La cita ha sido cancelada exitosamente.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error interno al cancelar la cita: ' . $e->getMessage()];
+            return [false, 'Error interno al cancelar la cita: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -975,7 +982,7 @@ class Cita extends Model
                 return [true, 'La cita ha sido pospuesta y devuelta a pendientes.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error interno al posponer la cita: ' . $e->getMessage()];
+            return [false, 'Error interno al posponer la cita: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -1038,7 +1045,7 @@ class Cita extends Model
                 return [true, 'Bloque propuesto correctamente.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error interno al proponer bloque: ' . $e->getMessage()];
+            return [false, 'Error interno al proponer bloque: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -1070,7 +1077,7 @@ class Cita extends Model
                 return [true, 'Propuesta retirada.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error al quitar propuesta: ' . $e->getMessage()];
+            return [false, 'Error al quitar propuesta: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -1287,7 +1294,7 @@ class Cita extends Model
                 return [true, 'Prioridad actualizada correctamente.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error al actualizar prioridad: ' . $e->getMessage()];
+            return [false, 'Error al actualizar prioridad: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -1536,12 +1543,6 @@ class Cita extends Model
         $psicologos = collect();
         $psicologoId = $user->id_usuario;
 
-        if ($user->tieneRol('admin')) {
-            $psicologos = Usuario::whereHas('roles', fn($q) => $q->where('nombre', 'psicologo'))
-                ->get();
-            $psicologoId = $request->input('psicologo_id', $psicologos->first()->id_usuario ?? null);
-        }
-
         $view = $request->input('view', 'week');
         $dateStr = $request->input('date', now()->toDateString());
         $currentDate = Carbon::parse($dateStr);
@@ -1690,7 +1691,7 @@ class Cita extends Model
                 return [true, 'La contrapropuesta ha sido enviada al paciente. Los bloques propuestos: ' . implode(', ', $propuestos)];
             });
         } catch (\Exception $e) {
-            return [false, 'Error al enviar la propuesta: ' . $e->getMessage()];
+            return [false, 'Error al enviar la propuesta: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -1832,7 +1833,7 @@ class Cita extends Model
                 return [true, 'Respuesta registrada correctamente.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error al registrar respuesta: ' . $e->getMessage()];
+            return [false, 'Error al registrar respuesta: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -1856,7 +1857,7 @@ class Cita extends Model
                 return [true, 'Mensaje ocultado correctamente.'];
             });
         } catch (\Exception $e) {
-            return [false, 'Error al ocultar el mensaje: ' . $e->getMessage()];
+            return [false, 'Error al ocultar el mensaje: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 

@@ -41,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tasa.actualizada' => CheckTasaActualizada::class,
             'permiso.api' => \App\Http\Middleware\VerificarPermisoApi::class,
+            'rol.psicologo' => \App\Http\Middleware\ExigirRolPsicologo::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -91,7 +91,7 @@ class SolicitudBecasService
                 $nombreArchivo = 'notas_solicitud_' . $solicitud->id . '_' . uniqid() . '.' . $extension;
                 
                 // Guardar el archivo físicamente en el storage bajo: documentos_becas/{codigo_lapso}/{nombre_archivo}
-                $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'public');
+                $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'local');
 
                 // Registrar la referencia del documento en la base de datos asociado a la solicitud
                 SolicitudDocumento::create([
@@ -317,7 +317,7 @@ class SolicitudBecasService
             $extension = $archivoNotas->extension() ?: $archivoNotas->getClientOriginalExtension();
             $nombreArchivo = 'notas_renovacion_' . $nuevaSolicitud->id . '_' . uniqid() . '.' . $extension;
             
-            $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'public');
+            $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'local');
 
             SolicitudDocumento::create([
                 'id_solicitud'     => $nuevaSolicitud->id,

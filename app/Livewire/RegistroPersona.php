@@ -260,7 +260,7 @@ class RegistroPersona extends Component
                 'alert',
                 type: 'error',
                 title: 'Error',
-                text: 'Ocurrió un error al reactivar el estudiante: ' . $e->getMessage()
+                text: 'Ocurrió un error al reactivar el estudiante: ' . \App\Support\Seguridad\MensajeError::de($e)
             );
         }
     }
@@ -338,7 +338,7 @@ class RegistroPersona extends Component
                 'alert',
                 type: 'error',
                 title: 'Error',
-                text: $e->getMessage() ?: 'Ocurrió un error al procesar la solicitud'
+                text: \App\Support\Seguridad\MensajeError::de($e) ?: 'Ocurrió un error al procesar la solicitud'
             );
         }
     }

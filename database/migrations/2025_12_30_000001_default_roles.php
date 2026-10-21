@@ -16,6 +16,7 @@ return new class extends Migration
         'Administrador de Beca'   => ['Rol por defecto Administrador de Beca', 'administrador-de-beca'],
         'Paciente'                => ['Rol por defecto paciente', 'paciente'],
         'Becario'                 => ['Rol por defecto becario', 'becario'],
+        'Psicólogo'               => ['Rol por defecto Psicólogo', 'psicologo'],
     ];
 
     public function up()

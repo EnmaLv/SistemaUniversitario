@@ -54,7 +54,7 @@ class CategoriaMedicamentoController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Error al crear la categoría: ' . $e->getMessage());
+                ->with('error', 'Error al crear la categoría: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -79,7 +79,7 @@ class CategoriaMedicamentoController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Error al actualizar la categoría: ' . $e->getMessage());
+                ->with('error', 'Error al actualizar la categoría: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 

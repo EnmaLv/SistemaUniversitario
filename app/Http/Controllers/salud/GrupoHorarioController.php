@@ -198,7 +198,7 @@ class GrupoHorarioController extends Controller
             $message = GrupoHorario::crearDesdeHorarios($userId, $action, $nombre);
             return redirect()->route('admin.psicologia.maestros.horarios.index')->with('success', $message);
         } catch (\Exception $e) {
-            return redirect()->route('admin.psicologia.maestros.horarios.index')->with('error', $e->getMessage());
+            return redirect()->route('admin.psicologia.maestros.horarios.index')->with('error', \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 

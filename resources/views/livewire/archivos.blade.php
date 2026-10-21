@@ -369,12 +369,14 @@
 
                                 <x-table-actions :id="$archivo->id" baseUrl="admin/configuracion/archivos"
                                     :show="false" :edit="false" :toggle="false">
-                                    <a href="{{ url('/admin/configuracion/archivos/ver/' . $archivo->info_estudiantes) }}"
-                                        target="_blank" onclick="event.stopPropagation()"
-                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors"
-                                        title="Ver archivo">
-                                        <i class="fas fa-download text-xs"></i>
-                                    </a>
+                                    @if ($archivo->ruta_archivo)
+                                        <a href="{{ route('admin.configuracion.archivos.ver', $archivo->id) }}"
+                                            onclick="event.stopPropagation()"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors"
+                                            title="Descargar archivo">
+                                            <i class="fas fa-download text-xs"></i>
+                                        </a>
+                                    @endif
                                 </x-table-actions>
                             </x-table-row>
                         @empty

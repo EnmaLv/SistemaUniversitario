@@ -177,7 +177,7 @@ class ConsultaController extends Controller
                 auth()->id()
             );
         } catch (StockInsuficienteException $e) {
-            return back()->withInput()->with('error', 'Error al dispensar: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al dispensar: ' . \App\Support\Seguridad\MensajeError::de($e));
         } catch (Throwable $e) {
             report($e);
 

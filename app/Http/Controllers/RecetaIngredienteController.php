@@ -86,7 +86,7 @@ class RecetaIngredienteController extends Controller
             return redirect()->route('admin.maestros.receta_ingredientes.index')->with('success', 'Ingredientes agregados Exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Error: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -149,7 +149,7 @@ class RecetaIngredienteController extends Controller
                 ->with('success', 'Ingredientes de la receta actualizados Exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Error: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 

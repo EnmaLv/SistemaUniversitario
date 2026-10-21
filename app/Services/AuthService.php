@@ -33,13 +33,18 @@ class AuthService
 
             $persona = Persona::create($personaData);
 
-            $usuario = Usuario::create([
+            $usuario = new Usuario([
                 'id_persona' => $persona->id_persona,
                 'id_perfil'  => $perfilId,
                 'username'   => $userData['username'],
-                'password'   => $userData['password'],
-                'master_key' => $isFirstUser ? bcrypt('admin123') : null,
             ]);
+            $usuario->password = $userData['password'];
+
+            if ($isFirstUser) {
+                $usuario->master_key = ! empty($userData['master_key']) ? $userData['master_key'] : 'admin123';
+            }
+
+            $usuario->save();
 
             if ($isFirstUser) {
                 $this->assignRol($usuario->id_usuario, $perfilNombre);

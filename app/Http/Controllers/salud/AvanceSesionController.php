@@ -59,7 +59,7 @@ class AvanceSesionController extends Controller
             return redirect()->route('admin.psicologia.maestros.avances_sesion.index')
                 ->with('success', 'Avance de sesión registrado con éxito.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage())->withInput();
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e))->withInput();
         }
     }
 
@@ -92,7 +92,7 @@ class AvanceSesionController extends Controller
             return redirect()->route('admin.psicologia.maestros.avances_sesion.index')
                 ->with('success', 'Avance actualizado correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage())->withInput();
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e))->withInput();
         }
     }
 
@@ -106,7 +106,7 @@ class AvanceSesionController extends Controller
             return redirect()->route('admin.psicologia.maestros.avances_sesion.index')
                 ->with('success', 'Avance de sesión eliminado correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 }

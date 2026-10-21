@@ -156,8 +156,8 @@ class Archivos extends Component
         DB::beginTransaction();
 
         try {
-            $ruta     = $this->archivo->store('informacion', 'public');
-            $fullPath = storage_path('app/public/' . $ruta);
+            $ruta     = $this->archivo->store('importaciones', 'local');
+            $fullPath = \Illuminate\Support\Facades\Storage::disk('local')->path($ruta);
 
             $spreadsheet = IOFactory::load($fullPath);
             $rows = $spreadsheet->getActiveSheet()->toArray(null, true, false, true);
@@ -271,6 +271,10 @@ class Archivos extends Component
 
             Archivo::create([
                 'info_estudiantes' => 'Estudiantes UPTP - ' . now()->format('Y-m-d H:i:s'),
+                'ruta_archivo'     => $ruta,
+                'nombre_original'  => $this->archivo->getClientOriginalName(),
+                'resumen'          => $stats,
+                'usuario_id'       => auth()->id(),
                 'fecha'            => now()->toDateString(),
                 'estado'           => 'Procesado',
             ]);
@@ -295,7 +299,7 @@ class Archivos extends Component
                 'swal',
                 icon: 'error',
                 title: 'Error al procesar',
-                text: $e->getMessage()
+                text: \App\Support\Seguridad\MensajeError::de($e)
             );
         } finally {
             $this->procesando = false;

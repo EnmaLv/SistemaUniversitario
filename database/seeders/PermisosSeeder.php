@@ -18,6 +18,12 @@ class PermisosSeeder extends Seeder
         'Administrador de Beca'  => ['becas', 'solicitudes_becas', 'beneficios_becas'],
         'Paciente'               => ['citas', 'mural', 'notificaciones', 'publicaciones', 'estado_animo_diario'],
         'Becario'                => ['solicitar'],
+        'Psicólogo'              => [
+            'agenda', 'agenda_historial', 'agenda_estadisticas', 'agenda_prioridades',
+            'horarios_psi', 'horarios_crear', 'grupo_horarios',
+            'historias', 'plantillas_globales', 'plantillas', 'campos_evolucion', 'avances_sesion', 'estado_animos',
+            'publicaciones', 'publicaciones_crear', 'mural', 'enfermedades', 'notificaciones',
+        ],
     ];
 
     public function run(): void

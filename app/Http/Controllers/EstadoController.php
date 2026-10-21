@@ -46,7 +46,7 @@ class EstadoController extends Controller
             info('Error al crear un nuevo estado: ' . $e->getMessage());
             return redirect()
                 ->route('admin.estado.index')
-                ->with('error', 'Error al crear el estado: ' . $e->getMessage());
+                ->with('error', 'Error al crear el estado: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -79,7 +79,7 @@ class EstadoController extends Controller
 
             return redirect()
                 ->route('admin.estado.index')
-                ->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
+                ->with('error', 'Error al actualizar el estado: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -103,7 +103,7 @@ class EstadoController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al verificar el estado',
-                'error' => $e->getMessage()
+                'error' => \App\Support\Seguridad\MensajeError::de($e)
             ], 500);
         }
     }

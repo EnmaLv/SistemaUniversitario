@@ -268,5 +268,38 @@ class PersonaSeeder extends Seeder
             ['id_rol' => 7, 'id_usuario' => 8], // Paciente
             ['id_rol' => 9, 'id_usuario' => 8], // Becario
         ]);
+
+        $rolPsicologo = DB::table('rol')->where('slug', 'psicologo')->value('id_rol');
+
+        foreach ([
+            ['Laura', 'Mendoza', '20111222', 'psicologa.laura@example.com'],
+            ['Carlos', 'Rivas', '20333444', 'psicologo.carlos@example.com'],
+        ] as [$nombre, $apellido, $cedula, $correo]) {
+            $idPersona = DB::table('persona')->insertGetId([
+                'nombre_persona' => $nombre,
+                'apellido_persona' => $apellido,
+                'cedula_persona' => $cedula,
+                'telefono_persona' => '04140000000',
+                'genero_persona' => 'Otro',
+                'edad_persona' => 35,
+                'fecha_nacimiento_persona' => now()->subYears(35)->toDateString(),
+                'email_persona' => $correo,
+                'id_perfil' => 1,
+                'id_sede' => 1,
+            ]);
+
+            $idUsuario = DB::table('usuario')->insertGetId([
+                'id_persona' => $idPersona,
+                'id_perfil' => 1,
+                'username' => $correo,
+                'password' => bcrypt('12345678'),
+                'master_key' => bcrypt('masterkey123'),
+                'security_questions' => null,
+            ]);
+
+            if ($rolPsicologo) {
+                DB::table('rol_usuario')->insert(['id_rol' => $rolPsicologo, 'id_usuario' => $idUsuario]);
+            }
+        }
     }
 }

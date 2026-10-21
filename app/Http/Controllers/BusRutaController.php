@@ -68,7 +68,7 @@ class BusRutaController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withInput()
-                ->withErrors(['error' => 'Error al procesar: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Error al procesar: ' . \App\Support\Seguridad\MensajeError::de($e)]);
         }
     }
 
@@ -110,7 +110,7 @@ class BusRutaController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withInput()
-                ->withErrors(['error' => 'Error al actualizar: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Error al actualizar: ' . \App\Support\Seguridad\MensajeError::de($e)]);
         }
     }
 

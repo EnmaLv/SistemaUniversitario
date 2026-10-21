@@ -51,16 +51,18 @@ class HistoriaClinica extends Model
             ->get();
     }
 
-    public static function obtenerPorPaciente($pacienteId)
+    public static function obtenerPorPaciente($pacienteId, $psicologoId)
     {
-        return self::where('user_id', $pacienteId)->first();
+        return self::where('user_id', $pacienteId)
+            ->where('psicologo_id', $psicologoId)
+            ->first();
     }
 
     public static function iniciarHistoria($pacienteId, $psicologoId)
     {
         try {
             DB::beginTransaction();
-            $historia = self::obtenerPorPaciente($pacienteId);
+            $historia = self::obtenerPorPaciente($pacienteId, $psicologoId);
 
             if (!$historia) {
                 $id = \Illuminate\Support\Facades\DB::table('historia_clinicas')->insertGetId([
@@ -69,7 +71,7 @@ class HistoriaClinica extends Model
                     'created_at' => now(),
                     'updated_at' => null
                 ]);
-                $historia = self::obtenerPorPaciente($pacienteId);
+                $historia = self::obtenerPorPaciente($pacienteId, $psicologoId);
             }
 
             $seccionesActivas = DB::table('historia_secciones_personalizadas')
@@ -131,9 +133,11 @@ class HistoriaClinica extends Model
             $q->where('psicologo_id', $psicologoId);
         })
         ->whereHas('persona', function ($q) use ($query) {
-            $q->where('nombre_persona', 'like', '%' . $query . '%')
-              ->orWhere('apellido_persona', 'like', '%' . $query . '%')
-              ->orWhere('cedula_persona', 'like', '%' . $query . '%');
+            $q->where(function ($q) use ($query) {
+                $q->where('nombre_persona', 'like', '%' . $query . '%')
+                  ->orWhere('apellido_persona', 'like', '%' . $query . '%')
+                  ->orWhere('cedula_persona', 'like', '%' . $query . '%');
+            });
         })
         ->with('persona')
         ->get()
@@ -152,7 +156,10 @@ class HistoriaClinica extends Model
         $query = DB::table('citas')
             ->join('usuario', 'citas.user_id', '=', 'usuario.id_usuario')
             ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
-            ->leftJoin('historia_clinicas', 'usuario.id_usuario', '=', 'historia_clinicas.user_id')
+            ->leftJoin('historia_clinicas', function ($join) {
+                $join->on('usuario.id_usuario', '=', 'historia_clinicas.user_id')
+                    ->on('historia_clinicas.psicologo_id', '=', 'citas.psicologo_id');
+            })
             ->where('citas.psicologo_id', $psicologoId)
             ->where('citas.estado', 'realizada');
 
@@ -260,7 +267,7 @@ class HistoriaClinica extends Model
         }
 
         return $historiasBase->map(function ($item) use ($psicologoId) {
-            $h = self::obtenerPorPaciente($item->id);
+            $h = self::obtenerPorPaciente($item->id, $psicologoId);
             $citasRealizadas = DB::table('citas')
                 ->where('user_id', $item->id)
                 ->where('psicologo_id', $psicologoId)
@@ -368,7 +375,7 @@ class HistoriaClinica extends Model
                 return ['success' => false, 'message' => 'Ya está vinculada'];
             });
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Error al vincular: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Error al vincular: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -384,7 +391,7 @@ class HistoriaClinica extends Model
 
             return [true, 'Enfermedad desvinculada correctamente.'];
         } catch (Exception $e) {
-            return [false, 'Error al desvincular: ' . $e->getMessage()];
+            return [false, 'Error al desvincular: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -411,9 +418,9 @@ class HistoriaClinica extends Model
         return self::find($id);
     }
 
-    public static function obtenerPorPacienteOrFail($pacienteId)
+    public static function obtenerPorPacienteOrFail($pacienteId, $psicologoId)
     {
-        $historia = self::obtenerPorPaciente($pacienteId);
+        $historia = self::obtenerPorPaciente($pacienteId, $psicologoId);
 
         if (!$historia) {
             abort(404);

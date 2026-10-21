@@ -40,7 +40,15 @@ abstract class SeguridadTestCase extends TestCase
             return;
         }
 
-        Artisan::call('migrate', ['--force' => true]);
+        $huella = static::huellaMigraciones();
+        $archivoHuella = storage_path('framework/testing/esquema_' . DB::connection()->getDatabaseName() . '.hash');
+
+        if (! is_file($archivoHuella) || trim((string) file_get_contents($archivoHuella)) !== $huella) {
+            Artisan::call('migrate:fresh', ['--force' => true]);
+            file_put_contents($archivoHuella, $huella);
+        } else {
+            Artisan::call('migrate', ['--force' => true]);
+        }
 
         if (! DB::table('perfil')->exists()) {
             DB::table('perfil')->insert([
@@ -63,11 +71,20 @@ abstract class SeguridadTestCase extends TestCase
             (new ModulosSeeder())->run();
         }
 
-        if (! DB::table('permiso')->exists() || ! DB::table('vista')->where('key', 'seguridad_bloqueos')->exists()) {
-            (new PermisosSeeder())->run();
-        }
+        (new PermisosSeeder())->run();
 
         static::$basePreparada = true;
+    }
+
+    protected static function huellaMigraciones(): string
+    {
+        $archivos = collect(\Illuminate\Support\Facades\File::allFiles(database_path('migrations')))
+            ->filter(fn ($archivo) => $archivo->getExtension() === 'php')
+            ->sortBy(fn ($archivo) => $archivo->getRelativePathname())
+            ->map(fn ($archivo) => $archivo->getRelativePathname() . ':' . md5_file($archivo->getPathname()))
+            ->implode('|');
+
+        return md5($archivos);
     }
 
     protected function crearUsuario(array|string $roles = [], string $password = 'Secreta123', array $extra = []): Usuario
@@ -85,13 +102,14 @@ abstract class SeguridadTestCase extends TestCase
             'id_sede'          => DB::table('sede')->value('id'),
         ]);
 
-        $usuario = Usuario::create(array_merge([
+        $usuario = new Usuario([
             'id_persona' => $persona->id_persona,
             'id_perfil'  => DB::table('perfil')->value('id_perfil'),
             'username'   => "usuario{$n}@prueba.test",
-            'password'   => $password,
-            'master_key' => 'Llave12345',
-        ], $extra));
+        ]);
+        $usuario->password = $password;
+        $usuario->master_key = 'Llave12345';
+        $usuario->forceFill($extra)->save();
 
         $ids = Rol::whereIn('nombre', (array) $roles)->pluck('id_rol')->all();
         if ($ids) {

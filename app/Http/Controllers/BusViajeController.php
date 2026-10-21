@@ -198,6 +198,11 @@ class BusViajeController extends Controller
             ->with('success', 'El viaje se ha actualizado exitosamente.');
     }
 
+    public function posicion(BusViaje $busViaje)
+    {
+        return app(\App\Http\Controllers\Api\BusViajeApiController::class)->obtenerPosicion($busViaje);
+    }
+
     public function show(BusViaje $busViaje)
     {
         $busViaje->load([

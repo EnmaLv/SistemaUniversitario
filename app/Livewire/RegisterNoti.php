@@ -308,12 +308,12 @@ class RegisterNoti extends Component
 
                 $this->notification = [
                     'type'    => 'danger',
-                    'message' => "No se pudo registrar al estudiante: " . $e->getMessage(),
+                    'message' => "No se pudo registrar al estudiante: " . \App\Support\Seguridad\MensajeError::de($e),
                 ];
 
                 $DatosHistorial['nombre']      = $persona->nombre_persona ?? 'Sin nombre';
                 $DatosHistorial['estado']      = 'Rechazado';
-                $DatosHistorial['observacion'] = $e->getMessage();
+                $DatosHistorial['observacion'] = \App\Support\Seguridad\MensajeError::de($e);
 
                 $this->dispatch('cedula-validada', datos: $DatosHistorial);
             }

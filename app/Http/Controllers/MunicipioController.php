@@ -55,7 +55,7 @@ class MunicipioController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al verificar el municipio',
-                'error' => $e->getMessage()
+                'error' => \App\Support\Seguridad\MensajeError::de($e)
             ], 500);
         }
     }
@@ -91,7 +91,7 @@ class MunicipioController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.municipio.index')
-                ->with('error', 'Ocurrió un error al registrar el municipio: ' . $e->getMessage());
+                ->with('error', 'Ocurrió un error al registrar el municipio: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -127,7 +127,7 @@ class MunicipioController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.municipio.index')
-                ->with('error', 'Ocurrió un error al actualizar el municipio: ' . $e->getMessage());
+                ->with('error', 'Ocurrió un error al actualizar el municipio: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 

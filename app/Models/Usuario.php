@@ -27,9 +27,6 @@ class Usuario extends Authenticatable
         'id_persona',
         'id_perfil',
         'username',
-        'password',
-        'master_key',
-        'security_questions',
         'ultima_actividad_chat',
         'chat_activo_user_id',
         'infracciones_reset_at',
@@ -53,6 +50,8 @@ class Usuario extends Authenticatable
 
     protected ?bool $esSuperAdminCache = null;
 
+    protected ?bool $esPsicologoCache = null;
+
     public function canAccessMenu($keys): bool
     {
         return $this->puedeAlguna(is_array($keys) ? $keys : [$keys], 'ver');
@@ -65,6 +64,20 @@ class Usuario extends Authenticatable
         }
 
         return $this->esSuperAdminCache = $this->roles->contains(fn ($rol) => $rol->esSuperAdmin());
+    }
+
+    public function esPsicologo(): bool
+    {
+        if ($this->esPsicologoCache !== null) {
+            return $this->esPsicologoCache;
+        }
+
+        $roles = array_map('mb_strtolower', (array) config('permisos.roles_psicologo', []));
+
+        return $this->esPsicologoCache = $this->roles->contains(
+            fn ($rol) => in_array(mb_strtolower((string) $rol->slug), $roles, true)
+                || in_array(mb_strtolower((string) $rol->nombre), $roles, true)
+        );
     }
 
     public function permisosEfectivos(): array
@@ -174,6 +187,7 @@ class Usuario extends Authenticatable
     {
         $this->permisosEfectivosCache = null;
         $this->esSuperAdminCache = null;
+        $this->esPsicologoCache = null;
     }
 
     public function permisosDirectos()
@@ -191,6 +205,11 @@ class Usuario extends Authenticatable
     }
 
 
+
+    public function citas()
+    {
+        return $this->hasMany(\App\Models\salud\Cita::class, 'user_id', 'id_usuario');
+    }
 
     public function paciente()
     {
@@ -333,14 +352,22 @@ class Usuario extends Authenticatable
         return null;
     }
 
-    public static function obtenerPacientesSinCita($busqueda = '')
+    public static function obtenerPacientesSinCita($busqueda = '', $psicologoId = null)
     {
+        $busqueda = trim((string) $busqueda);
+
+        if (!$psicologoId || mb_strlen($busqueda) < 3) {
+            return collect();
+        }
+
         $query = DB::table('usuario')
             ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
             ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
             ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
             ->select(
-                'usuario.*',
+                'usuario.id_usuario',
+                'usuario.id_persona',
+                'usuario.username',
                 'persona.nombre_persona as nombres',
                 'persona.apellido_persona as apellidos',
                 'persona.cedula_persona as cedula',
@@ -352,24 +379,35 @@ class Usuario extends Authenticatable
                     ->orWhere('rol.nombre', 'Paciente');
             })
             ->where('persona.estado', 1)
+            ->where('usuario.id_usuario', '!=', $psicologoId)
             ->whereNotExists(function ($subquery) {
                 $subquery->select(DB::raw(1))
                     ->from('citas')
                     ->whereColumn('citas.user_id', 'usuario.id_usuario')
                     ->whereIn('citas.estado', ['pendiente', 'confirmada']);
             })
+            ->where(function ($q) use ($psicologoId) {
+                $q->whereNotExists(function ($subquery) use ($psicologoId) {
+                    $subquery->select(DB::raw(1))
+                        ->from('citas')
+                        ->whereColumn('citas.user_id', 'usuario.id_usuario')
+                        ->where('citas.psicologo_id', '!=', $psicologoId);
+                })->orWhereExists(function ($subquery) use ($psicologoId) {
+                    $subquery->select(DB::raw(1))
+                        ->from('citas')
+                        ->whereColumn('citas.user_id', 'usuario.id_usuario')
+                        ->where('citas.psicologo_id', $psicologoId);
+                });
+            })
             ->distinct();
 
-        if ($busqueda) {
-            $buscarNormalized = mb_strtolower($busqueda, 'UTF-8');
-            $query->where(function ($q) use ($buscarNormalized) {
-                $q->whereRaw("LOWER(COALESCE(persona.nombre_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
-                    ->orWhereRaw("LOWER(COALESCE(persona.apellido_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
-                    ->orWhereRaw("LOWER(TRIM(CONCAT(COALESCE(persona.nombre_persona, ''), ' ', COALESCE(persona.apellido_persona, '')))) LIKE ?", ["%{$buscarNormalized}%"])
-                    ->orWhereRaw("LOWER(COALESCE(persona.email_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
-                    ->orWhereRaw("LOWER(COALESCE(persona.cedula_persona, '')) LIKE ?", ["{$buscarNormalized}%"]);
-            });
-        }
+        $buscarNormalized = mb_strtolower($busqueda, 'UTF-8');
+        $query->where(function ($q) use ($buscarNormalized) {
+            $q->whereRaw("LOWER(COALESCE(persona.nombre_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                ->orWhereRaw("LOWER(COALESCE(persona.apellido_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                ->orWhereRaw("LOWER(TRIM(CONCAT(COALESCE(persona.nombre_persona, ''), ' ', COALESCE(persona.apellido_persona, '')))) LIKE ?", ["%{$buscarNormalized}%"])
+                ->orWhereRaw("LOWER(COALESCE(persona.cedula_persona, '')) LIKE ?", ["{$buscarNormalized}%"]);
+        });
 
         $usuariosRaw = $query->orderBy('persona.nombre_persona', 'asc')->limit(20)->get();
 

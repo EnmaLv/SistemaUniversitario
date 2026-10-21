@@ -39,7 +39,7 @@ class CitaCancelledNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $senderName = $this->cancelledBy === 'paciente' ? $this->cita->paciente->persona->nombre_persona : $this->cita->psicologo->persona->nombre_persona;
-        $url = $this->cancelledBy === 'paciente' ? route('agenda.index') : route('citas.index');
+        $url = $this->cancelledBy === 'paciente' ? route('admin.psicologia.maestros.agenda.index') : route('admin.psicologia.maestros.citas.index');
         
         $body = $senderName . ' ha cancelado una cita.';
         if ($this->cancelledBy === 'pospuesta') {

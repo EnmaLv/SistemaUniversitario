@@ -22,5 +22,12 @@ class RolModuloSeeder extends Seeder
             ['rol_id' => 8, 'modulo_id' => 1],
             ['rol_id' => 9, 'modulo_id' => 4],
         ]);
+
+        $rolPsicologo = DB::table('rol')->where('slug', 'psicologo')->value('id_rol');
+        $moduloPsicologia = DB::table('modulos')->where('key', 'psicologia')->value('id');
+
+        if ($rolPsicologo && $moduloPsicologia) {
+            DB::table('rol_modulo')->insert(['rol_id' => $rolPsicologo, 'modulo_id' => $moduloPsicologia]);
+        }
     }
 }

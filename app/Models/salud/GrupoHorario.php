@@ -87,7 +87,7 @@ class GrupoHorario
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return [false, 'Error al activar el horario: ' . $e->getMessage()];
+            return [false, 'Error al activar el horario: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -113,7 +113,7 @@ class GrupoHorario
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return [false, 'Error al desactivar el horario: ' . $e->getMessage()];
+            return [false, 'Error al desactivar el horario: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 

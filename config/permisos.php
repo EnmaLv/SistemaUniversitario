@@ -17,6 +17,11 @@ return [
         'secretaria-de-bienestar',
     ],
 
+    'roles_psicologo' => [
+        'psicologo',
+        'psicólogo',
+    ],
+
     'grupo_modulo' => [
         'general'        => null,
         'administracion' => 'administracion',
@@ -46,6 +51,7 @@ return [
         'admin.psicologia.maestros.publicaciones.reaccionar' => 'ver',
         'notifications.readAll'                           => 'ver',
         'admin.configuracion.seguridad.bloqueos.desbloquear' => 'activar',
+        'admin.becas.lapsos.avanzar'                      => 'editar',
     ],
 
     'rutas_libres' => [
@@ -58,7 +64,7 @@ return [
             'admin.configuracion.master_key.verify',
             'admin.becas.solicitudes.store',
             'admin.becas.solicitudes.renovar',
-            'admin.becas.lapsos.avanzar',
+            'admin.becas.solicitudes.descargar_documento',
             'media.profile_photos',
             'media.publicaciones',
         ],

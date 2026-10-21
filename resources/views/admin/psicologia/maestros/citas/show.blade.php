@@ -16,7 +16,7 @@
                 <p><strong>Notas:</strong> {{ $cita->notas ?: 'Sin notas' }}</p>
 
                 <div class="mt-6">
-                    <a href="{{ route('agenda.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">← Volver a Agenda</a>
+                    <a href="{{ route('admin.psicologia.maestros.agenda.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">← Volver a Agenda</a>
                 </div>
             </div>
         </div>

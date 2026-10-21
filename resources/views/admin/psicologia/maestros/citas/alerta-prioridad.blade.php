@@ -37,7 +37,7 @@
                             </button>
                         </form>
 
-                        <a href="{{ route('agenda.index') }}" class="inline-flex justify-center w-full px-6 py-3 bg-gray-500 text-white font-medium text-sm leading-snug rounded-[25px] shadow-md hover:bg-gray-600 hover:shadow-lg focus:bg-gray-600 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-700 active:shadow-lg transition duration-150 ease-in-out items-center text-center">
+                        <a href="{{ route('admin.psicologia.maestros.agenda.index') }}" class="inline-flex justify-center w-full px-6 py-3 bg-gray-500 text-white font-medium text-sm leading-snug rounded-[25px] shadow-md hover:bg-gray-600 hover:shadow-lg focus:bg-gray-600 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-700 active:shadow-lg transition duration-150 ease-in-out items-center text-center">
                             No, mantener igual e ignorar
                         </a>
                     </div>

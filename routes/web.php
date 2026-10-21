@@ -297,17 +297,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('localidad/verificar', [LocalidadController::class, 'verificarExistencia'])->name('localidad.verificar');
 
         Route::get('/configuracion/archivos', [ArchivoController::class, 'index'])->name('admin.configuracion.archivos.index');
-        Route::get('/configuracion/archivos/ver/{archivo}', function ($archivo) {
-            $base = realpath(storage_path('app/public'));
-            $path = $base ? realpath($base . DIRECTORY_SEPARATOR . $archivo) : false;
-
-            abort_unless($path && str_starts_with($path, $base . DIRECTORY_SEPARATOR) && is_file($path), 404);
-
-            return response()->file($path, [
-                'Content-Disposition' => 'inline',
-                'X-Content-Type-Options' => 'nosniff',
-            ]);
-        })->where('archivo', '.*')->name('admin.configuracion.archivos.ver');
+        Route::get('/configuracion/archivos/ver/{archivo}', [ArchivoController::class, 'ver'])->whereNumber('archivo')->name('admin.configuracion.archivos.ver');
 
         // SALUD        
 

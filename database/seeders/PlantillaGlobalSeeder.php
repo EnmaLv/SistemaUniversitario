@@ -12,7 +12,7 @@ class PlantillaGlobalSeeder extends Seeder
         $psicologos = DB::table('usuario')
             ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
             ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
-            ->whereIn(DB::raw('LOWER(rol.nombre)'), ['psicologo'])
+            ->where('rol.slug', 'psicologo')
             ->select('usuario.id_usuario')
             ->distinct()
             ->get();

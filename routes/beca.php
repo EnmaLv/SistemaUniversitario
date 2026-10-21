@@ -41,6 +41,7 @@ Route::prefix('/becas')->group(function () {
         Route::post('/store', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'store'])->name('admin.becas.solicitudes.store');
         Route::post('/renovar', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'renovar'])->name('admin.becas.solicitudes.renovar');
         Route::get('/{id}', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'show'])->name('admin.becas.solicitudes.show');
+        Route::get('/{id}/documento', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'descargarDocumento'])->whereNumber('id')->name('admin.becas.solicitudes.descargar_documento');
         Route::put('/{id}/verificar', [\App\Http\Controllers\beca\SolicitudBecaController::class, 'verificar'])->name('admin.becas.solicitudes.verificar');
     });
 

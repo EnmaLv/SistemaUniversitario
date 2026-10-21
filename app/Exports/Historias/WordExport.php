@@ -29,7 +29,7 @@ class WordExport
 
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         $fileName = 'Expediente_General_' . Str::slug($paciente->name) . '.docx';
-        $tempFile = storage_path('app/public/' . $fileName);
+        $tempFile = \App\Support\Archivos\Temporales::ruta($fileName);
         $objWriter->save($tempFile);
 
         return $tempFile;
@@ -66,7 +66,7 @@ class WordExport
 
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         $fileName = 'Expediente_Completo_' . Str::slug($paciente->name) . '.docx';
-        $tempFile = storage_path('app/public/' . $fileName);
+        $tempFile = \App\Support\Archivos\Temporales::ruta($fileName);
         $objWriter->save($tempFile);
 
         return $tempFile;

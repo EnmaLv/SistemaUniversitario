@@ -78,6 +78,7 @@ class PlantillaGlobal
             foreach ($pacientesIds as $pacienteId) {
                 $historia = DB::table('historia_clinicas')
                     ->where('user_id', $pacienteId)
+                    ->where('psicologo_id', $psicologoId)
                     ->first();
 
                 if (!$historia) {
@@ -173,7 +174,7 @@ class PlantillaGlobal
             ];
         } catch (\Exception $e) {
             DB::rollBack();
-            return ['success' => false, 'message' => 'Error al aplicar la plantilla: ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Error al aplicar la plantilla: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 

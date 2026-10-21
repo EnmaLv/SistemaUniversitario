@@ -63,7 +63,7 @@ class JornadaBecaController extends Controller
             $this->JornadaServices->obtenerJornadaActiva();
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada creada exitosamente.');
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Error al crear la jornada: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Error al crear la jornada: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -99,7 +99,7 @@ class JornadaBecaController extends Controller
 
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada actualizada exitosamente.');
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Error al actualizar la jornada: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Error al actualizar la jornada: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -111,7 +111,7 @@ class JornadaBecaController extends Controller
 
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada inactivada exitosamente.');
         } catch (\Exception $e) {
-            return redirect()->route('admin.becas.jornada.index')->with('error', 'Error al inactivar la jornada: ' . $e->getMessage());
+            return redirect()->route('admin.becas.jornada.index')->with('error', 'Error al inactivar la jornada: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -123,7 +123,7 @@ class JornadaBecaController extends Controller
 
             return redirect()->route('admin.becas.jornada.index')->with('success', 'Jornada activada exitosamente.');
         } catch (\Exception $e) {
-            return redirect()->route('admin.becas.jornada.index')->with('error', 'Error al activar la jornada: ' . $e->getMessage());
+            return redirect()->route('admin.becas.jornada.index')->with('error', 'Error al activar la jornada: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 }

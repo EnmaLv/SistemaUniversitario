@@ -13,6 +13,7 @@ use App\Models\salud\SeccionPersonalizada;
 use App\Models\salud\SegmentoPersonalizado;
 use App\Models\salud\PlantillaSeccion;
 use App\Models\Usuario;
+use App\Support\Archivos\Temporales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -215,7 +216,7 @@ class HistoriaController extends Controller
         ]);
 
         $historia = HistoriaClinica::findOrFail($request->historia_clinica_id);
-        $this->autorizarPaciente((int) $historia->user_id);
+        $this->autorizarHistoria($historia);
 
         $result = HistoriaClinica::vincularEnfermedad($request->historia_clinica_id, $request->enfermedad_id, $request->contexto);
         return response()->json($result);
@@ -230,7 +231,7 @@ class HistoriaController extends Controller
         $historiaId = DB::table('historia_enfermedad')->where('id', $request->link_id)->value('historia_clinica_id');
         $historia = $historiaId ? HistoriaClinica::find($historiaId) : null;
         abort_if(!$historia, 404);
-        $this->autorizarPaciente((int) $historia->user_id);
+        $this->autorizarHistoria($historia);
 
         HistoriaClinica::desvincularEnfermedad($request->link_id);
 
@@ -243,9 +244,8 @@ class HistoriaController extends Controller
         $user = Auth::user();
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
-        $historia = HistoriaClinica::obtenerPorPaciente($paciente->id);
+        $historia = HistoriaClinica::obtenerPorPaciente($paciente->id, Auth::id());
         abort_if(!$historia, 404);
-        $this->autorizarPaciente((int) $historia->user_id);
 
         $segmentosPropios = array_flip(DB::table('historia_segmentos_personalizados as segmento')
             ->join('historia_secciones_personalizadas as seccion', 'seccion.id', '=', 'segmento.seccion_id')
@@ -268,8 +268,7 @@ class HistoriaController extends Controller
             'segmentos_titulos.*' => 'required|string|max:255',
         ]);
 
-        $historia = HistoriaClinica::obtenerPorPacienteOrFail($pacienteId);
-        $this->autorizarPaciente((int) $historia->user_id);
+        $historia = HistoriaClinica::obtenerPorPacienteOrFail($pacienteId, Auth::id());
 
         SeccionPersonalizada::crear($historia, $request->all());
 
@@ -288,17 +287,7 @@ class HistoriaController extends Controller
             abort(404, 'Historia clínica no encontrada.');
         }
 
-        $userId = (int) Auth::id();
-        $esDueno = (int) $historia->psicologo_id === $userId;
-
-        $tieneCitas = DB::table('citas')
-            ->where('psicologo_id', $userId)
-            ->where('user_id', $historia->user_id)
-            ->exists();
-
-        if (!$esDueno && !$tieneCitas) {
-            abort(403, 'No tienes permiso para eliminar esta sección.');
-        }
+        $this->autorizarHistoria($historia);
 
         $titulo = $seccion->titulo;
 
@@ -336,9 +325,8 @@ class HistoriaController extends Controller
         }
 
         $historia = HistoriaClinica::obtenerPorId($seccion->historia_clinica_id);
-        if (!$historia || $historia->psicologo_id != Auth::id()) {
-            abort(403);
-        }
+        abort_if(!$historia, 404);
+        $this->autorizarHistoria($historia);
 
         SeccionPersonalizada::reordenar($seccionId, $request->input('direccion'));
 
@@ -380,11 +368,7 @@ class HistoriaController extends Controller
 
         $zip = new ZipArchive();
         $zipFileName = 'Expedientes_' . Str::slug($paciente->name) . '_' . time() . '.zip';
-        $zipPath = storage_path('app/public/' . $zipFileName);
-
-        if (!file_exists(storage_path('app/public'))) {
-            mkdir(storage_path('app/public'), 0755, true);
-        }
+        $zipPath = $this->rutaTemporal($zipFileName);
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
             $zip->addFromString('Expediente_General_' . Str::slug($paciente->name) . '.pdf', $this->generateGeneralPdfContent($paciente, $historia));
@@ -401,7 +385,7 @@ class HistoriaController extends Controller
             abort(500, 'No se pudo crear el archivo ZIP.');
         }
 
-        return response()->download($zipPath)->deleteFileAfterSend(true);
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 
     public function reportePdf($pacienteId)
@@ -540,11 +524,7 @@ class HistoriaController extends Controller
         if ($modoDescarga === 'individuales') {
             $zip = new ZipArchive();
             $zipFileName = 'Evolucion_Individuales_' . Str::slug($paciente->name) . '.zip';
-            $zipPath = storage_path('app/public/' . $zipFileName);
-
-            if (!file_exists(storage_path('app/public'))) {
-                mkdir(storage_path('app/public'), 0755, true);
-            }
+            $zipPath = $this->rutaTemporal($zipFileName);
 
             if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
                 $count = 1;
@@ -557,7 +537,7 @@ class HistoriaController extends Controller
                     $count++;
                 }
                 $zip->close();
-                return response()->download($zipPath)->deleteFileAfterSend(true);
+                return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
             }
             return back()->with('error', 'Error al crear el archivo ZIP.');
         }
@@ -598,20 +578,16 @@ class HistoriaController extends Controller
 
         $modoDescarga = $request->input('modo_descarga', 'unificado');
 
-        if (!file_exists(storage_path('app/public'))) {
-            mkdir(storage_path('app/public'), 0755, true);
-        }
-
         if ($modoDescarga === 'individuales') {
             $zip = new ZipArchive();
             $zipFileName = 'Evolucion_Individuales_' . Str::slug($paciente->name) . '.zip';
-            $zipPath = storage_path('app/public/' . $zipFileName);
+            $zipPath = $this->rutaTemporal($zipFileName);
 
             if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
                 $count = 1;
                 $tempFiles = [];
                 foreach ($citasSeleccionadas as $cita) {
-                    $tempDocPath = storage_path('app/public/temp_doc_' . $count . '.docx');
+                    $tempDocPath = $this->rutaTemporal('temp_doc_' . $count . '.docx');
                     \App\Exports\Historias\WordExport::generateEvolucion(collect([$cita]), $paciente, $historia, $stats, $psicologoName, $tempDocPath);
                     $fecha = $cita->fecha ? $cita->fecha->format('Y-m-d') : 'SinFecha';
                     $zip->addFile($tempDocPath, "Nota_{$count}_{$fecha}.docx");
@@ -620,17 +596,17 @@ class HistoriaController extends Controller
                 }
                 $zip->close();
                 foreach ($tempFiles as $f) @unlink($f);
-                return response()->download($zipPath)->deleteFileAfterSend(true);
+                return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
             }
             return back()->with('error', 'Error al crear el archivo ZIP.');
         }
 
         $fileName = 'Evolucion_' . Str::slug($paciente->name) . '.docx';
-        $tempPath = storage_path('app/public/' . $fileName);
+        $tempPath = $this->rutaTemporal($fileName);
 
         \App\Exports\Historias\WordExport::generateEvolucion($citasSeleccionadas, $paciente, $historia, $stats, $psicologoName, $tempPath);
 
-        return response()->download($tempPath)->deleteFileAfterSend(true);
+        return response()->download($tempPath, $fileName)->deleteFileAfterSend(true);
     }
 
     private function extraerFiltros(Request $request): array
@@ -822,18 +798,24 @@ class HistoriaController extends Controller
         return $pdf;
     }
 
+    private function rutaTemporal(string $nombre): string
+    {
+        return Temporales::ruta(Str::random(16) . '_' . $nombre);
+    }
+
     private function autorizarPaciente(int $pacienteId): void
     {
-        /** @var Usuario $user */
-        $user = Auth::user();
-        if ($user->esSuperAdmin()) {
-            return;
-        }
+        $userId = (int) Auth::id();
 
-        $userId = (int) $user->id_usuario;
-        $tieneRelacion = DB::table('citas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists()
-            || DB::table('historia_clinicas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists();
+        $tieneRelacion = $pacienteId !== $userId
+            && (DB::table('citas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists()
+                || DB::table('historia_clinicas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists());
 
         abort_unless($tieneRelacion, 403, 'No tienes acceso al expediente de este paciente.');
+    }
+
+    private function autorizarHistoria(HistoriaClinica $historia): void
+    {
+        abort_unless((int) $historia->psicologo_id === (int) Auth::id(), 403, 'No tienes acceso al expediente de este paciente.');
     }
 }

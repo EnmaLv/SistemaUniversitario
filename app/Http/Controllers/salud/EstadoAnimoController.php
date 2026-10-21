@@ -106,7 +106,7 @@ class EstadoAnimoController extends Controller
 
             return redirect()->route('admin.psicologia.maestros.estado_animos.index')->with('success', 'Estado de ánimo actualizado correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage())->withInput();
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e))->withInput();
         }
     }
 
@@ -122,7 +122,7 @@ class EstadoAnimoController extends Controller
             EstadoAnimo::eliminar($id);
             return redirect()->route('admin.psicologia.maestros.estado_animos.index')->with('success', 'Estado de ánimo eliminado. El valor ha sido liberado.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 }

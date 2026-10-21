@@ -344,9 +344,9 @@ class RegistroComida extends Component
                 $advertencias = array_merge($advertencias, $adv);
             }
         } catch (Exception $e) {
-            $this->inventarioError = $e->getMessage();
-            $this->alertInventario = $e->getMessage();
-            $this->dispatch('notify-inventario', message: $e->getMessage());
+            $this->inventarioError = \App\Support\Seguridad\MensajeError::de($e);
+            $this->alertInventario = \App\Support\Seguridad\MensajeError::de($e);
+            $this->dispatch('notify-inventario', message: \App\Support\Seguridad\MensajeError::de($e));
             return;
         }
 
@@ -455,11 +455,11 @@ class RegistroComida extends Component
         } catch (Exception $e) {
             DB::rollBack();
 
-            $this->alertInventario   = $e->getMessage();
-            $this->inventarioError   = $e->getMessage();
+            $this->alertInventario   = \App\Support\Seguridad\MensajeError::de($e);
+            $this->inventarioError   = \App\Support\Seguridad\MensajeError::de($e);
             $this->desayuno_registrado = false;
             $this->showNotification  = true;
-            $this->dispatch('notify-inventario', message: $e->getMessage());
+            $this->dispatch('notify-inventario', message: \App\Support\Seguridad\MensajeError::de($e));
             return;
         }
     }
