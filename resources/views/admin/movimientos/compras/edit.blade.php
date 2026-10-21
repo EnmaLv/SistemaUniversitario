@@ -193,9 +193,9 @@
                                         border-color: var(--border-color);
                                         color: var(--text-main);">
                                     @foreach ($modulos as $modulo)
-                                        <option value="{{ $modulo->id }}"
-                                            {{ old('modulo_id', $compra->modulo_id) == $modulo->id ? 'selected' : '' }}>
-                                            {{ $modulo->nombre }}
+                                        <option value="{{ $modulo->id_mod }}"
+                                            {{ old('modulo_id', $compra->modulo_id) == $modulo->id_mod ? 'selected' : '' }}>
+                                            {{ $modulo->nombre_mod }}
                                         </option>
                                     @endforeach
                                 </select>

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('vehiculo_id')->constrained('vehiculos')->onDelete('cascade');
             $table->foreignId('bus_ruta_id')->constrained('bus_rutas')->onDelete('cascade');
             $table->unsignedBigInteger('conductor_id')->nullable();
-            $table->foreign('conductor_id')->references('id_usuario')->on('usuario')->nullOnDelete();
+            $table->foreign('conductor_id')->references('id_use')->on('user')->nullOnDelete();
             $table->string('turno', 100)->nullable();
             $table->string('firebase_id', 100)->nullable();
             $table->dateTime('fecha_inicio')->nullable();

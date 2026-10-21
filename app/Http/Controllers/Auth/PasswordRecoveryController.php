@@ -54,7 +54,7 @@ class PasswordRecoveryController extends Controller
 
         Bitacora::registrar(accion: 'recuperacion_iniciada', modulo: 'autenticacion', usuario: $user);
 
-        session(['recovery_user_id' => $user->id_usuario]);
+        session(['recovery_user_id' => $user->id_use]);
         return view('auth.recover_questions', ['questions' => $this->soloPreguntas($questions)]);
     }
 
@@ -78,7 +78,7 @@ class PasswordRecoveryController extends Controller
 
         $max = (int) config('seguridad.max_intentos_recuperacion', 3);
         $decaimiento = (int) config('seguridad.minutos_bloqueo_temporal', 5) * 60;
-        $claveUsuario = 'recuperacion-usuario:' . $user->id_usuario;
+        $claveUsuario = 'recuperacion-usuario:' . $user->id_use;
         $claveIp = 'recuperacion-ip:' . $request->ip();
 
         if (RateLimiter::tooManyAttempts($claveIp, $max * 2)) {
@@ -123,7 +123,7 @@ class PasswordRecoveryController extends Controller
         }
 
         RateLimiter::clear($claveUsuario);
-        session(['recovery_verified_id' => $user->id_usuario, 'recovery_verified_at' => time()]);
+        session(['recovery_verified_id' => $user->id_use, 'recovery_verified_at' => time()]);
 
         Bitacora::registrar(accion: 'recuperacion_preguntas_correctas', modulo: 'autenticacion', usuario: $user);
 
@@ -158,14 +158,14 @@ class PasswordRecoveryController extends Controller
         }
 
         $request->validate(['password' => 'required|string|min:8|confirmed']);
-        $user->password = $request->password;
+        $user->password_use = $request->password;
         $user->save();
 
         Bitacora::registrar(
             accion: 'recuperacion_reseteo_password',
             modulo: 'autenticacion',
-            tablaAfectada: 'usuario',
-            registroId: $user->id_usuario,
+            tablaAfectada: 'user',
+            registroId: $user->id_use,
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
             usuario: $user,
         );
@@ -181,15 +181,15 @@ class PasswordRecoveryController extends Controller
             return redirect()->route('password.recover.email')->withErrors(['email' => 'Debes responder las preguntas de seguridad antes de restablecer la llave maestra.']);
         }
 
-        $request->validate(['master_key' => 'required|string|min:6']);
-        $user->master_key = $request->master_key;
+        $request->validate(['master_key_use' => 'required|string|min:6']);
+        $user->master_key_use = $request->master_key_use;
         $user->save();
 
         Bitacora::registrar(
             accion: 'recuperacion_reseteo_llave',
             modulo: 'autenticacion',
-            tablaAfectada: 'usuario',
-            registroId: $user->id_usuario,
+            tablaAfectada: 'user',
+            registroId: $user->id_use,
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
             usuario: $user,
         );
@@ -221,12 +221,12 @@ class PasswordRecoveryController extends Controller
 
     private function esAdministrador(Usuario $user): bool
     {
-        return $user->roles()->where('nombre', 'Administrador')->exists();
+        return $user->roles()->where('nombre_rol', 'Administrador')->exists();
     }
 
     private function preguntas(Usuario $user): array
     {
-        $stored = $user->security_questions ?? [];
+        $stored = $user->security_questions_use ?? [];
         if (is_string($stored)) {
             $stored = json_decode($stored, true) ?: [];
         }

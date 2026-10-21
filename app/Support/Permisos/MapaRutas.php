@@ -22,7 +22,7 @@ class MapaRutas
         }
 
         if (Schema::hasTable('vista')) {
-            foreach (Vista::where('activo', true)->pluck('key') as $clave) {
+            foreach (Vista::where('status_id', 1)->pluck('key_vis') as $clave) {
                 if (! isset($mapa[$clave])) {
                     $mapa[$clave] = [$clave];
                 }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tipo_productos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100);
-            $table->foreignId('modulo_id')->constrained('modulos')->onDelete('cascade');
+            $table->foreignId('modulo_id')->constrained('modulo', 'id_mod')->onDelete('cascade');
             $table->boolean('activo')->default(true);
             $table->timestamps();
         });

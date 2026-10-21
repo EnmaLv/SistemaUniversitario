@@ -53,31 +53,31 @@ class BitacoraTest extends SeguridadTestCase
     {
         $usuario = $this->crearUsuario();
 
-        $creacion = BitacoraModelo::where('tabla_afectada', 'usuario')
-            ->where('registro_id', $usuario->id_usuario)
+        $creacion = BitacoraModelo::where('tabla_afectada', 'user')
+            ->where('registro_id', $usuario->id_use)
             ->where('accion', 'crear')
             ->first();
 
         $this->assertNotNull($creacion);
-        $this->assertArrayHasKey('username', $creacion->datos_modificados);
-        $this->assertArrayNotHasKey('password', $creacion->datos_modificados);
-        $this->assertArrayNotHasKey('master_key', $creacion->datos_modificados);
+        $this->assertArrayHasKey('username_use', $creacion->datos_modificados);
+        $this->assertArrayNotHasKey('password_use', $creacion->datos_modificados);
+        $this->assertArrayNotHasKey('master_key_use', $creacion->datos_modificados);
 
-        $usuario->password = 'OtraClave123';
-        $usuario->username = 'renombrado' . $usuario->id_usuario . '@prueba.test';
+        $usuario->password_use = 'OtraClave123';
+        $usuario->username_use = 'renombrado' . $usuario->id_use . '@prueba.test';
         $usuario->save();
 
-        $cambio = BitacoraModelo::where('tabla_afectada', 'usuario')
-            ->where('registro_id', $usuario->id_usuario)
+        $cambio = BitacoraModelo::where('tabla_afectada', 'user')
+            ->where('registro_id', $usuario->id_use)
             ->where('accion', 'actualizar')
             ->latest('id')
             ->first();
 
         $this->assertNotNull($cambio);
-        $this->assertSame($usuario->username, $cambio->datos_modificados['username']);
-        $this->assertArrayHasKey('username', $cambio->datos_anteriores);
-        $this->assertArrayNotHasKey('password', $cambio->datos_modificados);
-        $this->assertArrayNotHasKey('password', $cambio->datos_anteriores);
+        $this->assertSame($usuario->username_use, $cambio->datos_modificados['username_use']);
+        $this->assertArrayHasKey('username_use', $cambio->datos_anteriores);
+        $this->assertArrayNotHasKey('password_use', $cambio->datos_modificados);
+        $this->assertArrayNotHasKey('password_use', $cambio->datos_anteriores);
         $this->assertStringContainsString('password', $cambio->observacion);
         $this->assertStringNotContainsString('OtraClave123', json_encode($cambio->getAttributes()));
     }
@@ -89,8 +89,8 @@ class BitacoraTest extends SeguridadTestCase
         $this->actingAs($usuario)->get('/home');
         $this->actingAs($usuario)->getJson('/mensajes/contactos/lista');
 
-        $this->assertTrue(BitacoraModelo::where('usuario_id', $usuario->id_usuario)->where('ruta', 'home')->where('metodo_http', 'GET')->exists());
-        $this->assertFalse(BitacoraModelo::where('usuario_id', $usuario->id_usuario)->whereIn('ruta', ['chat.contactos', 'chat.contacts'])->exists());
+        $this->assertTrue(BitacoraModelo::where('usuario_id', $usuario->id_use)->where('ruta', 'home')->where('metodo_http', 'GET')->exists());
+        $this->assertFalse(BitacoraModelo::where('usuario_id', $usuario->id_use)->whereIn('ruta', ['chat.contactos', 'chat.contacts'])->exists());
     }
 
     public function test_respuesta_403_se_registra_como_acceso_denegado(): void
@@ -99,7 +99,7 @@ class BitacoraTest extends SeguridadTestCase
 
         $this->actingAs($usuario)->get('/admin/configuracion/roles')->assertForbidden();
 
-        $evento = BitacoraModelo::where('usuario_id', $usuario->id_usuario)->where('accion', 'acceso_denegado')->first();
+        $evento = BitacoraModelo::where('usuario_id', $usuario->id_use)->where('accion', 'acceso_denegado')->first();
         $this->assertNotNull($evento);
         $this->assertSame(403, $evento->codigo_respuesta);
         $this->assertStringContainsString('roles', $evento->observacion);

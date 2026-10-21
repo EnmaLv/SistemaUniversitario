@@ -143,7 +143,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($conductores as $c)
-                <option value="{{ $c->id_usuario }}">{{ $c->nombre_completo }}</option>
+                <option value="{{ $c->id_use }}">{{ $c->nombre_completo }}</option>
             @endforeach
         </select>
     </div>

@@ -18,34 +18,35 @@ use App\Support\Permisos\ResolutorAccion;
 class Usuario extends Authenticatable
 {
     use HasApiTokens;
-    protected $table = 'usuario';
-    protected $primaryKey = 'id_usuario';
+    protected $table = 'user';
+    protected $primaryKey = 'id_use';
     public $timestamps = true;
     protected $appends = ['nombre_completo'];
 
     protected $fillable = [
         'per_id',
         'id_perfil',
-        'username',
-        'ultima_actividad_chat',
-        'chat_activo_user_id',
-        'infracciones_reset_at',
+        'username_use',
+        'email_use',
+        'ultima_actividad_chat_use',
+        'chat_activo_use_id',
+        'infracciones_reset_at_use',
     ];
 
-    protected $hidden = ['password', 'master_key', 'security_questions', 'remember_token'];
+    protected $hidden = ['password_use', 'master_key_use', 'security_questions_use', 'remember_token_use'];
 
     protected $casts = [
-        'security_questions'     => 'array',
-        'bloqueado'              => 'boolean',
-        'bloqueado_hasta'        => 'datetime',
-        'bloqueado_en'           => 'datetime',
-        'ventana_bloqueos_desde' => 'datetime',
-        'ultimo_login'           => 'datetime',
-        'intentos_fallidos'      => 'integer',
-        'intentos_llave_fallidos' => 'integer',
-        'bloqueos_temporales'    => 'integer',
-        'debe_cambiar_password'  => 'boolean',
-        'password_cambiado_en'   => 'datetime',
+        'security_questions_use'     => 'array',
+        'bloqueado_use'          => 'boolean',
+        'bloqueado_hasta_use'        => 'datetime',
+        'bloqueado_en_use'           => 'datetime',
+        'ventana_bloqueos_desde_use' => 'datetime',
+        'ultimo_login_use'           => 'datetime',
+        'intentos_fallidos_use'      => 'integer',
+        'intentos_llave_fallidos_use' => 'integer',
+        'bloqueos_temporales_use'    => 'integer',
+        'debe_cambiar_password_use'  => 'boolean',
+        'password_cambiado_en_use'   => 'datetime',
     ];
 
     protected ?array $permisosEfectivosCache = null;
@@ -77,8 +78,8 @@ class Usuario extends Authenticatable
         $roles = array_map('mb_strtolower', (array) config('permisos.roles_psicologo', []));
 
         return $this->esPsicologoCache = $this->roles->contains(
-            fn ($rol) => in_array(mb_strtolower((string) $rol->slug), $roles, true)
-                || in_array(mb_strtolower((string) $rol->nombre), $roles, true)
+            fn ($rol) => in_array(mb_strtolower((string) $rol->slug_rol), $roles, true)
+                || in_array(mb_strtolower((string) $rol->nombre_rol), $roles, true)
         );
     }
 
@@ -91,16 +92,16 @@ class Usuario extends Authenticatable
         }
 
         if (\App\Support\Cuentas\Cedula::esCorreo($identificador)) {
-            return self::whereRaw('LOWER(username) = ?', [mb_strtolower($identificador)])->first();
+            return self::whereRaw('LOWER(username_use) = ?', [mb_strtolower($identificador)])->first();
         }
 
         $cedula = \App\Support\Cuentas\Cedula::normalizar($identificador);
 
         if ($cedula === null) {
-            return self::where('username', $identificador)->first();
+            return self::where('username_use', $identificador)->first();
         }
 
-        $usuario = self::where('username', $cedula)->first();
+        $usuario = self::where('username_use', $cedula)->first();
 
         if ($usuario) {
             return $usuario;
@@ -132,36 +133,36 @@ class Usuario extends Authenticatable
 
         $hoy = now()->toDateString();
 
-        $deRol = DB::table('rol_usuario')
-            ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
+        $deRol = DB::table('usuario_rol')
+            ->join('rol', 'rol.id_rol', '=', 'usuario_rol.rol_id')
             ->join('rol_permiso', 'rol_permiso.rol_id', '=', 'rol.id_rol')
-            ->join('permiso', 'permiso.id', '=', 'rol_permiso.permiso_id')
-            ->join('vista', 'vista.id', '=', 'permiso.vista_id')
-            ->where('rol_usuario.id_usuario', $this->id_usuario)
+            ->join('permiso', 'permiso.id_pmi', '=', 'rol_permiso.pmi_id')
+            ->join('vista', 'vista.id_vis', '=', 'permiso.vis_id')
+            ->where('usuario_rol.use_id', $this->id_use)
             ->whereNull('rol.deleted_at')
-            ->where('permiso.activo', true)
-            ->where('vista.activo', true)
-            ->pluck('permiso.key')
+            ->where('permiso.status_id', true)
+            ->where('vista.status_id', true)
+            ->pluck('permiso.nombre_pmi')
             ->all();
 
         $directos = DB::table('usuario_permiso')
-            ->join('permiso', 'permiso.id', '=', 'usuario_permiso.permiso_id')
-            ->join('vista', 'vista.id', '=', 'permiso.vista_id')
-            ->where('usuario_permiso.usuario_id', $this->id_usuario)
-            ->where('permiso.activo', true)
-            ->where('vista.activo', true)
-            ->where(fn ($q) => $q->whereNull('usuario_permiso.fecha_inicio')->orWhere('usuario_permiso.fecha_inicio', '<=', $hoy))
-            ->where(fn ($q) => $q->whereNull('usuario_permiso.fecha_fin')->orWhere('usuario_permiso.fecha_fin', '>=', $hoy))
-            ->get(['permiso.key', 'usuario_permiso.tipo']);
+            ->join('permiso', 'permiso.id_pmi', '=', 'usuario_permiso.pmi_id')
+            ->join('vista', 'vista.id_vis', '=', 'permiso.vis_id')
+            ->where('usuario_permiso.use_id', $this->id_use)
+            ->where('permiso.status_id', true)
+            ->where('vista.status_id', true)
+            ->where(fn ($q) => $q->whereNull('usuario_permiso.fecha_inicio_usp')->orWhere('usuario_permiso.fecha_inicio_usp', '<=', $hoy))
+            ->where(fn ($q) => $q->whereNull('usuario_permiso.fecha_fin_usp')->orWhere('usuario_permiso.fecha_fin_usp', '>=', $hoy))
+            ->get(['permiso.nombre_pmi', 'usuario_permiso.tipo_usp']);
 
         $efectivos = array_fill_keys($deRol, true);
 
-        foreach ($directos->where('tipo', 'grant') as $directo) {
-            $efectivos[$directo->key] = true;
+        foreach ($directos->where('tipo_usp', 'grant') as $directo) {
+            $efectivos[$directo->nombre_pmi] = true;
         }
 
-        foreach ($directos->where('tipo', 'revoke') as $directo) {
-            unset($efectivos[$directo->key]);
+        foreach ($directos->where('tipo_usp', 'revoke') as $directo) {
+            unset($efectivos[$directo->nombre_pmi]);
         }
 
         return $this->permisosEfectivosCache = $efectivos;
@@ -217,7 +218,7 @@ class Usuario extends Authenticatable
     public function vistasVisibles(): array
     {
         if ($this->esSuperAdmin()) {
-            return DB::table('vista')->where('activo', true)->pluck('key')->all();
+            return DB::table('vista')->where('status_id', 1)->whereNull('deleted_at')->pluck('key_vis')->all();
         }
 
         return collect(array_keys($this->permisosEfectivos()))
@@ -236,15 +237,15 @@ class Usuario extends Authenticatable
 
     public function permisosDirectos()
     {
-        return $this->belongsToMany(Permiso::class, 'usuario_permiso', 'usuario_id', 'permiso_id')
-            ->withPivot(['tipo', 'fecha_inicio', 'fecha_fin', 'asignado_por'])
+        return $this->belongsToMany(Permiso::class, 'usuario_permiso', 'use_id', 'pmi_id')
+            ->withPivot(['tipo_usp', 'fecha_inicio_usp', 'fecha_fin_usp', 'asignado_por_use_id'])
             ->withTimestamps();
     }
 
     public function modulosExtra()
     {
-        return $this->belongsToMany(Modulo::class, 'usuario_modulo', 'usuario_id', 'modulo_id')
-            ->withPivot('asignado_por')
+        return $this->belongsToMany(Modulo::class, 'usuario_modulo', 'use_id', 'mod_id')
+            ->withPivot('asignado_por_use_id')
             ->withTimestamps();
     }
 
@@ -252,22 +253,12 @@ class Usuario extends Authenticatable
 
     public function citas()
     {
-        return $this->hasMany(\App\Models\salud\Cita::class, 'user_id', 'id_usuario');
-    }
-
-    public function paciente()
-    {
-        return $this->belongsTo(Usuario::class, 'user_id', 'id_usuario');
-    }
-
-    public function psicologo()
-    {
-        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_usuario');
+        return $this->hasMany(\App\Models\salud\Cita::class, 'user_id', 'id_use');
     }
 
     public function getAuthPassword()
     {
-        return $this->password;
+        return $this->password_use;
     }
 
     public function perfil()
@@ -282,30 +273,40 @@ class Usuario extends Authenticatable
 
     public function roles()
     {
-        return $this->belongsToMany(Rol::class, 'rol_usuario', 'id_usuario', 'id_rol');
+        return $this->belongsToMany(Rol::class, 'usuario_rol', 'use_id', 'rol_id');
     }
 
-    public function setPasswordAttribute($value)
+    public function getAuthPasswordName()
     {
-        $this->attributes['password'] = Hash::make($value);
+        return 'password_use';
     }
 
-    public function setMasterKeyAttribute($value)
+    public function getRememberTokenName()
     {
-        $this->attributes['master_key'] = Hash::make($value);
+        return 'remember_token_use';
+    }
+
+    public function setPasswordUseAttribute($value)
+    {
+        $this->attributes['password_use'] = Hash::make($value);
+    }
+
+    public function setMasterKeyUseAttribute($value)
+    {
+        $this->attributes['master_key_use'] = Hash::make($value);
     }
 
     public function verifyMasterKey($candidate)
     {
         try {
-            $stored = $this->getOriginal('master_key') ?: $this->master_key;
+            $stored = $this->getOriginal('master_key_use') ?: $this->master_key_use;
             if (is_null($stored) || $stored === '') {
                 return false;
             }
 
             return Hash::check($candidate, $stored);
         } catch (\RuntimeException $e) {
-            $stored = $this->getOriginal('master_key') ?: $this->master_key;
+            $stored = $this->getOriginal('master_key_use') ?: $this->master_key_use;
             if (is_string($stored) && $stored !== '') {
                 return password_verify($candidate, $stored);
             }
@@ -336,8 +337,8 @@ class Usuario extends Authenticatable
 
         return $this->roles()
             ->where(function ($query) use ($roles) {
-                $query->whereIn('slug', $roles)
-                    ->orWhereIn('nombre', $roles);
+                $query->whereIn('slug_rol', $roles)
+                    ->orWhereIn('nombre_rol', $roles);
             })
             ->exists();
     }
@@ -345,14 +346,14 @@ class Usuario extends Authenticatable
     public function verifyPassword($candidate)
     {
         try {
-            $stored = $this->getOriginal('password') ?: $this->password;
+            $stored = $this->getOriginal('password_use') ?: $this->password_use;
             if (is_null($stored) || $stored === '') {
                 return false;
             }
 
             return Hash::check($candidate, $stored);
         } catch (\RuntimeException $e) {
-            $stored = $this->getOriginal('password') ?: $this->password;
+            $stored = $this->getOriginal('password_use') ?: $this->password_use;
             if (is_string($stored) && $stored !== '') {
                 return password_verify($candidate, $stored);
             }
@@ -363,18 +364,18 @@ class Usuario extends Authenticatable
 
     public static function obtenerUsuarioPorId($id)
     {
-        $userRaw = DB::table('usuario')
-            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
-            ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
-            ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
-            ->select('usuario.*', DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as name"))
-            ->where('usuario.id_usuario', $id)
+        $userRaw = DB::table('user')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
+            ->join('usuario_rol', 'user.id_use', '=', 'usuario_rol.use_id')
+            ->join('rol', 'usuario_rol.rol_id', '=', 'rol.id_rol')
+            ->select('user.*', DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as name"))
+            ->where('user.id_use', $id)
             ->first();
 
         if ($userRaw) {
             $user = new self((array) $userRaw);
-            $user->id = $userRaw->id_usuario;
-            $user->id_usuario = $userRaw->id_usuario;
+            $user->id = $userRaw->id_use;
+            $user->id_use = $userRaw->id_use;
 
             if (!isset($user->profile_photo_path)) {
                 $user->profile_photo_path = null;
@@ -404,14 +405,14 @@ class Usuario extends Authenticatable
             return collect();
         }
 
-        $query = DB::table('usuario')
-            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
-            ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
-            ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
+        $query = DB::table('user')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
+            ->join('usuario_rol', 'user.id_use', '=', 'usuario_rol.use_id')
+            ->join('rol', 'usuario_rol.rol_id', '=', 'rol.id_rol')
             ->select(
-                'usuario.id_usuario',
-                'usuario.per_id',
-                'usuario.username',
+                'user.id_use',
+                'user.per_id',
+                'user.username_use',
                 'persona.nombres_per as nombres',
                 'persona.apellidos_per as apellidos',
                 'persona.cedula_per as cedula',
@@ -419,28 +420,28 @@ class Usuario extends Authenticatable
                 DB::raw("TRIM(CONCAT(COALESCE(persona.nombres_per, ''), ' ', COALESCE(persona.apellidos_per, ''))) as name")
             )
             ->where(function ($q) {
-                $q->where('rol.slug', 'paciente')
-                    ->orWhere('rol.nombre', 'Paciente');
+                $q->where('rol.slug_rol', 'paciente')
+                    ->orWhere('rol.nombre_rol', 'Paciente');
             })
             ->where('persona.status_id', 1)
             ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.sed_id', $sede))
-            ->where('usuario.id_usuario', '!=', $psicologoId)
+            ->where('user.id_use', '!=', $psicologoId)
             ->whereNotExists(function ($subquery) {
                 $subquery->select(DB::raw(1))
                     ->from('citas')
-                    ->whereColumn('citas.user_id', 'usuario.id_usuario')
+                    ->whereColumn('citas.user_id', 'user.id_use')
                     ->whereIn('citas.estado', ['pendiente', 'confirmada']);
             })
             ->where(function ($q) use ($psicologoId) {
                 $q->whereNotExists(function ($subquery) use ($psicologoId) {
                     $subquery->select(DB::raw(1))
                         ->from('citas')
-                        ->whereColumn('citas.user_id', 'usuario.id_usuario')
+                        ->whereColumn('citas.user_id', 'user.id_use')
                         ->where('citas.psicologo_id', '!=', $psicologoId);
                 })->orWhereExists(function ($subquery) use ($psicologoId) {
                     $subquery->select(DB::raw(1))
                         ->from('citas')
-                        ->whereColumn('citas.user_id', 'usuario.id_usuario')
+                        ->whereColumn('citas.user_id', 'user.id_use')
                         ->where('citas.psicologo_id', $psicologoId);
                 });
             })
@@ -457,7 +458,7 @@ class Usuario extends Authenticatable
         $usuariosRaw = $query->orderBy('persona.nombres_per', 'asc')->limit(20)->get();
 
         return $usuariosRaw->map(function ($u) {
-            $u->id = $u->id_usuario;
+            $u->id = $u->id_use;
 
             $user = new self();
             $user->setRawAttributes((array) $u, true);
@@ -475,23 +476,23 @@ class Usuario extends Authenticatable
 
     public static function obtenerPsicologosDisponibles()
     {
-        $psicologos = DB::table('usuario')
-            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
-            ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
-            ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
-            ->join('grupos_horarios', 'usuario.id_usuario', '=', 'grupos_horarios.user_id')
+        $psicologos = DB::table('user')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
+            ->join('usuario_rol', 'user.id_use', '=', 'usuario_rol.use_id')
+            ->join('rol', 'usuario_rol.rol_id', '=', 'rol.id_rol')
+            ->join('grupos_horarios', 'user.id_use', '=', 'grupos_horarios.user_id')
             ->select(
-                'usuario.id_usuario',
-                'usuario.username',
+                'user.id_use',
+                'user.username_use',
                 'persona.nombres_per',
                 'persona.apellidos_per',
                 DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as name")
             )
             ->where(function ($query) {
-                $query->where('rol.slug', 'psicologo')
-                    ->orWhere('rol.slug', 'administrador')
-                    ->orWhere('rol.nombre', 'like', '%psicologo%')
-                    ->orWhere('rol.nombre', 'like', '%administrador%');
+                $query->where('rol.slug_rol', 'psicologo')
+                    ->orWhere('rol.slug_rol', 'administrador')
+                    ->orWhere('rol.nombre_rol', 'like', '%psicologo%')
+                    ->orWhere('rol.nombre_rol', 'like', '%administrador%');
             })
             ->where('grupos_horarios.activo', 1)
             ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.sed_id', $sede))
@@ -502,7 +503,7 @@ class Usuario extends Authenticatable
 
         foreach ($psicologos as $psicologo) {
             $psicologo->gruposHorarios = DB::table('grupos_horarios')
-                ->where('user_id', $psicologo->id_usuario)
+                ->where('user_id', $psicologo->id_use)
                 ->where('activo', 1)
                 ->get();
 
@@ -548,7 +549,7 @@ class Usuario extends Authenticatable
         }
 
         $roleSlugs = $user->roles
-            ->pluck('slug')
+            ->pluck('slug_rol')
             ->map(fn ($s) => strtolower((string) $s))
             ->filter()
             ->unique()
@@ -569,11 +570,11 @@ class Usuario extends Authenticatable
             );
         } else {
             // STAFF: todo el personal interno (cualquier rol que no sea paciente/becario)
-            $staffIds = DB::table('rol_usuario')
-                ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
-                ->whereNotIn('rol.slug', ['paciente', 'becario'])
-                ->where('rol_usuario.id_usuario', '!=', $userId)
-                ->pluck('rol_usuario.id_usuario');
+            $staffIds = DB::table('usuario_rol')
+                ->join('rol', 'usuario_rol.rol_id', '=', 'rol.id_rol')
+                ->whereNotIn('rol.slug_rol', ['paciente', 'becario'])
+                ->where('usuario_rol.use_id', '!=', $userId)
+                ->pluck('usuario_rol.use_id');
 
             $contactIds = $contactIds->merge($staffIds);
 
@@ -593,16 +594,16 @@ class Usuario extends Authenticatable
             return collect();
         }
 
-        return DB::table('usuario')
-            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
+        return DB::table('user')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
             ->select(
-                'usuario.id_usuario',
-                'usuario.username',
+                'user.id_use',
+                'user.username_use',
                 'persona.nombres_per',
                 'persona.apellidos_per',
                 DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as name")
             )
-            ->whereIn('usuario.id_usuario', $contactIds)
+            ->whereIn('user.id_use', $contactIds)
             ->distinct()
             ->get()
             ->map(function ($u) {

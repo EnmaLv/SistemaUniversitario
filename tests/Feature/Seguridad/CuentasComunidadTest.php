@@ -33,7 +33,7 @@ class CuentasComunidadTest extends SeguridadTestCase
 
     private function slugsDe(Usuario $usuario): array
     {
-        return $usuario->roles()->pluck('slug')->sort()->values()->all();
+        return $usuario->roles()->pluck('slug_rol')->sort()->values()->all();
     }
 
     public function test_normaliza_la_cedula_como_el_login(): void
@@ -53,9 +53,9 @@ class CuentasComunidadTest extends SeguridadTestCase
         $usuario = CuentasComunidad::asegurarCuenta($persona);
 
         $this->assertNotNull($usuario);
-        $this->assertSame('27111333', $usuario->username);
-        $this->assertTrue(Hash::check('27111333', $usuario->getOriginal('password')));
-        $this->assertTrue($usuario->debe_cambiar_password);
+        $this->assertSame('27111333', $usuario->username_use);
+        $this->assertTrue(Hash::check('27111333', $usuario->getOriginal('password_use')));
+        $this->assertTrue($usuario->debe_cambiar_password_use);
         $this->assertSame(['becario', 'paciente'], $this->slugsDe($usuario));
         $this->assertTrue(BitacoraModelo::where('accion', 'cuentas_comunidad_generadas')->exists());
     }
@@ -70,7 +70,7 @@ class CuentasComunidadTest extends SeguridadTestCase
 
         $this->assertSame($antes, Usuario::count());
         $this->assertSame(['becario', 'obrero', 'paciente'], $this->slugsDe($usuario->fresh()));
-        $this->assertFalse((bool) $usuario->fresh()->debe_cambiar_password);
+        $this->assertFalse((bool) $usuario->fresh()->debe_cambiar_password_use);
     }
 
     public function test_el_login_acepta_cedula_o_correo(): void
@@ -83,7 +83,7 @@ class CuentasComunidadTest extends SeguridadTestCase
         $this->post('/logout');
 
         $existente = $this->crearUsuario('Obrero');
-        $this->post('/login', ['email' => strtoupper($existente->username), 'password' => 'Secreta123']);
+        $this->post('/login', ['email' => strtoupper($existente->username_use), 'password' => 'Secreta123']);
         $this->assertAuthenticatedAs($existente->fresh());
     }
 
@@ -93,10 +93,10 @@ class CuentasComunidadTest extends SeguridadTestCase
         $cedula = $usuario->persona->cedula_per;
 
         $this->post('/login', ['email' => $cedula, 'password' => 'incorrecta']);
-        $this->post('/login', ['email' => $usuario->username, 'password' => 'incorrecta']);
+        $this->post('/login', ['email' => $usuario->username_use, 'password' => 'incorrecta']);
         $this->post('/login', ['email' => 'V-' . $cedula, 'password' => 'incorrecta']);
 
-        $this->assertNotNull($usuario->fresh()->bloqueado_hasta);
+        $this->assertNotNull($usuario->fresh()->bloqueado_hasta_use);
 
         $this->post('/login', ['email' => $cedula, 'password' => 'Secreta123']);
         $this->assertGuest();
@@ -132,10 +132,10 @@ class CuentasComunidadTest extends SeguridadTestCase
         ])->assertRedirect();
 
         $usuario->refresh();
-        $this->assertFalse($usuario->debe_cambiar_password);
-        $this->assertNotNull($usuario->password_cambiado_en);
-        $this->assertTrue(Hash::check('NuevaClave2026', $usuario->getOriginal('password')));
-        $this->assertTrue(BitacoraModelo::where('accion', 'password_cambiado')->where('registro_id', $usuario->id_usuario)->exists());
+        $this->assertFalse($usuario->debe_cambiar_password_use);
+        $this->assertNotNull($usuario->password_cambiado_en_use);
+        $this->assertTrue(Hash::check('NuevaClave2026', $usuario->getOriginal('password_use')));
+        $this->assertTrue(BitacoraModelo::where('accion', 'password_cambiado')->where('registro_id', $usuario->id_use)->exists());
 
         $this->get('/home')->assertDontSee('Debes cambiar tu contraseña');
         $this->assertNotSame(route('password.cambiar'), $this->get('/home')->headers->get('Location'));
@@ -177,7 +177,7 @@ class CuentasComunidadTest extends SeguridadTestCase
             array_column($resumen['errores'], 'motivo')
         );
 
-        $this->assertTrue(Usuario::where('username', '23111001')->where('debe_cambiar_password', true)->exists());
+        $this->assertTrue(Usuario::where('username_use', '23111001')->where('debe_cambiar_password_use', true)->exists());
         $this->assertSame('ACTUALIZADA', $existente->fresh()->apellidos_per);
         $this->assertSame('04140000000', $existente->fresh()->telefono_per);
 
@@ -194,6 +194,6 @@ class CuentasComunidadTest extends SeguridadTestCase
 
         $usuario = Usuario::where('per_id', $persona->id_per)->first();
         $this->assertNotNull($usuario);
-        $this->assertSame('22333444', $usuario->username);
+        $this->assertSame('22333444', $usuario->username_use);
     }
 }

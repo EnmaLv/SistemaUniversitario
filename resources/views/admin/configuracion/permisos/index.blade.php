@@ -49,13 +49,13 @@
                 </thead>
                 <tbody class="fade-in">
                     @forelse($usuarios as $usuario)
-                        <x-table-row :id="$usuario->id_usuario" class="border-b" style="border-color:var(--border-color);">
+                        <x-table-row :id="$usuario->id_use" class="border-b" style="border-color:var(--border-color);">
                             <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400 font-bold">
                                 {{ $loop->iteration + ($usuarios->currentPage()-1)* $usuarios->perPage() }}
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex rounded-lg border px-3 py-1 font-mono text-xs font-bold" style="border-color:var(--border-color);color:var(--color-primary);">
-                                    {{ $usuario->username }}
+                                    {{ $usuario->username_use }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 font-bold" style="color:var(--text-main);">
@@ -63,7 +63,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 @php
-                                    $rolNombre = $usuario->roles->pluck('nombre')->first() ?: ($usuario->perfil->nombre_perfil ?? 'Usuario Base');
+                                    $rolNombre = $usuario->roles->pluck('nombre_rol')->first() ?: ($usuario->perfil->nombre_perfil ?? 'Usuario Base');
                                 @endphp
                                 <span class="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400" style="border-color:var(--border-color);">
                                     <i class="fas fa-briefcase "></i> {{ $rolNombre }}
@@ -77,11 +77,11 @@
                             <td class="px-6 py-4 text-center">
                                 @php
                                     $auth = auth()->user();
-                                    $isSelfAdmin = $auth && $auth->id_usuario == $usuario->id_usuario && $auth->esSuperAdmin();
+                                    $isSelfAdmin = $auth && $auth->id_use == $usuario->id_use && $auth->esSuperAdmin();
                                 @endphp
                                 
                                 @if(!$isSelfAdmin)
-                                    <x-table-actions :id="$usuario->id_usuario" baseUrl="admin/configuracion/permisos" :show="false" :toggle="false" />
+                                    <x-table-actions :id="$usuario->id_use" baseUrl="admin/configuracion/permisos" :show="false" :toggle="false" />
                                 @else
                                     <span class="text-gray-500 dark:text-gray-400 text-xs" title="El administrador principal no puede editar sus propios permisos granulares">
                                         <i class="fas fa-lock mr-1"></i> Protegido

@@ -23,7 +23,7 @@ class BusVehiculoApiController extends Controller
             'consumo_litros_km'        => 'required|numeric|min:0.001|max:5',
             'km_actual'                => 'required|numeric|min:0|max:9999999',
             'km_proximo_mantenimiento' => 'required|numeric|min:0|max:9999999',
-            'conductor_id'             => 'nullable|exists:usuarios,id_usuario',
+            'conductor_id'             => 'nullable|exists:usuarios,id_use',
             'sed_id'                  => 'required|exists:sede,id_sed',
             'estado'                   => 'required|in:disponible,en_ruta,mantenimiento,inactivo',
         ];

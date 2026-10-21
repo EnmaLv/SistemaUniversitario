@@ -31,14 +31,14 @@ class PermisosSeeder extends Seeder
         SincronizadorPermisos::sincronizar(array_merge(...array_values(self::POR_DEFECTO)));
 
         foreach (self::POR_DEFECTO as $nombreRol => $vistas) {
-            $rol = Rol::where('nombre', $nombreRol)->first();
+            $rol = Rol::where('nombre_rol', $nombreRol)->first();
 
             if (! $rol || $rol->permisos()->exists()) {
                 continue;
             }
 
-            $ids = Permiso::whereHas('vista', fn ($q) => $q->whereIn('key', $vistas))
-                ->pluck('id')
+            $ids = Permiso::whereHas('vista', fn ($q) => $q->whereIn('key_vis', $vistas))
+                ->pluck('id_pmi')
                 ->all();
 
             $rol->permisos()->syncWithoutDetaching($ids);

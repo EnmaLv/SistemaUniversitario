@@ -145,7 +145,7 @@ class HistoriaController extends Controller
         $user = Auth::user();
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
-        $this->autorizarPaciente((int) $paciente->id_usuario);
+        $this->autorizarPaciente((int) $paciente->id_use);
 
         $categoriaFiltro = $this->resolverCategoria($request);
         $tipo = $request->get('tipo', $categoriaFiltro);

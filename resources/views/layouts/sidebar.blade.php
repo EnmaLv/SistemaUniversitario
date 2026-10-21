@@ -24,9 +24,9 @@
     ];
     $fallbackConf = ['icon' => 'fas fa-cubes', 'label' => 'Módulo'];
 
-    $modulosDisponibles = \App\Models\Modulo::where('activo', true)
-        ->whereIn('key', $modulosPermitidos)
-        ->orderBy('nombre')
+    $modulosDisponibles = \App\Models\Modulo::where('status_id', 1)
+        ->whereIn('key_mod', $modulosPermitidos)
+        ->orderBy('nombre_mod')
         ->get();
 @endphp
 
@@ -60,22 +60,22 @@
     @if (!$moduloActivo)
         <div class="mx-3 mb-3 flex flex-col gap-0.5">
             @forelse ($modulosDisponibles as $mod)
-                @php $conf = $moduloConfig[$mod->key] ?? $fallbackConf; @endphp
+                @php $conf = $moduloConfig[$mod->key_mod] ?? $fallbackConf; @endphp
 
                 <form action="{{ route('admin.modulos.cambiar') }}" method="POST" class="m-0">
                     @csrf
-                    <input type="hidden" name="modulo" value="{{ $mod->key }}">
+                    <input type="hidden" name="modulo" value="{{ $mod->key_mod }}">
 
                     <button type="submit"
                         class="w-full flex items-center gap-3 h-10 rounded-lg transition-all duration-200
                             text-white/85 hover:bg-white/10 hover:text-white"
-                        :class="sidebarOpen ? 'px-3' : 'justify-center px-0'" title="{{ $mod->nombre }}">
+                        :class="sidebarOpen ? 'px-3' : 'justify-center px-0'" title="{{ $mod->nombre_mod }}">
 
                         <i class="{{ $conf['icon'] }} w-5 text-center flex-shrink-0 text-sm"></i>
 
                         <span class="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300"
                             :class="sidebarOpen ? 'opacity-100 max-w-[160px]' : 'opacity-0 max-w-0'">
-                            {{ $mod->nombre }}
+                            {{ $mod->nombre_mod }}
                         </span>
                     </button>
                 </form>

@@ -41,12 +41,12 @@ class Cita extends Model
 
     public function paciente()
     {
-        return $this->belongsTo(Usuario::class, 'user_id', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'user_id', 'id_use');
     }
 
     public function psicologo()
     {
-        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_use');
     }
 
     public function scopePorPsicologo(Builder $query, $psicologoId): Builder
@@ -439,7 +439,7 @@ class Cita extends Model
         $user = Usuario::find($userId);
         if (!$user) return;
         $notifiable = new \App\Models\salud\NotifiableUser();
-        $notifiable->id = $user->id_usuario;
+        $notifiable->id = $user->id_use;
         $notifiable->email = $user->persona->correo_per ?? $user->username;
         $notifiable->nombres = $user->persona->nombres_per ?? '';
         $notifiable->apellidos = $user->persona->apellidos_per ?? '';
@@ -566,7 +566,7 @@ class Cita extends Model
     public static function evaluarPrioridadBasePaciente($userId)
     {
         $paciente = Usuario::find($userId);
-        $resetAt = $paciente ? $paciente->infracciones_reset_at : null;
+        $resetAt = $paciente ? $paciente->infracciones_reset_at_use : null;
 
         $queryCancelaciones = self::porPaciente($userId)
             ->where('estado', 'cancelada')
@@ -584,7 +584,7 @@ class Cita extends Model
 
     public static function verificarUmbralInfraccionesPaciente($userId, $psicologoId = null)
     {
-        $resetAt = Usuario::where('id_usuario', $userId)->value('infracciones_reset_at');
+        $resetAt = Usuario::where('id_use', $userId)->value('infracciones_reset_at_use');
 
         $queryCancelaciones = self::porPaciente($userId)
             ->where('estado', 'cancelada')
@@ -626,7 +626,7 @@ class Cita extends Model
 
     public static function evaluarAvisoAtencionPsicologo($userId, $psicologoId)
     {
-        if (!Usuario::where('id_usuario', $userId)->exists() || !Usuario::where('id_usuario', $psicologoId)->exists()) {
+        if (!Usuario::where('id_use', $userId)->exists() || !Usuario::where('id_use', $psicologoId)->exists()) {
             return;
         }
 
@@ -651,7 +651,7 @@ class Cita extends Model
     public static function crear($user, $validated)
     {
         return DB::transaction(function () use ($user, $validated) {
-            $tieneCitaPendiente = self::porPaciente($user->id_usuario)
+            $tieneCitaPendiente = self::porPaciente($user->id_use)
                 ->whereIn('estado', ['pendiente', 'confirmada'])
                 ->lockForUpdate()
                 ->exists();
@@ -664,13 +664,7 @@ class Cita extends Model
                 return [false, 'Debes seleccionar un bloque de horario.', null];
             }
 
-            $prioridadHeredada = $user->prioridad_siguiente_cita;
-            if ($prioridadHeredada) {
-                $prioridad = $prioridadHeredada;
-                $user->update(['prioridad_siguiente_cita' => null]);
-            } else {
-                $prioridad = !empty($validated['prioridad']) ? $validated['prioridad'] : self::evaluarPrioridadBasePaciente($user->id_usuario);
-            }
+            $prioridad = !empty($validated['prioridad']) ? $validated['prioridad'] : self::evaluarPrioridadBasePaciente($user->id_use);
 
             $psicologo = Usuario::find($validated['psicologo_id']);
             if (!$psicologo || !$psicologo->esPsicologo()) {
@@ -678,8 +672,8 @@ class Cita extends Model
             }
 
             $cita = self::create([
-                'user_id' => $user->id_usuario,
-                'psicologo_id' => $psicologo->id_usuario,
+                'user_id' => $user->id_use,
+                'psicologo_id' => $psicologo->id_use,
                 'fecha' => $validated['fecha_solicitada'],
                 'hora' => null,
                 'estado' => 'pendiente',
@@ -690,7 +684,7 @@ class Cita extends Model
 
             $citaModel = self::instanciarParaNotificacion($cita->id);
             if ($citaModel) {
-                self::notificarUsuario($psicologo->id_usuario, new \App\Notifications\CitaRequestedNotification($citaModel));
+                self::notificarUsuario($psicologo->id_use, new \App\Notifications\CitaRequestedNotification($citaModel));
             }
 
             return [true, 'Solicitud de cita creada correctamente.', $cita];
@@ -873,7 +867,7 @@ class Cita extends Model
                     return [false, 'Error: Usuario no identificado.'];
                 }
 
-                $actor = (int) $cita->psicologo_id === (int) $user->id_usuario ? 'psicologo' : 'paciente';
+                $actor = (int) $cita->psicologo_id === (int) $user->id_use ? 'psicologo' : 'paciente';
 
                 if ($actor === 'psicologo' || $actor === 'admin') {
                     if ($cita->estado !== 'confirmada') {
@@ -946,7 +940,7 @@ class Cita extends Model
                 }
 
                 $user = Usuario::find($userId);
-                if (!$user || !$user->tieneRol('psicologo') || $cita->psicologo_id !== $user->id_usuario) {
+                if (!$user || !$user->tieneRol('psicologo') || $cita->psicologo_id !== $user->id_use) {
                     return [false, 'Error: Usuario no autorizado para esta acción.'];
                 }
 
@@ -1141,7 +1135,6 @@ class Cita extends Model
                 $item->user_apellidos = $persona->apellidos_per ?? '';
                 $item->paciente_email = $persona->correo_per ?? '';
                 $item->paciente_cedula = $persona->cedula_per ?? '';
-                $item->paciente_horario_path = $item->paciente->horario_path;
             }
 
             $item = self::desencriptarItem($item);
@@ -1425,8 +1418,7 @@ class Cita extends Model
                 if ($item->paciente) {
                     $item->user_nombres = $item->paciente->persona->nombres_per;
                     $item->user_apellidos = $item->paciente->persona->apellidos_per;
-                    $item->paciente_horario_path = $item->paciente->horario_path;
-                }
+                    }
 
                 $item = self::desencriptarItem($item);
                 $firstName = explode(' ', trim($item->user_nombres ?? ''))[0];
@@ -1541,7 +1533,7 @@ class Cita extends Model
     public static function obtenerDataAgenda($request, $user)
     {
         $psicologos = collect();
-        $psicologoId = $user->id_usuario;
+        $psicologoId = $user->id_use;
 
         $view = $request->input('view', 'week');
         $dateStr = $request->input('date', now()->toDateString());

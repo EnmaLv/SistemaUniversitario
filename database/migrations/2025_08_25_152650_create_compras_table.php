@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('proveedor_id')->constrained('proveedors')->onDelete('cascade');
-            $table->foreignId('creado_por')->nullable()->references("id_usuario")->on("usuario")->onDelete('cascade');
-            $table->foreignId('modulo_id')->nullable()->constrained('modulos')->onDelete('cascade');
+            $table->foreignId('creado_por')->nullable()->references('id_use')->on("user")->onDelete('cascade');
+            $table->foreignId('modulo_id')->nullable()->constrained('modulo', 'id_mod')->onDelete('cascade');
             $table->foreignId('sed_id')->constrained('sede', 'id_sed');
             $table->timestamp('fecha')->useCurrent();
             $table->decimal('total', 10, 2);

@@ -10,16 +10,16 @@ class ModulosSeeder extends Seeder
     public function run()
     {
         $modulos = [
-            ['key' => 'salud', 'nombre' => 'Salud', 'descripcion' => 'Módulo de atención médica'],
-            ['key' => 'comedor', 'nombre' => 'Comedor', 'descripcion' => 'Módulo de comedor'],
-            ['key' => 'administracion', 'nombre' => 'Administración', 'descripcion' => 'Configuración y usuarios'],
-            ['key' => 'beca', 'nombre' => 'Beca', 'descripcion' => 'Módulo de beca'],
-            ['key' => 'transporte', 'nombre' => 'Transporte', 'descripcion' => 'Módulo de transporte universitario'],
-            ['key' => 'psicologia', 'nombre' => 'Psicología', 'descripcion' => 'Módulo de psicología'],
+            ['key_mod' => 'salud', 'nombre_mod' => 'Salud', 'descripcion_mod' => 'Módulo de atención médica'],
+            ['key_mod' => 'comedor', 'nombre_mod' => 'Comedor', 'descripcion_mod' => 'Módulo de comedor'],
+            ['key_mod' => 'administracion', 'nombre_mod' => 'Administración', 'descripcion_mod' => 'Configuración y usuarios'],
+            ['key_mod' => 'beca', 'nombre_mod' => 'Beca', 'descripcion_mod' => 'Módulo de beca'],
+            ['key_mod' => 'transporte', 'nombre_mod' => 'Transporte', 'descripcion_mod' => 'Módulo de transporte universitario'],
+            ['key_mod' => 'psicologia', 'nombre_mod' => 'Psicología', 'descripcion_mod' => 'Módulo de psicología'],
         ];
 
         foreach ($modulos as $m) {
-            DB::table('modulos')->updateOrInsert(['key' => $m['key']], $m);
+            DB::table('modulo')->updateOrInsert(['key_mod' => $m['key_mod']], $m);
         }
     }
 }

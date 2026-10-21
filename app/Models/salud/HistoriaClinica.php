@@ -20,12 +20,12 @@ class HistoriaClinica extends Model
 
     public function paciente()
     {
-        return $this->belongsTo(Usuario::class, 'user_id', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'user_id', 'id_use');
     }
 
     public function psicologo()
     {
-        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_use');
     }
 
     public function secciones()
@@ -35,12 +35,12 @@ class HistoriaClinica extends Model
 
     public static function obtenerPaciente($userId)
     {
-        return Usuario::with('persona')->where('id_usuario', $userId)->first();
+        return Usuario::with('persona')->where('id_use', $userId)->first();
     }
 
     public static function obtenerPsicologo($psicologoId)
     {
-        return Usuario::with('persona')->where('id_usuario', $psicologoId)->first();
+        return Usuario::with('persona')->where('id_use', $psicologoId)->first();
     }
 
     public static function obtenerSeccionesPersonalizadas($historiaId)
@@ -144,7 +144,7 @@ class HistoriaClinica extends Model
         ->map(function ($usuario) {
             $persona = $usuario->persona;
             return (object) [
-                'id' => $usuario->id_usuario,
+                'id' => $usuario->id_use,
                 'name' => trim(($persona->nombres_per ?? '') . ' ' . ($persona->apellidos_per ?? '')),
                 'email' => $persona->correo_per ?? ''
             ];
@@ -154,10 +154,10 @@ class HistoriaClinica extends Model
     public static function obtenerListado($psicologoId, $search = null, $filters = [])
     {
         $query = DB::table('citas')
-            ->join('usuario', 'citas.user_id', '=', 'usuario.id_usuario')
-            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
+            ->join('user', 'citas.user_id', '=', 'user.id_use')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
             ->leftJoin('historia_clinicas', function ($join) {
-                $join->on('usuario.id_usuario', '=', 'historia_clinicas.user_id')
+                $join->on('user.id_use', '=', 'historia_clinicas.user_id')
                     ->on('historia_clinicas.psicologo_id', '=', 'citas.psicologo_id');
             })
             ->where('citas.psicologo_id', $psicologoId)
@@ -201,7 +201,7 @@ class HistoriaClinica extends Model
                     $subquery->havingRaw('MIN(sub_citas.fecha) <= ?', [$fechaHasta]);
                 }
 
-                $query->whereIn('usuario.id_usuario', $subquery->pluck('user_id'));
+                $query->whereIn('user.id_use', $subquery->pluck('user_id'));
             } elseif ($tipoFiltroFecha === 'ultima_cita') {
                 $subquery = DB::table('citas as sub_citas')
                     ->select('sub_citas.user_id')
@@ -216,7 +216,7 @@ class HistoriaClinica extends Model
                     $subquery->havingRaw('MAX(sub_citas.fecha) <= ?', [$fechaHasta]);
                 }
 
-                $query->whereIn('usuario.id_usuario', $subquery->pluck('user_id'));
+                $query->whereIn('user.id_use', $subquery->pluck('user_id'));
             } else {
                 if (!empty($fechaDesde)) {
                     $query->whereDate('citas.fecha', '>=', $fechaDesde);
@@ -242,7 +242,7 @@ class HistoriaClinica extends Model
         }
 
         $historiasBase = $query->select(
-                'usuario.id_usuario as id',
+                'user.id_use as id',
                 DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as patient_name"),
                 'persona.correo_per as email',
                 'citas.fecha as ultima_sesion',

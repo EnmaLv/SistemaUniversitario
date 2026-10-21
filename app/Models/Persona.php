@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\PerteneceASede;
-use App\Models\Becas\BecaBeneficiario;
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -209,16 +208,11 @@ class Persona extends Model
 
     public function usuarios()
     {
-        return $this->hasMany(Usuario::class, 'per_id', 'per_id');
-    }
-
-    public function becasBeneficiario()
-    {
-        return $this->hasMany(BecaBeneficiario::class, 'persona_id', 'per_id');
+        return $this->hasMany(Usuario::class, 'per_id', 'id_per');
     }
 
     public function personaPnf()
     {
-        return $this->hasMany(PersonaPnf::class, 'per_id', 'per_id');
+        return $this->hasMany(PersonaPnf::class, 'per_id', 'id_per');
     }
 }

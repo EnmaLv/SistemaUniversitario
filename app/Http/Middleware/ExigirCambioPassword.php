@@ -19,7 +19,7 @@ class ExigirCambioPassword
     {
         $usuario = $request->user($guard);
 
-        if (! $usuario instanceof Usuario || ! $usuario->debe_cambiar_password) {
+        if (! $usuario instanceof Usuario || ! $usuario->debe_cambiar_password_use) {
             return $next($request);
         }
 
@@ -30,7 +30,7 @@ class ExigirCambioPassword
         $mensaje = 'Debes cambiar tu contraseña antes de continuar.';
 
         if ($request->expectsJson() || $guard === 'sanctum') {
-            return response()->json(['message' => $mensaje, 'debe_cambiar_password' => true], 428);
+            return response()->json(['message' => $mensaje, 'debe_cambiar_password_use' => true], 428);
         }
 
         return redirect()->route('password.cambiar')->with('warning', $mensaje);

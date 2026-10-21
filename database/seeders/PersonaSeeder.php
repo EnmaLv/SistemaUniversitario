@@ -28,13 +28,14 @@ class PersonaSeeder extends Seeder
             'sed_id' => 1,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 1,
             'id_perfil' => 1,
-            'username' => 'admin@example.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => json_encode([
+            'username_use' => 'admin@example.com',
+            'email_use' => 'admin@example.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => json_encode([
                 [
                     'question' => '¿Cuál es el nombre de tu primera mascota?',
                     'answer' => bcrypt('example'),
@@ -46,9 +47,9 @@ class PersonaSeeder extends Seeder
             ]),
         ]);
 
-        DB::table('rol_usuario')->insert([
-            'id_rol' => 1,
-            'id_usuario' => 1,
+        DB::table('usuario_rol')->insert([
+            'rol_id' => 1,
+            'use_id' => 1,
         ]);
 
         //Admin de salud
@@ -67,18 +68,19 @@ class PersonaSeeder extends Seeder
             'sed_id' => 1,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 2,
             'id_perfil' => 1,
-            'username' => 'nohelysq2006@gmail.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => null,
+            'username_use' => 'nohelysq2006@gmail.com',
+            'email_use' => 'nohelysq2006@gmail.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => null,
         ]);
 
-        DB::table('rol_usuario')->insert([
-            'id_rol' => 8,
-            'id_usuario' => 2,
+        DB::table('usuario_rol')->insert([
+            'rol_id' => 8,
+            'use_id' => 2,
         ]);
 
         DB::table('persona')->insert([
@@ -96,18 +98,19 @@ class PersonaSeeder extends Seeder
             'sed_id' => 1,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 3,
             'id_perfil' => 1,
-            'username' => 'america@example.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => null,
+            'username_use' => 'america@example.com',
+            'email_use' => 'america@example.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => null,
         ]);
 
-        DB::table('rol_usuario')->insert([
-            'id_rol' => 7,
-            'id_usuario' => 3,
+        DB::table('usuario_rol')->insert([
+            'rol_id' => 7,
+            'use_id' => 3,
         ]);
 
         //Doctor
@@ -126,18 +129,19 @@ class PersonaSeeder extends Seeder
             'sed_id' => 1,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 4,
             'id_perfil' => 1,
-            'username' => 'argenisdoctor@gmail.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => null,
+            'username_use' => 'argenisdoctor@gmail.com',
+            'email_use' => 'argenisdoctor@gmail.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => null,
         ]);
 
-        DB::table('rol_usuario')->insert([
-            'id_rol' => 4,
-            'id_usuario' => 4,
+        DB::table('usuario_rol')->insert([
+            'rol_id' => 4,
+            'use_id' => 4,
         ]);
 
         //Doctora
@@ -156,18 +160,19 @@ class PersonaSeeder extends Seeder
             'sed_id' => 2,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 5,
             'id_perfil' => 1,
-            'username' => 'genesisdoctor@gmail.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => null,
+            'username_use' => 'genesisdoctor@gmail.com',
+            'email_use' => 'genesisdoctor@gmail.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => null,
         ]);
 
-        DB::table('rol_usuario')->insert([
-            'id_rol' => 4,
-            'id_usuario' => 5,
+        DB::table('usuario_rol')->insert([
+            'rol_id' => 4,
+            'use_id' => 5,
         ]);
 
         //Enfermero
@@ -186,18 +191,19 @@ class PersonaSeeder extends Seeder
             'sed_id' => 1,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 6,
             'id_perfil' => 1,
-            'username' => 'denisenfermero@gmail.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => null,
+            'username_use' => 'denisenfermero@gmail.com',
+            'email_use' => 'denisenfermero@gmail.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => null,
         ]);
 
-        DB::table('rol_usuario')->insert([
-            'id_rol' => 5,
-            'id_usuario' => 6,
+        DB::table('usuario_rol')->insert([
+            'rol_id' => 5,
+            'use_id' => 6,
         ]);
 
         //Enfermero
@@ -216,18 +222,19 @@ class PersonaSeeder extends Seeder
             'sed_id' => 2,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 7,
             'id_perfil' => 1,
-            'username' => 'carmenenfermero@gmail.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => null,
+            'username_use' => 'carmenenfermero@gmail.com',
+            'email_use' => 'carmenenfermero@gmail.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => null,
         ]);
 
-        DB::table('rol_usuario')->insert([
-            'id_rol' => 5,
-            'id_usuario' => 7,
+        DB::table('usuario_rol')->insert([
+            'rol_id' => 5,
+            'use_id' => 7,
         ]);
 
         // Becario (Paciente + Becario)
@@ -246,22 +253,23 @@ class PersonaSeeder extends Seeder
             'sed_id' => 1,
         ]);
 
-        DB::table('usuario')->insert([
+        DB::table('user')->insert([
             'per_id' => 8,
             'id_perfil' => 1,
-            'username' => 'estudiantebecario@example.com',
-            'password' => bcrypt('12345678'),
-            'master_key' => bcrypt('masterkey123'),
-            'security_questions' => null,
+            'username_use' => 'estudiantebecario@example.com',
+            'email_use' => 'estudiantebecario@example.com',
+            'password_use' => bcrypt('12345678'),
+            'master_key_use' => bcrypt('masterkey123'),
+            'security_questions_use' => null,
         ]);
 
         // Se le asigna Paciente (7) y Becario (9)
-        DB::table('rol_usuario')->insert([
-            ['id_rol' => 7, 'id_usuario' => 8], // Paciente
-            ['id_rol' => 9, 'id_usuario' => 8], // Becario
+        DB::table('usuario_rol')->insert([
+            ['rol_id' => 7, 'use_id' => 8], // Paciente
+            ['rol_id' => 9, 'use_id' => 8], // Becario
         ]);
 
-        $rolPsicologo = DB::table('rol')->where('slug', 'psicologo')->value('id_rol');
+        $rolPsicologo = DB::table('rol')->where('slug_rol', 'psicologo')->value('id_rol');
 
         foreach ([
             ['Laura', 'Mendoza', '20111222', 'psicologa.laura@example.com', 1],
@@ -279,17 +287,18 @@ class PersonaSeeder extends Seeder
                 'sed_id' => $sede,
             ]);
 
-            $idUsuario = DB::table('usuario')->insertGetId([
+            $idUsuario = DB::table('user')->insertGetId([
                 'per_id' => $idPersona,
                 'id_perfil' => 1,
-                'username' => $correo,
-                'password' => bcrypt('12345678'),
-                'master_key' => bcrypt('masterkey123'),
-                'security_questions' => null,
+                'username_use' => $correo,
+            'email_use' => $correo,
+                'password_use' => bcrypt('12345678'),
+                'master_key_use' => bcrypt('masterkey123'),
+                'security_questions_use' => null,
             ]);
 
             if ($rolPsicologo) {
-                DB::table('rol_usuario')->insert(['id_rol' => $rolPsicologo, 'id_usuario' => $idUsuario]);
+                DB::table('usuario_rol')->insert(['rol_id' => $rolPsicologo, 'use_id' => $idUsuario]);
             }
         }
 

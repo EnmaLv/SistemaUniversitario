@@ -12,7 +12,7 @@
                     @php
                         \Log::info('DEBUG NAME PSICO', [
                             'auth_id'         => auth()->id(),
-                            'id_usuario'      => auth()->user()->id_usuario,
+                            'id_use'      => auth()->user()->id_use,
                             'per_id'      => auth()->user()->per_id,
                             'persona'         => optional(auth()->user()->persona)->toArray(),
                             'nombres_per'  => auth()->user()->persona?->nombres_per,

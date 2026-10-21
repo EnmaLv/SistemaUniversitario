@@ -17,8 +17,8 @@ class GenerarUsuariosFaltantes extends Command
         $pendientes = DB::table('persona')
             ->whereNotExists(function ($consulta) {
                 $consulta->select(DB::raw(1))
-                    ->from('usuario')
-                    ->whereColumn('usuario.per_id', 'persona.id_per');
+                    ->from('user')
+                    ->whereColumn('user.per_id', 'persona.id_per');
             });
 
         $total = (clone $pendientes)->count();

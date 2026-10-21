@@ -61,7 +61,7 @@ class BusViajeController extends Controller
             ->pluck('conductor_id');
 
         $conductores = Usuario::with('persona')
-            ->whereNotIn('id_usuario', $conductoresOcupados)
+            ->whereNotIn('id_use', $conductoresOcupados)
             ->get();
 
         $turnoSugerido = BusViaje::calcularTurnoActual();
@@ -75,7 +75,7 @@ class BusViajeController extends Controller
         $request->validate([
             'vehiculo_id'  => ['required', 'exists:vehiculos,id'],
             'bus_ruta_id'  => ['required', 'exists:bus_rutas,id'],
-            'conductor_id' => ['required', 'exists:usuario,id_usuario'],
+            'conductor_id' => ['required', 'exists:user,id_use'],
             'turno'        => ['required', Rule::in(['mañana', 'tarde', 'noche'])],
         ], [
             'vehiculo_id.required'  => 'Debe seleccionar un autobús.',
@@ -144,7 +144,7 @@ class BusViajeController extends Controller
             ->pluck('conductor_id');
 
         $conductores = Usuario::with('persona')
-            ->whereNotIn('id_usuario', $conductoresOcupados)
+            ->whereNotIn('id_use', $conductoresOcupados)
             ->get();
 
         return view('admin.transporte.maestros.bus_viajes.edit',
@@ -156,7 +156,7 @@ class BusViajeController extends Controller
         $request->validate([
             'vehiculo_id'  => ['required', 'exists:vehiculos,id'],
             'bus_ruta_id'  => ['required', 'exists:bus_rutas,id'],
-            'conductor_id' => ['required', 'exists:usuario,id_usuario'],
+            'conductor_id' => ['required', 'exists:user,id_use'],
             'turno'        => ['required', Rule::in(['mañana', 'tarde', 'noche'])],
         ], [
             'vehiculo_id.required'  => 'Debe seleccionar un autobús.',

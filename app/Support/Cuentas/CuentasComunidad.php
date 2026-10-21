@@ -19,7 +19,7 @@ class CuentasComunidad
 
     public static function idsRolesPorDefecto(): array
     {
-        $ids = Rol::whereIn('slug', self::ROLES_POR_DEFECTO)->pluck('id_rol')->all();
+        $ids = Rol::whereIn('slug_rol', self::ROLES_POR_DEFECTO)->pluck('id_rol')->all();
 
         if (count($ids) !== count(self::ROLES_POR_DEFECTO)) {
             throw new RuntimeException('No existen los roles Becario y Paciente; ejecuta las migraciones de roles.');
@@ -32,7 +32,7 @@ class CuentasComunidad
     {
         self::procesarLote([$persona->id_per], 'registro_manual', $actor);
 
-        return Usuario::where('per_id', $persona->id_per)->orderBy('id_usuario')->first();
+        return Usuario::where('per_id', $persona->id_per)->orderBy('id_use')->first();
     }
 
     public static function procesarLote(array $idsPersona, string $origen, ?Usuario $actor = null): array
@@ -58,7 +58,7 @@ class CuentasComunidad
                     ->whereIn('id_per', $lote)
                     ->get(['id_per', 'cedula_per', 'id_perfil']);
 
-                $conCuenta = DB::table('usuario')
+                $conCuenta = DB::table('user')
                     ->whereIn('per_id', $lote)
                     ->pluck('per_id')
                     ->flip();
@@ -69,9 +69,9 @@ class CuentasComunidad
                     ->values()
                     ->all();
 
-                $ocupados = DB::table('usuario')
-                    ->whereIn('username', $cedulas)
-                    ->pluck('username')
+                $ocupados = DB::table('user')
+                    ->whereIn('username_use', $cedulas)
+                    ->pluck('username_use')
                     ->flip()
                     ->all();
 
@@ -100,30 +100,30 @@ class CuentasComunidad
                     $nuevos[] = [
                         'per_id'            => $persona->id_per,
                         'id_perfil'             => $persona->id_perfil,
-                        'username'              => $cedula,
-                        'password'              => Hash::make($cedula),
-                        'debe_cambiar_password' => true,
+                        'username_use'          => $cedula,
+                        'password_use'          => Hash::make($cedula),
+                        'debe_cambiar_password_use' => true,
                         'created_at'            => $ahora,
                         'updated_at'            => $ahora,
                     ];
                 }
 
                 if ($nuevos !== []) {
-                    DB::table('usuario')->insert($nuevos);
+                    DB::table('user')->insert($nuevos);
                     $resumen['usuarios_creados'] += count($nuevos);
                 }
 
-                $usuarios = DB::table('usuario')->whereIn('per_id', $lote)->pluck('id_usuario')->all();
-                $creados = array_flip(array_column($nuevos, 'username'));
+                $usuarios = DB::table('user')->whereIn('per_id', $lote)->pluck('id_use')->all();
+                $creados = array_flip(array_column($nuevos, 'username_use'));
 
-                $asignados = DB::table('rol_usuario')
-                    ->whereIn('id_usuario', $usuarios)
-                    ->whereIn('id_rol', $roles)
-                    ->get(['id_usuario', 'id_rol'])
-                    ->mapWithKeys(fn ($fila) => [$fila->id_usuario . '-' . $fila->id_rol => true])
+                $asignados = DB::table('usuario_rol')
+                    ->whereIn('use_id', $usuarios)
+                    ->whereIn('rol_id', $roles)
+                    ->get(['use_id', 'rol_id'])
+                    ->mapWithKeys(fn ($fila) => [$fila->use_id . '-' . $fila->rol_id => true])
                     ->all();
 
-                $usernames = DB::table('usuario')->whereIn('id_usuario', $usuarios)->pluck('username', 'id_usuario');
+                $usernames = DB::table('user')->whereIn('id_use', $usuarios)->pluck('username_use', 'id_use');
 
                 $filas = [];
                 foreach ($usuarios as $idUsuario) {
@@ -132,7 +132,7 @@ class CuentasComunidad
                             continue;
                         }
 
-                        $filas[] = ['id_rol' => $idRol, 'id_usuario' => $idUsuario, 'created_at' => $ahora, 'updated_at' => $ahora];
+                        $filas[] = ['rol_id' => $idRol, 'use_id' => $idUsuario, 'created_at' => $ahora, 'updated_at' => $ahora];
 
                         if (! isset($creados[$usernames[$idUsuario] ?? ''])) {
                             $resumen['roles_agregados']++;
@@ -141,7 +141,7 @@ class CuentasComunidad
                 }
 
                 if ($filas !== []) {
-                    DB::table('rol_usuario')->insert($filas);
+                    DB::table('usuario_rol')->insert($filas);
                 }
             });
         }
@@ -155,7 +155,7 @@ class CuentasComunidad
         Bitacora::registrar(
             accion: 'cuentas_comunidad_generadas',
             modulo: 'administracion',
-            tablaAfectada: 'usuario',
+            tablaAfectada: 'user',
             datosModificados: [
                 'origen'              => $origen,
                 'personas'            => count($idsPersona),

@@ -27,13 +27,13 @@ class CitaController extends Controller
         abort_if(!$user, 403);
 
         if ($user->esPsicologo()) {
-            $citas = Cita::obtenerCitasGlobales(null, 10, $user->id_usuario);
+            $citas = Cita::obtenerCitasGlobales(null, 10, $user->id_use);
             return view('admin.psicologia.maestros.citas.index', compact('citas'));
         }
 
         if ($user->tieneRol('paciente')) {
             \Illuminate\Support\Facades\DB::table('notifications')
-                ->where('notifiable_id', $user->id)
+                ->where('notifiable_id', $user->id_use)
                 ->where('notifiable_type', 'App\Models\Usuario')
                 ->whereNull('read_at')
                 ->whereIn('type', [
@@ -43,7 +43,7 @@ class CitaController extends Controller
                 ])
                 ->update(['read_at' => now()]);
 
-            $citas = Cita::obtenerPorPaciente($user->id_usuario);
+            $citas = Cita::obtenerPorPaciente($user->id_use);
             $prioridades = Prioridad::obtenerParaPsicologo();
 
             return view('admin.psicologia.maestros.citas.index', compact('citas', 'prioridades'));
@@ -58,7 +58,7 @@ class CitaController extends Controller
         $user = Auth::user();
         abort_if(!$user || !$user->tieneRol('paciente'), 403);
 
-        $tieneCitaPendiente = Cita::tieneCitaActiva($user->id_usuario);
+        $tieneCitaPendiente = Cita::tieneCitaActiva($user->id_use);
         $psicologos = $tieneCitaPendiente ? collect() : $user->obtenerPsicologosDisponibles();
 
         return view('admin.psicologia.maestros.citas.create', compact('psicologos', 'tieneCitaPendiente'));
@@ -67,7 +67,7 @@ class CitaController extends Controller
     public function getAvailableSlots(Request $request)
     {
         $request->validate([
-            'psicologo_id' => 'required|exists:usuario,id_usuario',
+            'psicologo_id' => 'required|exists:user,id_use',
         ]);
 
         $grupoActivo = GrupoHorario::obtenerActivoPorPsicologo($request->psicologo_id);
@@ -156,14 +156,14 @@ class CitaController extends Controller
         abort_if(!$user || !$user->tieneRol('paciente'), 403);
 
         $validated = $request->validate([
-            'psicologo_id' => 'required|exists:usuario,id_usuario',
+            'psicologo_id' => 'required|exists:user,id_use',
             'fecha_solicitada' => 'required|date_format:Y-m-d|after_or_equal:today',
             'motivo' => 'required|string|max:100',
             'bloques_sugeridos' => 'required|string|max:1000',
         ]);
 
         $psicologo = Usuario::find($validated['psicologo_id']);
-        if (!$psicologo || !$psicologo->esPsicologo() || (int) $psicologo->id_usuario === (int) $user->id_usuario) {
+        if (!$psicologo || !$psicologo->esPsicologo() || (int) $psicologo->id_use === (int) $user->id_use) {
             return back()->withErrors(['psicologo_id' => 'Selecciona un psicólogo válido.'])->withInput();
         }
 
@@ -253,7 +253,7 @@ class CitaController extends Controller
             $camposGuardados = $camposGuardadosRaw->filter(fn($campo) => !in_array($campo->titulo, $camposOcultos))->values();
         }
 
-        $camposDisponibles = NotaEvolucionCampo::obtenerPorPsicologo($user->id_usuario);
+        $camposDisponibles = NotaEvolucionCampo::obtenerPorPsicologo($user->id_use);
 
         return view('admin.psicologia.maestros.citas.edit_note', 
         compact('cita', 'avances', 'estadosAnimo', 'camposGuardados', 'camposDisponibles', 'tipo', 'categoriaFiltro', 'returnTo', 'editing'));
@@ -446,7 +446,7 @@ class CitaController extends Controller
             'propuesta_estado' => $cita->propuesta_estado ?? null,
             'propuesta_bloque_seleccionado' => $cita->propuesta_bloque_seleccionado ?? null,
             'motivo_rechazo_propuesta' => $cita->motivo_rechazo_propuesta ?? null,
-            'paciente_horario' => $paciente && isset($paciente->horario_path) && $paciente->horario_path ? asset('storage/' . $paciente->horario_path) : null,
+            'paciente_horario' => null,
             'email' => $persona->correo_per ?? $paciente->email ?? null,
             'telefono' => $persona->telefono_per ?? null,
             'registrado_en' => $paciente?->created_at ? Carbon::parse($paciente->created_at)->format('d M, Y') : null,
@@ -470,7 +470,7 @@ class CitaController extends Controller
         $user = Auth::user();
         abort_if(!$user, 403, 'No autorizado para ver esta cita.');
 
-        $userId = (int) $user->id_usuario;
+        $userId = (int) $user->id_use;
 
         if ($user->esPsicologo() && (int) $cita->psicologo_id === $userId) {
             return;
@@ -527,7 +527,7 @@ class CitaController extends Controller
         $requireFields = $marcarRealizada && !$isManual;
 
         if ($marcarRealizada) {
-            if (!PlantillaGlobal::tienePlantillaGlobal($user->id_usuario)) {
+            if (!PlantillaGlobal::tienePlantillaGlobal($user->id_use)) {
                 if ($request->wantsJson()) {
                     return response()->json([
                         'status' => 'error',
@@ -615,7 +615,7 @@ class CitaController extends Controller
         }
 
         if ($marcarRealizada) {
-            $resultado = Cita::marcarRealizada($cita->id, $user->id_usuario);
+            $resultado = Cita::marcarRealizada($cita->id, $user->id_use);
             if (!$resultado[0]) {
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $resultado[1]], 400);
@@ -641,7 +641,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        $psicologoId = $user->id_usuario;
+        $psicologoId = $user->id_use;
 
         if (NotaEvolucionCampo::existeTitulo($psicologoId, $request->titulo)) {
             return response()->json(['success' => false, 'message' => 'Ya existe un campo con este título.']);
@@ -690,7 +690,7 @@ class CitaController extends Controller
 
         $this->authorizeAccess($cita);
 
-        [$isPass, $message] = Cita::cancelar($cita->id, $user->id_usuario, $request->input('motivo_cancelacion'));
+        [$isPass, $message] = Cita::cancelar($cita->id, $user->id_use, $request->input('motivo_cancelacion'));
 
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
@@ -715,7 +715,7 @@ class CitaController extends Controller
             'motivo_cancelacion' => 'nullable|string|max:1000',
         ]);
 
-        [$isPass, $message] = Cita::cancelar($cita->id, $user->id_usuario, $validated['motivo_cancelacion'] ?? null);
+        [$isPass, $message] = Cita::cancelar($cita->id, $user->id_use, $validated['motivo_cancelacion'] ?? null);
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -732,7 +732,7 @@ class CitaController extends Controller
         $user = Auth::user();
 
         $this->verificarPsicologoDueno($cita);
-        [$isPass, $message] = Cita::posponer($cita->id, $user->id_usuario);
+        [$isPass, $message] = Cita::posponer($cita->id, $user->id_use);
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -754,7 +754,7 @@ class CitaController extends Controller
             'bloque' => 'required|string|max:255',
         ]);
 
-        [$isPass, $message] = Cita::proponer($cita->id, $user->id_usuario, $validated['fecha'], $validated['bloque']);
+        [$isPass, $message] = Cita::proponer($cita->id, $user->id_use, $validated['fecha'], $validated['bloque']);
 
         $status = is_string($isPass) ? $isPass : ($isPass ? 'success' : 'error');
 
@@ -801,7 +801,7 @@ class CitaController extends Controller
             'bloque' => 'required|string|max:255',
         ]);
 
-        [$isPass, $message] = Cita::confirmar($cita->id, $user->id_usuario, $validated);
+        [$isPass, $message] = Cita::confirmar($cita->id, $user->id_use, $validated);
 
         $paciente = Usuario::with('persona')->find($cita->user_id);
         $nombrePaciente = $paciente?->persona?->nombres_per ?? 'Paciente';
@@ -830,7 +830,7 @@ class CitaController extends Controller
             ], 400);
         }
 
-        if (!PlantillaGlobal::tienePlantillaGlobal($user->id_usuario)) {
+        if (!PlantillaGlobal::tienePlantillaGlobal($user->id_use)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Debe activar su Esquema General para el historial clínico antes de completar citas.',
@@ -885,7 +885,7 @@ class CitaController extends Controller
         $endDate = $request->input('end_date', now()->toDateString());
         $prioridad = $request->input('prioridad');
 
-        $citas = Cita::obtenerHistorialPaciente($user->id_usuario, 12, $startDate, $endDate, $prioridad);
+        $citas = Cita::obtenerHistorialPaciente($user->id_use, 12, $startDate, $endDate, $prioridad);
 
         $citas->getCollection()->transform(fn($c) => [
             'id' => $c->id,
@@ -924,7 +924,7 @@ class CitaController extends Controller
             $mensaje ?? 'No autorizado.'
         );
 
-        $userId   = (int) $user->id_usuario;
+        $userId   = (int) $user->id_use;
         $citaPsi  = $cita->psicologo_id ? (int) $cita->psicologo_id : null;
 
         abort_if(
@@ -957,7 +957,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || (int) $cita->user_id !== (int) $user->id_usuario, 403, 'Esta cita no te pertenece.');
+        abort_if(!$user || (int) $cita->user_id !== (int) $user->id_use, 403, 'Esta cita no te pertenece.');
 
         $validated = $request->validate([
             'opcion' => 'required|in:cualquier_dia,sugerencia_aceptada,rechazada,aceptada',

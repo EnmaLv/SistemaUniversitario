@@ -17,7 +17,7 @@ class InactividadTest extends SeguridadTestCase
 
         $this->get('/home')->assertRedirect(route('login'));
         $this->assertGuest();
-        $this->assertTrue(BitacoraModelo::where('usuario_id', $usuario->id_usuario)->where('accion', 'sesion_expirada')->exists());
+        $this->assertTrue(BitacoraModelo::where('usuario_id', $usuario->id_use)->where('accion', 'sesion_expirada')->exists());
     }
 
     public function test_actividad_real_renueva_la_sesion(): void

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('estado_animo_diarios', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('paciente_id')->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('paciente_id')->constrained('user', 'id_use')->onDelete('cascade');
             $table->integer('valor');
             $table->date('fecha');
             $table->timestamps();

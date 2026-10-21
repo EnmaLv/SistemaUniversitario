@@ -1,4 +1,4 @@
-@if (auth()->user()->role === 'admin' && isset($psicologos) && $psicologos->count() > 0)
+@if (auth()->user()->esSuperAdmin() && isset($psicologos) && $psicologos->count() > 0)
     <div
         class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex items-center gap-3">

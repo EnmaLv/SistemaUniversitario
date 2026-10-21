@@ -84,9 +84,9 @@
                                     class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                     <option value="" selected disabled>Seleccione módulo</option>
                                     @foreach ($modulos as $modulo)
-                                        <option value="{{ $modulo->id }}"
-                                            {{ old('modulo_id') == $modulo->id ? 'selected' : '' }}>
-                                            {{ $modulo->nombre }}
+                                        <option value="{{ $modulo->id_mod }}"
+                                            {{ old('modulo_id') == $modulo->id_mod ? 'selected' : '' }}>
+                                            {{ $modulo->nombre_mod }}
                                         </option>
                                     @endforeach
                                 </select>

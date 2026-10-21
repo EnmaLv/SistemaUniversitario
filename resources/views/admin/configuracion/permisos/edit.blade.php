@@ -11,7 +11,7 @@
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         <i class="fas fa-user-shield mr-1 text-red-600"></i>
-                        Usuario: <strong>{{ $usuario->username }}</strong>
+                        Usuario: <strong>{{ $usuario->username_use }}</strong>
                         · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -23,7 +23,7 @@
             </div>
 
             @include('admin.configuracion.permisos._form', [
-                'action'       => route('admin.configuracion.permisos.update', $usuario->id_usuario),
+                'action'       => route('admin.configuracion.permisos.update', $usuario->id_use),
                 'metodo'       => 'PUT',
                 'usuario'      => $usuario,
                 'grupos'       => $grupos,

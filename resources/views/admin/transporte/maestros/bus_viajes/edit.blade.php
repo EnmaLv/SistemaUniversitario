@@ -102,8 +102,8 @@
                                     <select name="conductor_id" required>
                                         <option value="">-- Seleccionar chofer --</option>
                                         @foreach ($conductores as $conductor)
-                                            <option value="{{ $conductor->id_usuario }}"
-                                                {{ old('conductor_id', $busViaje->conductor_id) == $conductor->id_usuario ? 'selected' : '' }}>
+                                            <option value="{{ $conductor->id_use }}"
+                                                {{ old('conductor_id', $busViaje->conductor_id) == $conductor->id_use ? 'selected' : '' }}>
                                                 {{ $conductor->persona->nombres_per ?? '' }}
                                                 {{ $conductor->persona->apellidos_per ?? '' }}
                                             </option>

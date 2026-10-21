@@ -35,7 +35,7 @@ class Registro_diario extends Model
 
     public function persona_pnf()
     {
-        return $this->belongsTo(PersonaPnf::class);
+        return $this->belongsTo(PersonaPnf::class, 'ppr_id', 'id_ppr');
     }
 
     private static function relacionTable()

@@ -45,9 +45,8 @@
                                 <option value="">-- Seleccione VehÃ­culo --</option>
                                 @foreach($vehiculos as $v)
                                     <option value="{{ $v->id }}" {{ old('bus_vehiculo_id') == $v->id ? 'selected' : '' }}
-                                        data-combustible="{{ $v->bus_tipo_combustible_id }}"
-                                        data-km="{{ $v->km_actual }}"
-                                        data-bocas="{{ $v->cantidad_bocas }}">
+                                        data-combustible="{{ $v->tipo_combustible_id }}"
+                                        data-km="{{ $v->km_actual }}">
                                         {{ $v->placa }} â€ {{ $v->modelo->nombre ?? '' }} (KM: {{ number_format($v->km_actual, 0) }})
                                     </option>
                                 @endforeach

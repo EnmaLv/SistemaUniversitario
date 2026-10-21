@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('historia_plantillas_globales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('psicologo_id')->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('psicologo_id')->constrained('user', 'id_use')->onDelete('cascade');
             $table->string('titulo');
             $table->text('descripcion')->nullable();
             $table->json('secciones');

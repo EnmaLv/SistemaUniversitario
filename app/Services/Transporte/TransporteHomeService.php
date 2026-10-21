@@ -73,11 +73,11 @@ class TransporteHomeService
     protected function conductoresElegibles()
     {
         return Usuario::whereHas('roles', function ($q) {
-            $q->whereIn('nombre', ['conductor', 'chofer']);
+            $q->whereIn('nombre_rol', ['conductor', 'chofer']);
         })->get()->map(function ($u) {
             $u->nombre_completo = trim(
                 ($u->persona->nombres_per ?? '') . ' ' . ($u->persona->apellidos_per ?? '')
-            ) ?: ('Usuario #' . $u->id_usuario);
+            ) ?: ('Usuario #' . $u->id_use);
             return $u;
         });
     }

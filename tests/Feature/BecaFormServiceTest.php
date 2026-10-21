@@ -100,9 +100,9 @@ class BecaFormServiceTest extends TestCase
             'password' => 'password123',
         ]);
 
-        DB::table('rol_usuario')->insert([
+        DB::table('usuario_rol')->insert([
             'id_rol' => $roleId,
-            'id_usuario' => $user->id_usuario,
+            'id_use' => $user->id_use,
         ]);
 
         $formService = new BecaFormService();
@@ -183,9 +183,9 @@ class BecaFormServiceTest extends TestCase
             'password' => 'password123',
         ]);
 
-        DB::table('rol_usuario')->insert([
+        DB::table('usuario_rol')->insert([
             'id_rol' => $roleId,
-            'id_usuario' => $user->id_usuario,
+            'id_use' => $user->id_use,
         ]);
 
         $datos = (new BecaFormService())->datosFormulario();

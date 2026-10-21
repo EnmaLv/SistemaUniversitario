@@ -31,6 +31,7 @@ abstract class SeguridadTestCase extends TestCase
         Cache::flush();
         MapaRutas::limpiar();
         \App\Support\Sedes\SedeActiva::olvidar();
+        \Illuminate\Database\Eloquent\Model::preventAccessingMissingAttributes();
 
         $this->iniciarTransaccion();
     }
@@ -86,7 +87,7 @@ abstract class SeguridadTestCase extends TestCase
             }
         }
 
-        if (! DB::table('modulos')->exists()) {
+        if (! DB::table('modulo')->exists()) {
             (new ModulosSeeder())->run();
         }
 
@@ -137,13 +138,13 @@ abstract class SeguridadTestCase extends TestCase
         $usuario = new Usuario([
             'per_id' => $persona->id_per,
             'id_perfil'  => DB::table('perfil')->value('id_perfil'),
-            'username'   => "usuario{$n}@prueba.test",
+            'username_use' => "usuario{$n}@prueba.test",
         ]);
-        $usuario->password = $password;
-        $usuario->master_key = 'Llave12345';
+        $usuario->password_use = $password;
+        $usuario->master_key_use = 'Llave12345';
         $usuario->forceFill($extra)->save();
 
-        $ids = Rol::whereIn('nombre', (array) $roles)->pluck('id_rol')->all();
+        $ids = Rol::whereIn('nombre_rol', (array) $roles)->pluck('id_rol')->all();
         if ($ids) {
             $usuario->roles()->sync($ids);
         }

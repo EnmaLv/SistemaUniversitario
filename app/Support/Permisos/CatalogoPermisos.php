@@ -11,14 +11,14 @@ class CatalogoPermisos
     {
         return Vista::with([
                 'modulo',
-                'permisos' => fn ($q) => $q->where('activo', true),
+                'permisos' => fn ($q) => $q->where('status_id', 1),
             ])
-            ->where('activo', true)
-            ->orderBy('orden')
-            ->orderBy('nombre')
+            ->where('status_id', 1)
+            ->orderBy('orden_vis')
+            ->orderBy('nombre_vis')
             ->get()
             ->filter(fn ($vista) => $vista->permisos->isNotEmpty())
-            ->groupBy(fn ($vista) => $vista->modulo->nombre ?? 'General')
+            ->groupBy(fn ($vista) => $vista->modulo->nombre_mod ?? 'General')
             ->sortKeys();
     }
 }

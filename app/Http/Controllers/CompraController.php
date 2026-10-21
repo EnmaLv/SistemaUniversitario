@@ -56,7 +56,7 @@ class CompraController extends Controller
     {
         $id = Compra::crearCompra($request->validate([
             'proveedor_id'  => 'required|exists:proveedors,id',
-            'modulo_id'     => 'required|exists:modulos,id',
+            'modulo_id'     => 'required|exists:modulo,id_mod',
             'fecha'         => 'required|date',
             'observaciones' => 'nullable|string'
         ]));
@@ -67,6 +67,7 @@ class CompraController extends Controller
     public function show($id)
     {
         $compra = Compra::obtenerCompra($id);
+        abort_unless($compra, 404);
         $sede_destino = Compra::obtenerSedeDestino($id);
         $detalles = Compra::obtenerDetallesCompra($id);
 

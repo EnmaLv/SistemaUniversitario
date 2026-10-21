@@ -14,7 +14,7 @@ class DesbloquearUsuario extends Command
 
     public function handle(): int
     {
-        $usuario = Usuario::where('username', $this->argument('username'))->first();
+        $usuario = Usuario::buscarPorIdentificador((string) $this->argument('username'));
 
         if (! $usuario) {
             $this->error('No existe un usuario con ese username.');
@@ -26,8 +26,8 @@ class DesbloquearUsuario extends Command
         Bloqueos::desbloquear($usuario, null, 'consola');
 
         $this->info($estado
-            ? "Usuario {$usuario->username} desbloqueado (tenía bloqueo {$estado['tipo']})."
-            : "Usuario {$usuario->username} no tenía bloqueos activos; se reiniciaron sus contadores.");
+            ? "Usuario {$usuario->username_use} desbloqueado (tenía bloqueo {$estado['tipo']})."
+            : "Usuario {$usuario->username_use} no tenía bloqueos activos; se reiniciaron sus contadores.");
 
         return self::SUCCESS;
     }

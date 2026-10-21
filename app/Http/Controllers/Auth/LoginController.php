@@ -45,7 +45,7 @@ class LoginController extends Controller
         $perfil = $usuario->perfil()->first();
         if ($perfil && $perfil->nombre_perfil === 'Administrador') {
             $request->session()->regenerate();
-            session(['pending_admin_id' => $usuario->id_usuario]);
+            session(['pending_admin_id' => $usuario->id_use]);
 
             Bitacora::registrar(
                 accion: 'login_credenciales_validas',
@@ -67,7 +67,7 @@ class LoginController extends Controller
         session(['sede_inicializada_para' => (int) $usuario->getKey()]);
         Bitacora::registrar(accion: 'login_exitoso', modulo: 'autenticacion', usuario: $usuario);
 
-        $destino = (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($usuario->id_usuario ?? $usuario->id);
+        $destino = (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($usuario->id_use ?? $usuario->id);
         return redirect()->intended($destino);
     }
 

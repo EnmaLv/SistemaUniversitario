@@ -27,14 +27,14 @@ class PermisosController extends Controller
             ->withCount('permisosDirectos')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('username', 'like', "%{$search}%")
+                    $q->where('username_use', 'like', "%{$search}%")
                     ->orWhereHas('persona', function ($subQ) use ($search) {
                         $subQ->where('nombres_per', 'like', "%{$search}%")
                             ->orWhere('apellidos_per', 'like', "%{$search}%");
                     });
                 });
             })
-            ->orderBy('id_usuario', 'asc')
+            ->orderBy('id_use', 'asc')
             ->paginate(10)
             ->withQueryString();
 
@@ -53,20 +53,20 @@ class PermisosController extends Controller
 
         $roleIds = $usuario->roles->pluck('id_rol')->all();
 
-        $modulos      = Modulo::where('activo', true)->orderBy('nombre')->get();
-        $roleModules  = DB::table('rol_modulo')->whereIn('rol_id', $roleIds)->pluck('modulo_id')->unique()->values()->all();
-        $modulosExtra = DB::table('usuario_modulo')->where('usuario_id', $usuario->id_usuario)->pluck('modulo_id')->all();
+        $modulos      = Modulo::where('status_id', 1)->orderBy('nombre_mod')->get();
+        $roleModules  = DB::table('rol_modulo')->whereIn('rol_id', $roleIds)->pluck('mod_id')->unique()->values()->all();
+        $modulosExtra = DB::table('usuario_modulo')->where('use_id', $usuario->id_use)->pluck('mod_id')->all();
 
         $grupos  = CatalogoPermisos::agrupado();
-        $deRol   = DB::table('rol_permiso')->whereIn('rol_id', $roleIds)->pluck('permiso_id')->unique()->values()->all();
+        $deRol   = DB::table('rol_permiso')->whereIn('rol_id', $roleIds)->pluck('pmi_id')->unique()->values()->all();
 
-        $directos = DB::table('usuario_permiso')->where('usuario_id', $usuario->id_usuario)->get();
-        $grants   = $directos->where('tipo', 'grant')->pluck('permiso_id')->all();
-        $revokes  = $directos->where('tipo', 'revoke')->pluck('permiso_id')->all();
+        $directos = DB::table('usuario_permiso')->where('use_id', $usuario->id_use)->get();
+        $grants   = $directos->where('tipo_usp', 'grant')->pluck('pmi_id')->all();
+        $revokes  = $directos->where('tipo_usp', 'revoke')->pluck('pmi_id')->all();
 
         $vigencia = [
-            'fecha_inicio' => $directos->pluck('fecha_inicio')->filter()->first(),
-            'fecha_fin'    => $directos->pluck('fecha_fin')->filter()->first(),
+            'fecha_inicio' => $directos->pluck('fecha_inicio_usp')->filter()->first(),
+            'fecha_fin'    => $directos->pluck('fecha_fin_usp')->filter()->first(),
         ];
 
         $esSuperAdmin = $usuario->esSuperAdmin();
@@ -95,11 +95,11 @@ class PermisosController extends Controller
 
         $data = $request->validate([
             'grant'        => 'nullable|array',
-            'grant.*'      => 'integer|exists:permiso,id',
+            'grant.*'      => 'integer|exists:permiso,id_pmi',
             'revoke'       => 'nullable|array',
-            'revoke.*'     => 'integer|exists:permiso,id',
+            'revoke.*'     => 'integer|exists:permiso,id_pmi',
             'modulos'      => 'nullable|array',
-            'modulos.*'    => 'integer|exists:modulos,id',
+            'modulos.*'   => 'integer|exists:modulo,id_mod',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin'    => 'nullable|date|after_or_equal:fecha_inicio',
         ], [
@@ -113,41 +113,41 @@ class PermisosController extends Controller
         $asignadoPor = auth()->id();
         $ahora       = now();
         $base        = [
-            'usuario_id'   => $usuario->id_usuario,
-            'fecha_inicio' => $data['fecha_inicio'] ?? null,
-            'fecha_fin'    => $data['fecha_fin'] ?? null,
-            'asignado_por' => $asignadoPor,
+            'use_id'              => $usuario->id_use,
+            'fecha_inicio_usp'    => $data['fecha_inicio'] ?? null,
+            'fecha_fin_usp'       => $data['fecha_fin'] ?? null,
+            'asignado_por_use_id' => $asignadoPor,
             'created_at'   => $ahora,
             'updated_at'   => $ahora,
         ];
 
         DB::transaction(function () use ($usuario, $grant, $revoke, $modulos, $base, $asignadoPor, $ahora) {
-            $previos = DB::table('usuario_permiso')->where('usuario_id', $usuario->id_usuario)->get();
+            $previos = DB::table('usuario_permiso')->where('use_id', $usuario->id_use)->get();
             $antes = [
-                'grant'    => $previos->where('tipo', 'grant')->pluck('permiso_id')->map('intval')->all(),
-                'revoke'   => $previos->where('tipo', 'revoke')->pluck('permiso_id')->map('intval')->all(),
-                'modulos'  => DB::table('usuario_modulo')->where('usuario_id', $usuario->id_usuario)->pluck('modulo_id')->map('intval')->all(),
-                'vigencia' => [$previos->pluck('fecha_inicio')->filter()->first(), $previos->pluck('fecha_fin')->filter()->first()],
+                'grant'    => $previos->where('tipo_usp', 'grant')->pluck('pmi_id')->map('intval')->all(),
+                'revoke'   => $previos->where('tipo_usp', 'revoke')->pluck('pmi_id')->map('intval')->all(),
+                'modulos'  => DB::table('usuario_modulo')->where('use_id', $usuario->id_use)->pluck('mod_id')->map('intval')->all(),
+                'vigencia' => [$previos->pluck('fecha_inicio_usp')->filter()->first(), $previos->pluck('fecha_fin_usp')->filter()->first()],
             ];
 
-            DB::table('usuario_permiso')->where('usuario_id', $usuario->id_usuario)->delete();
+            DB::table('usuario_permiso')->where('use_id', $usuario->id_use)->delete();
 
             $filas = array_merge(
-                array_map(fn ($permisoId) => $base + ['permiso_id' => $permisoId, 'tipo' => 'grant'], $grant),
-                array_map(fn ($permisoId) => $base + ['permiso_id' => $permisoId, 'tipo' => 'revoke'], $revoke)
+                array_map(fn ($permisoId) => $base + ['pmi_id' => $permisoId, 'tipo_usp' => 'grant'], $grant),
+                array_map(fn ($permisoId) => $base + ['pmi_id' => $permisoId, 'tipo_usp' => 'revoke'], $revoke)
             );
 
             if ($filas) {
                 DB::table('usuario_permiso')->insert($filas);
             }
 
-            DB::table('usuario_modulo')->where('usuario_id', $usuario->id_usuario)->delete();
+            DB::table('usuario_modulo')->where('use_id', $usuario->id_use)->delete();
 
             if ($modulos) {
                 DB::table('usuario_modulo')->insert(array_map(fn ($moduloId) => [
-                    'usuario_id'   => $usuario->id_usuario,
-                    'modulo_id'    => $moduloId,
-                    'asignado_por' => $asignadoPor,
+                    'use_id'              => $usuario->id_use,
+                    'mod_id'              => $moduloId,
+                    'asignado_por_use_id' => $asignadoPor,
                     'created_at'   => $ahora,
                     'updated_at'   => $ahora,
                 ], $modulos));
@@ -157,7 +157,7 @@ class PermisosController extends Controller
                 'grant'    => $grant,
                 'revoke'   => $revoke,
                 'modulos'  => $modulos,
-                'vigencia' => ($grant || $revoke) ? [$base['fecha_inicio'], $base['fecha_fin']] : [null, null],
+                'vigencia' => ($grant || $revoke) ? [$base['fecha_inicio_usp'], $base['fecha_fin_usp']] : [null, null],
             ]);
         });
 
@@ -173,7 +173,7 @@ class PermisosController extends Controller
         $auth = auth()->user();
 
         return $auth
-            && $auth->id_usuario == $usuario->id_usuario
+            && $auth->id_use == $usuario->id_use
             && $auth->esSuperAdmin();
     }
 }

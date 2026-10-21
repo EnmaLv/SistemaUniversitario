@@ -19,7 +19,7 @@ class CambioPasswordController extends Controller
         /** @var Usuario $usuario */
         $usuario = Auth::user();
 
-        return view('auth.cambiar_password', ['obligatorio' => (bool) $usuario->debe_cambiar_password]);
+        return view('auth.cambiar_password', ['obligatorio' => (bool) $usuario->debe_cambiar_password_use]);
     }
 
     public function guardar(Request $request)
@@ -37,11 +37,11 @@ class CambioPasswordController extends Controller
             'password.min'             => 'La nueva contraseña debe tener al menos 8 caracteres.',
         ]);
 
-        if (! Hash::check($request->input('password_actual'), (string) $usuario->getOriginal('password'))) {
+        if (! Hash::check($request->input('password_actual'), (string) $usuario->getOriginal('password_use'))) {
             Bitacora::registrar(
                 accion: 'password_cambio_rechazado',
                 modulo: 'autenticacion',
-                tablaAfectada: 'usuario',
+                tablaAfectada: 'user',
                 registroId: $usuario->getKey(),
                 nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
                 observacion: 'Contraseña actual incorrecta',
@@ -54,28 +54,28 @@ class CambioPasswordController extends Controller
         $cedulaNueva = Cedula::normalizar($nueva);
         $cedulas = array_filter([
             Cedula::normalizar($usuario->persona?->cedula_per),
-            Cedula::normalizar($usuario->username),
+            Cedula::normalizar($usuario->username_use),
         ]);
 
         if ($cedulaNueva !== null && in_array($cedulaNueva, $cedulas, true)) {
             return back()->withErrors(['password' => 'La nueva contraseña no puede ser tu cédula.']);
         }
 
-        if (Hash::check($nueva, (string) $usuario->getOriginal('password'))) {
+        if (Hash::check($nueva, (string) $usuario->getOriginal('password_use'))) {
             return back()->withErrors(['password' => 'La nueva contraseña debe ser distinta de la actual.']);
         }
 
-        $obligatorio = (bool) $usuario->debe_cambiar_password;
+        $obligatorio = (bool) $usuario->debe_cambiar_password_use;
 
-        $usuario->password = $nueva;
-        $usuario->debe_cambiar_password = false;
-        $usuario->password_cambiado_en = now();
+        $usuario->password_use = $nueva;
+        $usuario->debe_cambiar_password_use = false;
+        $usuario->password_cambiado_en_use = now();
         $usuario->save();
 
         Bitacora::registrar(
             accion: 'password_cambiado',
             modulo: 'autenticacion',
-            tablaAfectada: 'usuario',
+            tablaAfectada: 'user',
             registroId: $usuario->getKey(),
             observacion: $obligatorio ? 'Cambio obligatorio en el primer inicio de sesión' : 'Cambio voluntario',
         );
@@ -83,7 +83,7 @@ class CambioPasswordController extends Controller
         $request->session()->regenerate();
 
         return redirect()
-            ->to((new ModuleFilter())->resolveInitialRoute($usuario->id_usuario))
+            ->to((new ModuleFilter())->resolveInitialRoute($usuario->id_use))
             ->with('success', 'Tu contraseña se actualizó correctamente.');
     }
 }

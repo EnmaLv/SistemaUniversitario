@@ -77,14 +77,14 @@ class ComedorHomeService
      */
     protected function productosDelComedor(): array
     {
-        $comedor = Modulo::where('key', 'comedor')->first();
+        $comedor = Modulo::where('key_mod', 'comedor')->first();
         if (!$comedor) {
             return [];
         }
 
         return Producto::whereHas('categoria', function ($q) use ($comedor) {
             $q->whereHas('tipoProducto', function ($t) use ($comedor) {
-                $t->where('modulo_id', $comedor->id);
+                $t->where('modulo_id', $comedor->id_mod);
             });
         })->pluck('id')->toArray();
     }

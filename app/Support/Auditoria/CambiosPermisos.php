@@ -29,7 +29,7 @@ class CambiosPermisos
             datosAnteriores: ['permisos_quitados' => $quitados, 'modulos_quitados' => $modulosQuitados],
             datosModificados: ['permisos_otorgados' => $otorgados, 'modulos_agregados' => $modulosAgregados],
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
-            observacion: "Rol: {$rol->nombre}",
+            observacion: "Rol: {$rol->nombre_rol}",
         );
     }
 
@@ -55,18 +55,18 @@ class CambiosPermisos
             accion: 'permisos_usuario_actualizados',
             modulo: 'administracion',
             tablaAfectada: 'usuario_permiso',
-            registroId: $usuario->id_usuario,
+            registroId: $usuario->id_use,
             datosAnteriores: ['quitados' => $cambios['quitados'], 'vigencia' => $antes['vigencia'] ?? null],
             datosModificados: ['agregados' => $cambios['agregados'], 'vigencia' => $despues['vigencia'] ?? null],
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
-            observacion: "Usuario: {$usuario->username}",
+            observacion: "Usuario: {$usuario->username_use}",
         );
     }
 
     public static function rolesUsuario(Usuario $usuario, array $sinc, string $accion = 'roles_usuario_actualizados'): void
     {
-        $agregados = Rol::withTrashed()->whereIn('id_rol', $sinc['attached'] ?? [])->pluck('nombre')->all();
-        $quitados = Rol::withTrashed()->whereIn('id_rol', $sinc['detached'] ?? [])->pluck('nombre')->all();
+        $agregados = Rol::withTrashed()->whereIn('id_rol', $sinc['attached'] ?? [])->pluck('nombre_rol')->all();
+        $quitados = Rol::withTrashed()->whereIn('id_rol', $sinc['detached'] ?? [])->pluck('nombre_rol')->all();
 
         if (! $agregados && ! $quitados) {
             return;
@@ -76,21 +76,21 @@ class CambiosPermisos
             accion: $accion,
             modulo: 'administracion',
             tablaAfectada: 'rol_usuario',
-            registroId: $usuario->id_usuario,
+            registroId: $usuario->id_use,
             datosAnteriores: ['roles_quitados' => $quitados],
             datosModificados: ['roles_agregados' => $agregados],
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
-            observacion: "Usuario: {$usuario->username}",
+            observacion: "Usuario: {$usuario->username_use}",
         );
     }
 
     protected static function permisos(array $ids): array
     {
-        return $ids ? Permiso::whereIn('id', $ids)->orderBy('key')->pluck('key')->all() : [];
+        return $ids ? Permiso::whereIn('id_pmi', $ids)->orderBy('nombre_pmi')->pluck('nombre_pmi')->all() : [];
     }
 
     protected static function modulos(array $ids): array
     {
-        return $ids ? Modulo::whereIn('id', $ids)->orderBy('key')->pluck('key')->all() : [];
+        return $ids ? Modulo::whereIn('id_mod', $ids)->orderBy('key_mod')->pluck('key_mod')->all() : [];
     }
 }

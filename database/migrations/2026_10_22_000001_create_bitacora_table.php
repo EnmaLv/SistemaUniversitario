@@ -32,7 +32,7 @@ return new class extends Migration
             $table->text('observacion')->nullable();
             $table->timestamp('fecha_hora')->useCurrent();
 
-            $table->foreign('usuario_id')->references('id_usuario')->on('usuario')->nullOnDelete();
+            $table->foreign('usuario_id')->references('id_use')->on('user')->nullOnDelete();
             $table->index('usuario_id', 'idx_bitacora_usuario');
             $table->index('modulo', 'idx_bitacora_modulo');
             $table->index('accion', 'idx_bitacora_accion');

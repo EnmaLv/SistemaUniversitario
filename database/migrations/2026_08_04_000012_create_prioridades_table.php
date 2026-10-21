@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->integer('nivel_gravedad')->default(1);
             $table->boolean('activo')->default(true);
-            $table->foreignId('psicologo_id')->nullable()->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('psicologo_id')->nullable()->constrained('user', 'id_use')->onDelete('cascade');
             $table->timestamps();
 
             $table->unique(['nombre', 'psicologo_id']);

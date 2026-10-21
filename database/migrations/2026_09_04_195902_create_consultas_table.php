@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('motivo');
             $table->text('observaciones');
             $table->text('diagnostico');
-            $table->foreignId('creado_por')->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('creado_por')->constrained('user', 'id_use')->onDelete('cascade');
             $table->timestamps();
         });
 

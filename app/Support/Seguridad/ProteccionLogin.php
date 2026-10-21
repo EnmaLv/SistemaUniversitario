@@ -42,7 +42,7 @@ class ProteccionLogin
                 accion: 'login_fallido',
                 modulo: 'autenticacion',
                 nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
-                observacion: sprintf('Contraseña incorrecta (%s). Intento %d de %d', $canal, (int) $usuario->intentos_fallidos + 1, $max),
+                observacion: sprintf('Contraseña incorrecta (%s). Intento %d de %d', $canal, (int) $usuario->intentos_fallidos_use + 1, $max),
                 usuario: $usuario,
                 nombreUsuario: $username,
             );
@@ -133,7 +133,7 @@ class ProteccionLogin
 
     protected static function passwordValida(Usuario $usuario, string $password): bool
     {
-        $almacenada = $usuario->getOriginal('password');
+        $almacenada = $usuario->getOriginal('password_use');
 
         if (! is_string($almacenada) || $almacenada === '') {
             return false;

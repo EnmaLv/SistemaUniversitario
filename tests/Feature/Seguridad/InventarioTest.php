@@ -20,7 +20,7 @@ class InventarioTest extends SeguridadTestCase
         $this->servicio = app(ServicioInventario::class);
 
         $unidad = DB::table('unidades')->insertGetId(['nombre' => 'Kilo', 'abreviatura' => 'Kg', 'factor_a_gramo' => 1000, 'created_at' => now(), 'updated_at' => now()]);
-        $tipo = DB::table('tipo_productos')->insertGetId(['nombre' => 'Alimentos', 'modulo_id' => DB::table('modulos')->value('id'), 'created_at' => now(), 'updated_at' => now()]);
+        $tipo = DB::table('tipo_productos')->insertGetId(['nombre' => 'Alimentos', 'modulo_id' => DB::table('modulo')->value('id_mod'), 'created_at' => now(), 'updated_at' => now()]);
         $categoria = DB::table('categorias')->insertGetId(['nombre' => 'Cereales', 'tipo_producto_id' => $tipo, 'created_at' => now(), 'updated_at' => now()]);
 
         $this->productoId = DB::table('productos')->insertGetId([

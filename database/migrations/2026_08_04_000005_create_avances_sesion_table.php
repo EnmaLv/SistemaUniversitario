@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('avances_sesion', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('psicologo_id')->nullable()->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('psicologo_id')->nullable()->constrained('user', 'id_use')->onDelete('cascade');
             $table->unsignedTinyInteger('valor')->default(0)->comment('Nivel del 1 al 10');
             $table->string('nombre');
             $table->text('descripcion')->nullable();

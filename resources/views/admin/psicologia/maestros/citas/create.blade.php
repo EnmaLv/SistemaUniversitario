@@ -97,7 +97,7 @@
                                         @endphp
                                         <button type="button"
                                             class="psicologo-card group relative flex items-center gap-3.5 p-3.5 sm:p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 hover:border-{{ $themeColor }}-400 dark:hover:border-{{$themeColor }}-500 hover:bg-{{ $themeColor }}-50/30 dark:hover:bg-{{$themeColor }}-950/20 transition-all duration-200 text-left cursor-pointer"
-                                            data-psicologo-id="{{ $psicologo->id_usuario }}"
+                                            data-psicologo-id="{{ $psicologo->id_use }}"
                                             data-psicologo-name="{{ $fullName }}"
                                             data-dias="{{ json_encode($psicologo->dias_laborables ?? []) }}"
                                             data-slots="{{ json_encode($psicologo->slots ?? []) }}">

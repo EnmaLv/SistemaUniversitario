@@ -59,26 +59,26 @@ class Message
 
     public static function obtenerRemitente($senderId)
     {
-        return DB::table('usuario')->where('id_usuario', $senderId)->first();
+        return DB::table('user')->where('id_use', $senderId)->first();
     }
 
     public static function registrarActividadChat($userId, $chatActivoId)
     {
-        return DB::table('usuario')->where('id_usuario', $userId)->update([
-            'ultima_actividad_chat' => now(),
-            'chat_activo_user_id' => $chatActivoId,
+        return DB::table('user')->where('id_use', $userId)->update([
+            'ultima_actividad_chat_use' => now(),
+            'chat_activo_use_id' => $chatActivoId,
         ]);
     }
 
     public static function usuarioEstaActivoEnChat($userId, $senderId)
     {
-        $user = DB::table('usuario')->where('id_usuario', $userId)->first();
-        if (!$user || !$user->ultima_actividad_chat || !$user->chat_activo_user_id) {
+        $user = DB::table('user')->where('id_use', $userId)->first();
+        if (!$user || !$user->ultima_actividad_chat_use || !$user->chat_activo_use_id) {
             return false;
         }
 
-        if ($user->chat_activo_user_id == $senderId) {
-            $actividad = Carbon::parse($user->ultima_actividad_chat);
+        if ($user->chat_activo_use_id == $senderId) {
+            $actividad = Carbon::parse($user->ultima_actividad_chat_use);
             if (now()->diffInSeconds($actividad) <= 60) {
                 return true;
             }

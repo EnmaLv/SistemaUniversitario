@@ -15,7 +15,7 @@ class RequireMasterKey
             $isAdmin = false;
             if (method_exists($user, 'roles')) {
                 try {
-                    $isAdmin = $user->roles()->where('nombre', 'Administrador')->exists();
+                    $isAdmin = $user->roles()->where('nombre_rol', 'Administrador')->exists();
                 } catch (\Exception $e) {
                     $isAdmin = false;
                 }

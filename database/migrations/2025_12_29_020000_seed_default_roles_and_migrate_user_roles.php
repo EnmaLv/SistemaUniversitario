@@ -13,21 +13,21 @@ return new class extends Migration
         }
 
         $defaults = [
-            ['nombre' => 'Administrador', 'descripcion' => 'Rol con todos los permisos'],
-            ['nombre' => 'Secretaria De Bienestar', 'descripcion' => 'Rol administrativo'],
-            ['nombre' => 'Obrero', 'descripcion' => 'Rol operativo'],
-            ['nombre' => 'Doctor(a)', 'descripcion' => 'Rol operativo'],
-            ['nombre' => 'Enfermero(a)', 'descripcion' => 'Rol operativo'],
-            ['nombre' => 'Administrador de Beca', 'descripcion' => 'Rol operativo'],
-            ['nombre' => 'Paciente', 'descripcion' => 'Rol estudiantil'],
-            ['nombre' => 'Administrador de Salud', 'descripcion' => 'Rol operativo']
+            ['nombre_rol' => 'Administrador', 'descripcion_rol' => 'Rol con todos los permisos'],
+            ['nombre_rol' => 'Secretaria De Bienestar', 'descripcion_rol' => 'Rol administrativo'],
+            ['nombre_rol' => 'Obrero', 'descripcion_rol' => 'Rol operativo'],
+            ['nombre_rol' => 'Doctor(a)', 'descripcion_rol' => 'Rol operativo'],
+            ['nombre_rol' => 'Enfermero(a)', 'descripcion_rol' => 'Rol operativo'],
+            ['nombre_rol' => 'Administrador de Beca', 'descripcion_rol' => 'Rol operativo'],
+            ['nombre_rol' => 'Paciente', 'descripcion_rol' => 'Rol estudiantil'],
+            ['nombre_rol' => 'Administrador de Salud', 'descripcion_rol' => 'Rol operativo']
         ];
 
         foreach ($defaults as $d) {
-            $exists = DB::table('rol')->where('nombre', $d['nombre'])->exists();
+            $exists = DB::table('rol')->where('nombre_rol', $d['nombre_rol'])->exists();
             if (! $exists) {
-                $slug = strtolower(str_replace(' ', '-', $d['nombre']));
-                DB::table('rol')->insert(array_merge($d, ['slug' => $slug, 'created_at' => now(), 'updated_at' => now()]));
+                $slug = strtolower(str_replace(' ', '-', $d['nombre_rol']));
+                DB::table('rol')->insert(array_merge($d, ['slug_rol' => $slug, 'created_at' => now(), 'updated_at' => now()]));
             }
         }
     }

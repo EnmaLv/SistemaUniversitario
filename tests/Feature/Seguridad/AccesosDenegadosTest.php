@@ -36,10 +36,10 @@ class AccesosDenegadosTest extends SeguridadTestCase
         $this->assertGuest();
 
         $usuario->refresh();
-        $this->assertTrue($usuario->bloqueado);
-        $this->assertSame(Bloqueos::MOTIVO_ACCESOS, $usuario->motivo_bloqueo);
-        $this->assertSame(10, BitacoraModelo::where('usuario_id', $usuario->id_usuario)->where('accion', 'acceso_denegado')->count());
-        $this->assertTrue(BitacoraModelo::where('usuario_id', $usuario->id_usuario)->where('accion', 'bloqueo_permanente')->where('nivel', 'critico')->exists());
+        $this->assertTrue($usuario->bloqueado_use);
+        $this->assertSame(Bloqueos::MOTIVO_ACCESOS, $usuario->motivo_bloqueo_use);
+        $this->assertSame(10, BitacoraModelo::where('usuario_id', $usuario->id_use)->where('accion', 'acceso_denegado')->count());
+        $this->assertTrue(BitacoraModelo::where('usuario_id', $usuario->id_use)->where('accion', 'bloqueo_permanente')->where('nivel', 'critico')->exists());
     }
 
     public function test_los_accesos_fuera_de_la_ventana_no_se_acumulan(): void
@@ -55,7 +55,7 @@ class AccesosDenegadosTest extends SeguridadTestCase
 
         $this->get('/admin/configuracion/roles')->assertForbidden();
         $this->assertAuthenticated();
-        $this->assertFalse((bool) $usuario->fresh()->bloqueado);
+        $this->assertFalse((bool) $usuario->fresh()->bloqueado_use);
     }
 
     public function test_un_superadmin_tambien_suma_403_que_no_vienen_de_check_menu_permission(): void
@@ -64,7 +64,7 @@ class AccesosDenegadosTest extends SeguridadTestCase
 
         $this->actingAs($admin)->get(route('admin.psicologia.maestros.historias.index'))->assertForbidden();
 
-        $this->assertTrue(BitacoraModelo::where('usuario_id', $admin->id_usuario)->where('accion', 'acceso_denegado')->exists());
+        $this->assertTrue(BitacoraModelo::where('usuario_id', $admin->id_use)->where('accion', 'acceso_denegado')->exists());
     }
 
     public function test_sin_permiso_editar_recibe_403_en_update_y_con_permiso_pasa(): void
@@ -76,9 +76,9 @@ class AccesosDenegadosTest extends SeguridadTestCase
         $this->actingAs($usuario)->put("/admin/maestros/sedes/{$sedeId}", $datos)->assertForbidden();
 
         DB::table('usuario_permiso')->insert([
-            'usuario_id' => $usuario->id_usuario,
-            'permiso_id' => DB::table('permiso')->where('key', 'sedes.editar')->value('id'),
-            'tipo'       => 'grant',
+            'use_id'     => $usuario->id_use,
+            'pmi_id'     => DB::table('permiso')->where('nombre_pmi', 'sedes.editar')->value('id_pmi'),
+            'tipo_usp'   => 'grant',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

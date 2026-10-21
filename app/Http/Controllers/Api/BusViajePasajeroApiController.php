@@ -29,7 +29,7 @@ class BusViajePasajeroApiController extends Controller
         ]);
 
         if ($validated['metodo'] === 'manual') {
-            if ((int) $viaje->conductor_id !== (int) $request->user()->id_usuario) {
+            if ((int) $viaje->conductor_id !== (int) $request->user()->id_use) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Solo el conductor del viaje puede registrar pasajeros manualmente.',

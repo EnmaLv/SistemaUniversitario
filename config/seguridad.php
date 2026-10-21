@@ -83,6 +83,10 @@ return [
         'new_master_key_confirmation',
         'security_questions',
         'remember_token',
+        'password_use',
+        'master_key_use',
+        'security_questions_use',
+        'remember_token_use',
         'answers',
         '_token',
         'token',
@@ -93,8 +97,8 @@ return [
 
     'campos_ignorados_modelos' => [
         'updated_at',
-        'ultima_actividad_chat',
-        'chat_activo_user_id',
+        'ultima_actividad_chat_use',
+        'chat_activo_use_id',
         'last_used_at',
     ],
 

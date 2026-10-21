@@ -123,7 +123,7 @@ class HorarioConsultorio extends Model
         $rolesPermitidos = [4, 5];
 
         return \App\Models\RolUsuario::with(['usuario.persona', 'rol'])
-            ->whereIn('id_rol', $rolesPermitidos)
+            ->whereIn('rol_id', $rolesPermitidos)
             ->get()
             ->map(function ($ru) {
                 // Obtenemos la relación persona desde el usuario
@@ -131,14 +131,14 @@ class HorarioConsultorio extends Model
 
                 // Consultar el consultorio asignado a este rol en los horarios
                 $horario = self::with('consultorio')
-                    ->where('id_rol_usuario', $ru->id)
+                    ->where('id_rol_usuario', $ru->id_usr)
                     ->where('activo', true)
                     ->first();
 
                 return (object) [
-                    'per_id'      => $persona?->per_id ?? $persona?->id, // ID necesario para la validación
-                    'id_usuario'      => $ru->usuario?->id,
-                    'id_rol_usuario'  => $ru->id,
+                    'per_id'      => $persona?->id_per, // ID necesario para la validación
+                    'id_use'      => $ru->usuario?->id_use,
+                    'id_rol_usuario'  => $ru->id_usr,
                     'nombre_completo' => $ru->nombre_completo,
                     'nombre_rol'      => $ru->nombre_rol,
                     'consultorio_id'     => $horario?->consultorio_id ?? '',

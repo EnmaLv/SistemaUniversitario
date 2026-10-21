@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('publicaciones', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('psicologo_id')->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('psicologo_id')->constrained('user', 'id_use')->onDelete('cascade');
             $table->string('titulo');
             $table->text('contenido');
             $table->string('tipo')->default('texto');

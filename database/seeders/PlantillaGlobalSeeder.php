@@ -9,11 +9,11 @@ class PlantillaGlobalSeeder extends Seeder
 {
     public function run(): void
     {
-        $psicologos = DB::table('usuario')
-            ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
-            ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
-            ->where('rol.slug', 'psicologo')
-            ->select('usuario.id_usuario')
+        $psicologos = DB::table('user')
+            ->join('usuario_rol', 'user.id_use', '=', 'usuario_rol.use_id')
+            ->join('rol', 'usuario_rol.rol_id', '=', 'rol.id_rol')
+            ->where('rol.slug_rol', 'psicologo')
+            ->select('user.id_use')
             ->distinct()
             ->get();
 
@@ -41,7 +41,7 @@ class PlantillaGlobalSeeder extends Seeder
         ];
 
         foreach ($psicologos as $psicologo) {
-            $userId = $psicologo->id_usuario;
+            $userId = $psicologo->id_use;
 
             $plantilla = DB::table('historia_plantillas_globales')
                 ->where('psicologo_id', $userId)

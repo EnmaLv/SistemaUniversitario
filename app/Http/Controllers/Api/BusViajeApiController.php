@@ -22,7 +22,7 @@ class BusViajeApiController extends Controller
 
     public function registrarGps(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ($viaje->conductor_id !== $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para registrar GPS en este viaje.',
@@ -95,7 +95,7 @@ class BusViajeApiController extends Controller
     {
         $usuario = $request->user();
 
-        $viaje = BusViaje::delConductor($usuario->id_usuario)
+        $viaje = BusViaje::delConductor($usuario->id_use)
             ->whereIn('estado', ['programado', 'en_curso'])
             ->with([
                 'vehiculo.tipoCombustible',
@@ -119,7 +119,7 @@ class BusViajeApiController extends Controller
 
     public function iniciar(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ($viaje->conductor_id !== $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para iniciar este viaje.',
@@ -184,7 +184,7 @@ class BusViajeApiController extends Controller
 
     public function finalizar(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ($viaje->conductor_id !== $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para finalizar este viaje.',
@@ -251,7 +251,7 @@ class BusViajeApiController extends Controller
 
     public function cancelar(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ($viaje->conductor_id !== $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para cancelar este viaje.',
@@ -294,7 +294,7 @@ class BusViajeApiController extends Controller
 
     public function historial(Request $request): JsonResponse
     {
-        $viajes = BusViaje::delConductor($request->user()->id_usuario)
+        $viajes = BusViaje::delConductor($request->user()->id_use)
             ->where('estado', 'finalizado')
             ->with([
                 'vehiculo',
@@ -323,7 +323,7 @@ class BusViajeApiController extends Controller
                 'busRuta',
                 'conductor',
             ])
-            ->orderByRaw("FIELD(estado, 'en_curso', 'programado')")
+            ->orderByRaw("CASE WHEN estado = 'en_curso' THEN 0 ELSE 1 END")
             ->orderBy('created_at', 'asc')
             ->get();
 

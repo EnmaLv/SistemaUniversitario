@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('horario_consultorios', function (Blueprint $table) {
             $table->id();
             $table->foreignId('consultorio_id')->constrained('consultorios', 'id')->onDelete('cascade');
-            $table->foreignId('id_rol_usuario')->constrained('rol_usuario', 'id')->onDelete('cascade');
+            $table->foreignId('id_rol_usuario')->constrained('usuario_rol', 'id_usr')->onDelete('cascade');
             $table->string('dia');
             $table->time('hora_inicio');
             $table->time('hora_fin');

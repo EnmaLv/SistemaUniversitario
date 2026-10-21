@@ -62,7 +62,7 @@ class BusVehiculo extends Model
 
     public function conductor()
     {
-        return $this->belongsTo(\App\Models\Usuario::class, 'conductor_id', 'id_usuario');
+        return $this->belongsTo(\App\Models\Usuario::class, 'conductor_id', 'id_use');
     }
 
     public static function listarVehiculos($buscar = null, $estado = "todos", $activo = 1)

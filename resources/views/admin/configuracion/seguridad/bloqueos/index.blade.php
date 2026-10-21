@@ -56,15 +56,15 @@
                         <tbody class="fade-in">
                             @forelse ($usuarios as $usuario)
                                 @php
-                                    $permanente = (bool) $usuario->bloqueado;
-                                    $esPropio = (int) $usuario->id_usuario === (int) auth()->id();
+                                    $permanente = (bool) $usuario->bloqueado_use;
+                                    $esPropio = (int) $usuario->id_use === (int) auth()->id();
                                 @endphp
-                                <x-table-row :id="$usuario->id_usuario" class="border-b text-sm" style="border-color:var(--border-color);">
+                                <x-table-row :id="$usuario->id_use" class="border-b text-sm" style="border-color:var(--border-color);">
                                     <td class="px-6 py-4 text-center font-bold" style="color:var(--text-muted);">
                                         {{ ($usuarios->currentPage() - 1) * $usuarios->perPage() + $loop->iteration }}
                                     </td>
                                     <td class="px-6 py-4" style="color:var(--text-main);">
-                                        <span class="block font-bold">{{ $usuario->username }}</span>
+                                        <span class="block font-bold">{{ $usuario->username_use }}</span>
                                         <span class="block text-xs" style="color:var(--text-muted);">{{ $usuario->nombre_completo }}</span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
@@ -79,23 +79,23 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4" style="color:var(--text-main);">
-                                        {{ $motivos[$usuario->motivo_bloqueo] ?? ($usuario->motivo_bloqueo ?? '—') }}
+                                        {{ $motivos[$usuario->motivo_bloqueo_use] ?? ($usuario->motivo_bloqueo_use ?? '—') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap" style="color:var(--text-main);">
-                                        {{ $usuario->bloqueado_en?->format('d/m/Y H:i') ?? '—' }}
-                                        @if (! $permanente && $usuario->bloqueado_hasta)
-                                            <span class="block text-xs" style="color:var(--text-muted);">hasta {{ $usuario->bloqueado_hasta->format('d/m/Y H:i') }}</span>
+                                        {{ $usuario->bloqueado_en_use?->format('d/m/Y H:i') ?? '—' }}
+                                        @if (! $permanente && $usuario->bloqueado_hasta_use)
+                                            <span class="block text-xs" style="color:var(--text-muted);">hasta {{ $usuario->bloqueado_hasta_use->format('d/m/Y H:i') }}</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-center text-xs" style="color:var(--text-main);">
-                                        <span class="block" title="Contraseñas incorrectas seguidas">Contraseña: <strong>{{ $usuario->intentos_fallidos }}</strong></span>
-                                        <span class="block" title="Llaves maestras incorrectas seguidas">Llave: <strong>{{ $usuario->intentos_llave_fallidos }}</strong></span>
-                                        <span class="block" title="Bloqueos temporales en la ventana actual">Bloqueos: <strong>{{ $usuario->bloqueos_temporales }}</strong></span>
+                                        <span class="block" title="Contraseñas incorrectas seguidas">Contraseña: <strong>{{ $usuario->intentos_fallidos_use }}</strong></span>
+                                        <span class="block" title="Llaves maestras incorrectas seguidas">Llave: <strong>{{ $usuario->intentos_llave_fallidos_use }}</strong></span>
+                                        <span class="block" title="Bloqueos temporales en la ventana actual">Bloqueos: <strong>{{ $usuario->bloqueos_temporales_use }}</strong></span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-xs" style="color:var(--text-main);">
-                                        {{ $usuario->ultimo_login?->format('d/m/Y H:i') ?? 'Nunca' }}
-                                        @if ($usuario->ultimo_login_ip)
-                                            <span class="block" style="color:var(--text-muted);">{{ $usuario->ultimo_login_ip }}</span>
+                                        {{ $usuario->ultimo_login_use?->format('d/m/Y H:i') ?? 'Nunca' }}
+                                        @if ($usuario->ultimo_login_ip_use)
+                                            <span class="block" style="color:var(--text-muted);">{{ $usuario->ultimo_login_ip_use }}</span>
                                         @endif
                                     </td>
                                     @if ($esPropio)
@@ -105,9 +105,9 @@
                                             </span>
                                         </td>
                                     @else
-                                        <x-table-actions :id="$usuario->id_usuario" :show="false" :edit="false" :toggle="false">
+                                        <x-table-actions :id="$usuario->id_use" :show="false" :edit="false" :toggle="false">
                                             @canAction('seguridad_bloqueos', 'activar')
-                                                <form action="{{ route('admin.configuracion.seguridad.bloqueos.desbloquear', $usuario->id_usuario) }}" method="POST" class="inline form-desbloquear" data-usuario="{{ $usuario->username }}">
+                                                <form action="{{ route('admin.configuracion.seguridad.bloqueos.desbloquear', $usuario->id_use) }}" method="POST" class="inline form-desbloquear" data-usuario="{{ $usuario->username_use }}">
                                                     @csrf
                                                     @method('PUT')
                                                     <button type="submit" onclick="event.stopPropagation()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors" title="Desbloquear">

@@ -14,7 +14,7 @@ class GrupoHorario
 
     public static function obtenerUsuario($userId)
     {
-        return DB::table('usuario')->where('id_usuario', $userId)->first();
+        return DB::table('user')->where('id_use', $userId)->first();
     }
 
     public static function obtenerHorarios($grupoId)

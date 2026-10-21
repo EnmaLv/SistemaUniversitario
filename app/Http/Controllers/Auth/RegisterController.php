@@ -65,10 +65,10 @@ class RegisterController extends Controller
     private function adminExists()
     {
         try {
-            $adminRol = Rol::where('nombre', 'Administrador')->first();
+            $adminRol = Rol::where('nombre_rol', 'Administrador')->first();
             $adminCount = $adminRol ? $adminRol->usuarios()->count() : 0;
         } catch (\Throwable $e) {
-            $adminCount = Usuario::join('perfil', 'usuario.id_perfil', '=', 'perfil.id_perfil')
+            $adminCount = Usuario::join('perfil', 'user.id_perfil', '=', 'perfil.id_perfil')
                 ->where('perfil.nombre_perfil', 'Administrador')
                 ->count();
         }
@@ -99,30 +99,30 @@ class RegisterController extends Controller
             'first_lastname' => ['required', 'string', 'max:255'],
             'cedula' => ['required', 'digits_between:1,8', 'unique:persona,cedula_per'],
             'telefono' => ['nullable', 'regex:/^\d{4}-\d{7}$/'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:usuario,username', 'unique:persona,correo_per'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:user,username_use', 'unique:persona,correo_per'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'security_questions' => ['required', 'array', 'size:2'],
-            'security_questions.*.question' => ['required', 'string'],
-            'security_questions.*.answer' => ['required', 'string'],
+            'security_questions_use' => ['required', 'array', 'size:2'],
+            'security_questions_use.*.question' => ['required', 'string'],
+            'security_questions_use.*.answer' => ['required', 'string'],
         ];
 
         if (!$this->adminExists()) {
-            $rules['master_key'] = ['required', 'string', 'min:6'];
+            $rules['master_key_use'] = ['required', 'string', 'min:6'];
         } else {
             $rules['id_rol'] = ['required', 'exists:rol,id_rol'];
 
             $selectedRol = Rol::find($data['id_rol'] ?? null);
-            if ($selectedRol && strtolower($selectedRol->nombre) === 'administrador') {
-                $rules['master_key'] = ['required', 'string', 'min:6'];
+            if ($selectedRol && strtolower($selectedRol->nombre_rol) === 'administrador') {
+                $rules['master_key_use'] = ['required', 'string', 'min:6'];
             } else {
-                $rules['master_key'] = ['nullable'];
+                $rules['master_key_use'] = ['nullable'];
             }
         }
 
         return Validator::make($data, $rules, [
             'cedula.unique' => 'La cédula de identidad ya se encuentra registrada en el sistema.',
             'email.unique' => 'El correo electrónico ya está siendo utilizado por otro usuario.',
-            'master_key.required' => 'La Llave Maestra es obligatoria para registrar perfiles de Administrador.',
+            'master_key_use.required' => 'La Llave Maestra es obligatoria para registrar perfiles de Administrador.',
         ]);
     }
 
@@ -144,7 +144,7 @@ class RegisterController extends Controller
         $userData = [
             'username' => $data['email'],
             'password' => $data['password'],
-            'master_key' => $data['master_key'] ?? null,
+            'master_key_use' => $data['master_key_use'] ?? null,
         ];
 
         if (!empty($data['telefono'])) {
@@ -155,13 +155,13 @@ class RegisterController extends Controller
         $usuario = $authService->register($personaData, $userData);
 
         try {
-            $adminRol = Rol::where('nombre', 'Administrador')->first();
+            $adminRol = Rol::where('nombre_rol', 'Administrador')->first();
             $adminCount = $adminRol ? $adminRol->usuarios()->count() : 0;
 
             if ($adminCount === 0) {
                 $assignRol = Rol::firstOrCreate(
-                    ['nombre' => 'Administrador'],
-                    ['descripcion' => 'Rol por defecto Administrador', 'slug' => 'administrador']
+                    ['nombre_rol' => 'Administrador'],
+                    ['descripcion_rol' => 'Rol por defecto Administrador', 'slug_rol' => 'administrador']
                 );
             } else {
                 $assignRol = Rol::find($data['id_rol']);
@@ -171,9 +171,9 @@ class RegisterController extends Controller
                 CambiosPermisos::rolesUsuario($usuario, $usuario->roles()->sync([$assignRol->id_rol]), 'roles_usuario_registro');
             }
 
-            if ($assignRol && $assignRol->nombre === 'Administrador' && !empty($data['master_key'])) {
+            if ($assignRol && $assignRol->nombre_rol === 'Administrador' && !empty($data['master_key_use'])) {
                 try {
-                    ConfiguracionSistema::updateMasterKey($data['master_key']);
+                    ConfiguracionSistema::updateMasterKey($data['master_key_use']);
                 } catch (\Throwable $ex) {
                 }
             }
@@ -181,13 +181,13 @@ class RegisterController extends Controller
             throw $e;
         }
 
-        if (!empty($data['master_key'])) {
-            $usuario->master_key = $data['master_key'];
+        if (!empty($data['master_key_use'])) {
+            $usuario->master_key_use = $data['master_key_use'];
         }
 
-        if (!empty($data['security_questions']) && is_array($data['security_questions'])) {
+        if (!empty($data['security_questions_use']) && is_array($data['security_questions_use'])) {
             $sq = [];
-            foreach ($data['security_questions'] as $qa) {
+            foreach ($data['security_questions_use'] as $qa) {
                 if (!empty($qa['question']) && !empty($qa['answer'])) {
                     $sq[] = [
                         'question' => $qa['question'],
@@ -196,7 +196,7 @@ class RegisterController extends Controller
                 }
             }
             if (!empty($sq)) {
-                $usuario->security_questions = $sq;
+                $usuario->security_questions_use = $sq;
             }
         }
 

@@ -36,7 +36,7 @@ class Compra extends Model
 
     public function modulo()
     {
-        return $this->belongsTo(Modulo::class);
+        return $this->belongsTo(Modulo::class, 'modulo_id', 'id_mod');
     }
 
     public function detalleCompras()
@@ -53,10 +53,11 @@ class Compra extends Model
                 ->orderBy('nombre')
                 ->get(),
 
-            'modulos' => DB::table('modulos')
-                ->select('id', 'nombre')
-                ->where('activo', 1)
-                ->orderBy('nombre')
+            'modulos' => DB::table('modulo')
+                ->select('id_mod', 'nombre_mod')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->orderBy('nombre_mod')
                 ->get(),
 
             'productos' => DB::table('productos')

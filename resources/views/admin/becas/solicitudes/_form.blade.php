@@ -112,8 +112,8 @@
                                             Seleccione al estudiante...
                                         </option>
                                         @foreach ($estudiantes as $est)
-                                            <option value="{{ $est->per_id }}"
-                                                @selected(old('per_id') == $est->per_id)>
+                                            <option value="{{ $est->id_per }}"
+                                                @selected(old('per_id') == $est->id_per)>
                                                 {{ $est->nombres_per }} {{ $est->apellidos_per }}
                                                 — {{ $est->cedula_per }}
                                             </option>

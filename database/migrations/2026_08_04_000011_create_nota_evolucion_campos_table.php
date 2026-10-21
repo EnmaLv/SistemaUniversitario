@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('nota_evolucion_campos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('psicologo_id')->nullable()->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('psicologo_id')->nullable()->constrained('user', 'id_use')->onDelete('cascade');
             $table->string('titulo');
             $table->tinyInteger('status')->default(1);
             $table->timestamps();

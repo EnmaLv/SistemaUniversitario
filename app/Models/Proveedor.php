@@ -133,7 +133,7 @@ class Proveedor extends Model
             ->first();
 
         if ($proveedor) {
-            $proveedor->compras = DB::table('compras')
+            $proveedor->compras = \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sed_id')
                 ->where('proveedor_id', $id)
                 ->orderBy('fecha', 'desc')
                 ->get();

@@ -7,7 +7,7 @@ class PlantillaSeccion
 {
     public static function obtenerPsicologo($psicologoId)
     {
-        return DB::table('usuario')->where('id_usuario', $psicologoId)->first();
+        return DB::table('user')->where('id_use', $psicologoId)->first();
     }
 
     public static function obtenerPorPsicologo($psicologoId)

@@ -254,7 +254,7 @@ class SolicitudBecaController extends Controller
         ]);
 
         try {
-            $verificadorId = Auth::user()->id_usuario;
+            $verificadorId = Auth::user()->id_use;
             $this->solicitudService->verificarSolicitud(
                 $id, 
                 intval($request->estado), 

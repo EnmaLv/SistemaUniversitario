@@ -82,7 +82,7 @@ class SolicitudBeca extends Model
 
     public function verificador()
     {
-        return $this->belongsTo(Usuario::class, 'verificado_por', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'verificado_por', 'id_use');
     }
 
     public function documento()

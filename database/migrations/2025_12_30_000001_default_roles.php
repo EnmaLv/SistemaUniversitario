@@ -25,27 +25,27 @@ return new class extends Migration
             return;
         }
 
-        $hasSlug = Schema::hasColumn('rol', 'slug');
+        $hasSlug = Schema::hasColumn('rol', 'slug_rol');
 
         foreach (self::ROLES as $nombre => [$descripcion, $slug]) {
             $datos = [
-                'descripcion' => $descripcion,
+                'descripcion_rol' => $descripcion,
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ];
 
             if ($hasSlug) {
-                $datos['slug'] = $slug;
+                $datos['slug_rol'] = $slug;
             }
 
-            DB::table('rol')->updateOrInsert(['nombre' => $nombre], $datos);
+            DB::table('rol')->updateOrInsert(['nombre_rol' => $nombre], $datos);
         }
     }
 
     public function down()
     {
         if (Schema::hasTable('rol')) {
-            DB::table('rol')->whereIn('nombre', array_keys(self::ROLES))->delete();
+            DB::table('rol')->whereIn('nombre_rol', array_keys(self::ROLES))->delete();
         }
     }
 };

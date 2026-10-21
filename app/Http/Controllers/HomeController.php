@@ -46,7 +46,7 @@ class HomeController extends Controller
         $user = Usuario::query()->findOrFail(Auth::id());
         $user->load(['persona', 'roles']);
         Auth::guard()->setUser($user);
-        $userId = $user->id_usuario;
+        $userId = $user->id_use;
 
         (new \App\AdminLTE\Filters\ModuleFilter())->asegurarSesion($userId);
 
@@ -265,15 +265,15 @@ class HomeController extends Controller
 
         $roles = $user->roles;
         $privilegedRole = $roles->first(function ($role) {
-            return in_array(mb_strtolower($role->nombre ?? ''), ['administrador', 'secretaria de bienestar'], true);
+            return in_array(mb_strtolower($role->nombre_rol ?? ''), ['administrador', 'secretaria de bienestar'], true);
         });
 
-        return $privilegedRole?->nombre ?? $roles->first()?->nombre;
+        return $privilegedRole?->nombre_rol ?? $roles->first()?->nombre_rol;
     }
 
     protected function construirModulosVisibles(?string $roleName): array
     {
-        $rol             = $roleName ? Rol::where('nombre', $roleName)->first() : null;
+        $rol             = $roleName ? Rol::where('nombre_rol', $roleName)->first() : null;
         $menuPermissions = $rol?->menu_permissions ?? [];
         $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
         $isSecretaria    = $roleName && strtolower($roleName) === 'secretaria de bienestar';

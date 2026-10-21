@@ -110,7 +110,7 @@ class Consulta extends Model
 
     public function medico(): BelongsTo
     {
-        return $this->belongsTo(Persona::class, 'medico_id', 'per_id');
+        return $this->belongsTo(Persona::class, 'medico_id', 'id_per');
     }
 
     public function consultorio(): BelongsTo
@@ -125,7 +125,7 @@ class Consulta extends Model
 
     public function creadoPor(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'creado_por', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'creado_por', 'id_use');
     }
 
     public function receta(): HasOne

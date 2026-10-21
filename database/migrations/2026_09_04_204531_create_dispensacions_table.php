@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('cantidad', 14, 2);
             $table->foreignId('unidad_id')->constrained('unidades', 'id')->onDelete('cascade');
             $table->foreignId('sed_id')->constrained('sede', 'id_sed')->onDelete('cascade');
-            $table->foreignId('usuario_id')->constrained('usuario', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('usuario_id')->constrained('user', 'id_use')->onDelete('cascade');
             $table->date('fecha');
             $table->text('observaciones')->nullable();
             $table->timestamps();

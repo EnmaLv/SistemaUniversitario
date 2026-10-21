@@ -389,7 +389,7 @@ class RegistroPersona extends Component
             $this->sede = DB::table('sede')->get();
             $this->semestreId = $persona->semestre_per;
             $this->showPnf = true;
-            $this->pnfId = $personaPnf->prg_id;
+            $this->pnfId = $personaPnf?->prg_id;
             $this->sedeId = $persona->sed_id;
 
             if (!$direccion) {

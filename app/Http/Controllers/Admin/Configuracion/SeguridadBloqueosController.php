@@ -31,20 +31,20 @@ class SeguridadBloqueosController extends Controller
         $usuarios = Usuario::with('persona')
             ->where(function ($q) use ($tipo) {
                 if ($tipo !== 'temporal') {
-                    $q->orWhere('bloqueado', true);
+                    $q->orWhere('bloqueado_use', true);
                 }
                 if ($tipo !== 'permanente') {
-                    $q->orWhere(fn ($sub) => $sub->where('bloqueado', false)->where('bloqueado_hasta', '>', now()));
+                    $q->orWhere(fn ($sub) => $sub->where('bloqueado_use', false)->where('bloqueado_hasta_use', '>', now()));
                 }
             })
             ->when($busqueda !== '', function ($q) use ($busqueda) {
                 $q->where(function ($sub) use ($busqueda) {
-                    $sub->where('username', 'like', "%{$busqueda}%")
+                    $sub->where('username_use', 'like', "%{$busqueda}%")
                         ->orWhereHas('persona', fn ($p) => $p->where('nombres_per', 'like', "%{$busqueda}%")
                             ->orWhere('apellidos_per', 'like', "%{$busqueda}%"));
                 });
             })
-            ->orderByDesc('bloqueado_en')
+            ->orderByDesc('bloqueado_en_use')
             ->paginate(10)
             ->withQueryString();
 
@@ -58,13 +58,13 @@ class SeguridadBloqueosController extends Controller
         $usuario = Usuario::findOrFail($id);
         $responsable = $request->user();
 
-        if ((int) $usuario->id_usuario === (int) $responsable->id_usuario) {
+        if ((int) $usuario->id_use === (int) $responsable->id_use) {
             return redirect()
                 ->route('admin.configuracion.seguridad.bloqueos.index')
                 ->with('error', 'No puedes desbloquear tu propia cuenta. Pide a otro administrador que lo haga.');
         }
 
-        if (! Bloqueos::estaBloqueado($usuario) && (int) $usuario->bloqueos_temporales === 0 && (int) $usuario->intentos_fallidos === 0) {
+        if (! Bloqueos::estaBloqueado($usuario) && (int) $usuario->bloqueos_temporales_use === 0 && (int) $usuario->intentos_fallidos_use === 0) {
             return redirect()
                 ->route('admin.configuracion.seguridad.bloqueos.index')
                 ->with('info', 'El usuario no tiene bloqueos activos.');
@@ -74,6 +74,6 @@ class SeguridadBloqueosController extends Controller
 
         return redirect()
             ->route('admin.configuracion.seguridad.bloqueos.index')
-            ->with('success', "Usuario {$usuario->username} desbloqueado exitosamente.");
+            ->with('success', "Usuario {$usuario->username_use} desbloqueado exitosamente.");
     }
 }

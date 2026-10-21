@@ -67,7 +67,7 @@ class BusViaje extends Model
 
     public function conductor()
     {
-        return $this->belongsTo(Usuario::class, 'conductor_id', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'conductor_id', 'id_use');
     }
 
     public function cargasCombustible()

@@ -2,45 +2,48 @@
 
 namespace App\Models;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Permiso extends Model
 {
+    use RegistraAutoria;
+    use SoftDeletes;
+
     protected $table = 'permiso';
 
-    protected $fillable = [
-        'key',
-        'nombre',
-        'descripcion',
-        'accion',
-        'vista_id',
-        'modulo_id',
-        'activo',
-    ];
+    protected $primaryKey = 'id_pmi';
 
-    protected $casts = [
-        'activo' => 'boolean',
+    protected $fillable = [
+        'nombre_pmi',
+        'etiqueta_pmi',
+        'descripcion_pmi',
+        'accion_pmi',
+        'vis_id',
+        'mod_id',
+        'status_id',
     ];
 
     public function vista()
     {
-        return $this->belongsTo(Vista::class, 'vista_id');
+        return $this->belongsTo(Vista::class, 'vis_id', 'id_vis');
     }
 
     public function modulo()
     {
-        return $this->belongsTo(Modulo::class, 'modulo_id');
+        return $this->belongsTo(Modulo::class, 'mod_id', 'id_mod');
     }
 
     public function roles()
     {
-        return $this->belongsToMany(Rol::class, 'rol_permiso', 'permiso_id', 'rol_id')->withTimestamps();
+        return $this->belongsToMany(Rol::class, 'rol_permiso', 'pmi_id', 'rol_id')->withTimestamps();
     }
 
     public function usuarios()
     {
-        return $this->belongsToMany(Usuario::class, 'usuario_permiso', 'permiso_id', 'usuario_id')
-            ->withPivot(['tipo', 'fecha_inicio', 'fecha_fin', 'asignado_por'])
+        return $this->belongsToMany(Usuario::class, 'usuario_permiso', 'pmi_id', 'use_id')
+            ->withPivot(['tipo_usp', 'fecha_inicio_usp', 'fecha_fin_usp', 'asignado_por_use_id'])
             ->withTimestamps();
     }
 }

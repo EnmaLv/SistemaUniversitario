@@ -24,7 +24,7 @@ class ConfiguracionSistema extends Model
 
     public static function checkMasterKey(string $candidate): bool
     {
-        $row = self::getParametro('master_key');
+        $row = self::getParametro('master_key_use');
         if (!$row) return false;
         return Hash::check($candidate, $row->valor_csi);
     }
@@ -32,6 +32,6 @@ class ConfiguracionSistema extends Model
     public static function updateMasterKey(string $newKey): void
     {
         $hash = Hash::make($newKey);
-        $row = self::updateOrCreate(['clave_csi' => 'master_key'], ['valor_csi' => $hash]);
+        $row = self::updateOrCreate(['clave_csi' => 'master_key_use'], ['valor_csi' => $hash]);
     }
 }

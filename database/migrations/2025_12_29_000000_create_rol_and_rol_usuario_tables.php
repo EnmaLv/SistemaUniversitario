@@ -10,28 +10,30 @@ return new class extends Migration
     {
         Schema::create('rol', function (Blueprint $table) {
             $table->id('id_rol');
-            $table->string('nombre')->unique();
-            $table->string('slug')->nullable()->unique();
-            $table->text('descripcion')->nullable();
+            $table->string('nombre_rol')->unique();
+            $table->string('slug_rol')->nullable()->unique();
+            $table->text('descripcion_rol')->nullable();
+            $table->foreignId('dep_id')->nullable()->constrained('departamento', 'id_dep');
             $table->timestamps();
-            $table->softDeletes();
+            $table->auditoria();
         });
 
-        Schema::create('rol_usuario', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('id_rol');
-            $table->unsignedBigInteger('id_usuario');
+        Schema::create('usuario_rol', function (Blueprint $table) {
+            $table->id('id_usr');
+            $table->unsignedBigInteger('rol_id');
+            $table->unsignedBigInteger('use_id');
             $table->timestamps();
+            $table->auditoria();
 
-            $table->foreign('id_rol')->references('id_rol')->on('rol')->onDelete('cascade');
-            $table->foreign('id_usuario')->references('id_usuario')->on('usuario')->onDelete('cascade');
-            $table->unique(['id_rol', 'id_usuario']);
+            $table->foreign('rol_id')->references('id_rol')->on('rol')->onDelete('cascade');
+            $table->foreign('use_id')->references('id_use')->on('user')->onDelete('cascade');
+            $table->unique(['rol_id', 'use_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('rol_usuario');
+        Schema::dropIfExists('usuario_rol');
         Schema::dropIfExists('rol');
     }
 };

@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
             if (Auth::check()) {
                 $user = Auth::user();
                 return (new \App\AdminLTE\Filters\ModuleFilter())
-                    ->resolveInitialRoute($user->id_usuario ?? $user->id);
+                    ->resolveInitialRoute($user->id_use ?? $user->id);
             }
             return '/';
         });

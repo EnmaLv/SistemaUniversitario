@@ -24,7 +24,7 @@ return new class extends Migration
             $table->date('proxima_fecha')->nullable();
             $table->enum('estado', ['pendiente', 'en_proceso', 'completado'])->default('pendiente');
             $table->unsignedBigInteger('usuario_registro_id')->nullable();
-            $table->foreign('usuario_registro_id')->references('id_usuario')->on('usuario')->nullOnDelete();
+            $table->foreign('usuario_registro_id')->references('id_use')->on('user')->nullOnDelete();
             $table->timestamps();
         });
     }

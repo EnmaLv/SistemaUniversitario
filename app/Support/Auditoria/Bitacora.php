@@ -51,7 +51,7 @@ class Bitacora
                 'tabla_afectada'    => $tablaAfectada,
                 'registro_id'       => $registroId,
                 'usuario_id'        => $usuario?->getKey(),
-                'nombre_usuario'    => Str::limit($nombreUsuario ?? $usuario?->username ?? '', 255, '') ?: null,
+                'nombre_usuario'    => Str::limit($nombreUsuario ?? $usuario?->username_use ?? '', 255, '') ?: null,
                 'datos_anteriores'  => DatosSensibles::limpiar($datosAnteriores),
                 'datos_modificados' => DatosSensibles::limpiar($datosModificados),
                 'ip_address'        => $request?->ip(),

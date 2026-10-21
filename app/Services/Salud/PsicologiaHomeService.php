@@ -25,8 +25,8 @@ class PsicologiaHomeService
         $estadoAnimoHoy = EstadoAnimoDiario::getTodayForUser($userId);
 
         $proximaCita = DB::table('citas')
-            ->join('usuario', 'citas.psicologo_id', '=', 'usuario.id_usuario')
-            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
+            ->join('user', 'citas.psicologo_id', '=', 'user.id_use')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
             ->select('citas.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
             ->where('citas.user_id', $userId)
             ->where('citas.estado', 'confirmada')
@@ -45,8 +45,8 @@ class PsicologiaHomeService
         }
 
         $citaPendiente = DB::table('citas')
-            ->join('usuario', 'citas.psicologo_id', '=', 'usuario.id_usuario')
-            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
+            ->join('user', 'citas.psicologo_id', '=', 'user.id_use')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
             ->select('citas.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
             ->where('citas.user_id', $userId)
             ->where('citas.estado', 'pendiente')

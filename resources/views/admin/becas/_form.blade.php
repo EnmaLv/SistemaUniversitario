@@ -113,7 +113,7 @@
                     <input type="hidden" name="tutores[{{ $index }}][rol_id]" value="{{ $tutorRow['rol_id'] ?? '' }}">
                     <input type="hidden" name="tutores[{{ $index }}][tutor_id]" value="{{ $tutorRow['tutor_id'] ?? '' }}">
                     <input type="hidden" name="tutores[{{ $index }}][descripcion]" value="{{ $tutorRow['descripcion'] ?? '' }}">
-                    <td>{{ optional($roles->firstWhere('id_rol', $tutorRow['rol_id']))->nombre ?? 'Sin rol' }}</td>
+                    <td>{{ optional($roles->firstWhere('id_rol', $tutorRow['rol_id']))->nombre_rol ?? 'Sin rol' }}</td>
                     <td>{{ optional($tutores->firstWhere('per_id', $tutorRow['tutor_id'])) ? trim(optional($tutores->firstWhere('per_id', $tutorRow['tutor_id']))->nombres_per . ' ' . optional($tutores->firstWhere('per_id', $tutorRow['tutor_id']))->apellidos_per) : 'Sin tutor' }}</td>
                     <td>{{ $tutorRow['descripcion'] ?? '' }}</td>
                     <td class="text-center">
@@ -146,7 +146,7 @@
                             <select id="tutorRoleSelect" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input">
                                 <option value="">Seleccione rol</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->id_rol }}">{{ $role->nombre }}</option>
+                                    <option value="{{ $role->id_rol }}">{{ $role->nombre_rol }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -175,7 +175,7 @@
 
 @php
     $tutorJsRoles = $roles->map(function ($role) {
-        return ['id' => $role->id_rol, 'name' => $role->nombre];
+        return ['id' => $role->id_rol, 'name' => $role->nombre_rol];
     })->toArray();
 
     $tutorJsPersonas = $tutores->map(function ($tutor) {

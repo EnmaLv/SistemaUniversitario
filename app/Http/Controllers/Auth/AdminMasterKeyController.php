@@ -24,7 +24,7 @@ class AdminMasterKeyController extends Controller
     public function verify(Request $request)
     {
         $request->validate([
-            'master_key' => ['required', 'string'],
+            'master_key_use' => ['required', 'string'],
         ]);
 
         $id = session('pending_admin_id');
@@ -43,9 +43,9 @@ class AdminMasterKeyController extends Controller
             return redirect()->route('login')->withErrors(['email' => Bloqueos::mensaje($estado)]);
         }
 
-        if ($user->verifyMasterKey($request->input('master_key'))) {
+        if ($user->verifyMasterKey($request->input('master_key_use'))) {
             session()->forget('pending_admin_id');
-            Auth::loginUsingId($user->id_usuario ?? $user->id);
+            Auth::loginUsingId($user->id_use ?? $user->id);
             $request->session()->regenerate();
             session(['ultima_actividad' => time()]);
 
@@ -55,7 +55,7 @@ class AdminMasterKeyController extends Controller
             Bitacora::registrar(accion: 'llave_maestra_correcta', modulo: 'autenticacion', observacion: 'Inicio de sesión de administrador', usuario: $user);
             Bitacora::registrar(accion: 'login_exitoso', modulo: 'autenticacion', usuario: $user);
 
-            $destino = (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($user->id_usuario ?? $user->id);
+            $destino = (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($user->id_use ?? $user->id);
             return redirect()->intended($destino);
         }
 
@@ -63,7 +63,7 @@ class AdminMasterKeyController extends Controller
             accion: 'llave_maestra_incorrecta',
             modulo: 'autenticacion',
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
-            observacion: sprintf('Inicio de sesión de administrador. Intento %d de %d', (int) $user->intentos_llave_fallidos + 1, (int) config('seguridad.max_intentos_llave', 3)),
+            observacion: sprintf('Inicio de sesión de administrador. Intento %d de %d', (int) $user->intentos_llave_fallidos_use + 1, (int) config('seguridad.max_intentos_llave', 3)),
             usuario: $user,
         );
 
@@ -72,7 +72,7 @@ class AdminMasterKeyController extends Controller
             return redirect()->route('login')->withErrors(['email' => Bloqueos::mensaje($estado)]);
         }
 
-        return back()->withErrors(['master_key' => 'Llave maestra incorrecta.']);
+        return back()->withErrors(['master_key_use' => 'Llave maestra incorrecta.']);
     }
 
     private function descartarSesion(Request $request): void

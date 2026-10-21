@@ -11,10 +11,10 @@ return new class extends Migration
     public function up(): void
     {
         $rolTieneJson     = Schema::hasColumn('rol', 'menu_permissions');
-        $usuarioTieneJson = Schema::hasColumn('usuario', 'extra_permissions');
+        $usuarioTieneJson = Schema::hasColumn('user', 'extra_permissions');
 
         $roles    = $rolTieneJson ? DB::table('rol')->whereNull('deleted_at')->get(['id_rol', 'menu_permissions']) : collect();
-        $usuarios = $usuarioTieneJson ? DB::table('usuario')->whereNotNull('extra_permissions')->get(['id_usuario', 'extra_permissions']) : collect();
+        $usuarios = $usuarioTieneJson ? DB::table('user')->whereNotNull('extra_permissions')->get(['id_use', 'extra_permissions']) : collect();
 
         $clavesRol = [];
         foreach ($roles as $rol) {
@@ -24,7 +24,7 @@ return new class extends Migration
         $extrasUsuario = [];
         foreach ($usuarios as $usuario) {
             $extra = $this->decodificar($usuario->extra_permissions);
-            $extrasUsuario[$usuario->id_usuario] = [
+            $extrasUsuario[$usuario->id_use] = [
                 'allow'   => array_values(array_filter((array) ($extra['allow'] ?? []), 'is_string')),
                 'deny'    => array_values(array_filter((array) ($extra['deny'] ?? []), 'is_string')),
                 'modulos' => array_values(array_map('intval', (array) ($extra['modulos'] ?? []))),
@@ -42,10 +42,10 @@ return new class extends Migration
         SincronizadorPermisos::sincronizar($todasLasClaves);
 
         $permisosPorVista = DB::table('permiso')
-            ->join('vista', 'vista.id', '=', 'permiso.vista_id')
-            ->get(['vista.key as vista_key', 'permiso.id'])
+            ->join('vista', 'vista.id_vis', '=', 'permiso.vis_id')
+            ->get(['vista.key_vis as vista_key', 'permiso.id_pmi'])
             ->groupBy('vista_key')
-            ->map(fn ($filas) => $filas->pluck('id')->all())
+            ->map(fn ($filas) => $filas->pluck('id_pmi')->all())
             ->all();
 
         $ahora = now();
@@ -57,7 +57,7 @@ return new class extends Migration
                     foreach ($permisosPorVista[$clave] ?? [] as $permisoId) {
                         $filas[$permisoId] = [
                             'rol_id'     => $rolId,
-                            'permiso_id' => $permisoId,
+                            'pmi_id'     => $permisoId,
                             'created_at' => $ahora,
                             'updated_at' => $ahora,
                         ];
@@ -68,7 +68,7 @@ return new class extends Migration
                 }
             }
 
-            $modulosValidos = DB::table('modulos')->pluck('id')->all();
+            $modulosValidos = DB::table('modulo')->pluck('id_mod')->all();
 
             foreach ($extrasUsuario as $usuarioId => $extra) {
                 $filas = [];
@@ -88,9 +88,9 @@ return new class extends Migration
                 $insertar = [];
                 foreach ($filas as $permisoId => $tipo) {
                     $insertar[] = [
-                        'usuario_id' => $usuarioId,
-                        'permiso_id' => $permisoId,
-                        'tipo'       => $tipo,
+                        'use_id'     => $usuarioId,
+                        'pmi_id'     => $permisoId,
+                        'tipo_usp'   => $tipo,
                         'created_at' => $ahora,
                         'updated_at' => $ahora,
                     ];
@@ -102,8 +102,8 @@ return new class extends Migration
                 $modulos = array_values(array_intersect($extra['modulos'], $modulosValidos));
                 if ($modulos) {
                     DB::table('usuario_modulo')->insertOrIgnore(array_map(fn ($moduloId) => [
-                        'usuario_id' => $usuarioId,
-                        'modulo_id'  => $moduloId,
+                        'use_id'     => $usuarioId,
+                        'mod_id'     => $moduloId,
                         'created_at' => $ahora,
                         'updated_at' => $ahora,
                     ], $modulos));

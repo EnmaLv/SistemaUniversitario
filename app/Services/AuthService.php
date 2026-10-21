@@ -35,18 +35,18 @@ class AuthService
             $usuario = new Usuario([
                 'per_id' => $persona->id_per,
                 'id_perfil'  => $perfilId,
-                'username'   => $userData['username'],
+                'username_use' => $userData['username'],
             ]);
-            $usuario->password = $userData['password'];
+            $usuario->password_use = $userData['password'];
 
             if ($isFirstUser) {
-                $usuario->master_key = ! empty($userData['master_key']) ? $userData['master_key'] : 'admin123';
+                $usuario->master_key_use = ! empty($userData['master_key_use']) ? $userData['master_key_use'] : 'admin123';
             }
 
             $usuario->save();
 
             if ($isFirstUser) {
-                $this->assignRol($usuario->id_usuario, $perfilNombre);
+                $this->assignRol($usuario->id_use, $perfilNombre);
             }
 
             return $usuario;
@@ -55,14 +55,14 @@ class AuthService
 
     private function assignRol(int $usuarioId, string $rolNombre): void
     {
-        $rol = DB::table('rol')->where('nombre', $rolNombre)->first();
+        $rol = DB::table('rol')->where('nombre_rol', $rolNombre)->first();
         
         if (!$rol) {
             return;
         }
 
-        DB::table('rol_usuario')->updateOrInsert(
-            ['id_usuario' => $usuarioId, 'id_rol' => $rol->id_rol],
+        DB::table('usuario_rol')->updateOrInsert(
+            ['use_id' => $usuarioId, 'rol_id' => $rol->id_rol],
             ['created_at' => now(), 'updated_at' => now()]
         );
     }
@@ -97,12 +97,12 @@ class AuthService
 
     public function validateCredentials(string $username, string $password): ?Usuario
     {
-        $usuario = Usuario::where('username', $username)->first();
+        $usuario = Usuario::where('username_use', $username)->first();
         if (!$usuario) {
             return null;
         }
 
-        if (!Hash::check($password, $usuario->getOriginal('password'))) {
+        if (!Hash::check($password, $usuario->getOriginal('password_use'))) {
             return null;
         }
 
@@ -112,7 +112,7 @@ class AuthService
     public function verifyMasterKeyForUsuario(Usuario $usuario, string $masterKey): bool
     {
         try {
-            $isAdmin = $usuario->roles()->where('nombre', 'Administrador')->exists();
+            $isAdmin = $usuario->roles()->where('nombre_rol', 'Administrador')->exists();
         } catch (\Throwable $e) {
             $perfil = $usuario->perfil()->first();
             $isAdmin = $perfil && $perfil->nombre_perfil === 'Administrador';
@@ -133,7 +133,7 @@ class AuthService
         }
 
         try {
-            $isAdmin = $usuario->roles()->where('nombre', 'Administrador')->exists();
+            $isAdmin = $usuario->roles()->where('nombre_rol', 'Administrador')->exists();
         } catch (\Throwable $e) {
             $perfil = $usuario->perfil()->first();
             $isAdmin = $perfil && $perfil->nombre_perfil === 'Administrador';

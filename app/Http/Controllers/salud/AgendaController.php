@@ -38,7 +38,7 @@ class AgendaController extends Controller
 
         $data['avances'] = DB::table('avances_sesion')->orderBy('nombre', 'asc')->get();
         $data['estados_animo'] = DB::table('estado_animos')->orderBy('valor', 'asc')->get();
-        $data['prioridades'] = Prioridad::obtenerParaPsicologo($user->id_usuario);
+        $data['prioridades'] = Prioridad::obtenerParaPsicologo($user->id_use);
 
         return view('admin.psicologia.maestros.agenda.index', $data);
     }
@@ -46,7 +46,7 @@ class AgendaController extends Controller
     public function pendingList(Request $request)
     {
         $user = $this->verificarAcceso();
-        $psicologoId = $user->id_usuario;
+        $psicologoId = $user->id_use;
 
         $prioridadFilter = $request->input('prioridad');
         $q = trim((string) $request->input('q', ''));
@@ -63,7 +63,7 @@ class AgendaController extends Controller
         $user = $this->verificarAcceso();
 
         $validated = $request->validate([
-            'paciente_id'   => 'required|exists:usuario,id_usuario',
+            'paciente_id'   => 'required|exists:user,id_use',
             'fecha'         => 'required|date_format:Y-m-d|after_or_equal:today',
             'hora'          => 'required|date_format:H:i',
             'bloque_inicio' => 'required|date_format:H:i',
@@ -93,7 +93,7 @@ class AgendaController extends Controller
         }
 
         $paciente = Usuario::find($pacienteId);
-        if (!$paciente || (int) $paciente->id_usuario === (int) $user->id_usuario || !$paciente->tieneRol('paciente')) {
+        if (!$paciente || (int) $paciente->id_use === (int) $user->id_use || !$paciente->tieneRol('paciente')) {
             return response()->json(['success' => false, 'message' => 'Paciente no válido.']);
         }
 
@@ -106,7 +106,7 @@ class AgendaController extends Controller
         $bloqueLabel = "{$diaSemana} {$bloqueInicio} - {$bloqueFin}";
 
         // Verificar que el bloque esté libre
-        $bloqueOcupado = Cita::where('psicologo_id', $user->id_usuario)
+        $bloqueOcupado = Cita::where('psicologo_id', $user->id_use)
             ->where('fecha', $fecha)
             ->whereIn('estado', ['confirmada', 'realizada'])
             ->whereNotNull('bloque_propuesto')
@@ -140,7 +140,7 @@ class AgendaController extends Controller
         // Crear directamente como CONFIRMADA con bloque asignado
         $cita = Cita::create([
             'user_id'          => $pacienteId,
-            'psicologo_id'     => $user->id_usuario,
+            'psicologo_id'     => $user->id_use,
             'fecha'            => $fecha,
             'hora'             => $hora,
             'estado'           => 'confirmada',
@@ -194,7 +194,7 @@ class AgendaController extends Controller
     public function dailyCitas(Request $request)
     {
         $user = $this->verificarAcceso();
-        $psicologoId = $user->id_usuario;
+        $psicologoId = $user->id_use;
         $fecha = $request->input('fecha');
 
         return response()->json(Cita::obtenerCitasDiariasJson($psicologoId, $fecha));
@@ -204,7 +204,7 @@ class AgendaController extends Controller
     {
         $user = $this->verificarAcceso();
 
-        $psicologoId = $user->id_usuario;
+        $psicologoId = $user->id_use;
 
         $fechaInicio = $request->input('start_date', Carbon::now()->subDays(30)->toDateString());
         $fechaFin = $request->input('end_date', Carbon::now()->toDateString());
@@ -292,7 +292,7 @@ class AgendaController extends Controller
 
         $user = $this->verificarAcceso();
 
-        $psicologoId = $user->id_usuario;
+        $psicologoId = $user->id_use;
         $psicologo = $user;
 
         $viewType = $request->input('view', 'week');

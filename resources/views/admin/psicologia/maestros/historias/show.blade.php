@@ -253,7 +253,7 @@
                         data-patient-perfil-academico="{{ $paciente->perfil_academico ?? 'Sin definir' }}"
                         data-patient-pnf="{{ $paciente->persona->pnf ?? 'No aplica' }}"
                         data-patient-semestre="{{ $paciente->persona->semestre_per ? $paciente->persona->semestre_per . '° Semestre' : 'No aplica' }}"
-                        data-patient-horario="{{ $paciente->horario_path ? asset('storage/' . $paciente->horario_path) : '' }}"
+                        data-patient-horario=""
                         data-patient-edad="{{ $edad }}"
                         data-patient-photo="{{ $hasPhoto ? route('media.profile_photos', basename($photoPath)) : '' }}"
                         title="Ver perfil completo">

@@ -214,14 +214,14 @@
 
         <form method="POST" action="{{ route('admin.master_key.verify') }}">
             @csrf
-            <label for="master_key">Llave maestra</label>
+            <label for="master_key_use">Llave maestra</label>
             <div class="input-group">
                 <span aria-hidden="true">
                     <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;">
                         <path d="M14.5 3a5.5 5.5 0 0 0-4.8 8.18L4 16.88V21h4.12l1.5-1.5H12V17h2.5l1.72-1.72A5.5 5.5 0 1 0 14.5 3Zm0 3a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/>
                     </svg>
                 </span>
-                <input id="master_key" name="master_key" type="password" placeholder="Introduce tu llave" required autofocus>
+                <input id="master_key_use" name="master_key_use" type="password" placeholder="Introduce tu llave" required autofocus>
                 <button class="toggle" type="button" id="toggleMasterKey" aria-label="Mostrar llave">
                     <span id="toggleIcon">◉</span>
                 </button>
@@ -237,7 +237,7 @@
 
     <script>
         document.getElementById('toggleMasterKey').addEventListener('click', function () {
-            const input = document.getElementById('master_key');
+            const input = document.getElementById('master_key_use');
             const icon = document.getElementById('toggleIcon');
             const visible = input.type === 'password';
             input.type = visible ? 'text' : 'password';

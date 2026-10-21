@@ -12,7 +12,7 @@ class BecaFormService
     {
         // obtener ids de roles asociados al módulo de beca
         $becaRoleIds = Rol::whereHas('modulos', function ($q) {
-            $q->where('key', 'beca');
+            $q->where('key_mod', 'beca');
         })->pluck('id_rol')->toArray();
 
         return [
@@ -29,7 +29,7 @@ class BecaFormService
                 }])
                 ->orderBy('nombres_per')
                 ->get(),
-            'roles' => Rol::orderBy('nombre')->get(),
+            'roles' => Rol::orderBy('nombre_rol')->get(),
             'estudiantes' => Persona::deSedeActiva()->where('status_id', 1)
                 ->whereHas('perfil', function ($query) {
                     $query->where('nombre_perfil', 'Estudiante');

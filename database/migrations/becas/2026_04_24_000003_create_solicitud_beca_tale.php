@@ -32,7 +32,7 @@ return new class extends Migration
             $table->text('comentario_verificador')->nullable()->comment('Razón en caso de rechazo');
             $table->foreignId('verificado_por')
                   ->nullable()
-                  ->constrained('usuario', 'id_usuario');
+                  ->constrained('user', 'id_use');
             $table->timestamp('fecha_verificacion')->nullable();
 
             $table->timestamps();
