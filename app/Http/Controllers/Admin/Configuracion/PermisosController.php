@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Configuracion;
 use App\Http\Controllers\Controller;
 use App\Models\Modulo;
 use App\Models\Usuario;
+use App\Support\Auditoria\CambiosPermisos;
 use App\Support\Permisos\CatalogoPermisos;
 use App\Support\Permisos\VersionPermisos;
 use Illuminate\Http\Request;
@@ -121,6 +122,14 @@ class PermisosController extends Controller
         ];
 
         DB::transaction(function () use ($usuario, $grant, $revoke, $modulos, $base, $asignadoPor, $ahora) {
+            $previos = DB::table('usuario_permiso')->where('usuario_id', $usuario->id_usuario)->get();
+            $antes = [
+                'grant'    => $previos->where('tipo', 'grant')->pluck('permiso_id')->map('intval')->all(),
+                'revoke'   => $previos->where('tipo', 'revoke')->pluck('permiso_id')->map('intval')->all(),
+                'modulos'  => DB::table('usuario_modulo')->where('usuario_id', $usuario->id_usuario)->pluck('modulo_id')->map('intval')->all(),
+                'vigencia' => [$previos->pluck('fecha_inicio')->filter()->first(), $previos->pluck('fecha_fin')->filter()->first()],
+            ];
+
             DB::table('usuario_permiso')->where('usuario_id', $usuario->id_usuario)->delete();
 
             $filas = array_merge(
@@ -143,6 +152,13 @@ class PermisosController extends Controller
                     'updated_at'   => $ahora,
                 ], $modulos));
             }
+
+            CambiosPermisos::permisosUsuario($usuario, $antes, [
+                'grant'    => $grant,
+                'revoke'   => $revoke,
+                'modulos'  => $modulos,
+                'vigencia' => ($grant || $revoke) ? [$base['fecha_inicio'], $base['fecha_fin']] : [null, null],
+            ]);
         });
 
         VersionPermisos::invalidar();

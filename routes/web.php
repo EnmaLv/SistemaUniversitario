@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\Admin\Configuracion\BitacoraController;
 use App\Http\Controllers\Admin\Configuracion\EmpleosController;
 use App\Http\Controllers\Admin\Configuracion\PermisosController;
 use App\Http\Controllers\Admin\Configuracion\RolesController;
@@ -409,6 +410,11 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/roles/{id}/edit', [RolesController::class, 'edit'])->name('admin.configuracion.roles.edit');
                 Route::put('/roles/{id}', [RolesController::class, 'update'])->name('admin.configuracion.roles.update');
                 Route::delete('/roles/{id}', [RolesController::class, 'destroy'])->name('admin.configuracion.roles.destroy');
+
+                Route::get('/bitacora', [BitacoraController::class, 'index'])->name('admin.configuracion.bitacora.index');
+                Route::get('/bitacora/exportar/csv', [BitacoraController::class, 'exportarCsv'])->name('admin.configuracion.bitacora.exportar_csv');
+                Route::get('/bitacora/exportar/pdf', [BitacoraController::class, 'exportarPdf'])->name('admin.configuracion.bitacora.exportar_pdf');
+                Route::get('/bitacora/{id}', [BitacoraController::class, 'show'])->whereNumber('id')->name('admin.configuracion.bitacora.show');
 
                 Route::get('/master-key', [EmpleosController::class, 'masterKeyForm'])->name('admin.configuracion.master_key.form');
                 Route::post('/master-key/verify', [EmpleosController::class, 'verifyMasterKey'])->name('admin.configuracion.master_key.verify');

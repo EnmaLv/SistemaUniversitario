@@ -56,6 +56,7 @@ return [
             'permisos'          => 'Permisos por usuario',
             'archivos'          => 'Archivos',
             'configuracion'     => 'Configuración general',
+            'bitacora'          => 'Bitácora de auditoría',
         ],
     ],
 

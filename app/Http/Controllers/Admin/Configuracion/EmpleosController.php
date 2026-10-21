@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Models\Perfil;
 use App\Models\Rol;
+use App\Support\Auditoria\CambiosPermisos;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -79,7 +80,9 @@ class EmpleosController extends Controller
             }
         }
 
+        $rolesPrevios = $usuario->roles->pluck('id_rol')->all();
         $usuario->roles()->detach();
+        CambiosPermisos::rolesUsuario($usuario, ['detached' => $rolesPrevios], 'roles_usuario_retirados');
         $usuario->delete();
 
         return redirect()->route('admin.configuracion.empleados.index')->with('success', 'Empleado eliminado Exitosamente');
@@ -178,7 +181,7 @@ class EmpleosController extends Controller
         }
 
         if (is_array($newRoleIds)) {
-            $usuario->roles()->sync($newRoleIds);
+            CambiosPermisos::rolesUsuario($usuario, $usuario->roles()->sync($newRoleIds));
         }
 
         \App\Support\Permisos\VersionPermisos::invalidar();

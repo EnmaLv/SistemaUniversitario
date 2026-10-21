@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Modulo;
 use App\Models\Permiso;
 use App\Models\Rol;
+use App\Support\Auditoria\CambiosPermisos;
 use App\Support\Permisos\CatalogoPermisos;
 use App\Support\Permisos\VersionPermisos;
 use Illuminate\Http\Request;
@@ -56,8 +57,10 @@ class RolesController extends Controller
                 'descripcion' => $data['descripcion'] ?? null,
             ]);
 
-            $rol->modulos()->sync($data['modulos'] ?? []);
-            $rol->permisos()->sync($data['permisos'] ?? []);
+            $sincModulos  = $rol->modulos()->sync($data['modulos'] ?? []);
+            $sincPermisos = $rol->permisos()->sync($data['permisos'] ?? []);
+
+            CambiosPermisos::rol($rol, 'rol_permisos_asignados', $sincPermisos, $sincModulos);
         });
 
         VersionPermisos::invalidar();
@@ -94,8 +97,10 @@ class RolesController extends Controller
                 'descripcion' => $data['descripcion'] ?? null,
             ]);
 
-            $rol->modulos()->sync($data['modulos'] ?? []);
-            $rol->permisos()->sync($rol->esSuperAdmin() ? Permiso::pluck('id')->all() : ($data['permisos'] ?? []));
+            $sincModulos  = $rol->modulos()->sync($data['modulos'] ?? []);
+            $sincPermisos = $rol->permisos()->sync($rol->esSuperAdmin() ? Permiso::pluck('id')->all() : ($data['permisos'] ?? []));
+
+            CambiosPermisos::rol($rol, 'rol_permisos_actualizados', $sincPermisos, $sincModulos);
         });
 
         VersionPermisos::invalidar();
@@ -125,9 +130,14 @@ class RolesController extends Controller
         }
 
         DB::transaction(function () use ($rol) {
+            $permisos = $rol->permisos()->pluck('permiso.id')->all();
+            $modulos  = $rol->modulos()->pluck('modulos.id')->all();
+
             $rol->permisos()->detach();
             $rol->modulos()->detach();
             $rol->delete();
+
+            CambiosPermisos::rol($rol, 'rol_permisos_retirados', ['detached' => $permisos], ['detached' => $modulos]);
         });
 
         VersionPermisos::invalidar();

@@ -5,6 +5,10 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Configuration\Exceptions;
 use App\Http\Middleware\CheckTasaActualizada;
 use App\Http\Middleware\IgnorarTasaHoy;
+use App\Http\Middleware\RegistrarActividad;
+use App\Support\Seguridad\AccesosDenegados;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             CheckTasaActualizada::class,
+            RegistrarActividad::class,
         ]);
 
         $middleware->trustProxies(at: '*');
@@ -29,6 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
+            return AccesosDenegados::responder($e, $request);
+        });
     })
     ->create();
