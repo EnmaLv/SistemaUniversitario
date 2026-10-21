@@ -1,6 +1,6 @@
 # Evidencias para auditoría — Sistema de Bienestar Estudiantil (UPTP)
 
-Consultas SQL listas para ejecutar en MySQL 8 durante una auditoría. Todas son de solo lectura, salvo la sección 6, que intenta modificar la bitácora para demostrar que **no** se puede.
+Consultas SQL listas para ejecutar en MySQL 8 durante una auditoría (usan funciones propias de MySQL como `IF`, `GROUP_CONCAT` y `JSON_EXTRACT`; en PostgreSQL se reemplazan por `CASE`, `STRING_AGG` y el operador `->>`). Todas son de solo lectura, salvo la sección 6, que intenta modificar la bitácora para demostrar que **no** se puede.
 
 Cómo abrir una consola de MySQL en el entorno Docker:
 
@@ -14,43 +14,43 @@ Reemplaza los valores entre `:` (por ejemplo `:usuario`, `:desde`) antes de ejec
 
 ## 1. Intentos fallidos de inicio de sesión por usuario
 
-Resumen por username intentado (incluye usernames inexistentes, que quedan con `usuario_id` nulo):
+Resumen por username intentado (incluye usernames inexistentes, que quedan con `use_id` nulo):
 
 ```sql
 SELECT
-    COALESCE(b.nombre_usuario, '(sin username)')                AS username_intentado,
-    IF(b.usuario_id IS NULL, 'inexistente', 'existente')        AS tipo_cuenta,
-    SUM(b.accion = 'login_fallido')                              AS intentos_fallidos,
-    SUM(b.accion = 'login_bloqueado')                            AS intentos_durante_bloqueo,
-    SUM(b.accion = 'login_exitoso')                              AS inicios_exitosos,
-    COUNT(DISTINCT b.ip_address)                                 AS ips_distintas,
-    MIN(b.fecha_hora)                                            AS primer_evento,
-    MAX(b.fecha_hora)                                            AS ultimo_evento
-FROM bitacora b
-WHERE b.accion IN ('login_fallido', 'login_bloqueado', 'login_exitoso')
-GROUP BY b.nombre_usuario, tipo_cuenta
-ORDER BY intentos_fallidos DESC;
+    COALESCE(b.nombre_usuario_bis, '(sin username)')                AS username_intentado,
+    IF(b.use_id IS NULL, 'inexistente', 'existente')        AS tipo_cuenta,
+    SUM(b.tipo_evento_bis = 'login_fallido')                              AS intentos_fallidos_use,
+    SUM(b.tipo_evento_bis = 'login_bloqueado')                            AS intentos_durante_bloqueo,
+    SUM(b.tipo_evento_bis = 'login_exitoso')                              AS inicios_exitosos,
+    COUNT(DISTINCT b.direccion_ip_bis)                                 AS ips_distintas,
+    MIN(b.created_at)                                            AS primer_evento,
+    MAX(b.created_at)                                            AS ultimo_evento
+FROM bitacora_sistema b
+WHERE b.tipo_evento_bis IN ('login_fallido', 'login_bloqueado', 'login_exitoso')
+GROUP BY b.nombre_usuario_bis, tipo_cuenta
+ORDER BY intentos_fallidos_use DESC;
 ```
 
 Detalle cronológico de un usuario:
 
 ```sql
-SELECT fecha_hora, accion, nivel, ip_address, navegador, sistema_operativo, observacion
-FROM bitacora
-WHERE nombre_usuario = ':usuario'
-  AND accion IN ('login_fallido', 'login_bloqueado', 'login_exitoso', 'login_limite_ip',
+SELECT created_at, tipo_evento_bis, nivel_bis, direccion_ip_bis, navegador_bis, sistema_operativo_bis, observacion_bis
+FROM bitacora_sistema
+WHERE nombre_usuario_bis = ':usuario'
+  AND tipo_evento_bis IN ('login_fallido', 'login_bloqueado', 'login_exitoso', 'login_limite_ip',
                  'llave_maestra_incorrecta', 'llave_maestra_correcta', 'logout', 'sesion_expirada')
-ORDER BY fecha_hora;
+ORDER BY created_at;
 ```
 
-Estado actual de los contadores en la tabla `usuario`:
+Estado actual de los contadores en la tabla `user`:
 
 ```sql
-SELECT id_usuario, username, intentos_fallidos, intentos_llave_fallidos,
-       bloqueos_temporales, ventana_bloqueos_desde, ultimo_login, ultimo_login_ip
-FROM usuario
-WHERE intentos_fallidos > 0 OR intentos_llave_fallidos > 0 OR bloqueos_temporales > 0
-ORDER BY intentos_fallidos DESC;
+SELECT id_use, username_use, intentos_fallidos_use, intentos_llave_fallidos_use,
+       bloqueos_temporales_use, ventana_bloqueos_desde_use, ultimo_login_use, ultimo_login_ip_use
+FROM user
+WHERE intentos_fallidos_use > 0 OR intentos_llave_fallidos_use > 0 OR bloqueos_temporales_use > 0
+ORDER BY intentos_fallidos_use DESC;
 ```
 
 ## 2. Bloqueos
@@ -58,59 +58,59 @@ ORDER BY intentos_fallidos DESC;
 Cuentas bloqueadas en este momento:
 
 ```sql
-SELECT id_usuario, username,
-       IF(bloqueado, 'permanente', 'temporal') AS tipo,
-       motivo_bloqueo, bloqueado_en, bloqueado_hasta,
-       bloqueos_temporales, ultimo_login, ultimo_login_ip
-FROM usuario
-WHERE bloqueado = 1 OR bloqueado_hasta > NOW()
-ORDER BY bloqueado_en DESC;
+SELECT id_use, username_use,
+       IF(bloqueado_use, 'permanente', 'temporal') AS tipo,
+       motivo_bloqueo_use, bloqueado_en_use, bloqueado_hasta_use,
+       bloqueos_temporales_use, ultimo_login_use, ultimo_login_ip_use
+FROM user
+WHERE bloqueado_use = 1 OR bloqueado_hasta_use > NOW()
+ORDER BY bloqueado_en_use DESC;
 ```
 
 Historial de bloqueos y desbloqueos (quién desbloqueó y desde dónde):
 
 ```sql
-SELECT b.fecha_hora, b.accion, b.nivel,
-       u.username                       AS cuenta_afectada,
-       b.nombre_usuario                 AS registrado_por,
-       b.ip_address, b.observacion
-FROM bitacora b
-LEFT JOIN usuario u ON u.id_usuario = b.registro_id
-WHERE b.accion IN ('bloqueo_temporal', 'bloqueo_permanente', 'desbloqueo', 'sesion_cerrada_por_bloqueo')
-ORDER BY b.fecha_hora DESC;
+SELECT b.created_at, b.tipo_evento_bis, b.nivel_bis,
+       u.username_use                       AS cuenta_afectada,
+       b.nombre_usuario_bis                 AS registrado_por,
+       b.direccion_ip_bis, b.observacion_bis
+FROM bitacora_sistema b
+LEFT JOIN user u ON u.id_use = b.registro_id_bis
+WHERE b.tipo_evento_bis IN ('bloqueo_temporal', 'bloqueo_permanente', 'desbloqueo', 'sesion_cerrada_por_bloqueo')
+ORDER BY b.created_at DESC;
 ```
 
 Desbloqueos de emergencia hechos desde la consola (`php artisan seguridad:desbloquear`):
 
 ```sql
-SELECT fecha_hora, registro_id, observacion
-FROM bitacora
-WHERE accion = 'desbloqueo' AND usuario_id IS NULL AND observacion LIKE 'consola%'
-ORDER BY fecha_hora DESC;
+SELECT created_at, registro_id_bis, observacion_bis
+FROM bitacora_sistema
+WHERE tipo_evento_bis = 'desbloqueo' AND use_id IS NULL AND observacion_bis LIKE 'consola%'
+ORDER BY created_at DESC;
 ```
 
 ## 3. Accesos denegados (403) por IP
 
 ```sql
-SELECT ip_address,
+SELECT direccion_ip_bis,
        COUNT(*)                       AS accesos_denegados,
-       COUNT(DISTINCT usuario_id)     AS usuarios_distintos,
-       GROUP_CONCAT(DISTINCT nombre_usuario ORDER BY nombre_usuario SEPARATOR ', ') AS usuarios,
-       MIN(fecha_hora)                AS primero,
-       MAX(fecha_hora)                AS ultimo
-FROM bitacora
-WHERE accion = 'acceso_denegado'
-GROUP BY ip_address
+       COUNT(DISTINCT use_id)     AS usuarios_distintos,
+       GROUP_CONCAT(DISTINCT nombre_usuario_bis ORDER BY nombre_usuario_bis SEPARATOR ', ') AS usuarios,
+       MIN(created_at)                AS primero,
+       MAX(created_at)                AS ultimo
+FROM bitacora_sistema
+WHERE tipo_evento_bis = 'acceso_denegado'
+GROUP BY direccion_ip_bis
 ORDER BY accesos_denegados DESC;
 ```
 
 Vistas y acciones que más se intentaron sin permiso:
 
 ```sql
-SELECT ruta, observacion, COUNT(*) AS intentos
-FROM bitacora
-WHERE accion = 'acceso_denegado'
-GROUP BY ruta, observacion
+SELECT ruta_bis, observacion_bis, COUNT(*) AS intentos
+FROM bitacora_sistema
+WHERE tipo_evento_bis = 'acceso_denegado'
+GROUP BY ruta_bis, observacion_bis
 ORDER BY intentos DESC
 LIMIT 50;
 ```
@@ -118,12 +118,12 @@ LIMIT 50;
 Usuarios bloqueados por accesos restringidos repetidos:
 
 ```sql
-SELECT b.fecha_hora, u.username, b.ip_address, b.observacion
-FROM bitacora b
-JOIN usuario u ON u.id_usuario = b.registro_id
-WHERE b.accion = 'bloqueo_permanente'
-  AND JSON_UNQUOTE(JSON_EXTRACT(b.datos_modificados, '$.motivo_bloqueo')) = 'accesos_restringidos_repetidos'
-ORDER BY b.fecha_hora DESC;
+SELECT b.created_at, u.username_use, b.direccion_ip_bis, b.observacion_bis
+FROM bitacora_sistema b
+JOIN user u ON u.id_use = b.registro_id_bis
+WHERE b.tipo_evento_bis = 'bloqueo_permanente'
+  AND JSON_UNQUOTE(JSON_EXTRACT(b.datos_nuevos_bis, '$.motivo_bloqueo_use')) = 'accesos_restringidos_repetidos'
+ORDER BY b.created_at DESC;
 ```
 
 ## 4. Cambios a roles y permisos
@@ -131,77 +131,77 @@ ORDER BY b.fecha_hora DESC;
 Permisos y módulos otorgados o retirados a roles:
 
 ```sql
-SELECT b.fecha_hora, b.nombre_usuario AS realizado_por, b.accion, b.observacion,
-       JSON_EXTRACT(b.datos_modificados, '$.permisos_otorgados') AS permisos_otorgados,
-       JSON_EXTRACT(b.datos_anteriores,  '$.permisos_quitados')  AS permisos_quitados,
-       JSON_EXTRACT(b.datos_modificados, '$.modulos_agregados')  AS modulos_agregados,
-       JSON_EXTRACT(b.datos_anteriores,  '$.modulos_quitados')   AS modulos_quitados
-FROM bitacora b
-WHERE b.accion IN ('rol_permisos_asignados', 'rol_permisos_actualizados', 'rol_permisos_retirados')
-ORDER BY b.fecha_hora DESC;
+SELECT b.created_at, b.nombre_usuario_bis AS realizado_por, b.tipo_evento_bis, b.observacion_bis,
+       JSON_EXTRACT(b.datos_nuevos_bis, '$.permisos_otorgados') AS permisos_otorgados,
+       JSON_EXTRACT(b.datos_anteriores_bis,  '$.permisos_quitados')  AS permisos_quitados,
+       JSON_EXTRACT(b.datos_nuevos_bis, '$.modulos_agregados')  AS modulos_agregados,
+       JSON_EXTRACT(b.datos_anteriores_bis,  '$.modulos_quitados')   AS modulos_quitados
+FROM bitacora_sistema b
+WHERE b.tipo_evento_bis IN ('rol_permisos_asignados', 'rol_permisos_actualizados', 'rol_permisos_retirados')
+ORDER BY b.created_at DESC;
 ```
 
 Permisos directos (grant/revoke) y módulos especiales por usuario:
 
 ```sql
-SELECT b.fecha_hora, b.nombre_usuario AS realizado_por, b.observacion AS usuario_afectado,
-       b.datos_anteriores, b.datos_modificados
-FROM bitacora b
-WHERE b.accion = 'permisos_usuario_actualizados'
-ORDER BY b.fecha_hora DESC;
+SELECT b.created_at, b.nombre_usuario_bis AS realizado_por, b.observacion_bis AS usuario_afectado,
+       b.datos_anteriores_bis, b.datos_nuevos_bis
+FROM bitacora_sistema b
+WHERE b.tipo_evento_bis = 'permisos_usuario_actualizados'
+ORDER BY b.created_at DESC;
 ```
 
 Roles asignados o retirados a usuarios:
 
 ```sql
-SELECT b.fecha_hora, b.nombre_usuario AS realizado_por, b.accion, b.observacion,
-       JSON_EXTRACT(b.datos_modificados, '$.roles_agregados') AS roles_agregados,
-       JSON_EXTRACT(b.datos_anteriores,  '$.roles_quitados')  AS roles_quitados
-FROM bitacora b
-WHERE b.accion IN ('roles_usuario_actualizados', 'roles_usuario_retirados', 'roles_usuario_registro')
-ORDER BY b.fecha_hora DESC;
+SELECT b.created_at, b.nombre_usuario_bis AS realizado_por, b.tipo_evento_bis, b.observacion_bis,
+       JSON_EXTRACT(b.datos_nuevos_bis, '$.roles_agregados') AS roles_agregados,
+       JSON_EXTRACT(b.datos_anteriores_bis,  '$.roles_quitados')  AS roles_quitados
+FROM bitacora_sistema b
+WHERE b.tipo_evento_bis IN ('roles_usuario_actualizados', 'roles_usuario_retirados', 'roles_usuario_registro')
+ORDER BY b.created_at DESC;
 ```
 
 Creación, edición y eliminación de roles (cambios Eloquent sobre la tabla `rol`):
 
 ```sql
-SELECT fecha_hora, nombre_usuario, accion, registro_id, datos_anteriores, datos_modificados, observacion
-FROM bitacora
-WHERE tabla_afectada = 'rol'
-ORDER BY fecha_hora DESC;
+SELECT created_at, nombre_usuario_bis, tipo_evento_bis, registro_id_bis, datos_anteriores_bis, datos_nuevos_bis, observacion_bis
+FROM bitacora_sistema
+WHERE tabla_afectada_bis = 'rol'
+ORDER BY created_at DESC;
 ```
 
 ## 5. Actividad de un usuario en un rango de fechas
 
 ```sql
-SELECT fecha_hora, modulo, accion, nivel, metodo_http, ruta, codigo_respuesta,
-       tabla_afectada, registro_id, ip_address, navegador, sistema_operativo, observacion
-FROM bitacora
-WHERE (nombre_usuario = ':usuario' OR usuario_id = (SELECT id_usuario FROM usuario WHERE username = ':usuario'))
-  AND fecha_hora BETWEEN ':desde 00:00:00' AND ':hasta 23:59:59'
-ORDER BY fecha_hora;
+SELECT created_at, modulo_bis, tipo_evento_bis, nivel_bis, metodo_http_bis, ruta_bis, codigo_respuesta_bis,
+       tabla_afectada_bis, registro_id_bis, direccion_ip_bis, navegador_bis, sistema_operativo_bis, observacion_bis
+FROM bitacora_sistema
+WHERE (nombre_usuario_bis = ':usuario' OR use_id = (SELECT id_use FROM user WHERE username_use = ':usuario'))
+  AND created_at BETWEEN ':desde 00:00:00' AND ':hasta 23:59:59'
+ORDER BY created_at;
 ```
 
 Resumen por módulo y acción del mismo periodo:
 
 ```sql
-SELECT modulo, accion, COUNT(*) AS eventos
-FROM bitacora
-WHERE usuario_id = (SELECT id_usuario FROM usuario WHERE username = ':usuario')
-  AND fecha_hora BETWEEN ':desde 00:00:00' AND ':hasta 23:59:59'
-GROUP BY modulo, accion
+SELECT modulo_bis, tipo_evento_bis, COUNT(*) AS eventos
+FROM bitacora_sistema
+WHERE use_id = (SELECT id_use FROM user WHERE username_use = ':usuario')
+  AND created_at BETWEEN ':desde 00:00:00' AND ':hasta 23:59:59'
+GROUP BY modulo_bis, tipo_evento_bis
 ORDER BY eventos DESC;
 ```
 
 Sesiones distintas usadas por el usuario (el identificador se guarda como hash SHA-256, nunca en claro):
 
 ```sql
-SELECT session_id, MIN(fecha_hora) AS inicio, MAX(fecha_hora) AS fin, COUNT(*) AS eventos,
-       GROUP_CONCAT(DISTINCT ip_address) AS ips
-FROM bitacora
-WHERE usuario_id = (SELECT id_usuario FROM usuario WHERE username = ':usuario')
-  AND session_id IS NOT NULL
-GROUP BY session_id
+SELECT session_id_bis, MIN(created_at) AS inicio, MAX(created_at) AS fin, COUNT(*) AS eventos,
+       GROUP_CONCAT(DISTINCT direccion_ip_bis) AS ips
+FROM bitacora_sistema
+WHERE use_id = (SELECT id_use FROM user WHERE username_use = ':usuario')
+  AND session_id_bis IS NOT NULL
+GROUP BY session_id_bis
 ORDER BY inicio DESC;
 ```
 
@@ -210,20 +210,20 @@ ORDER BY inicio DESC;
 Triggers instalados:
 
 ```sql
-SHOW TRIGGERS WHERE `Table` = 'bitacora';
+SHOW TRIGGERS WHERE `Table` = 'bitacora_sistema';
 ```
 
-Resultado esperado: `trg_bitacora_sin_update` (BEFORE UPDATE) y `trg_bitacora_sin_delete` (BEFORE DELETE).
+Resultado esperado: `trg_bitacora_sistema_sin_update` (BEFORE UPDATE) y `trg_bitacora_sistema_sin_delete` (BEFORE DELETE). En PostgreSQL el equivalente es `trg_bitacora_sistema_inmutable` con la función `fn_bitacora_sistema_inmutable()`.
 
 Intento de modificación. Ambas sentencias **deben fallar** con `ERROR 1644 (45000): La bitacora es de solo insercion ...` y no deben alterar ninguna fila:
 
 ```sql
-SELECT id, accion, fecha_hora FROM bitacora ORDER BY id DESC LIMIT 1;
+SELECT id_bis, tipo_evento_bis, created_at FROM bitacora_sistema ORDER BY id_bis DESC LIMIT 1;
 
-UPDATE bitacora SET accion = 'alterada' ORDER BY id DESC LIMIT 1;
-DELETE FROM bitacora ORDER BY id DESC LIMIT 1;
+UPDATE bitacora_sistema SET tipo_evento_bis = 'alterada' ORDER BY id_bis DESC LIMIT 1;
+DELETE FROM bitacora_sistema ORDER BY id_bis DESC LIMIT 1;
 
-SELECT id, accion, fecha_hora FROM bitacora ORDER BY id DESC LIMIT 1;
+SELECT id_bis, tipo_evento_bis, created_at FROM bitacora_sistema ORDER BY id_bis DESC LIMIT 1;
 ```
 
 La primera y la última consulta deben devolver exactamente la misma fila.
@@ -232,7 +232,7 @@ Continuidad de los identificadores (un hueco indicaría filas borradas por fuera
 
 ```sql
 SELECT a.id + 1 AS inicio_hueco, MIN(b.id) - 1 AS fin_hueco
-FROM bitacora a
+FROM bitacora_sistema a
 JOIN bitacora b ON b.id > a.id
 GROUP BY a.id
 HAVING inicio_hueco < MIN(b.id)

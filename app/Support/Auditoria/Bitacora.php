@@ -38,7 +38,7 @@ class Bitacora
 
             $request = static::peticionActual();
             $usuario ??= static::usuarioActual();
-            $agente = $request ? AgenteUsuario::analizar($request->userAgent()) : ['navegador' => 'Consola', 'sistema_operativo' => PHP_OS_FAMILY];
+            $agente = $request ? AgenteUsuario::analizar($request->userAgent()) : ['navegador' => 'Consola', 'sistema_operativo_bis' => PHP_OS_FAMILY];
 
             if ($registroId !== null && ! ctype_digit((string) $registroId)) {
                 $observacion = trim(($observacion ?? '') . ' [clave: ' . $registroId . ']');
@@ -46,24 +46,25 @@ class Bitacora
             }
 
             return BitacoraModelo::create([
-                'modulo'            => Str::limit($modulo ?? FiltroPeticiones::moduloDe($request), 100, ''),
-                'accion'            => Str::limit($accion, 100, ''),
-                'tabla_afectada'    => $tablaAfectada,
-                'registro_id'       => $registroId,
-                'usuario_id'        => $usuario?->getKey(),
-                'nombre_usuario'    => Str::limit($nombreUsuario ?? $usuario?->username_use ?? '', 255, '') ?: null,
-                'datos_anteriores'  => DatosSensibles::limpiar($datosAnteriores),
-                'datos_modificados' => DatosSensibles::limpiar($datosModificados),
-                'ip_address'        => $request?->ip(),
-                'navegador'         => Str::limit($agente['navegador'], 255, ''),
-                'sistema_operativo' => Str::limit($agente['sistema_operativo'], 100, ''),
-                'metodo_http'       => $request?->method(),
-                'ruta'              => $request ? Str::limit($request->route()?->getName() ?? $request->path(), 191, '') : null,
-                'url'               => $request ? DatosSensibles::urlSegura($request) : null,
-                'codigo_respuesta'  => $codigoRespuesta,
-                'nivel'             => $nivel,
-                'session_id'        => $request && $request->hasSession() ? hash('sha256', $request->session()->getId()) : null,
-                'observacion'       => $observacion !== null ? Str::limit($observacion, 2000) : ($request ? null : 'consola'),
+                'modulo_bis'            => Str::limit($modulo ?? FiltroPeticiones::moduloDe($request), 100, ''),
+                'tipo_evento_bis'       => Str::limit($accion, 100, ''),
+                'tabla_afectada_bis'    => $tablaAfectada,
+                'registro_id_bis'       => $registroId,
+                'use_id'                => $usuario?->getKey(),
+                'created_id'            => $usuario?->getKey(),
+                'nombre_usuario_bis'    => Str::limit($nombreUsuario ?? $usuario?->username_use ?? '', 255, '') ?: null,
+                'datos_anteriores_bis'  => DatosSensibles::limpiar($datosAnteriores),
+                'datos_nuevos_bis'      => DatosSensibles::limpiar($datosModificados),
+                'direccion_ip_bis'      => $request?->ip(),
+                'navegador_bis'         => Str::limit($agente['navegador'], 255, ''),
+                'sistema_operativo_bis' => Str::limit($agente['sistema_operativo'], 100, ''),
+                'metodo_http_bis'       => $request?->method(),
+                'ruta_bis'              => $request ? Str::limit($request->route()?->getName() ?? $request->path(), 191, '') : null,
+                'url_bis'               => $request ? DatosSensibles::urlSegura($request) : null,
+                'codigo_respuesta_bis'  => $codigoRespuesta,
+                'nivel_bis'             => $nivel,
+                'session_id_bis'        => $request && $request->hasSession() ? hash('sha256', $request->session()->getId()) : null,
+                'observacion_bis'       => $observacion !== null ? Str::limit($observacion, 2000) : ($request ? null : 'consola'),
             ]);
         } catch (\Throwable $e) {
             Log::warning('No se pudo registrar el evento en la bitácora.', [
@@ -101,6 +102,6 @@ class Bitacora
             return true;
         }
 
-        return static::$tablaConfirmada = Schema::hasTable('bitacora');
+        return static::$tablaConfirmada = Schema::hasTable('bitacora_sistema');
     }
 }

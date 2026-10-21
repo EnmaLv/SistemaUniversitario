@@ -38,8 +38,8 @@ class AccesosDenegadosTest extends SeguridadTestCase
         $usuario->refresh();
         $this->assertTrue($usuario->bloqueado_use);
         $this->assertSame(Bloqueos::MOTIVO_ACCESOS, $usuario->motivo_bloqueo_use);
-        $this->assertSame(10, BitacoraModelo::where('usuario_id', $usuario->id_use)->where('accion', 'acceso_denegado')->count());
-        $this->assertTrue(BitacoraModelo::where('usuario_id', $usuario->id_use)->where('accion', 'bloqueo_permanente')->where('nivel', 'critico')->exists());
+        $this->assertSame(10, BitacoraModelo::where('use_id', $usuario->id_use)->where('tipo_evento_bis', 'acceso_denegado')->count());
+        $this->assertTrue(BitacoraModelo::where('use_id', $usuario->id_use)->where('tipo_evento_bis', 'bloqueo_permanente')->where('nivel_bis', 'critico')->exists());
     }
 
     public function test_los_accesos_fuera_de_la_ventana_no_se_acumulan(): void
@@ -64,7 +64,7 @@ class AccesosDenegadosTest extends SeguridadTestCase
 
         $this->actingAs($admin)->get(route('admin.psicologia.maestros.historias.index'))->assertForbidden();
 
-        $this->assertTrue(BitacoraModelo::where('usuario_id', $admin->id_use)->where('accion', 'acceso_denegado')->exists());
+        $this->assertTrue(BitacoraModelo::where('use_id', $admin->id_use)->where('tipo_evento_bis', 'acceso_denegado')->exists());
     }
 
     public function test_sin_permiso_editar_recibe_403_en_update_y_con_permiso_pasa(): void

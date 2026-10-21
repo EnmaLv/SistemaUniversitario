@@ -40,17 +40,17 @@
         <tbody>
             @foreach ($registros as $registro)
                 <tr>
-                    <td>{{ $registro->id }}</td>
-                    <td>{{ $registro->fecha_hora?->format('d/m/Y H:i:s') }}</td>
-                    <td>{{ $registro->nombre_usuario ?? 'Sistema' }}</td>
-                    <td>{{ $registro->modulo }}</td>
-                    <td>{{ $registro->accion }}</td>
-                    <td class="{{ $registro->nivel }}">{{ $registro->nivel }}</td>
-                    <td>{{ $registro->tabla_afectada }}{{ $registro->registro_id ? ' #' . $registro->registro_id : '' }}</td>
-                    <td>{{ $registro->metodo_http }} {{ $registro->ruta }}</td>
-                    <td>{{ $registro->codigo_respuesta }}</td>
-                    <td>{{ $registro->ip_address }}</td>
-                    <td>{{ \Illuminate\Support\Str::limit($registro->observacion, 120) }}</td>
+                    <td>{{ $registro->id_bis }}</td>
+                    <td>{{ $registro->created_at?->format('d/m/Y H:i:s') }}</td>
+                    <td>{{ $registro->nombre_usuario_bis ?? 'Sistema' }}</td>
+                    <td>{{ $registro->modulo_bis }}</td>
+                    <td>{{ $registro->tipo_evento_bis }}</td>
+                    <td class="{{ $registro->nivel_bis }}">{{ $registro->nivel_bis }}</td>
+                    <td>{{ $registro->tabla_afectada_bis }}{{ $registro->registro_id_bis ? ' #' . $registro->registro_id_bis : '' }}</td>
+                    <td>{{ $registro->metodo_http_bis }} {{ $registro->ruta_bis }}</td>
+                    <td>{{ $registro->codigo_respuesta_bis }}</td>
+                    <td>{{ $registro->direccion_ip_bis }}</td>
+                    <td>{{ \Illuminate\Support\Str::limit($registro->observacion_bis, 120) }}</td>
                 </tr>
             @endforeach
         </tbody>

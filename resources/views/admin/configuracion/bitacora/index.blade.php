@@ -109,35 +109,35 @@
                         </thead>
                         <tbody class="fade-in">
                             @forelse ($registros as $registro)
-                                <x-table-row :id="$registro->id" class="border-b text-sm" style="border-color:var(--border-color);">
-                                    <td class="px-4 py-3 text-center font-bold" style="color:var(--text-muted);">{{ $registro->id }}</td>
-                                    <td class="px-4 py-3 whitespace-nowrap" style="color:var(--text-main);">{{ $registro->fecha_hora?->format('d/m/Y H:i:s') }}</td>
+                                <x-table-row :id="$registro->id_bis" class="border-b text-sm" style="border-color:var(--border-color);">
+                                    <td class="px-4 py-3 text-center font-bold" style="color:var(--text-muted);">{{ $registro->id_bis }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap" style="color:var(--text-main);">{{ $registro->created_at?->format('d/m/Y H:i:s') }}</td>
                                     <td class="px-4 py-3" style="color:var(--text-main);">
-                                        <span class="font-bold">{{ $registro->nombre_usuario ?? 'Sistema' }}</span>
-                                        @if ($registro->usuario_id)
-                                            <span class="block text-xs" style="color:var(--text-muted);">ID {{ $registro->usuario_id }}</span>
+                                        <span class="font-bold">{{ $registro->nombre_usuario_bis ?? 'Sistema' }}</span>
+                                        @if ($registro->use_id)
+                                            <span class="block text-xs" style="color:var(--text-muted);">ID {{ $registro->use_id }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3" style="color:var(--text-main);">{{ $registro->modulo }}</td>
+                                    <td class="px-4 py-3" style="color:var(--text-main);">{{ $registro->modulo_bis }}</td>
                                     <td class="px-4 py-3">
-                                        <span class="inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-extrabold" style="border-color:var(--border-color);color:var(--color-primary);">{{ $registro->accion }}</span>
+                                        <span class="inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-extrabold" style="border-color:var(--border-color);color:var(--color-primary);">{{ $registro->tipo_evento_bis }}</span>
                                     </td>
                                     <td class="px-4 py-3 max-w-xs" style="color:var(--text-muted);">
-                                        @if ($registro->tabla_afectada)
-                                            <span class="block text-xs font-bold">{{ $registro->tabla_afectada }}{{ $registro->registro_id ? ' #' . $registro->registro_id : '' }}</span>
+                                        @if ($registro->tabla_afectada_bis)
+                                            <span class="block text-xs font-bold">{{ $registro->tabla_afectada_bis }}{{ $registro->registro_id_bis ? ' #' . $registro->registro_id_bis : '' }}</span>
                                         @endif
-                                        @if ($registro->metodo_http)
-                                            <span class="block truncate text-xs" title="{{ $registro->ruta }}">{{ $registro->metodo_http }} {{ $registro->ruta }} {{ $registro->codigo_respuesta ? '· ' . $registro->codigo_respuesta : '' }}</span>
+                                        @if ($registro->metodo_http_bis)
+                                            <span class="block truncate text-xs" title="{{ $registro->ruta_bis }}">{{ $registro->metodo_http_bis }} {{ $registro->ruta_bis }} {{ $registro->codigo_respuesta_bis ? '· ' . $registro->codigo_respuesta_bis : '' }}</span>
                                         @endif
-                                        @if ($registro->observacion)
-                                            <span class="block truncate text-xs" title="{{ $registro->observacion }}">{{ \Illuminate\Support\Str::limit($registro->observacion, 70) }}</span>
+                                        @if ($registro->observacion_bis)
+                                            <span class="block truncate text-xs" title="{{ $registro->observacion_bis }}">{{ \Illuminate\Support\Str::limit($registro->observacion_bis, 70) }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-xs" style="color:var(--text-main);">{{ $registro->ip_address ?? '—' }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs" style="color:var(--text-main);">{{ $registro->direccion_ip_bis ?? '—' }}</td>
                                     <td class="px-4 py-3 text-center">
-                                        <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-bold {{ $colorNivel[$registro->nivel] ?? $colorNivel['info'] }}">{{ ucfirst($registro->nivel) }}</span>
+                                        <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-bold {{ $colorNivel[$registro->nivel_bis] ?? $colorNivel['info'] }}">{{ ucfirst($registro->nivel_bis) }}</span>
                                     </td>
-                                    <x-table-actions :id="$registro->id" baseUrl="admin/configuracion/bitacora" :edit="false" :toggle="false" />
+                                    <x-table-actions :id="$registro->id_bis" baseUrl="admin/configuracion/bitacora" :edit="false" :toggle="false" />
                                 </x-table-row>
                             @empty
                                 <tr>

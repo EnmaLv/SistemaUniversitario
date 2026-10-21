@@ -57,7 +57,7 @@ class CuentasComunidadTest extends SeguridadTestCase
         $this->assertTrue(Hash::check('27111333', $usuario->getOriginal('password_use')));
         $this->assertTrue($usuario->debe_cambiar_password_use);
         $this->assertSame(['becario', 'paciente'], $this->slugsDe($usuario));
-        $this->assertTrue(BitacoraModelo::where('accion', 'cuentas_comunidad_generadas')->exists());
+        $this->assertTrue(BitacoraModelo::where('tipo_evento_bis', 'cuentas_comunidad_generadas')->exists());
     }
 
     public function test_si_la_persona_ya_tiene_usuario_solo_agrega_los_roles(): void
@@ -135,7 +135,7 @@ class CuentasComunidadTest extends SeguridadTestCase
         $this->assertFalse($usuario->debe_cambiar_password_use);
         $this->assertNotNull($usuario->password_cambiado_en_use);
         $this->assertTrue(Hash::check('NuevaClave2026', $usuario->getOriginal('password_use')));
-        $this->assertTrue(BitacoraModelo::where('accion', 'password_cambiado')->where('registro_id', $usuario->id_use)->exists());
+        $this->assertTrue(BitacoraModelo::where('tipo_evento_bis', 'password_cambiado')->where('registro_id_bis', $usuario->id_use)->exists());
 
         $this->get('/home')->assertDontSee('Debes cambiar tu contraseña');
         $this->assertNotSame(route('password.cambiar'), $this->get('/home')->headers->get('Location'));
@@ -181,9 +181,9 @@ class CuentasComunidadTest extends SeguridadTestCase
         $this->assertSame('ACTUALIZADA', $existente->fresh()->apellidos_per);
         $this->assertSame('04140000000', $existente->fresh()->telefono_per);
 
-        $evento = BitacoraModelo::where('accion', 'importacion_personas')->latest('id')->first();
+        $evento = BitacoraModelo::where('tipo_evento_bis', 'importacion_personas')->latest('id_bis')->first();
         $this->assertNotNull($evento);
-        $this->assertStringNotContainsString('23111001', json_encode($evento->datos_modificados) . $evento->observacion);
+        $this->assertStringNotContainsString('23111001', json_encode($evento->datos_nuevos_bis) . $evento->observacion_bis);
     }
 
     public function test_el_comando_crea_las_cuentas_faltantes(): void

@@ -43,6 +43,8 @@ Después, la base de desarrollo se recreó dos veces más con `migrate:fresh --s
 
 ## 2. Tablas y columnas nuevas
 
+> **Actualización (adaptación al DER del profesor):** esta sección describe el estado previo a la adaptación. Hoy la tabla se llama `bitacora_sistema` y la de usuarios `user`, con la nomenclatura del DER (`tipo_evento_bis`, `use_id`, `datos_nuevos_bis`, `direccion_ip_bis`, `created_at`…). La equivalencia completa está en `docs/der/REPORTE_ADAPTACION.md` y las consultas actualizadas en `docs/seguridad/EVIDENCIAS_AUDITORIA.md`.
+
 Se crearon una tabla nueva (`bitacora`) y diez columnas nuevas en `usuario`. No se renombró ni se eliminó ninguna columna existente. Las tablas del DER del profesor (`bitacora_sistema`, `user`) **no existen en esta base**; las equivalencias de abajo sirven para que el estudiante explique el mapeo cuando el sistema se integre al del profesor.
 
 ### 2.1 Tabla `bitacora` frente a `bitacora_sistema` del profesor

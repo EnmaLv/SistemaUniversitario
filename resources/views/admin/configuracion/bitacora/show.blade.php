@@ -17,22 +17,22 @@
             return (string) $valor;
         };
         $datos = [
-            'Fecha y hora'      => $registro->fecha_hora?->format('d/m/Y H:i:s'),
-            'Nivel'             => ucfirst($registro->nivel),
-            'Módulo'            => $registro->modulo,
-            'Acción'            => $registro->accion,
-            'Usuario'           => ($registro->nombre_usuario ?? 'Sistema') . ($registro->usuario_id ? ' (ID ' . $registro->usuario_id . ')' : ''),
-            'Tabla afectada'    => $registro->tabla_afectada,
-            'Registro'          => $registro->registro_id,
-            'Método HTTP'       => $registro->metodo_http,
-            'Ruta'              => $registro->ruta,
-            'URL'               => $registro->url,
-            'Código respuesta'  => $registro->codigo_respuesta,
-            'Dirección IP'      => $registro->ip_address,
-            'Navegador'         => $registro->navegador,
-            'Sistema operativo' => $registro->sistema_operativo,
-            'Sesión (hash)'     => $registro->session_id,
-            'Observación'       => $registro->observacion,
+            'Fecha y hora'      => $registro->created_at?->format('d/m/Y H:i:s'),
+            'Nivel'             => ucfirst($registro->nivel_bis),
+            'Módulo'            => $registro->modulo_bis,
+            'Acción'            => $registro->tipo_evento_bis,
+            'Usuario'           => ($registro->nombre_usuario_bis ?? 'Sistema') . ($registro->use_id ? ' (ID ' . $registro->use_id . ')' : ''),
+            'Tabla afectada'    => $registro->tabla_afectada_bis,
+            'Registro'          => $registro->registro_id_bis,
+            'Método HTTP'       => $registro->metodo_http_bis,
+            'Ruta'              => $registro->ruta_bis,
+            'URL'               => $registro->url_bis,
+            'Código respuesta'  => $registro->codigo_respuesta_bis,
+            'Dirección IP'      => $registro->direccion_ip_bis,
+            'Navegador'         => $registro->navegador_bis,
+            'Sistema operativo' => $registro->sistema_operativo_bis,
+            'Sesión (hash)'     => $registro->session_id_bis,
+            'Observación'       => $registro->observacion_bis,
         ];
     @endphp
 
@@ -40,7 +40,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Evento #{{ $registro->id }}</h1>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Evento #{{ $registro->id_bis }}</h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         <i class="fas fa-lock mr-1" style="color:var(--color-primary)"></i>
                         Registro de solo lectura

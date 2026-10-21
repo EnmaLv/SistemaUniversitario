@@ -27,9 +27,9 @@ class AdministracionBloqueosTest extends SeguridadTestCase
         $this->assertFalse($bloqueado->bloqueado_use);
         $this->assertSame(0, $bloqueado->bloqueos_temporales_use);
 
-        $evento = BitacoraModelo::where('accion', 'desbloqueo')->where('registro_id', $bloqueado->id_use)->first();
+        $evento = BitacoraModelo::where('tipo_evento_bis', 'desbloqueo')->where('registro_id_bis', $bloqueado->id_use)->first();
         $this->assertNotNull($evento);
-        $this->assertSame($admin->id_use, $evento->usuario_id);
+        $this->assertSame($admin->id_use, $evento->use_id);
     }
 
     public function test_un_usuario_no_puede_desbloquearse_a_si_mismo(): void
@@ -43,7 +43,7 @@ class AdministracionBloqueosTest extends SeguridadTestCase
             ->assertSessionHas('error');
 
         $this->assertSame(1, $admin->fresh()->bloqueos_temporales_use);
-        $this->assertFalse(BitacoraModelo::where('accion', 'desbloqueo')->where('registro_id', $admin->id_use)->exists());
+        $this->assertFalse(BitacoraModelo::where('tipo_evento_bis', 'desbloqueo')->where('registro_id_bis', $admin->id_use)->exists());
     }
 
     public function test_usuario_sin_permiso_no_accede_a_la_pantalla_de_bloqueos(): void
@@ -64,11 +64,11 @@ class AdministracionBloqueosTest extends SeguridadTestCase
             ->assertOk()
             ->assertSee('Bitácora de auditoría');
 
-        $evento = BitacoraModelo::latest('id')->first();
-        $this->get("/admin/configuracion/bitacora/{$evento->id}")->assertOk()->assertSee('antes → después', false);
+        $evento = BitacoraModelo::latest('id_bis')->first();
+        $this->get("/admin/configuracion/bitacora/{$evento->id_bis}")->assertOk()->assertSee('antes → después', false);
 
         $this->get('/admin/configuracion/bitacora/exportar/csv')->assertOk();
-        $this->assertTrue(BitacoraModelo::where('accion', 'bitacora_exportada')->where('usuario_id', $admin->id_use)->exists());
+        $this->assertTrue(BitacoraModelo::where('tipo_evento_bis', 'bitacora_exportada')->where('use_id', $admin->id_use)->exists());
     }
 
     public function test_comando_de_consola_desbloquea_y_registra_sin_usuario(): void
@@ -79,9 +79,9 @@ class AdministracionBloqueosTest extends SeguridadTestCase
         $this->artisan('seguridad:desbloquear', ['username' => $usuario->username_use])->assertSuccessful();
 
         $this->assertFalse($usuario->fresh()->bloqueado_use);
-        $evento = BitacoraModelo::where('accion', 'desbloqueo')->where('registro_id', $usuario->id_use)->latest('id')->first();
+        $evento = BitacoraModelo::where('tipo_evento_bis', 'desbloqueo')->where('registro_id_bis', $usuario->id_use)->latest('id_bis')->first();
         $this->assertNotNull($evento);
-        $this->assertNull($evento->usuario_id);
-        $this->assertStringStartsWith('consola', $evento->observacion);
+        $this->assertNull($evento->use_id);
+        $this->assertStringStartsWith('consola', $evento->observacion_bis);
     }
 }

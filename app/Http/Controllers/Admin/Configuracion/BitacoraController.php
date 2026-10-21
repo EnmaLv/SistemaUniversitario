@@ -14,9 +14,9 @@ class BitacoraController extends Controller
     private const FILTROS = ['usuario', 'modulo', 'accion', 'nivel', 'ip', 'desde', 'hasta'];
 
     private const COLUMNAS_CSV = [
-        'id', 'fecha_hora', 'nivel', 'modulo', 'accion', 'usuario_id', 'nombre_usuario', 'tabla_afectada',
-        'registro_id', 'metodo_http', 'ruta', 'url', 'codigo_respuesta', 'ip_address', 'navegador',
-        'sistema_operativo', 'session_id', 'observacion', 'datos_anteriores', 'datos_modificados',
+        'id_bis', 'created_at', 'nivel_bis', 'modulo_bis', 'tipo_evento_bis', 'use_id', 'nombre_usuario_bis', 'tabla_afectada_bis',
+        'registro_id_bis', 'metodo_http_bis', 'ruta_bis', 'url_bis', 'codigo_respuesta_bis', 'direccion_ip_bis', 'navegador_bis',
+        'sistema_operativo_bis', 'session_id_bis', 'observacion_bis', 'datos_anteriores_bis', 'datos_nuevos_bis',
     ];
 
     public function __construct()
@@ -31,12 +31,12 @@ class BitacoraController extends Controller
 
         $registros = BitacoraModelo::query()
             ->filtrar($filtros)
-            ->orderByDesc('id')
+            ->orderByDesc('id_bis')
             ->paginate(20)
             ->withQueryString();
 
-        $modulos  = BitacoraModelo::query()->distinct()->orderBy('modulo')->pluck('modulo');
-        $acciones = BitacoraModelo::query()->distinct()->orderBy('accion')->pluck('accion');
+        $modulos  = BitacoraModelo::query()->distinct()->orderBy('modulo_bis')->pluck('modulo_bis');
+        $acciones = BitacoraModelo::query()->distinct()->orderBy('tipo_evento_bis')->pluck('tipo_evento_bis');
         $niveles  = [BitacoraModelo::NIVEL_INFO, BitacoraModelo::NIVEL_ADVERTENCIA, BitacoraModelo::NIVEL_CRITICO];
 
         return view('admin.configuracion.bitacora.index', compact('registros', 'filtros', 'modulos', 'acciones', 'niveles'));
@@ -46,8 +46,8 @@ class BitacoraController extends Controller
     {
         $registro = BitacoraModelo::with('usuario.persona')->findOrFail($id);
 
-        $antes   = $registro->datos_anteriores ?? [];
-        $despues = $registro->datos_modificados ?? [];
+        $antes   = $registro->datos_anteriores_bis ?? [];
+        $despues = $registro->datos_nuevos_bis ?? [];
         $campos  = array_values(array_unique(array_merge(array_keys($antes), array_keys($despues))));
 
         $diferencias = array_map(fn ($campo) => [
@@ -67,7 +67,7 @@ class BitacoraController extends Controller
         Bitacora::registrar(
             accion: 'bitacora_exportada',
             modulo: 'administracion',
-            tablaAfectada: 'bitacora',
+            tablaAfectada: 'bitacora_sistema',
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
             observacion: 'Formato CSV | Filtros: ' . $this->describirFiltros($filtros),
         );
@@ -80,7 +80,7 @@ class BitacoraController extends Controller
             fwrite($salida, "\xEF\xBB\xBF");
             fputcsv($salida, self::COLUMNAS_CSV, ';');
 
-            foreach ($consulta->lazyByIdDesc(500, 'id') as $fila) {
+            foreach ($consulta->lazyByIdDesc(500, 'id_bis') as $fila) {
                 fputcsv($salida, array_map(function ($columna) use ($fila) {
                     $valor = $fila->{$columna};
                     if (is_array($valor)) {
@@ -107,12 +107,12 @@ class BitacoraController extends Controller
         Bitacora::registrar(
             accion: 'bitacora_exportada',
             modulo: 'administracion',
-            tablaAfectada: 'bitacora',
+            tablaAfectada: 'bitacora_sistema',
             nivel: BitacoraModelo::NIVEL_ADVERTENCIA,
             observacion: "Formato PDF (máx. {$limite} filas) | Filtros: " . $this->describirFiltros($filtros),
         );
 
-        $registros = BitacoraModelo::query()->filtrar($filtros)->orderByDesc('id')->limit($limite)->get();
+        $registros = BitacoraModelo::query()->filtrar($filtros)->orderByDesc('id_bis')->limit($limite)->get();
         $total = BitacoraModelo::query()->filtrar($filtros)->count();
 
         $pdf = Pdf::loadView('admin.configuracion.bitacora.pdf', [
