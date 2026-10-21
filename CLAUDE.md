@@ -7,8 +7,8 @@
 - No inventes archivos, tablas ni rutas que no existan. Si necesitas confirmar algo, léelo del código. Si no existe, decláralo en el reporte final.
 
 ## Stack
-- Laravel 10 (los controladores usan `$this->middleware()` en el constructor), PHP 8.
-- MySQL 8 en Docker.
+- Laravel 12, PHP 8. Registra middleware, aliases y grupos donde el proyecto ya los tenga (bootstrap/app.php o app/Http/Kernel.php); revisa cuál usa antes de tocar nada. Sigue el estilo que ya usan los controladores existentes.
+- MySQL 8 hoy; la base de datos se migrará a PostgreSQL más adelante. Todo código nuevo debe ser compatible con ambos motores.
 - Blade + Tailwind CSS + Alpine.js. **Bootstrap está prohibido**: fue eliminado del sistema y no existe.
 - El paquete AdminLTE sigue instalado solo por `FilterInterface` en `app/AdminLTE/Filters/ModuleFilter.php`; no se usa para la UI.
 - SweetAlert2 está disponible en algunas vistas (`Swal`). Siempre deja un fallback con `confirm()`.
