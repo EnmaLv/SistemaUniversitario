@@ -284,10 +284,10 @@
             <div class="info-cell">
                 <strong class="label">Datos del paciente</strong>
                 <span class="field-name">Nombre:</span>
-                <span class="field-value">{{ $consulta->paciente->nombre_persona }}
-                    {{ $consulta->paciente->apellido_persona }}</span><br>
+                <span class="field-value">{{ $consulta->paciente->nombres_per }}
+                    {{ $consulta->paciente->apellidos_per }}</span><br>
                 <span class="field-name">Cédula/ID:</span>
-                <span class="field-value">{{ $consulta->paciente->cedula_persona ?? 'S/N' }}</span><br>
+                <span class="field-value">{{ $consulta->paciente->cedula_per ?? 'S/N' }}</span><br>
                 <span class="field-name">Válido hasta:</span>
                 <span class="field-value">
                     @if (optional($consulta->receta)->vigencia)
@@ -300,8 +300,8 @@
             <div class="info-cell">
                 <strong class="label">Datos de la consulta</strong>
                 <span class="field-name">Médico:</span>
-                <span class="field-value">Dr(a). {{ $consulta->medico->nombre_persona }}
-                    {{ $consulta->medico->apellido_persona }}</span><br>
+                <span class="field-value">Dr(a). {{ $consulta->medico->nombres_per }}
+                    {{ $consulta->medico->apellidos_per }}</span><br>
                 <span class="field-name">Consultorio:</span>
                 <span class="field-value">{{ optional($consulta->consultorio)->nombre ?? 'Centro Médico' }}</span><br>
                 <span class="field-name">Fecha:</span>
@@ -347,8 +347,8 @@
     <div class="signature-area">
         <div class="signature-line"></div>
         <div class="signature-text">
-            <strong>Dr(a). {{ $consulta->medico->nombre_persona }}
-                {{ $consulta->medico->apellido_persona }}</strong><br>
+            <strong>Dr(a). {{ $consulta->medico->nombres_per }}
+                {{ $consulta->medico->apellidos_per }}</strong><br>
             Firma y sello médico
         </div>
     </div>

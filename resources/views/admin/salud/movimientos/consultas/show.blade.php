@@ -9,18 +9,18 @@
                 $recetaCompleta = $tieneReceta && !$consulta->receta->tieneItemsPendientes();
                 $pacienteNombre =
                     trim(
-                        optional($consulta->paciente)->cedula_persona .
+                        optional($consulta->paciente)->cedula_per .
                             ' ' .
-                            optional($consulta->paciente)->nombre_persona .
+                            optional($consulta->paciente)->nombres_per .
                             ' ' .
-                            optional($consulta->paciente)->apellido_persona,
+                            optional($consulta->paciente)->apellidos_per,
                     ) ?:
                     '—';
                 $medicoNombre =
                     trim(
-                        optional($consulta->medico)->nombre_persona .
+                        optional($consulta->medico)->nombres_per .
                             ' ' .
-                            optional($consulta->medico)->apellido_persona,
+                            optional($consulta->medico)->apellidos_per,
                     ) ?:
                     '—';
             @endphp
@@ -428,7 +428,7 @@
                                                                 <div class="flex items-center justify-end gap-3">
                                                                     <span
                                                                         class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                        {{ optional(optional($disp->usuario)->persona)->nombre_persona .' '. optional(optional($disp->usuario)->persona)->apellido_persona ?? (optional($disp->usuario)->username ?? '—') }}
+                                                                        {{ optional(optional($disp->usuario)->persona)->nombres_per .' '. optional(optional($disp->usuario)->persona)->apellidos_per ?? (optional($disp->usuario)->username ?? '—') }}
                                                                     </span>
                                                                 </div>
                                                             </td>

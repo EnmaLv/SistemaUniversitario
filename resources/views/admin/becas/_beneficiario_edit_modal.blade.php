@@ -13,7 +13,7 @@
                 <div class="grid gap-4 md:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Estudiante</label>
-                        <p class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"><strong>{{ $beneficiario->persona?->nombre_persona }} {{ $beneficiario->persona?->apellido_persona }} - {{ $beneficiario->persona?->cedula_persona }}</strong></p>
+                        <p class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"><strong>{{ $beneficiario->persona?->nombres_per }} {{ $beneficiario->persona?->apellidos_per }} - {{ $beneficiario->persona?->cedula_per }}</strong></p>
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Área</label>
@@ -32,7 +32,7 @@
                         <select name="tutor_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                             <option value="">Seleccione tutor</option>
                             @foreach($tutores as $t)
-                                <option value="{{ $t->id_persona }}" {{ $beneficiario->tutor_id == $t->id_persona ? 'selected' : '' }}>{{ trim($t->nombre_persona . ' ' . $t->apellido_persona) }}</option>
+                                <option value="{{ $t->per_id }}" {{ $beneficiario->tutor_id == $t->per_id ? 'selected' : '' }}>{{ trim($t->nombres_per . ' ' . $t->apellidos_per) }}</option>
                             @endforeach
                         </select>
                     </div>

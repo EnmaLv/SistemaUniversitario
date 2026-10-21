@@ -21,7 +21,7 @@ class Dispensacion extends Model
         'receta_medica_id',
         'detalle_receta_medica_id',
         'producto_id',
-        'id_persona',
+        'per_id',
         'lote_id',
         'cantidad',
         'unidad_id',
@@ -53,7 +53,7 @@ class Dispensacion extends Model
 
     public function paciente()
     {
-        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
     public function lote()

@@ -30,9 +30,9 @@ class CuentasComunidad
 
     public static function asegurarCuenta(Persona $persona, ?Usuario $actor = null): ?Usuario
     {
-        self::procesarLote([$persona->id_persona], 'registro_manual', $actor);
+        self::procesarLote([$persona->id_per], 'registro_manual', $actor);
 
-        return Usuario::where('id_persona', $persona->id_persona)->orderBy('id_usuario')->first();
+        return Usuario::where('per_id', $persona->id_per)->orderBy('id_usuario')->first();
     }
 
     public static function procesarLote(array $idsPersona, string $origen, ?Usuario $actor = null): array
@@ -55,16 +55,16 @@ class CuentasComunidad
         foreach (array_chunk($idsPersona, self::TAMANO_LOTE) as $lote) {
             DB::transaction(function () use ($lote, $roles, &$resumen) {
                 $personas = DB::table('persona')
-                    ->whereIn('id_persona', $lote)
-                    ->get(['id_persona', 'cedula_persona', 'id_perfil']);
+                    ->whereIn('id_per', $lote)
+                    ->get(['id_per', 'cedula_per', 'id_perfil']);
 
                 $conCuenta = DB::table('usuario')
-                    ->whereIn('id_persona', $lote)
-                    ->pluck('id_persona')
+                    ->whereIn('per_id', $lote)
+                    ->pluck('per_id')
                     ->flip();
 
                 $cedulas = $personas
-                    ->map(fn ($persona) => Cedula::normalizar($persona->cedula_persona))
+                    ->map(fn ($persona) => Cedula::normalizar($persona->cedula_per))
                     ->filter()
                     ->values()
                     ->all();
@@ -79,26 +79,26 @@ class CuentasComunidad
                 $ahora = now();
 
                 foreach ($personas as $persona) {
-                    if (isset($conCuenta[$persona->id_persona])) {
+                    if (isset($conCuenta[$persona->id_per])) {
                         $resumen['usuarios_existentes']++;
                         continue;
                     }
 
-                    $cedula = Cedula::normalizar($persona->cedula_persona);
+                    $cedula = Cedula::normalizar($persona->cedula_per);
 
                     if (! $cedula) {
-                        $resumen['errores'][] = ['id_persona' => $persona->id_persona, 'motivo' => 'Cédula vacía o mal formada'];
+                        $resumen['errores'][] = ['per_id' => $persona->id_per, 'motivo' => 'Cédula vacía o mal formada'];
                         continue;
                     }
 
                     if (isset($ocupados[$cedula])) {
-                        $resumen['errores'][] = ['id_persona' => $persona->id_persona, 'motivo' => 'La cédula ya es el usuario de otra cuenta'];
+                        $resumen['errores'][] = ['per_id' => $persona->id_per, 'motivo' => 'La cédula ya es el usuario de otra cuenta'];
                         continue;
                     }
 
                     $ocupados[$cedula] = true;
                     $nuevos[] = [
-                        'id_persona'            => $persona->id_persona,
+                        'per_id'            => $persona->id_per,
                         'id_perfil'             => $persona->id_perfil,
                         'username'              => $cedula,
                         'password'              => Hash::make($cedula),
@@ -113,7 +113,7 @@ class CuentasComunidad
                     $resumen['usuarios_creados'] += count($nuevos);
                 }
 
-                $usuarios = DB::table('usuario')->whereIn('id_persona', $lote)->pluck('id_usuario')->all();
+                $usuarios = DB::table('usuario')->whereIn('per_id', $lote)->pluck('id_usuario')->all();
                 $creados = array_flip(array_column($nuevos, 'username'));
 
                 $asignados = DB::table('rol_usuario')

@@ -141,7 +141,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($medicos as $m)
-                <option value="{{ $m->id_persona }}">
+                <option value="{{ $m->per_id }}">
                     {{ $m->nombre_completo }} — {{ $m->nombre_rol }}
                 </option>
             @endforeach

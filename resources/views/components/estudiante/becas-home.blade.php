@@ -1,8 +1,8 @@
 @php
     $misSolicitudesBecas = collect([]);
-    if (auth()->check() && auth()->user()->tieneRol(['paciente', 'becario', 'estudiante']) && auth()->user()->id_persona) {
+    if (auth()->check() && auth()->user()->tieneRol(['paciente', 'becario', 'estudiante']) && auth()->user()->per_id) {
         $misSolicitudesBecas = \App\Models\Becas\SolicitudBeca::with('jornada.beneficio')
-            ->where('id_persona', auth()->user()->id_persona)
+            ->where('per_id', auth()->user()->per_id)
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -22,7 +22,7 @@
                         style="color: var(--text-main);">
                         Hola,<br>
                         <span class="text-red-600 dark:text-red-400">
-                            {{ auth()->user()->persona?->nombre_persona ?? (auth()->user()->nombres ?? auth()->user()->name) }}
+                            {{ auth()->user()->persona?->nombres_per ?? (auth()->user()->nombres ?? auth()->user()->name) }}
                         </span>
                     </h2>
                     <p class="mt-2 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed">

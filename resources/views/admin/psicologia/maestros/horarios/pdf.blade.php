@@ -103,7 +103,7 @@
     <main>
         <div class="header-title">
             <h1>HORARIO LABORAL</h1>
-            <p>{{ mb_strtoupper($psicologo->persona->nombre_persona ?? 'PSICÓLOGO NO ASIGNADO') }} {{ mb_strtoupper($psicologo->persona->apellido_persona ?? 'N/A') }}</p>
+            <p>{{ mb_strtoupper($psicologo->persona->nombres_per ?? 'PSICÓLOGO NO ASIGNADO') }} {{ mb_strtoupper($psicologo->persona->apellidos_per ?? 'N/A') }}</p>
         </div>
 
         @php

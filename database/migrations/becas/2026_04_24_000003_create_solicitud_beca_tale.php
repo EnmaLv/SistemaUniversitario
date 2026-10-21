@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             
             // Relación con el estudiante
-            $table->foreignId('id_persona')
-                  ->constrained('persona', 'id_persona')
+            $table->foreignId('per_id')
+                  ->constrained('persona', 'id_per')
                   ->onDelete('cascade');
             $table->foreignId('id_beneficio')
                   ->constrained('be_beneficios', 'id')

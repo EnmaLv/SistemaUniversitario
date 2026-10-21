@@ -25,7 +25,7 @@ class RecordatorioNotasNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
-        $pacienteName = $this->cita->paciente->persona->nombre_persona ?? 'Paciente';
+        $pacienteName = $this->cita->paciente->persona->nombres_per ?? 'Paciente';
         return [
             'type_id' => 'recordatorio_notas',
             'cita_id' => $this->cita->id,

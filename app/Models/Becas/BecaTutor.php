@@ -22,7 +22,7 @@ class BecaTutor extends Model
 
     public function tutor()
     {
-        return $this->belongsTo(Persona::class, 'tutor_id', 'id_persona');
+        return $this->belongsTo(Persona::class, 'tutor_id', 'per_id');
     }
 
     public function rol()

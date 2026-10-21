@@ -53,34 +53,34 @@ class BecaFormServiceTest extends TestCase
         ]);
 
         $student = Persona::create([
-            'nombre_persona' => 'Estudiante',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Prueba',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '11111111',
-            'telefono_persona' => '04141234567',
-            'genero_persona' => 'M',
+            'nombres_per' => 'Estudiante',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Prueba',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '11111111',
+            'telefono_per' => '04141234567',
+            'genero_per' => 'M',
             'edad_persona' => 20,
-            'fecha_nacimiento_persona' => '2004-01-01',
-            'email_persona' => 'estudiante@test.com',
-            'semestre_persona' => '1',
+            'fecha_nacimiento_per' => '2004-01-01',
+            'correo_per' => 'estudiante@test.com',
+            'semestre_per' => '1',
             'estado' => true,
             'id_perfil' => $perfilId,
             'sed_id' => $sedeId,
         ]);
 
         $tutor = Persona::create([
-            'nombre_persona' => 'Tutor',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Prueba',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '22222222',
-            'telefono_persona' => '04141234568',
-            'genero_persona' => 'F',
+            'nombres_per' => 'Tutor',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Prueba',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '22222222',
+            'telefono_per' => '04141234568',
+            'genero_per' => 'F',
             'edad_persona' => 30,
-            'fecha_nacimiento_persona' => '1994-01-01',
-            'email_persona' => 'tutor@test.com',
-            'semestre_persona' => null,
+            'fecha_nacimiento_per' => '1994-01-01',
+            'correo_per' => 'tutor@test.com',
+            'semestre_per' => null,
             'estado' => true,
             'id_perfil' => $tutorPerfilId,
             'sed_id' => $sedeId,
@@ -94,7 +94,7 @@ class BecaFormServiceTest extends TestCase
         ]);
 
         $user = Usuario::create([
-            'id_persona' => $tutor->id_persona,
+            'per_id' => $tutor->per_id,
             'id_perfil' => 1,
             'username' => 'tutoruser',
             'password' => 'password123',
@@ -108,15 +108,15 @@ class BecaFormServiceTest extends TestCase
         $formService = new BecaFormService();
         $datos = $formService->datosFormulario();
 
-        $tutorIds = $datos['tutores']->pluck('id_persona')->all();
+        $tutorIds = $datos['tutores']->pluck('per_id')->all();
 
-        $this->assertContains($tutor->id_persona, $tutorIds);
-        $this->assertNotContains($student->id_persona, $tutorIds);
+        $this->assertContains($tutor->per_id, $tutorIds);
+        $this->assertNotContains($student->per_id, $tutorIds);
 
-        $estudianteIds = $datos['estudiantes']->pluck('id_persona')->all();
+        $estudianteIds = $datos['estudiantes']->pluck('per_id')->all();
 
-        $this->assertContains($student->id_persona, $estudianteIds);
-        $this->assertNotContains($tutor->id_persona, $estudianteIds);
+        $this->assertContains($student->per_id, $estudianteIds);
+        $this->assertNotContains($tutor->per_id, $estudianteIds);
     }
 
     public function test_tutor_list_includes_personas_with_roles_even_if_persona_is_inactive()
@@ -153,17 +153,17 @@ class BecaFormServiceTest extends TestCase
         ]);
 
         $persona = Persona::create([
-            'nombre_persona' => 'Encargada',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Becas',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '33333333',
-            'telefono_persona' => '04141234569',
-            'genero_persona' => 'F',
+            'nombres_per' => 'Encargada',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Becas',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '33333333',
+            'telefono_per' => '04141234569',
+            'genero_per' => 'F',
             'edad_persona' => 35,
-            'fecha_nacimiento_persona' => '1990-01-01',
-            'email_persona' => 'becas@test.com',
-            'semestre_persona' => null,
+            'fecha_nacimiento_per' => '1990-01-01',
+            'correo_per' => 'becas@test.com',
+            'semestre_per' => null,
             'estado' => false,
             'id_perfil' => $perfilId,
             'sed_id' => $sedeId,
@@ -177,7 +177,7 @@ class BecaFormServiceTest extends TestCase
         ]);
 
         $user = Usuario::create([
-            'id_persona' => $persona->id_persona,
+            'per_id' => $persona->id_per,
             'id_perfil' => 1,
             'username' => 'becasuser',
             'password' => 'password123',
@@ -190,7 +190,7 @@ class BecaFormServiceTest extends TestCase
 
         $datos = (new BecaFormService())->datosFormulario();
 
-        $this->assertContains($persona->id_persona, $datos['tutores']->pluck('id_persona')->all());
+        $this->assertContains($persona->id_per, $datos['tutores']->pluck('per_id')->all());
     }
 
     public function test_edit_form_defaults_to_no_when_beca_has_no_tutores()

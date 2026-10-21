@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('consultas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_persona')->constrained('persona', 'id_persona')->onDelete('cascade');
-            $table->foreignId('medico_id')->constrained('persona', 'id_persona')->onDelete('cascade');
+            $table->foreignId('per_id')->constrained('persona', 'id_per')->onDelete('cascade');
+            $table->foreignId('medico_id')->constrained('persona', 'id_per')->onDelete('cascade');
             $table->foreignId('consultorio_id')->constrained('consultorios', 'id')->onDelete('cascade');
             $table->date('fecha')->nullable();
             $table->text('motivo');

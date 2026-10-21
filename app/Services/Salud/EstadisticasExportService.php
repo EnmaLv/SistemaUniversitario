@@ -84,7 +84,7 @@ class EstadisticasExportService
         $medico = Persona::find($medicoId);
 
         return $medico
-            ? trim(($medico->nombre_persona ?? '') . ' ' . ($medico->apellido_persona ?? ''))
+            ? trim(($medico->nombres_per ?? '') . ' ' . ($medico->apellidos_per ?? ''))
             : null;
     }
 

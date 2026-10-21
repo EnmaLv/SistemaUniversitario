@@ -19,7 +19,7 @@
     @endif
 
     {{-- Input oculto para el POST del formulario --}}
-    <input type="hidden" name="id_persona" value="{{ $selectedId }}" />
+    <input type="hidden" name="per_id" value="{{ $selectedId }}" />
 
     {{-- Dropdown --}}
     <div x-show="open && !'{{ $selectedId }}'" x-transition.opacity style="display: none;"
@@ -27,11 +27,11 @@
 
         <div wire:loading.remove wire:target="search">
             @forelse($estudiantes as $est)
-                <div wire:click="pickStudent({{ $est->id_persona }})" @click="open = false"
+                <div wire:click="pickStudent({{ $est->per_id }})" @click="open = false"
                     class="px-4 py-2.5 text-sm cursor-pointer transition-colors hover:bg-red-50 dark:hover:bg-red-950/20 border-b border-gray-100 dark:border-gray-750/30">
-                    <div class="font-bold text-slate-800 dark:text-slate-200">{{ $est->nombre_persona }}
-                        {{ $est->apellido_persona }}</div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">C.I. {{ $est->cedula_persona }}</div>
+                    <div class="font-bold text-slate-800 dark:text-slate-200">{{ $est->nombres_per }}
+                        {{ $est->apellidos_per }}</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">C.I. {{ $est->cedula_per }}</div>
                 </div>
             @empty
                 <div class="px-4 py-4 text-xs text-center text-gray-400 font-bold">
@@ -41,5 +41,5 @@
         </div>
     </div>
 
-    @error('id_persona') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+    @error('per_id') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
 </div>

@@ -13,12 +13,12 @@ class MultisedeTest extends SeguridadTestCase
     private function crearEstudiante(string $apellido, int $sede): Persona
     {
         return Persona::create([
-            'nombre_persona'   => 'ESTUDIANTE',
-            'apellido_persona' => $apellido,
-            'cedula_persona'   => (string) random_int(10000000, 29999999),
-            'telefono_persona' => '04140000000',
-            'genero_persona'   => 'FEMENINO',
-            'email_persona'    => strtolower($apellido) . '@prueba.test',
+            'nombres_per'   => 'ESTUDIANTE',
+            'apellidos_per' => $apellido,
+            'cedula_per'   => (string) random_int(10000000, 29999999),
+            'telefono_per' => '04140000000',
+            'genero_per'   => 'FEMENINO',
+            'correo_per'    => strtolower($apellido) . '@prueba.test',
             'id_perfil'        => 2,
             'sed_id'          => $sede,
         ]);

@@ -59,7 +59,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 font-bold" style="color:var(--text-main);">
-                                {{$usuario->persona->nombre_persona . ' ' . $usuario->persona->apellido_persona ?? "”" }}
+                                {{$usuario->persona->nombres_per . ' ' . $usuario->persona->apellidos_per ?? "”" }}
                             </td>
                             <td class="px-6 py-4">
                                 @php

@@ -40,8 +40,8 @@ class SeguridadBloqueosController extends Controller
             ->when($busqueda !== '', function ($q) use ($busqueda) {
                 $q->where(function ($sub) use ($busqueda) {
                     $sub->where('username', 'like', "%{$busqueda}%")
-                        ->orWhereHas('persona', fn ($p) => $p->where('nombre_persona', 'like', "%{$busqueda}%")
-                            ->orWhere('apellido_persona', 'like', "%{$busqueda}%"));
+                        ->orWhereHas('persona', fn ($p) => $p->where('nombres_per', 'like', "%{$busqueda}%")
+                            ->orWhere('apellidos_per', 'like', "%{$busqueda}%"));
                 });
             })
             ->orderByDesc('bloqueado_en')

@@ -4,8 +4,8 @@
 
         $receta = $consulta->receta;
         $paciente = $consulta->paciente;
-        $pacienteNombre = trim(($paciente->nombre_persona ?? '') . ' ' . ($paciente->apellido_persona ?? ''));
-        $medicoNombre = trim(($consulta->medico->nombre_persona ?? '') . ' ' . ($consulta->medico->apellido_persona ?? ''));
+        $pacienteNombre = trim(($paciente->nombres_per ?? '') . ' ' . ($paciente->apellidos_per ?? ''));
+        $medicoNombre = trim(($consulta->medico->nombres_per ?? '') . ' ' . ($consulta->medico->apellidos_per ?? ''));
         $recetaVencida = $receta->vigencia && \Carbon\Carbon::parse($receta->vigencia)->endOfDay()->isPast();
 
         $dispensacionesExistentes = $receta->detalles->flatMap->dispensaciones;
@@ -273,7 +273,7 @@
                                                 <p class="text-xs cx-muted mt-0.5">
                                                     {{ optional($disp->fecha)->format('d/m/Y') }},
                                                     lote {{ optional($disp->lote)->codigo_lote ?? '—' }},
-                                                    entregó {{ optional(optional($disp->usuario)->persona)->nombre_persona ?? '—' }}
+                                                    entregó {{ optional(optional($disp->usuario)->persona)->nombres_per ?? '—' }}
                                                 </p>
                                             </div>
                                             <span class="text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400 shrink-0">
@@ -293,11 +293,11 @@
                     <div class="cx-card p-5">
                         <div class="flex items-center gap-3">
                             <span class="w-10 h-10 rounded-full bg-sky-600 text-white flex items-center justify-center text-sm font-bold shrink-0" aria-hidden="true">
-                                {{ mb_strtoupper(mb_substr($paciente->nombre_persona ?? '?', 0, 1) . mb_substr($paciente->apellido_persona ?? '', 0, 1)) }}
+                                {{ mb_strtoupper(mb_substr($paciente->nombres_per ?? '?', 0, 1) . mb_substr($paciente->apellidos_per ?? '', 0, 1)) }}
                             </span>
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold cx-text truncate">{{ $pacienteNombre ?: 'Paciente' }}</p>
-                                <p class="text-xs cx-muted">C.I. {{ $paciente->cedula_persona ?? 'S/C' }}</p>
+                                <p class="text-xs cx-muted">C.I. {{ $paciente->cedula_per ?? 'S/C' }}</p>
                             </div>
                         </div>
 

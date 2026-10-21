@@ -153,8 +153,8 @@
             <div class="header-title">
                 @if ($loop->first)
                     <h1>{{ count($semanasInfo) > 1 ? 'AGENDA DEL MES' : 'AGENDA SEMANAL' }}</h1>
-                    <p>{{ mb_strtoupper($psicologo->persona->nombre_persona ?? 'PSICÓLOGO NO ASIGNADO') }}
-                        {{ mb_strtoupper($psicologo->persona->apellido_persona ?? 'N/A') }}</p>
+                    <p>{{ mb_strtoupper($psicologo->persona->nombres_per ?? 'PSICÓLOGO NO ASIGNADO') }}
+                        {{ mb_strtoupper($psicologo->persona->apellidos_per ?? 'N/A') }}</p>
                 @endif
                 <p>SEMANA DEL {{ $currentDate->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->format('d/m/Y') }} AL
                     {{ $currentDate->copy()->endOfWeek(\Carbon\Carbon::FRIDAY)->format('d/m/Y') }}</p>
@@ -342,7 +342,7 @@
                                                                 '</span>';
                                                         }
                                                         $nombreCorto =
-                                                            $mcita->paciente->persona->nombre_persona ?? 'Paciente';
+                                                            $mcita->paciente->persona->nombres_per ?? 'Paciente';
                                                         echo '<span style="font-size: 7px; color: #475569; display: block; margin-top: 2px;">' .
                                                             htmlspecialchars($nombreCorto) .
                                                             '</span>';

@@ -97,9 +97,9 @@ class RegisterController extends Controller
         $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'first_lastname' => ['required', 'string', 'max:255'],
-            'cedula' => ['required', 'digits_between:1,8', 'unique:persona,cedula_persona'],
+            'cedula' => ['required', 'digits_between:1,8', 'unique:persona,cedula_per'],
             'telefono' => ['nullable', 'regex:/^\d{4}-\d{7}$/'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:usuario,username', 'unique:persona,email_persona'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:usuario,username', 'unique:persona,correo_per'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'security_questions' => ['required', 'array', 'size:2'],
             'security_questions.*.question' => ['required', 'string'],
@@ -131,15 +131,14 @@ class RegisterController extends Controller
         $authService = new AuthService();
 
         $personaData = [
-            'nombre_persona' => $data['first_name'],
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => $data['first_lastname'],
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => $data['cedula'] ?? null,
-            'genero_persona' => '',
-            'edad_persona' => 0,
-            'fecha_nacimiento_persona' => now(),
-            'email_persona' => $data['email'],
+            'nombres_per' => $data['first_name'],
+            'segundo_nombre_per' => null,
+            'apellidos_per' => $data['first_lastname'],
+            'segundo_apellido_per' => null,
+            'cedula_per' => $data['cedula'] ?? null,
+            'genero_per' => '',
+            'fecha_nacimiento_per' => now(),
+            'correo_per' => $data['email'],
         ];
 
         $userData = [
@@ -150,7 +149,7 @@ class RegisterController extends Controller
 
         if (!empty($data['telefono'])) {
             $digits = preg_replace('/\D+/', '', $data['telefono']);
-            $personaData['telefono_persona'] = substr($digits, 0, 4) . '-' . substr($digits, 4);
+            $personaData['telefono_per'] = substr($digits, 0, 4) . '-' . substr($digits, 4);
         }
 
         $usuario = $authService->register($personaData, $userData);

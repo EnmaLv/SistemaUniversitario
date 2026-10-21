@@ -96,7 +96,7 @@ class SedeActiva
         $clave = (int) $usuario->getKey();
 
         if (! array_key_exists($clave, static::$sedePorUsuario)) {
-            $sede = DB::table('persona')->where('id_persona', $usuario->id_persona)->value('sed_id');
+            $sede = DB::table('persona')->where('id_per', $usuario->per_id)->value('sed_id');
             static::$sedePorUsuario[$clave] = $sede === null ? null : (int) $sede;
         }
 

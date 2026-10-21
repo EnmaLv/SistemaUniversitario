@@ -10,16 +10,16 @@ class PersonaController extends Controller
     public function index(Request $request)
     {
         $query = Persona::deSedeActiva()
-            ->select('id_persona', 'nombre_persona', 'apellido_persona', 'email_persona', 'cedula_persona')
+            ->select('id_per', 'nombres_per', 'apellidos_per', 'correo_per', 'cedula_per')
             ->where('id_perfil', 2);
         
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
             
             $query->where(function ($q) use ($buscar) {
-                $q->where('nombre_persona', 'like', "%{$buscar}%")
-                ->orWhere('apellido_persona', 'like', "%{$buscar}%")
-                ->orWhere('cedula_persona', 'like', "%{$buscar}%");
+                $q->where('nombres_per', 'like', "%{$buscar}%")
+                ->orWhere('apellidos_per', 'like', "%{$buscar}%")
+                ->orWhere('cedula_per', 'like', "%{$buscar}%");
             });
         }
         

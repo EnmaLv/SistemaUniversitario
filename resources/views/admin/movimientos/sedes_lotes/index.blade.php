@@ -17,7 +17,7 @@
             <div class="hidden text-right sm:block">
                 <small class="block text-[11px] font-bold uppercase tracking-wider text-gray-400">Usuario</small>
                 <span class="text-sm font-bold" style="color: var(--text-main);">
-                    {{ auth()->user()->persona->nombre_persona }}
+                    {{ auth()->user()->persona->nombres_per }}
                 </span>
             </div>
             <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"

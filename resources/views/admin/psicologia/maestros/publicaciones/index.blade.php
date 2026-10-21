@@ -43,12 +43,12 @@
                                         <img src="{{ route('media.profile_photos', basename(auth()->user()->profile_photo_path)) }}"
                                             class="w-full h-full object-cover">
                                     @else
-                                        {{ substr(auth()->user()->persona->nombre_persona, 0, 1) }}{{ substr(auth()->user()->persona->apellido_persona, 0, 1) }}
+                                        {{ substr(auth()->user()->persona->nombres_per, 0, 1) }}{{ substr(auth()->user()->persona->apellidos_per, 0, 1) }}
                                     @endif
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-bold leading-tight" style="color: var(--text-main);">
-                                        {{ auth()->user()->persona->nombre_persona }} {{ auth()->user()->persona->apellido_persona }}
+                                        {{ auth()->user()->persona->nombres_per }} {{ auth()->user()->persona->apellidos_per }}
                                     </h4>
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="text-[11px] font-medium text-gray-400">

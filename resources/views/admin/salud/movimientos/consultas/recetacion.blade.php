@@ -1,9 +1,9 @@
 <x-app-layout>
     @php
         $paciente = $consulta->paciente;
-        $pacienteNombre = trim(($paciente->nombre_persona ?? '') . ' ' . ($paciente->apellido_persona ?? ''));
+        $pacienteNombre = trim(($paciente->nombres_per ?? '') . ' ' . ($paciente->apellidos_per ?? ''));
         $medicoNombre = trim(
-            ($consulta->medico->nombre_persona ?? '') . ' ' . ($consulta->medico->apellido_persona ?? ''),
+            ($consulta->medico->nombres_per ?? '') . ' ' . ($consulta->medico->apellidos_per ?? ''),
         );
 
         $productosJs = $productos->map(fn($p) => ['id' => (string) $p->id, 'nombre' => $p->nombre])->values();

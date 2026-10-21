@@ -332,7 +332,7 @@ class HomeController extends Controller
     {
         $renovables = collect();
 
-        if (!$user || !$user->id_persona) {
+        if (!$user || !$user->per_id) {
             return $renovables;
         }
 
@@ -340,11 +340,11 @@ class HomeController extends Controller
             $aprobadoAnterior = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
                 ->where('estado', 1)
                 ->where('id_lapso', '!=', $jornada->lapsos_id)
-                ->where('id_persona', $user->id_persona)
+                ->where('per_id', $user->per_id)
                 ->exists();
 
             $postuladoActual = SolicitudBeca::where('jornada_id', $jornada->id)
-                ->where('id_persona', $user->id_persona)
+                ->where('per_id', $user->per_id)
                 ->exists();
 
             if ($aprobadoAnterior && !$postuladoActual) {

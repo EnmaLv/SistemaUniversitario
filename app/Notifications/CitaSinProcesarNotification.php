@@ -33,7 +33,7 @@ class CitaSinProcesarNotification extends Notification implements ShouldQueue
     {
         $fechaStr = $this->cita->fecha ? \Carbon\Carbon::parse($this->cita->fecha)->format('d/m/Y') : '';
         $horaStr = $this->cita->hora ? \Carbon\Carbon::parse($this->cita->hora)->format('g:i A') : '';
-        $pacienteName = $this->cita->paciente->persona->nombre_persona ?? ($this->cita->paciente->persona->nombre_persona ?? 'Desconocido');
+        $pacienteName = $this->cita->paciente->persona->nombres_per ?? ($this->cita->paciente->persona->nombres_per ?? 'Desconocido');
         
         return [
             'type_id' => 'cita_sin_procesar',

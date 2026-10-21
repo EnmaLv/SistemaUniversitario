@@ -15,7 +15,7 @@
                         <select name="persona_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                             <option value="">Seleccione estudiante</option>
                             @foreach($estudiantes as $e)
-                                <option value="{{ $e->id_persona }}">{{ trim($e->nombre_persona . ' ' . $e->apellido_persona) }} - {{ $e->cedula_persona }}</option>
+                                <option value="{{ $e->per_id }}">{{ trim($e->nombres_per . ' ' . $e->apellidos_per) }} - {{ $e->cedula_per }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -36,7 +36,7 @@
                         <select name="tutor_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                             <option value="">Seleccione tutor</option>
                             @foreach($tutores as $t)
-                                <option value="{{ $t->id_persona }}">{{ trim($t->nombre_persona . ' ' . $t->apellido_persona) }}</option>
+                                <option value="{{ $t->per_id }}">{{ trim($t->nombres_per . ' ' . $t->apellidos_per) }}</option>
                             @endforeach
                         </select>
                     </div>

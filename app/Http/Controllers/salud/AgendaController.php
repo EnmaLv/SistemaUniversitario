@@ -177,7 +177,7 @@ class AgendaController extends Controller
                 'hora'     => $hora,
                 'bloque'   => $bloqueLabel,
             ];
-            Mail::to($paciente->persona->email_persona ?? $paciente->username)
+            Mail::to($paciente->persona->correo_per ?? $paciente->username)
                 ->queue(new \App\Mail\CitaAsignadaManualMail($citaData, $user));
         } catch (\Exception $e) {
             Log::error('Error enviando correo de cita manual: ' . $e->getMessage());
@@ -314,8 +314,8 @@ class AgendaController extends Controller
                 ->get();
 
             $citasCalendario = $citas->map(function($cita) {
-                $nombres = $cita->paciente->persona->nombre_persona ?? $cita->nombres ?? '';
-                $apellidos = $cita->paciente->persona->apellido_persona ?? $cita->apellidos ?? '';
+                $nombres = $cita->paciente->persona->nombres_per ?? $cita->nombres ?? '';
+                $apellidos = $cita->paciente->persona->apellidos_per ?? $cita->apellidos ?? '';
 
                 $cita->paciente_nombre = trim("{$nombres} {$apellidos}");
 

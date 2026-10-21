@@ -19,17 +19,18 @@ return new class extends Migration
             $table->auditoria();
         });
 
-        Schema::create('persona_pnf', function (Blueprint $table) {
-            $table->id('id_persona_pnf');
-            $table->foreignId('id_persona')
-                ->references("id_persona")->on("persona")
+        Schema::create('persona_programa', function (Blueprint $table) {
+            $table->id('id_ppr');
+            $table->foreignId('per_id')
+                ->references('id_per')->on('persona')
                 ->onDelete('cascade');
             $table->foreignId('prg_id')
                 ->references('id_prg')->on("programa")
                 ->onDelete('cascade');
-            $table->date('fecha_inicio');
-            $table->date('fecha_fin')->nullable();
+            $table->date('fecha_inicio_ppr');
+            $table->date('fecha_fin_ppr')->nullable();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -38,7 +39,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('persona_pnf');
+        Schema::dropIfExists('persona_programa');
         Schema::dropIfExists('programa');
     }
 };

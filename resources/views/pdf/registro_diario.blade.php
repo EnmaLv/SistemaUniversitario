@@ -372,11 +372,11 @@
                 @foreach ($registros as $index => $registro)
                     <tr>
                         <td class="center">{{ $index + 1 }}</td>
-                        <td>{{ $registro->cedula_persona ?? '—' }}</td>
-                        <td>{{ $registro->nombre_persona ?? '—' }}</td>
-                        <td>{{ $registro->apellido_persona ?? '—' }}</td>
+                        <td>{{ $registro->cedula_per ?? '—' }}</td>
+                        <td>{{ $registro->nombres_per ?? '—' }}</td>
+                        <td>{{ $registro->apellidos_per ?? '—' }}</td>
                         <td>{{ $registro->nombre_prg ?? '—' }}</td>
-                        <td>{{ $registro->sector ?? '—' }}</td>
+                        <td>{{ $registro->sector_dir ?? '—' }}</td>
                         <td class="center">
                             @if (!empty($registro->fecha_regis_diario_c))
                                 {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}

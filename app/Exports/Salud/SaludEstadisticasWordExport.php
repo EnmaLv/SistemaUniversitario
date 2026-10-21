@@ -140,16 +140,16 @@ class SaludEstadisticasWordExport
                 $table->addRow();
                 $table->addCell()->addText('#' . $c->id, $cellFontStyle);
                 $table->addCell()->addText(
-                    trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) ?: '—',
+                    trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—',
                     $cellFontStyle
                 );
-                $table->addCell()->addText($c->paciente->cedula_persona ?? '—', $cellFontStyle);
+                $table->addCell()->addText($c->paciente->cedula_per ?? '—', $cellFontStyle);
                 $table->addCell()->addText(
                     $c->fecha ? Carbon::parse($c->fecha)->format('d/m/Y') : '—',
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
-                    trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')) ?: '—',
+                    trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: '—',
                     $cellFontStyle
                 );
                 $table->addCell()->addText($c->consultorio->nombre ?? '—', $cellFontStyle);
@@ -189,11 +189,11 @@ class SaludEstadisticasWordExport
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
-                    trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')),
+                    trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')),
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
-                    trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')),
+                    trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')),
                     $cellFontStyle
                 );
                 $table->addCell()->addText((string) $c->receta->detalles->count(), $cellFontStyle);
@@ -235,14 +235,14 @@ class SaludEstadisticasWordExport
                             $cellFontStyle
                         );
                         $table->addCell()->addText(
-                            trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')),
+                            trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')),
                             $cellFontStyle
                         );
                         $table->addCell()->addText($det->producto->nombre ?? '—', $cellFontStyle);
                         $table->addCell()->addText(number_format($disp->cantidad, 2), $cellFontStyle);
                         $table->addCell()->addText($disp->lote->codigo ?? '—', $cellFontStyle);
                         $table->addCell()->addText(
-                            trim(($disp->usuario->persona->nombre_persona ?? '') . ' ' . ($disp->usuario->persona->apellido_persona ?? '')) ?: '—',
+                            trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—',
                             $cellFontStyle
                         );
                     }

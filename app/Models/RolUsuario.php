@@ -31,7 +31,7 @@ class RolUsuario extends Model
         $persona = optional($this->usuario)->persona;
 
         if ($persona) {
-            $nombre = "{$persona->nombre_persona} {$persona->apellido_persona}";
+            $nombre = "{$persona->nombres_per} {$persona->apellidos_per}";
             if ($nombre !== '') {
                 return $nombre;
             }

@@ -2,22 +2,29 @@
 
 namespace App\Models;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PersonaPnf extends Model
 {
-    protected $table = 'persona_pnf';
-    protected $primaryKey = 'id_persona_pnf';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'persona_programa';
+
+    protected $primaryKey = 'id_ppr';
+
     protected $fillable = [
-        "id_persona",
-        "prg_id",
-        "fecha_inicio",
-        "fecha_fin"
+        'per_id',
+        'prg_id',
+        'fecha_inicio_ppr',
+        'fecha_fin_ppr',
     ];
 
     public function persona()
     {
-        return $this->belongsTo(Persona::class, 'id_persona');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
     public function pnf()

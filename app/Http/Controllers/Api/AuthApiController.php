@@ -50,8 +50,8 @@ class AuthApiController extends Controller
             'usuario' => [
                 'id'       => $usuario->id_usuario,
                 'username' => $usuario->username,
-                'nombre'   => $persona ? trim("{$persona->nombre_persona} {$persona->apellido_persona}") : $usuario->username,
-                'email'    => $persona->email_persona ?? $usuario->username,
+                'nombre'   => $persona ? trim("{$persona->nombres_per} {$persona->apellidos_per}") : $usuario->username,
+                'email'    => $persona->correo_per ?? $usuario->username,
             ],
             'roles'   => $roles,
             'modulos' => $modulos,
@@ -77,8 +77,8 @@ class AuthApiController extends Controller
             'usuario' => [
                 'id'       => $usuario->id_usuario,
                 'username' => $usuario->username,
-                'nombre'   => $persona ? trim("{$persona->nombre_persona} {$persona->apellido_persona}") : $usuario->username,
-                'email'    => $persona->email_persona ?? $usuario->username,
+                'nombre'   => $persona ? trim("{$persona->nombres_per} {$persona->apellidos_per}") : $usuario->username,
+                'email'    => $persona->correo_per ?? $usuario->username,
             ],
             'roles'   => $roles,
             'modulos' => $modulos,

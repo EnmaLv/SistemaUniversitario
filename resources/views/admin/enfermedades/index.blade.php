@@ -11,7 +11,7 @@
                         Catálogo de Enfermedades
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>

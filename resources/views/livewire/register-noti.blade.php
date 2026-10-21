@@ -389,9 +389,9 @@
                                             <i class="fas fa-user text-xs"></i>
                                         </span>
                                         <div class="min-w-0">
-                                            <p class="font-bold truncate">{{ $registro->nombre_persona }}</p>
+                                            <p class="font-bold truncate">{{ $registro->nombres_per }}</p>
                                             <p class="text-[11px] text-gray-400 dark:text-gray-500 truncate">
-                                                {{ $registro->apellido_persona }}</p>
+                                                {{ $registro->apellidos_per }}</p>
                                         </div>
                                     </div>
                                 </td>

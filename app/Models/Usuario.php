@@ -24,7 +24,7 @@ class Usuario extends Authenticatable
     protected $appends = ['nombre_completo'];
 
     protected $fillable = [
-        'id_persona',
+        'per_id',
         'id_perfil',
         'username',
         'ultima_actividad_chat',
@@ -106,7 +106,7 @@ class Usuario extends Authenticatable
             return $usuario;
         }
 
-        $porPersona = self::whereHas('persona', fn ($consulta) => $consulta->where('cedula_persona', $cedula))
+        $porPersona = self::whereHas('persona', fn ($consulta) => $consulta->where('cedula_per', $cedula))
             ->limit(2)
             ->get();
 
@@ -277,7 +277,7 @@ class Usuario extends Authenticatable
 
     public function persona()
     {
-        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
     public function roles()
@@ -317,8 +317,8 @@ class Usuario extends Authenticatable
     public function getNombreCompletoAttribute(): string
     {
         if ($this->persona) {
-            $nombre   = trim($this->persona->nombre_persona ?? '');
-            $apellido = trim($this->persona->apellido_persona ?? '');
+            $nombre   = trim($this->persona->nombres_per ?? '');
+            $apellido = trim($this->persona->apellidos_per ?? '');
 
             $nombreCompleto = trim("{$nombre} {$apellido}");
 
@@ -364,10 +364,10 @@ class Usuario extends Authenticatable
     public static function obtenerUsuarioPorId($id)
     {
         $userRaw = DB::table('usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
             ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
             ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
-            ->select('usuario.*', DB::raw("CONCAT(persona.nombre_persona, ' ', persona.apellido_persona) as name"))
+            ->select('usuario.*', DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as name"))
             ->where('usuario.id_usuario', $id)
             ->first();
 
@@ -381,7 +381,7 @@ class Usuario extends Authenticatable
             }
 
             $user->profile_photo_url = !empty($user->profile_photo_path) ? Storage::disk('public')->url($user->profile_photo_path) : null;
-            $initials = strtoupper(substr($user->nombre_persona ?? '', 0, 1) . substr($user->apellido_persona ?? '', 0, 1));
+            $initials = strtoupper(substr($user->nombres_per ?? '', 0, 1) . substr($user->apellidos_per ?? '', 0, 1));
             $user->avatar = $user->profile_photo_url ?: ($initials ?: 'PR');
 
             $user->primera_cita = DB::table('citas')
@@ -405,24 +405,24 @@ class Usuario extends Authenticatable
         }
 
         $query = DB::table('usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
             ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
             ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
             ->select(
                 'usuario.id_usuario',
-                'usuario.id_persona',
+                'usuario.per_id',
                 'usuario.username',
-                'persona.nombre_persona as nombres',
-                'persona.apellido_persona as apellidos',
-                'persona.cedula_persona as cedula',
-                'persona.email_persona as email',
-                DB::raw("TRIM(CONCAT(COALESCE(persona.nombre_persona, ''), ' ', COALESCE(persona.apellido_persona, ''))) as name")
+                'persona.nombres_per as nombres',
+                'persona.apellidos_per as apellidos',
+                'persona.cedula_per as cedula',
+                'persona.correo_per as email',
+                DB::raw("TRIM(CONCAT(COALESCE(persona.nombres_per, ''), ' ', COALESCE(persona.apellidos_per, ''))) as name")
             )
             ->where(function ($q) {
                 $q->where('rol.slug', 'paciente')
                     ->orWhere('rol.nombre', 'Paciente');
             })
-            ->where('persona.estado', 1)
+            ->where('persona.status_id', 1)
             ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.sed_id', $sede))
             ->where('usuario.id_usuario', '!=', $psicologoId)
             ->whereNotExists(function ($subquery) {
@@ -448,13 +448,13 @@ class Usuario extends Authenticatable
 
         $buscarNormalized = mb_strtolower($busqueda, 'UTF-8');
         $query->where(function ($q) use ($buscarNormalized) {
-            $q->whereRaw("LOWER(COALESCE(persona.nombre_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
-                ->orWhereRaw("LOWER(COALESCE(persona.apellido_persona, '')) LIKE ?", ["%{$buscarNormalized}%"])
-                ->orWhereRaw("LOWER(TRIM(CONCAT(COALESCE(persona.nombre_persona, ''), ' ', COALESCE(persona.apellido_persona, '')))) LIKE ?", ["%{$buscarNormalized}%"])
-                ->orWhereRaw("LOWER(COALESCE(persona.cedula_persona, '')) LIKE ?", ["{$buscarNormalized}%"]);
+            $q->whereRaw("LOWER(COALESCE(persona.nombres_per, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                ->orWhereRaw("LOWER(COALESCE(persona.apellidos_per, '')) LIKE ?", ["%{$buscarNormalized}%"])
+                ->orWhereRaw("LOWER(TRIM(CONCAT(COALESCE(persona.nombres_per, ''), ' ', COALESCE(persona.apellidos_per, '')))) LIKE ?", ["%{$buscarNormalized}%"])
+                ->orWhereRaw("LOWER(COALESCE(persona.cedula_per, '')) LIKE ?", ["{$buscarNormalized}%"]);
         });
 
-        $usuariosRaw = $query->orderBy('persona.nombre_persona', 'asc')->limit(20)->get();
+        $usuariosRaw = $query->orderBy('persona.nombres_per', 'asc')->limit(20)->get();
 
         return $usuariosRaw->map(function ($u) {
             $u->id = $u->id_usuario;
@@ -476,16 +476,16 @@ class Usuario extends Authenticatable
     public static function obtenerPsicologosDisponibles()
     {
         $psicologos = DB::table('usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
             ->join('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
             ->join('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
             ->join('grupos_horarios', 'usuario.id_usuario', '=', 'grupos_horarios.user_id')
             ->select(
                 'usuario.id_usuario',
                 'usuario.username',
-                'persona.nombre_persona',
-                'persona.apellido_persona',
-                DB::raw("CONCAT(persona.nombre_persona, ' ', persona.apellido_persona) as name")
+                'persona.nombres_per',
+                'persona.apellidos_per',
+                DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as name")
             )
             ->where(function ($query) {
                 $query->where('rol.slug', 'psicologo')
@@ -594,20 +594,20 @@ class Usuario extends Authenticatable
         }
 
         return DB::table('usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
             ->select(
                 'usuario.id_usuario',
                 'usuario.username',
-                'persona.nombre_persona',
-                'persona.apellido_persona',
-                DB::raw("CONCAT(persona.nombre_persona, ' ', persona.apellido_persona) as name")
+                'persona.nombres_per',
+                'persona.apellidos_per',
+                DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as name")
             )
             ->whereIn('usuario.id_usuario', $contactIds)
             ->distinct()
             ->get()
             ->map(function ($u) {
-                $firstName    = explode(' ', trim($u->nombre_persona ?? ''))[0]  ?? '';
-                $firstLastName = explode(' ', trim($u->apellido_persona ?? ''))[0] ?? '';
+                $firstName    = explode(' ', trim($u->nombres_per ?? ''))[0]  ?? '';
+                $firstLastName = explode(' ', trim($u->apellidos_per ?? ''))[0] ?? '';
                 $shortName    = trim($firstName . ' ' . $firstLastName);
                 $u->name      = $shortName ?: $u->name;
                 return $u;

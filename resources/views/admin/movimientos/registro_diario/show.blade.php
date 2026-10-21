@@ -10,7 +10,7 @@
                         Vista detallada del registro
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span>
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span>
                         · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -25,7 +25,7 @@
             </div>
 
             @php
-                $edad = \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->age;
+                $edad = \Carbon\Carbon::parse($registro->fecha_nacimiento_per)->age;
             @endphp
 
             <div class="space-y-5">
@@ -44,7 +44,7 @@
                             </h2>
                             <p class="mt-3 text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">
                                 <strong style="color: var(--text-main);">
-                                    {{ trim($registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona) }}
+                                    {{ trim($registro->nombres_per . ' ' . $registro->segundo_nombre_per . ' ' . $registro->apellidos_per . ' ' . $registro->segundo_apellido_per) }}
                                 </strong>
                                 fue registrado en el sistema con la información detallada a continuación.
                             </p>
@@ -74,7 +74,7 @@
                                     Nombre completo
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ trim($registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona) }}
+                                    {{ trim($registro->nombres_per . ' ' . $registro->segundo_nombre_per . ' ' . $registro->apellidos_per . ' ' . $registro->segundo_apellido_per) }}
                                 </p>
                             </div>
 
@@ -84,7 +84,7 @@
                                         Cédula
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->cedula_persona ?? '—' }}
+                                        {{ $registro->cedula_per ?? '—' }}
                                     </p>
                                 </div>
                                 <div>
@@ -92,7 +92,7 @@
                                         Género
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->genero_persona ?? '—' }}
+                                        {{ $registro->genero_per ?? '—' }}
                                     </p>
                                 </div>
                             </div>
@@ -103,7 +103,7 @@
                                         Fecha de nacimiento
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($registro->fecha_nacimiento_per)->format('d/m/Y') }}
                                     </p>
                                 </div>
                                 <div>
@@ -138,7 +138,7 @@
                                     Teléfono
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ $registro->telefono_persona ?? '—' }}
+                                    {{ $registro->telefono_per ?? '—' }}
                                 </p>
                             </div>
 
@@ -147,7 +147,7 @@
                                     Correo electrónico
                                 </p>
                                 <p class="text-sm font-bold break-all" style="color: var(--text-main);">
-                                    {{ $registro->email_persona ?? '—' }}
+                                    {{ $registro->correo_per ?? '—' }}
                                 </p>
                             </div>
 
@@ -165,7 +165,7 @@
                                         Semestre
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->semestre_persona ?? '—' }}
+                                        {{ $registro->semestre_per ?? '—' }}
                                     </p>
                                 </div>
                             </div>

@@ -35,7 +35,7 @@ return new class extends Migration
         Schema::create('condicion_estudiante', function (Blueprint $table) {
             $table->id();
             $table->string('nombre_condicion')->comment('Regular, repitiente, etc');
-            $table->foreignId('id_persona')->constrained('persona', 'id_persona')->onDelete('cascade');
+            $table->foreignId('per_id')->constrained('persona', 'id_per')->onDelete('cascade');
             $table->foreignId('lapsos_id')->constrained('be_lapsos')->onDelete('cascade');
             $table->timestamps();
         });

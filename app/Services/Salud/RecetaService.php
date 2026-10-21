@@ -96,7 +96,7 @@ class RecetaService
         return $consulta->receta()->updateOrCreate(
             ['consulta_id' => $consulta->id],
             [
-                'id_persona'  => $consulta->pacienteIdParaReceta(),
+                'per_id'  => $consulta->pacienteIdParaReceta(),
                 'medico_id'   => $consulta->medicoIdParaReceta($usuarioId),
                 'fecha'       => $datos['fecha'],
                 'vigencia'    => $datos['vigencia'] ?? null,

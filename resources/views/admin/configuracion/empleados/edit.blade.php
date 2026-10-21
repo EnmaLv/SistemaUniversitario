@@ -364,19 +364,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Cédula de Identidad
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('cedula_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('cedula_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-id-card text-sm"></i>
                                     </span>
-                                    <input type="text" name="cedula_persona"
-                                        value="{{ old('cedula_persona', optional($usuario->persona)->cedula_persona) }}"
+                                    <input type="text" name="cedula_per"
+                                        value="{{ old('cedula_per', optional($usuario->persona)->cedula_per) }}"
                                         placeholder="Ej: V-12345678"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('cedula_persona')
+                                @error('cedula_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -386,19 +386,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Teléfono de Contacto
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('telefono_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('telefono_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-phone text-sm"></i>
                                     </span>
-                                    <input type="text" name="telefono_persona"
-                                        value="{{ old('telefono_persona', optional($usuario->persona)->telefono_persona) }}"
+                                    <input type="text" name="telefono_per"
+                                        value="{{ old('telefono_per', optional($usuario->persona)->telefono_per) }}"
                                         placeholder="Ej: 0412-1234567"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('telefono_persona')
+                                @error('telefono_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -408,19 +408,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Nombres
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('nombre_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('nombres_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-user text-sm"></i>
                                     </span>
-                                    <input type="text" name="nombre_persona"
-                                        value="{{ old('nombre_persona', optional($usuario->persona)->nombre_persona) }}"
+                                    <input type="text" name="nombres_per"
+                                        value="{{ old('nombres_per', optional($usuario->persona)->nombres_per) }}"
                                         placeholder="Nombres del empleado"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('nombre_persona')
+                                @error('nombres_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -430,19 +430,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Apellidos
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('apellido_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('apellidos_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-user text-sm"></i>
                                     </span>
-                                    <input type="text" name="apellido_persona"
-                                        value="{{ old('apellido_persona', optional($usuario->persona)->apellido_persona) }}"
+                                    <input type="text" name="apellidos_per"
+                                        value="{{ old('apellidos_per', optional($usuario->persona)->apellidos_per) }}"
                                         placeholder="Apellidos del empleado"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('apellido_persona')
+                                @error('apellidos_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>

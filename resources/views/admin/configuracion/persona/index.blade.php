@@ -9,7 +9,7 @@
                         Estudiantes
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -52,7 +52,7 @@
 
                         <tbody class="text-xs font-medium">
                             @forelse($personas as $persona)
-                                <x-table-row :id="$persona->id_persona" class="border-b"
+                                <x-table-row :id="$persona->id_per" class="border-b"
                                     style="border-color: var(--border-color);">
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
@@ -62,29 +62,29 @@
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $persona->cedula_persona }}
+                                        {{ $persona->cedula_per }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap"
                                         style="color: var(--text-main);">
-                                        {{ $persona->nombre_persona }}
+                                        {{ $persona->nombres_per }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap"
                                         style="color: var(--text-main);">
-                                        {{ $persona->apellido_persona }}
+                                        {{ $persona->apellidos_per }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $persona->email_persona ?: 'Sin correo' }}
+                                        {{ $persona->correo_per ?: 'Sin correo' }}
                                     </td>
 
-                                    <x-table-actions :id="$persona->id_persona" baseUrl="admin/configuracion/persona"
+                                    <x-table-actions :id="$persona->id_per" baseUrl="admin/configuracion/persona"
                                         :show="false" :edit="false" :toggle="false">
-                                        <a href="{{ route('admin.configuracion.persona.show', ['id' => $persona->id_persona]) }}"
+                                        <a href="{{ route('admin.configuracion.persona.show', ['id' => $persona->id_per]) }}"
                                             onclick="event.stopPropagation()"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-500 hover:bg-sky-100 dark:hover:bg-sky-950/50 transition-colors"
                                             title="Ver estudiante">
                                             <i class="fas fa-eye text-xs"></i>
                                         </a>
-                                        <a href="{{ route('admin.configuracion.persona.edit', ['id' => $persona->id_persona]) }}"
+                                        <a href="{{ route('admin.configuracion.persona.edit', ['id' => $persona->id_per]) }}"
                                             onclick="event.stopPropagation()"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
                                             title="Editar">

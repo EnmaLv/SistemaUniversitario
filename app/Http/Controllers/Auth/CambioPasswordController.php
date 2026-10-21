@@ -53,7 +53,7 @@ class CambioPasswordController extends Controller
         $nueva = (string) $request->input('password');
         $cedulaNueva = Cedula::normalizar($nueva);
         $cedulas = array_filter([
-            Cedula::normalizar($usuario->persona?->cedula_persona),
+            Cedula::normalizar($usuario->persona?->cedula_per),
             Cedula::normalizar($usuario->username),
         ]);
 

@@ -119,7 +119,7 @@ class SaludHomeService
             }
 
             // Médico
-            $nombreMedico = trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')) ?: 'No asignado';
+            $nombreMedico = trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: 'No asignado';
             $resumen['medicos'][$nombreMedico] = ($resumen['medicos'][$nombreMedico] ?? 0) + 1;
 
             // Consultorio
@@ -157,19 +157,19 @@ class SaludHomeService
 
             // Datos únicos del paciente
             $paciente = $c->paciente;
-            if ($paciente && !isset($pacientes[$paciente->id_persona])) {
-                $pacientes[$paciente->id_persona] = true;
+            if ($paciente && !isset($pacientes[$paciente->per_id])) {
+                $pacientes[$paciente->per_id] = true;
                 $resumen['total_pacientes']++;
 
                 // Género
-                $genero = strtolower(trim($paciente->genero_persona ?? ''));
+                $genero = strtolower(trim($paciente->genero_per ?? ''));
                 if (in_array($genero, ['masculino', 'hombre', 'm'])) $resumen['genero']['masculino']++;
                 elseif (in_array($genero, ['femenino', 'mujer', 'f'])) $resumen['genero']['femenino']++;
                 else $resumen['genero']['otro']++;
 
                 // Edad
-                if ($paciente->fecha_nacimiento_persona) {
-                    $edad = Carbon::parse($paciente->fecha_nacimiento_persona)->age;
+                if ($paciente->fecha_nacimiento_per) {
+                    $edad = Carbon::parse($paciente->fecha_nacimiento_per)->age;
                     $edadesList[] = $edad;
                     if ($edad <= 17) $resumen['edades']['rangos']['0-17']++;
                     elseif ($edad <= 25) $resumen['edades']['rangos']['18-25']++;

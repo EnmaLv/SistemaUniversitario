@@ -13,9 +13,9 @@
                         \Log::info('DEBUG NAME PSICO', [
                             'auth_id'         => auth()->id(),
                             'id_usuario'      => auth()->user()->id_usuario,
-                            'id_persona'      => auth()->user()->id_persona,
+                            'per_id'      => auth()->user()->per_id,
                             'persona'         => optional(auth()->user()->persona)->toArray(),
-                            'nombre_persona'  => auth()->user()->persona?->nombre_persona,
+                            'nombres_per'  => auth()->user()->persona?->nombres_per,
                             'nombres_attr'    => auth()->user()->nombres ?? null,
                             'name_attr'       => auth()->user()->name ?? null,
                             'roles'           => auth()->user()->roles->pluck('nombre', 'slug')->toArray(),
@@ -27,7 +27,7 @@
                         style="color: var(--text-main);">
                         {{ $saludo ?? 'Buenos días' }},<br>
                         <span class="text-indigo-600 dark:text-indigo-400">
-                            {{ auth()->user()->persona->nombre_persona ?? (auth()->user()->nombres ?? auth()->user()->name) }}
+                            {{ auth()->user()->persona->nombres_per ?? (auth()->user()->nombres ?? auth()->user()->name) }}
                         </span>
                     </h2>
                     <p class="mt-2 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -41,7 +41,7 @@
             </div>
 
             <div class="relative h-48 sm:h-56 my-4 rounded-2xl overflow-hidden">
-                <img src="{{ asset('img/' . (auth()->user()->persona?->genero_persona === 'Masculino' || auth()->user()->persona?->genero_persona === 'M' ? 'therapy_illustration_masc.png' : 'therapy_illustration.png')) }}"
+                <img src="{{ asset('img/' . (auth()->user()->persona?->genero_per === 'Masculino' || auth()->user()->persona?->genero_per === 'M' ? 'therapy_illustration_masc.png' : 'therapy_illustration.png')) }}"
                     alt="Ilustración Bienestar"
                     class="w-full h-full object-cover object-[50%_60%] transition-transform duration-500 hover:scale-105">
                 <div

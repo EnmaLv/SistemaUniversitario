@@ -27,14 +27,14 @@ class BecaFormService
                 ->with(['usuarios.roles' => function ($q) use ($becaRoleIds) {
                     $q->whereIn('rol.id_rol', $becaRoleIds);
                 }])
-                ->orderBy('nombre_persona')
+                ->orderBy('nombres_per')
                 ->get(),
             'roles' => Rol::orderBy('nombre')->get(),
-            'estudiantes' => Persona::deSedeActiva()->where('estado', true)
+            'estudiantes' => Persona::deSedeActiva()->where('status_id', 1)
                 ->whereHas('perfil', function ($query) {
                     $query->where('nombre_perfil', 'Estudiante');
                 })
-                ->orderBy('nombre_persona')
+                ->orderBy('nombres_per')
                 ->get(),
         ];
     }

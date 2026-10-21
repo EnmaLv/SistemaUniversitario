@@ -8,8 +8,8 @@
                             $paciente = $cita->paciente;
                             $nombreCompleto =
                                 implode(' ', [
-                                    $paciente->persona->nombre_persona ?? '',
-                                    $paciente->persona->apellido_persona ?? '',
+                                    $paciente->persona->nombres_per ?? '',
+                                    $paciente->persona->apellidos_per ?? '',
                                 ]) ?? '';
                             $partes = explode(' ', trim($nombreCompleto));
                             $primerNombre = $partes[0] ?? '';
@@ -21,12 +21,12 @@
                                     ? \Carbon\Carbon::parse($cita->confirmado_en)->format('d/m/Y')
                                     : 'No disponible';
                             $edad =
-                                $paciente->persona->fecha_nacimiento_persona ?? null
-                                    ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->age
+                                $paciente->persona->fecha_nacimiento_per ?? null
+                                    ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->age
                                     : 'No disponible';
                             $nacimiento =
-                                $paciente->persona->fecha_nacimiento_persona ?? null
-                                    ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->format(
+                                $paciente->persona->fecha_nacimiento_per ?? null
+                                    ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->format(
                                         'd/m/Y',
                                     )
                                     : 'No disponible';
@@ -35,13 +35,13 @@
                         <button type="button"
                             class="open-patient-modal shrink-0 w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-md shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                             data-patient-type="user" data-patient-name="{{ $nombreCompleto }}"
-                            data-patient-email="{{ $paciente->persona->email_persona ?? 'No disponible' }}"
-                            data-patient-phone="{{ $paciente->persona->telefono_persona ?? 'No disponible' }}"
+                            data-patient-email="{{ $paciente->persona->correo_per ?? 'No disponible' }}"
+                            data-patient-phone="{{ $paciente->persona->telefono_per ?? 'No disponible' }}"
                             data-patient-created="{{ $fechaCita }}"
-                            data-patient-cedula="{{ $paciente->persona->cedula_persona ?? 'No disponible' }}"
-                            data-patient-genero="{{ $paciente->persona->genero_persona ?? 'No disponible' }}"
+                            data-patient-cedula="{{ $paciente->persona->cedula_per ?? 'No disponible' }}"
+                            data-patient-genero="{{ $paciente->persona->genero_per ?? 'No disponible' }}"
                             data-patient-nacimiento="{{ $nacimiento }}"
-                            data-patient-semestre="{{ $paciente->persona->semestre_persona ?? null ? $paciente->persona->semestre . '° Semestre' : 'No aplica' }}"
+                            data-patient-semestre="{{ $paciente->persona->semestre_per ?? null ? $paciente->persona->semestre . '° Semestre' : 'No aplica' }}"
                             data-patient-edad="{{ $edad }}" title="Ver perfil del paciente">
                             <span class="text-lg font-black tracking-wider">{{ $iniciales }}</span>
                         </button>

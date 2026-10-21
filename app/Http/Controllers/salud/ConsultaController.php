@@ -74,7 +74,7 @@ class ConsultaController extends Controller
             'consulta'     => $consulta,
             'consultorios' => $this->consultoriosActivos(),
             'medicos'      => HorarioConsultorio::usuariosElegibles(),
-            'personas'     => Persona::where('estado', true)->orderBy('nombre_persona')->get(),
+            'personas'     => Persona::where('status_id', 1)->orderBy('nombres_per')->get(),
         ]);
     }
 
@@ -213,7 +213,7 @@ class ConsultaController extends Controller
 
         $nombreArchivo = sprintf(
             'recipe-%s-%s.pdf',
-            $consulta->paciente->cedula_persona ?? 'sin-cedula',
+            $consulta->paciente->cedula_per ?? 'sin-cedula',
             $consulta->fecha->format('Y-m-d')
         );
 
@@ -253,17 +253,17 @@ class ConsultaController extends Controller
         $q = $request->termino();
 
         $personas = Persona::deSedeActiva()->where(function ($query) use ($q) {
-            $query->where('nombre_persona', 'like', "%{$q}%")
-                ->orWhere('apellido_persona', 'like', "%{$q}%")
-                ->orWhere('cedula_persona', 'like', "%{$q}%");
+            $query->where('nombres_per', 'like', "%{$q}%")
+                ->orWhere('apellidos_per', 'like', "%{$q}%")
+                ->orWhere('cedula_per', 'like', "%{$q}%");
         })
             ->limit(10)
             ->get()
             ->map(fn($persona) => [
-                'id_persona' => $persona->id_persona,
-                'nombre'     => ' ' . ($persona->cedula_persona ?? 'S/C')
-                    . ' ' . ($persona->nombre_persona ?? '')
-                    . ' ' . ($persona->apellido_persona ?? ''),
+                'per_id' => $persona->id_per,
+                'nombre'     => ' ' . ($persona->cedula_per ?? 'S/C')
+                    . ' ' . ($persona->nombres_per ?? '')
+                    . ' ' . ($persona->apellidos_per ?? ''),
             ]);
 
         return response()->json($personas);

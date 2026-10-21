@@ -125,10 +125,10 @@
                                     Hay {{ $item['personas']->count() }} estudiante(s) del lapso anterior que no han renovado su beca para la jornada "{{ $item['jornada']->nombre_jornada }}".
                                 </p>
                             </div>
-                            <div class="shrink-0 flex -space-x-2 overflow-hidden" title="{{ $item['personas']->pluck('nombre_persona')->implode(', ') }}">
+                            <div class="shrink-0 flex -space-x-2 overflow-hidden" title="{{ $item['personas']->pluck('nombres_per')->implode(', ') }}">
                                 @foreach($item['personas']->take(5) as $p)
                                     <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 bg-amber-200 dark:bg-amber-800 flex items-center justify-center text-[10px] font-bold text-amber-800 dark:text-amber-200">
-                                        {{ substr($p->nombre_persona, 0, 1) }}{{ substr($p->apellido_persona, 0, 1) }}
+                                        {{ substr($p->nombres_per, 0, 1) }}{{ substr($p->apellidos_per, 0, 1) }}
                                     </div>
                                 @endforeach
                                 @if($item['personas']->count() > 5)
@@ -169,11 +169,11 @@
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <div class="flex flex-col items-center gap-0.5">
                                             <span class="font-bold" style="color: var(--text-main);">
-                                                {{ $solicitud->persona->nombre_persona }}
-                                                {{ $solicitud->persona->apellido_persona }}
+                                                {{ $solicitud->persona->nombres_per }}
+                                                {{ $solicitud->persona->apellidos_per }}
                                             </span>
                                             <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800 font-mono">
-                                                {{ $solicitud->persona->cedula_persona }}
+                                                {{ $solicitud->persona->cedula_per }}
                                             </span>
                                         </div>
                                     </td>

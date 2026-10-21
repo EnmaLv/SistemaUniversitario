@@ -274,7 +274,7 @@
                     <input type="hidden" name="tutores[{{ $index }}][tutor_id]" value="{{ $tutorRow['tutor_id'] ?? '' }}">
                     <input type="hidden" name="tutores[{{ $index }}][descripcion]" value="{{ $tutorRow['descripcion'] ?? '' }}">
                     <td>{{ optional($roles->firstWhere('id_rol', $tutorRow['rol_id']))->nombre ?? 'Sin rol' }}</td>
-                    <td>{{ optional($tutores->firstWhere('id_persona', $tutorRow['tutor_id'])) ? trim(optional($tutores->firstWhere('id_persona', $tutorRow['tutor_id']))->nombre_persona . ' ' . optional($tutores->firstWhere('id_persona', $tutorRow['tutor_id']))->apellido_persona) : 'Sin tutor' }}</td>
+                    <td>{{ optional($tutores->firstWhere('per_id', $tutorRow['tutor_id'])) ? trim(optional($tutores->firstWhere('per_id', $tutorRow['tutor_id']))->nombres_per . ' ' . optional($tutores->firstWhere('per_id', $tutorRow['tutor_id']))->apellidos_per) : 'Sin tutor' }}</td>
                     <td>{{ $tutorRow['descripcion'] ?? '' }}</td>
                     <td class="text-center">
                         <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400 remove-tutor" title="Eliminar tutor">
@@ -355,8 +355,8 @@
 
     $tutorJsPersonas = $tutores->map(function ($tutor) {
         return [
-            'id' => $tutor->id_persona,
-            'name' => trim($tutor->nombre_persona . ' ' . $tutor->apellido_persona),
+            'id' => $tutor->per_id,
+            'name' => trim($tutor->nombres_per . ' ' . $tutor->apellidos_per),
             'role_ids' => $tutor->usuarios->flatMap(function ($usuario) {
                 return $usuario->roles->pluck('id_rol');
             })->unique()->values()->all(),

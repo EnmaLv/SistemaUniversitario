@@ -20,12 +20,12 @@ class CuentasComunidadTest extends SeguridadTestCase
     private function crearPersona(?string $cedula = null): Persona
     {
         return Persona::create([
-            'nombre_persona'   => 'ESTUDIANTE',
-            'apellido_persona' => 'PRUEBA',
-            'cedula_persona'   => $cedula ?? (string) random_int(10000000, 29999999),
-            'telefono_persona' => '04140000000',
-            'genero_persona'   => 'FEMENINO',
-            'email_persona'    => 'estudiante' . random_int(1, 999999) . '@prueba.test',
+            'nombres_per'   => 'ESTUDIANTE',
+            'apellidos_per' => 'PRUEBA',
+            'cedula_per'   => $cedula ?? (string) random_int(10000000, 29999999),
+            'telefono_per' => '04140000000',
+            'genero_per'   => 'FEMENINO',
+            'correo_per'    => 'estudiante' . random_int(1, 999999) . '@prueba.test',
             'id_perfil'        => DB::table('perfil')->value('id_perfil'),
             'sed_id'          => DB::table('sede')->value('id_sed'),
         ]);
@@ -90,7 +90,7 @@ class CuentasComunidadTest extends SeguridadTestCase
     public function test_el_bloqueo_cuenta_los_intentos_con_cedula_y_con_correo(): void
     {
         $usuario = $this->crearUsuario('Obrero');
-        $cedula = $usuario->persona->cedula_persona;
+        $cedula = $usuario->persona->cedula_per;
 
         $this->post('/login', ['email' => $cedula, 'password' => 'incorrecta']);
         $this->post('/login', ['email' => $usuario->username, 'password' => 'incorrecta']);
@@ -178,8 +178,8 @@ class CuentasComunidadTest extends SeguridadTestCase
         );
 
         $this->assertTrue(Usuario::where('username', '23111001')->where('debe_cambiar_password', true)->exists());
-        $this->assertSame('ACTUALIZADA', $existente->fresh()->apellido_persona);
-        $this->assertSame('04140000000', $existente->fresh()->telefono_persona);
+        $this->assertSame('ACTUALIZADA', $existente->fresh()->apellidos_per);
+        $this->assertSame('04140000000', $existente->fresh()->telefono_per);
 
         $evento = BitacoraModelo::where('accion', 'importacion_personas')->latest('id')->first();
         $this->assertNotNull($evento);
@@ -192,7 +192,7 @@ class CuentasComunidadTest extends SeguridadTestCase
 
         $this->artisan('usuarios:generar-faltantes')->assertSuccessful();
 
-        $usuario = Usuario::where('id_persona', $persona->id_persona)->first();
+        $usuario = Usuario::where('per_id', $persona->id_per)->first();
         $this->assertNotNull($usuario);
         $this->assertSame('22333444', $usuario->username);
     }

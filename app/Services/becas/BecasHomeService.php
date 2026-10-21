@@ -163,7 +163,7 @@ class BecasHomeService
             if ($s->verificado_por && $s->verificador) {
                 $persona = $s->verificador->persona;
                 $nombre = trim(
-                    ($persona->nombre_persona ?? '') . ' ' . ($persona->apellido_persona ?? '')
+                    ($persona->nombres_per ?? '') . ' ' . ($persona->apellidos_per ?? '')
                 ) ?: ('Verificador #' . $s->verificado_por);
                 $verificadores[$nombre] = ($verificadores[$nombre] ?? 0) + 1;
             }

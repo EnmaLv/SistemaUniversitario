@@ -152,7 +152,7 @@ class HistoriaController extends Controller
         $returnTo = $request->get('return_to');
         $editing = $request->get('editing');
 
-        $paciente->name = trim(($paciente->nombre_persona ?? '') . ' ' . ($paciente->apellido_persona ?? ''));
+        $paciente->name = trim(($paciente->nombres_per ?? '') . ' ' . ($paciente->apellidos_per ?? ''));
         $paciente->primera_cita = Cita::obtenerFechaPrimeraCita($paciente->id);
 
         $historia = HistoriaClinica::iniciarHistoria($paciente->id, Auth::id());

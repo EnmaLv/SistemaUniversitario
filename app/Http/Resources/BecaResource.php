@@ -24,9 +24,9 @@ class BecaResource extends JsonResource
                         'area' => $asignacion->area,
                         'horario' => $asignacion->horario,
                         'tutor' => $asignacion->tutor ? [
-                            'id' => $asignacion->tutor->id_persona,
-                            'nombre' => trim($asignacion->tutor->nombre_persona . ' ' . $asignacion->tutor->apellido_persona),
-                            'email' => $asignacion->tutor->email_persona,
+                            'id' => $asignacion->tutor->per_id,
+                            'nombre' => trim($asignacion->tutor->nombres_per . ' ' . $asignacion->tutor->apellidos_per),
+                            'email' => $asignacion->tutor->correo_per,
                         ] : null,
                         'observaciones' => $asignacion->observaciones,
                         'activo' => (bool) $asignacion->activo,

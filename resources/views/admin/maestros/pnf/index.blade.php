@@ -7,7 +7,7 @@
         <div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">Programas de Formación</h1>
             <p class="mt-1 text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
-                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                 {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>

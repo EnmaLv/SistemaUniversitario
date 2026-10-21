@@ -104,8 +104,8 @@
                                         @foreach ($conductores as $conductor)
                                             <option value="{{ $conductor->id_usuario }}"
                                                 {{ old('conductor_id') == $conductor->id_usuario ? 'selected' : '' }}>
-                                                {{ $conductor->persona->nombre_persona ?? '' }}
-                                                {{ $conductor->persona->apellido_persona ?? '' }}
+                                                {{ $conductor->persona->nombres_per ?? '' }}
+                                                {{ $conductor->persona->apellidos_per ?? '' }}
                                             </option>
                                         @endforeach
                                     </select>

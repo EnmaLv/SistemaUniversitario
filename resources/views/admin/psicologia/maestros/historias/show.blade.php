@@ -222,16 +222,16 @@
                         $fechaCita = $paciente->primera_cita
                             ? \Carbon\Carbon::parse($paciente->primera_cita)->format('d/m/Y')
                             : 'No disponible';
-                        $edad = $paciente->persona->fecha_nacimiento_persona
-                            ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->age
+                        $edad = $paciente->persona->fecha_nacimiento_per
+                            ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->age
                             : 'No disponible';
-                        $nacimiento = $paciente->persona->fecha_nacimiento_persona
-                            ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->format('d/m/Y')
+                        $nacimiento = $paciente->persona->fecha_nacimiento_per
+                            ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->format('d/m/Y')
                             : 'No disponible';
                         $nombreCompleto =
                             implode(' ', [
-                                $paciente->persona->nombre_persona ?? '',
-                                $paciente->persona->apellido_persona ?? '',
+                                $paciente->persona->nombres_per ?? '',
+                                $paciente->persona->apellidos_per ?? '',
                             ]) ?? '';
                         $partes = explode(' ', trim($nombreCompleto));
                         $primerNombre = $partes[0] ?? '';
@@ -244,15 +244,15 @@
                         class="open-patient-modal w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center text-white font-bold text-2xl sm:text-3xl shadow-lg shadow-indigo-500/10 hover:scale-105 transition-all active:scale-95 overflow-hidden border border-indigo-100 dark:border-indigo-900/50 shrink-0"
                         style="background: linear-gradient(135deg, #4f46e5, #6d28d9)" data-patient-type="user"
                         data-patient-name="{{ $nombreCompleto }}"
-                        data-patient-email="{{ $paciente->persona->email_persona ?? 'No disponible' }}"
-                        data-patient-phone="{{ $paciente->persona->telefono_persona ?? 'No disponible' }}"
+                        data-patient-email="{{ $paciente->persona->correo_per ?? 'No disponible' }}"
+                        data-patient-phone="{{ $paciente->persona->telefono_per ?? 'No disponible' }}"
                         data-patient-created="{{ $fechaCita }}"
-                        data-patient-cedula="{{ $paciente->persona->cedula_persona ?? 'No disponible' }}"
-                        data-patient-genero="{{ $paciente->persona->genero_persona ?? 'No disponible' }}"
+                        data-patient-cedula="{{ $paciente->persona->cedula_per ?? 'No disponible' }}"
+                        data-patient-genero="{{ $paciente->persona->genero_per ?? 'No disponible' }}"
                         data-patient-nacimiento="{{ $nacimiento }}"
                         data-patient-perfil-academico="{{ $paciente->perfil_academico ?? 'Sin definir' }}"
                         data-patient-pnf="{{ $paciente->persona->pnf ?? 'No aplica' }}"
-                        data-patient-semestre="{{ $paciente->persona->semestre_persona ? $paciente->persona->semestre_persona . '° Semestre' : 'No aplica' }}"
+                        data-patient-semestre="{{ $paciente->persona->semestre_per ? $paciente->persona->semestre_per . '° Semestre' : 'No aplica' }}"
                         data-patient-horario="{{ $paciente->horario_path ? asset('storage/' . $paciente->horario_path) : '' }}"
                         data-patient-edad="{{ $edad }}"
                         data-patient-photo="{{ $hasPhoto ? route('media.profile_photos', basename($photoPath)) : '' }}"

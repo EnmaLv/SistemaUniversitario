@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('bus_viaje_id')->constrained('bus_viajes')->onDelete('cascade');
 
             $table->unsignedBigInteger('persona_id');
-            $table->foreign('persona_id')->references('id_persona')->on('persona')->onDelete('cascade');
+            $table->foreign('persona_id')->references('id_per')->on('persona')->onDelete('cascade');
 
             $table->foreignId('bus_parada_id')->nullable()->constrained('bus_paradas')->nullOnDelete();
 

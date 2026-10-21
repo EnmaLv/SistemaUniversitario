@@ -19,7 +19,7 @@ class SolicitudBeca extends Model
     protected $table = 'be_solicitud_becas';
 
     protected $fillable = [
-        'id_persona',
+        'per_id',
         'id_beneficio',
         'jornada_id',
         'tipo_solicitud',
@@ -62,7 +62,7 @@ class SolicitudBeca extends Model
 
     public function persona()
     {
-        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
     public function beneficio()

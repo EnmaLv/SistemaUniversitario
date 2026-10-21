@@ -93,24 +93,24 @@ class ChatController extends Controller
         $like = '%' . mb_strtolower($q, 'UTF-8') . '%';
 
         $results = DB::table('usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
             ->leftJoin('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
             ->leftJoin('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
             ->select(
                 'usuario.id_usuario as id',
                 'usuario.username',
-                DB::raw("TRIM(CONCAT(COALESCE(persona.nombre_persona,''),' ',COALESCE(persona.apellido_persona,''))) as name"),
+                DB::raw("TRIM(CONCAT(COALESCE(persona.nombres_per,''),' ',COALESCE(persona.apellidos_per,''))) as name"),
                 DB::raw("GROUP_CONCAT(DISTINCT COALESCE(rol.nombre,'') SEPARATOR ', ') as roles")
             )
             ->where('usuario.id_usuario', '!=', $userId)
             ->where(function ($q) use ($like) {
-                $q->whereRaw("LOWER(COALESCE(persona.nombre_persona,'')) LIKE ?",   [$like])
-                  ->orWhereRaw("LOWER(COALESCE(persona.apellido_persona,'')) LIKE ?", [$like])
-                  ->orWhereRaw("LOWER(CONCAT(COALESCE(persona.nombre_persona,''),' ',COALESCE(persona.apellido_persona,''))) LIKE ?", [$like])
+                $q->whereRaw("LOWER(COALESCE(persona.nombres_per,'')) LIKE ?",   [$like])
+                  ->orWhereRaw("LOWER(COALESCE(persona.apellidos_per,'')) LIKE ?", [$like])
+                  ->orWhereRaw("LOWER(CONCAT(COALESCE(persona.nombres_per,''),' ',COALESCE(persona.apellidos_per,''))) LIKE ?", [$like])
                   ->orWhereRaw("LOWER(COALESCE(usuario.username,'')) LIKE ?",       [$like]);
             })
-            ->groupBy('usuario.id_usuario', 'usuario.username', 'persona.nombre_persona', 'persona.apellido_persona')
-            ->orderBy('persona.nombre_persona')
+            ->groupBy('usuario.id_usuario', 'usuario.username', 'persona.nombres_per', 'persona.apellidos_per')
+            ->orderBy('persona.nombres_per')
             ->limit(20)
             ->get();
 

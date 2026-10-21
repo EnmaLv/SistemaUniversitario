@@ -134,9 +134,9 @@ class HistoriaClinica extends Model
         })
         ->whereHas('persona', function ($q) use ($query) {
             $q->where(function ($q) use ($query) {
-                $q->where('nombre_persona', 'like', '%' . $query . '%')
-                  ->orWhere('apellido_persona', 'like', '%' . $query . '%')
-                  ->orWhere('cedula_persona', 'like', '%' . $query . '%');
+                $q->where('nombres_per', 'like', '%' . $query . '%')
+                  ->orWhere('apellidos_per', 'like', '%' . $query . '%')
+                  ->orWhere('cedula_per', 'like', '%' . $query . '%');
             });
         })
         ->with('persona')
@@ -145,8 +145,8 @@ class HistoriaClinica extends Model
             $persona = $usuario->persona;
             return (object) [
                 'id' => $usuario->id_usuario,
-                'name' => trim(($persona->nombre_persona ?? '') . ' ' . ($persona->apellido_persona ?? '')),
-                'email' => $persona->email_persona ?? ''
+                'name' => trim(($persona->nombres_per ?? '') . ' ' . ($persona->apellidos_per ?? '')),
+                'email' => $persona->correo_per ?? ''
             ];
         });
     }
@@ -155,7 +155,7 @@ class HistoriaClinica extends Model
     {
         $query = DB::table('citas')
             ->join('usuario', 'citas.user_id', '=', 'usuario.id_usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
             ->leftJoin('historia_clinicas', function ($join) {
                 $join->on('usuario.id_usuario', '=', 'historia_clinicas.user_id')
                     ->on('historia_clinicas.psicologo_id', '=', 'citas.psicologo_id');
@@ -167,19 +167,19 @@ class HistoriaClinica extends Model
             $query->leftJoin('historia_enfermedad', 'historia_clinicas.id', '=', 'historia_enfermedad.historia_clinica_id')
                   ->leftJoin('enfermedades', 'historia_enfermedad.enfermedad_id', '=', 'enfermedades.id')
                   ->where(function ($q) use ($search) {
-                      $q->where('persona.nombre_persona', 'like', "%{$search}%")
-                        ->orWhere('persona.apellido_persona', 'like', "%{$search}%")
-                        ->orWhere('persona.cedula_persona', 'like', "%{$search}%");
+                      $q->where('persona.nombres_per', 'like', "%{$search}%")
+                        ->orWhere('persona.apellidos_per', 'like', "%{$search}%")
+                        ->orWhere('persona.cedula_per', 'like', "%{$search}%");
                   });
         }
 
         if (!empty($filters['pnf'])) {
-            $query->join('persona_pnf', 'persona.id_persona', '=', 'persona_pnf.id_persona')
-                  ->where('persona_pnf.prg_id', $filters['pnf']);
+            $query->join('persona_programa', 'persona.id_per', '=', 'persona_programa.per_id')
+                  ->where('persona_programa.prg_id', $filters['pnf']);
         }
 
         if (!empty($filters['edad'])) {
-            $query->whereYear('persona.fecha_nacimiento_persona', Carbon::now()->subYears($filters['edad'])->year);
+            $query->whereYear('persona.fecha_nacimiento_per', Carbon::now()->subYears($filters['edad'])->year);
         }
 
         $tipoFiltroFecha = $filters['tipo_filtro_fecha'] ?? 'rango';
@@ -243,8 +243,8 @@ class HistoriaClinica extends Model
 
         $historiasBase = $query->select(
                 'usuario.id_usuario as id',
-                DB::raw("CONCAT(persona.nombre_persona, ' ', persona.apellido_persona) as patient_name"),
-                'persona.email_persona as email',
+                DB::raw("CONCAT(persona.nombres_per, ' ', persona.apellidos_per) as patient_name"),
+                'persona.correo_per as email',
                 'citas.fecha as ultima_sesion',
                 'citas.notas'
             )
@@ -286,9 +286,9 @@ class HistoriaClinica extends Model
             $paciente = self::obtenerPaciente($item->id);
             if ($paciente && $paciente->persona) {
                 $p = $paciente->persona;
-                $paciente->name = trim(($p->nombre_persona ?? '') . ' ' . ($p->apellido_persona ?? ''));
+                $paciente->name = trim(($p->nombres_per ?? '') . ' ' . ($p->apellidos_per ?? ''));
                 $paciente->avatar = strtoupper(
-                    substr($p->nombre_persona ?? '', 0, 1) . substr($p->apellido_persona ?? '', 0, 1)
+                    substr($p->nombres_per ?? '', 0, 1) . substr($p->apellidos_per ?? '', 0, 1)
                 );
             }
 

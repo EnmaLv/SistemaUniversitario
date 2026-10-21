@@ -1075,10 +1075,10 @@
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($c->fecha)->format('d/m/Y') }}</td>
                             <td class="strong">
-                                {{ trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) ?: '—' }}
+                                {{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—' }}
                             </td>
-                            <td>{{ $c->paciente->cedula_persona ?? '—' }}</td>
-                            <td>{{ trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')) ?: '—' }}
+                            <td>{{ $c->paciente->cedula_per ?? '—' }}</td>
+                            <td>{{ trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: '—' }}
                             </td>
                             <td>{{ $c->consultorio->nombre ?? '—' }}</td>
                             <td>
@@ -1125,9 +1125,9 @@
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($c->receta->fecha)->format('d/m/Y') }}</td>
                                 <td class="strong">#{{ str_pad($c->receta->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                <td>{{ trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) }}
+                                <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                 </td>
-                                <td>{{ trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')) }}
+                                <td>{{ trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) }}
                                 </td>
                                 <td class="center">{{ $c->receta->detalles->count() }}</td>
                                 <td>
@@ -1169,12 +1169,12 @@
                                     @php $totalItems++; @endphp
                                     <tr>
                                         <td>{{ \Carbon\Carbon::parse($disp->fecha)->format('d/m/Y') }}</td>
-                                        <td>{{ trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) }}
+                                        <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                         </td>
                                         <td>{{ $det->producto->nombre ?? '—' }}</td>
                                         <td class="center">{{ number_format($disp->cantidad, 2) }}</td>
                                         <td>{{ $disp->lote->codigo ?? '—' }}</td>
-                                        <td>{{ trim(($disp->usuario->persona->nombre_persona ?? '') . ' ' . ($disp->usuario->persona->apellido_persona ?? '')) ?: '—' }}
+                                        <td>{{ trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—' }}
                                         </td>
                                     </tr>
                                 @endforeach

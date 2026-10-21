@@ -124,18 +124,18 @@ abstract class SeguridadTestCase extends TestCase
         $n = ++static::$consecutivo . '_' . bin2hex(random_bytes(3));
 
         $persona = Persona::create([
-            'nombre_persona'   => 'Prueba',
-            'apellido_persona' => 'Seguridad',
-            'cedula_persona'   => (string) random_int(10000000, 99999999),
-            'telefono_persona' => '0424-0000000',
-            'genero_persona'   => 'Otro',
-            'email_persona'    => "persona{$n}@prueba.test",
+            'nombres_per'   => 'Prueba',
+            'apellidos_per' => 'Seguridad',
+            'cedula_per'   => (string) random_int(10000000, 99999999),
+            'telefono_per' => '0424-0000000',
+            'genero_per'   => 'Otro',
+            'correo_per'    => "persona{$n}@prueba.test",
             'id_perfil'        => DB::table('perfil')->value('id_perfil'),
             'sed_id'          => $sedeId ?? $this->sedeA(),
         ]);
 
         $usuario = new Usuario([
-            'id_persona' => $persona->id_persona,
+            'per_id' => $persona->id_per,
             'id_perfil'  => DB::table('perfil')->value('id_perfil'),
             'username'   => "usuario{$n}@prueba.test",
         ]);

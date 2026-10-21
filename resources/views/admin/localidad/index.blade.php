@@ -6,7 +6,7 @@
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">Localidades</h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>

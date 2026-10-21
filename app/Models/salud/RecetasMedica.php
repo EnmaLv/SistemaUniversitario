@@ -16,7 +16,7 @@ class RecetasMedica extends Model
 
     protected $fillable = [
         'consulta_id',
-        'id_persona',
+        'per_id',
         'medico_id',
         'fecha',
         'descripcion',
@@ -40,12 +40,12 @@ class RecetasMedica extends Model
 
     public function paciente()
     {
-        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
     public function medico()
     {
-        return $this->belongsTo(Persona::class, 'medico_id', 'id_persona');
+        return $this->belongsTo(Persona::class, 'medico_id', 'per_id');
     }
 
     public function detalles()

@@ -120,8 +120,8 @@
                                         class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                         <option value="">Todos los médicos</option>
                                         @foreach ($medicos as $medico)
-                                            <option value="{{ $medico->id_persona }}"
-                                                @if (request('medico_id') == $medico->id_persona) selected @endif>
+                                            <option value="{{ $medico->per_id }}"
+                                                @if (request('medico_id') == $medico->per_id) selected @endif>
                                                 {{ $medico->nombre_completo }}
                                             </option>
                                         @endforeach
@@ -223,11 +223,11 @@
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                             style="color: var(--text-main);">
-                                            {{ trim(optional($data->paciente)->nombre_persona . ' ' . optional($data->paciente)->apellido_persona) ?: '—' }}
+                                            {{ trim(optional($data->paciente)->nombres_per . ' ' . optional($data->paciente)->apellidos_per) ?: '—' }}
                                         </td>
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ trim(optional($data->medico)->nombre_persona . ' ' . optional($data->medico)->apellido_persona) ?: '—' }}
+                                            {{ trim(optional($data->medico)->nombres_per . ' ' . optional($data->medico)->apellidos_per) ?: '—' }}
                                         </td>
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">

@@ -31,7 +31,7 @@ class ContrapropuestaRechazadaNotification extends Notification implements Shoul
 
     public function toArray(object $notifiable): array
     {
-        $pacienteName = trim(($this->cita->paciente->persona->nombre_persona ?? '') . ' ' . ($this->cita->paciente->persona->apellido_persona ?? '')) ?: 'El paciente';
+        $pacienteName = trim(($this->cita->paciente->persona->nombres_per ?? '') . ' ' . ($this->cita->paciente->persona->apellidos_per ?? '')) ?: 'El paciente';
         
         return [
             'type_id' => 'contrapropuesta_rechazada',

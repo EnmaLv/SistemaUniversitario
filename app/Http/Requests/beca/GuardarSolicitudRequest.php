@@ -17,7 +17,7 @@ class GuardarSolicitudRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_persona'      => 'required|exists:persona,id_persona',
+            'per_id'      => 'required|exists:persona,id_per',
             'jornada_id'      => 'required|exists:be_jornadas_becas,id',
             'id_beneficio'    => 'required|exists:be_beneficios,id',
             'id_lapso'        => 'required|exists:be_lapsos,id',
@@ -96,7 +96,7 @@ class GuardarSolicitudRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'id_persona.required' => 'Debe seleccionar un estudiante.',
+            'per_id.required' => 'Debe seleccionar un estudiante.',
             'jornada_id.required' => 'Debe asociar una jornada activa.',
             'respuestas.required' => 'Debe responder el formulario.',
             'archivo_notas.required' => 'El archivo de notas es obligatorio.',

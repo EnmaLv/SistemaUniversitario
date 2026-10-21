@@ -26,12 +26,12 @@ class RegistroDiarioExport implements FromCollection, WithHeadings, ShouldAutoSi
     {
         return [
             $registro->id,
-            $registro->cedula_persona,
-            $registro->nombre_persona,
-            $registro->apellido_persona,
+            $registro->cedula_per,
+            $registro->nombres_per,
+            $registro->apellidos_per,
             $registro->nombre_prg,
             $registro->fecha_regis_diario_c,
-            $registro->sector ?? 'N/A',
+            $registro->sector_dir ?? 'N/A',
         ]; 
     }
 

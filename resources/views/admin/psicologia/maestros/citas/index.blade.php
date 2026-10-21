@@ -158,17 +158,17 @@
                                                     @if (auth()->user()->tieneRol('psicologo'))
                                                         <td class="px-6 py-4 whitespace-nowrap">
                                                             <span
-                                                                class="font-bold text-slate-700 dark:text-gray-300">{{ optional($cita->paciente->persona)->nombre_persona ?: $cita->paciente->persona ?? 'N/A' }}</span>
+                                                                class="font-bold text-slate-700 dark:text-gray-300">{{ optional($cita->paciente->persona)->nombres_per ?: $cita->paciente->persona ?? 'N/A' }}</span>
                                                         </td>
                                                     @endif
 
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="flex items-center gap-2">
                                                             <span
-                                                                class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0">{{ substr(optional($cita->psicologo->persona)->nombre_persona ?: 'N', 0, 1) }}</span>
+                                                                class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0">{{ substr(optional($cita->psicologo->persona)->nombres_per ?: 'N', 0, 1) }}</span>
                                                             <span class="font-bold text-slate-700 dark:text-gray-300">
-                                                                {{ optional($cita->psicologo->persona)->nombre_persona ?: 'No asignado' }}
-                                                                {{ optional($cita->psicologo->persona)->apellido_persona ?: '' }}
+                                                                {{ optional($cita->psicologo->persona)->nombres_per ?: 'No asignado' }}
+                                                                {{ optional($cita->psicologo->persona)->apellidos_per ?: '' }}
                                                             </span>
                                                         </div>
                                                     </td>

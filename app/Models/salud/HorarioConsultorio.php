@@ -136,7 +136,7 @@ class HorarioConsultorio extends Model
                     ->first();
 
                 return (object) [
-                    'id_persona'      => $persona?->id_persona ?? $persona?->id, // ID necesario para la validación
+                    'per_id'      => $persona?->per_id ?? $persona?->id, // ID necesario para la validación
                     'id_usuario'      => $ru->usuario?->id,
                     'id_rol_usuario'  => $ru->id,
                     'nombre_completo' => $ru->nombre_completo,

@@ -62,7 +62,7 @@ class PublicacionReaccionController extends Controller
                 ->first();
                 
             $ultimoUsuario = Usuario::with('persona')->where('id_usuario', $ultimaReaccion->paciente_id)->first();
-            $nombreUltimo = ($ultimoUsuario && $ultimoUsuario->persona) ? $ultimoUsuario->persona->nombre_persona : 'Un usuario';
+            $nombreUltimo = ($ultimoUsuario && $ultimoUsuario->persona) ? $ultimoUsuario->persona->nombres_per : 'Un usuario';
 
             if ($totalLikes == 1) {
                 $mensaje = "{$nombreUltimo} le dio me gusta a tu aviso.";

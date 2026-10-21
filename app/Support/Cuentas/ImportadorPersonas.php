@@ -74,9 +74,9 @@ class ImportadorPersonas
     {
         $cedulas = array_map('strval', array_keys($lote));
         $existentes = DB::table('persona')
-            ->whereIn('cedula_persona', $cedulas)
+            ->whereIn('cedula_per', $cedulas)
             ->get()
-            ->keyBy('cedula_persona');
+            ->keyBy('cedula_per');
 
         $ahora = now();
         $registros = [];
@@ -88,31 +88,30 @@ class ImportadorPersonas
             $correo = trim((string) ($fila['email'] ?? ''));
 
             $nuevos = [
-                'nombre_persona'           => $this->mayusculas($fila['nombre'] ?? ''),
-                'segundo_nombre_persona'   => $this->mayusculas($fila['segundo_nombre'] ?? '') ?: null,
-                'apellido_persona'         => $this->mayusculas($fila['apellido'] ?? ''),
-                'segundo_apellido_persona' => $this->mayusculas($fila['segundo_apellido'] ?? '') ?: null,
-                'telefono_persona'         => preg_replace('/\D/', '', (string) ($fila['telefono'] ?? '')),
-                'genero_persona'           => $this->genero($fila['genero'] ?? ''),
-                'fecha_nacimiento_persona' => $fechaNacimiento,
-                'edad_persona'             => $fechaNacimiento ? Carbon::parse($fechaNacimiento)->age : null,
-                'email_persona'            => filter_var($correo, FILTER_VALIDATE_EMAIL) ? mb_strtolower($correo) : '',
-                'semestre_persona'         => trim((string) ($fila['semestre'] ?? '')) ?: null,
+                'nombres_per'           => $this->mayusculas($fila['nombre'] ?? ''),
+                'segundo_nombre_per'   => $this->mayusculas($fila['segundo_nombre'] ?? '') ?: null,
+                'apellidos_per'         => $this->mayusculas($fila['apellido'] ?? ''),
+                'segundo_apellido_per' => $this->mayusculas($fila['segundo_apellido'] ?? '') ?: null,
+                'telefono_per'         => preg_replace('/\D/', '', (string) ($fila['telefono'] ?? '')),
+                'genero_per'           => $this->genero($fila['genero'] ?? ''),
+                'fecha_nacimiento_per' => $fechaNacimiento,
+                'correo_per'            => filter_var($correo, FILTER_VALIDATE_EMAIL) ? mb_strtolower($correo) : '',
+                'semestre_per'         => trim((string) ($fila['semestre'] ?? '')) ?: null,
             ];
 
             if ($previa) {
                 foreach ($nuevos as $columna => $valor) {
-                    if ($valor === null || $valor === '' || ($columna === 'genero_persona' && $valor === 'NO DEFINIDO')) {
+                    if ($valor === null || $valor === '' || ($columna === 'genero_per' && $valor === 'NO DEFINIDO')) {
                         $nuevos[$columna] = $previa->{$columna};
                     }
                 }
             }
 
             $registros[] = array_merge($nuevos, [
-                'cedula_persona' => $cedula,
+                'cedula_per' => $cedula,
                 'id_perfil'      => $previa->id_perfil ?? self::PERFIL_ESTUDIANTE,
                 'sed_id'        => $previa->sed_id ?? $idSede,
-                'estado'         => 1,
+                'status_id'      => 1,
                 'created_at'     => $previa->created_at ?? $ahora,
                 'updated_at'     => $ahora,
             ]);
@@ -122,15 +121,15 @@ class ImportadorPersonas
 
         DB::table('persona')->upsert(
             $registros,
-            ['cedula_persona'],
+            ['cedula_per'],
             [
-                'nombre_persona', 'segundo_nombre_persona', 'apellido_persona', 'segundo_apellido_persona',
-                'telefono_persona', 'genero_persona', 'fecha_nacimiento_persona', 'edad_persona',
-                'email_persona', 'semestre_persona', 'estado', 'updated_at',
+                'nombres_per', 'segundo_nombre_per', 'apellidos_per', 'segundo_apellido_per',
+                'telefono_per', 'genero_per', 'fecha_nacimiento_per',
+                'correo_per', 'semestre_per', 'status_id', 'updated_at',
             ]
         );
 
-        $ids = DB::table('persona')->whereIn('cedula_persona', $cedulas)->pluck('id_persona', 'cedula_persona');
+        $ids = DB::table('persona')->whereIn('cedula_per', $cedulas)->pluck('id_per', 'cedula_per');
         $resumen['ids_persona'] = array_merge($resumen['ids_persona'], $ids->values()->all());
 
         $this->guardarPnf($lote, $ids->all());
@@ -138,9 +137,9 @@ class ImportadorPersonas
 
     private function guardarPnf(array $lote, array $idsPorCedula): void
     {
-        $conPnf = DB::table('persona_pnf')
-            ->whereIn('id_persona', array_values($idsPorCedula))
-            ->pluck('prg_id', 'id_persona');
+        $conPnf = DB::table('persona_programa')
+            ->whereIn('per_id', array_values($idsPorCedula))
+            ->pluck('prg_id', 'per_id');
 
         $insertar = [];
         $actualizar = [];
@@ -160,18 +159,18 @@ class ImportadorPersonas
             }
 
             if (! $conPnf->has($idPersona)) {
-                $insertar[] = ['id_persona' => $idPersona, 'prg_id' => $idPnf, 'fecha_inicio' => $hoy, 'fecha_fin' => $hoy];
+                $insertar[] = ['per_id' => $idPersona, 'prg_id' => $idPnf, 'fecha_inicio_ppr' => $hoy, 'fecha_fin_ppr' => $hoy];
             } elseif ($textoPnf !== '' && (int) $conPnf[$idPersona] !== $idPnf) {
                 $actualizar[$idPnf][] = $idPersona;
             }
         }
 
         if ($insertar !== []) {
-            DB::table('persona_pnf')->insert($insertar);
+            DB::table('persona_programa')->insert($insertar);
         }
 
         foreach ($actualizar as $idPnf => $idsPersona) {
-            DB::table('persona_pnf')->whereIn('id_persona', $idsPersona)->update(['prg_id' => $idPnf]);
+            DB::table('persona_programa')->whereIn('per_id', $idsPersona)->update(['prg_id' => $idPnf]);
         }
     }
 

@@ -29,8 +29,8 @@ class PermisosController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
                     ->orWhereHas('persona', function ($subQ) use ($search) {
-                        $subQ->where('nombre_persona', 'like', "%{$search}%")
-                            ->orWhere('apellido_persona', 'like', "%{$search}%");
+                        $subQ->where('nombres_per', 'like', "%{$search}%")
+                            ->orWhere('apellidos_per', 'like', "%{$search}%");
                     });
                 });
             })

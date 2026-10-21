@@ -26,8 +26,8 @@ class PsicologiaHomeService
 
         $proximaCita = DB::table('citas')
             ->join('usuario', 'citas.psicologo_id', '=', 'usuario.id_usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
-            ->select('citas.*', 'persona.nombre_persona as psi_nombres', 'persona.apellido_persona as psi_apellidos')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
+            ->select('citas.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
             ->where('citas.user_id', $userId)
             ->where('citas.estado', 'confirmada')
             ->where('citas.fecha', '>=', $now->format('Y-m-d'))
@@ -46,8 +46,8 @@ class PsicologiaHomeService
 
         $citaPendiente = DB::table('citas')
             ->join('usuario', 'citas.psicologo_id', '=', 'usuario.id_usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
-            ->select('citas.*', 'persona.nombre_persona as psi_nombres', 'persona.apellido_persona as psi_apellidos')
+            ->join('persona', 'usuario.per_id', '=', 'persona.id_per')
+            ->select('citas.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
             ->where('citas.user_id', $userId)
             ->where('citas.estado', 'pendiente')
             ->orderBy('citas.created_at', 'desc')

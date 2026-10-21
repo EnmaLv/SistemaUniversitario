@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('receta_medica_id')->constrained('recetas_medicas', 'id')->onDelete('cascade');
             $table->foreignId('detalle_receta_medica_id')->constrained('detalle_recetas_medicas', 'id')->onDelete('cascade');
             $table->foreignId('producto_id')->constrained('productos', 'id')->onDelete('cascade');
-            $table->foreignId('id_persona')->constrained('persona', 'id_persona')->onDelete('cascade');
+            $table->foreignId('per_id')->constrained('persona', 'id_per')->onDelete('cascade');
             $table->foreignId('lote_id')->nullable()->constrained('lotes', 'id')->nullOnDelete();
             $table->decimal('cantidad', 14, 2);
             $table->foreignId('unidad_id')->constrained('unidades', 'id')->onDelete('cascade');

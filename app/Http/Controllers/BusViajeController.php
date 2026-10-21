@@ -33,8 +33,8 @@ class BusViajeController extends Controller
                         $r->where('nombre', 'like', "%{$buscar}%");
                     })
                     ->orWhereHas('conductor.persona', function ($p) use ($buscar) {
-                        $p->where('nombre_persona', 'like', "%{$buscar}%")
-                            ->orWhere('apellido_persona', 'like', "%{$buscar}%");
+                        $p->where('nombres_per', 'like', "%{$buscar}%")
+                            ->orWhere('apellidos_per', 'like', "%{$buscar}%");
                     });
             });
         }

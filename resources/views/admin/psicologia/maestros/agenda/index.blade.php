@@ -239,7 +239,7 @@
                                                                                 ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60'
                                                                                 : 'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600')) }}">
                                                                     {{ $cita->hora ? \Carbon\Carbon::parse($cita->hora)->format('g:i A') : 'S/H' }}
-                                                                    - {{ $cita->paciente->persona->nombre_persona }}
+                                                                    - {{ $cita->paciente->persona->nombres_per }}
                                                                 </div>
                                                             @endforeach
                                                         </div>
@@ -293,11 +293,11 @@
                                                                 <div class="flex items-center gap-3">
                                                                     <div class="w-9 h-9 text-{{ $themeColor ?? 'indigo' }}-600 dark:text-{{ $themeColor ?? 'indigo' }}-400 border border-{{ $themeColor ?? 'indigo' }}-200 dark:border-{{ $themeColor ?? 'indigo me' }}-800/40 rounded-xl flex items-center justify-center text-xs font-black uppercase"
                                                                         style="background-color: rgba(0,0,0,0.02);">
-                                                                        {{ substr($cita->paciente->persona->nombre_persona, 0, 1) }}
+                                                                        {{ substr($cita->paciente->persona->nombres_per, 0, 1) }}
                                                                     </div>
                                                                     <span class="text-sm font-bold"
                                                                         style="color: var(--text-main);">
-                                                                        {{ $cita->paciente->persona->nombre_persona }}
+                                                                        {{ $cita->paciente->persona->nombres_per }}
                                                                     </span>
                                                                 </div>
                                                             </td>
@@ -353,7 +353,7 @@
                                                                 <button type="button"
                                                                     onclick="abrirDetalleCita({{ json_encode([
                                                                         'id' => $cita->id,
-                                                                        'paciente' => $cita->paciente->persona->nombre_persona,
+                                                                        'paciente' => $cita->paciente->persona->nombres_per,
                                                                         'estado' => $cita->estado,
                                                                         'motivo' => $cita->motivo ?? 'No especificado',
                                                                         'prioridad' => $cita->prioridad ?? 'Normal',
@@ -719,9 +719,9 @@
                                                                             data-block-date="{{ $fechaDelDia }}"
                                                                             data-block-time="{{ $horarioBloque->hora_inicio }}"
                                                                             data-block-active="{{ $horarioBloque->activo === \App\Models\salud\Horario::STATUS_ACTIVE ? 'true' : 'false' }}"
-                                                                            data-pending-requests="{{ json_encode($citasEnSlot->map(fn($c) => ['id' => $c->id, 'paciente' => $c->paciente->persona->nombre_persona ?? ($c->paciente->persona->nombre_persona ?? 'Paciente'), 'motivo' => $c->motivo ?? 'Solicitud pendiente', 'estado' => $c->estado ?? 'pendiente'])->values()) }}"
+                                                                            data-pending-requests="{{ json_encode($citasEnSlot->map(fn($c) => ['id' => $c->id, 'paciente' => $c->paciente->persona->nombres_per ?? ($c->paciente->persona->nombres_per ?? 'Paciente'), 'motivo' => $c->motivo ?? 'Solicitud pendiente', 'estado' => $c->estado ?? 'pendiente'])->values()) }}"
                                                                             @if ($assignedCita) data-assigned-cita-id="{{ $assignedCita->id }}"
-                                                                                        data-assigned-paciente="{{ $assignedCita->paciente->persona->nombre_persona }} {{ $assignedCita->paciente->persona->apellido_persona }}"
+                                                                                        data-assigned-paciente="{{ $assignedCita->paciente->persona->nombres_per }} {{ $assignedCita->paciente->persona->apellidos_per }}"
                                                                                         data-assigned-estado="{{ $assignedCita->estado }}"
                                                                                         data-assigned-block="true" @endif>
 
@@ -752,8 +752,8 @@
                                                                                         @endif
                                                                                         <p
                                                                                             class="text-[10px] font-black leading-tight truncate text-sky-600 dark:text-sky-400">
-                                                                                            {{ $assignedCita->paciente->persona->nombre_persona }}
-                                                                                            {{ $assignedCita->paciente->persona->apellido_persona }}
+                                                                                            {{ $assignedCita->paciente->persona->nombres_per }}
+                                                                                            {{ $assignedCita->paciente->persona->apellidos_per }}
                                                                                         </p>
                                                                                     </div>
                                                                                 @else
@@ -781,7 +781,7 @@
                                                                                                 title="{{ $canceladaCita->cancelado_por === 'paciente' ? 'Cancelado por el paciente' : 'Cancelada por el psicólogo' }}"></span>
                                                                                             <p
                                                                                                 class="text-[10px] font-extrabold leading-tight truncate text-gray-400 dark:text-gray-500 line-through">
-                                                                                                {{ $canceladaCita->paciente->persona->nombre_persona }}
+                                                                                                {{ $canceladaCita->paciente->persona->nombres_per }}
                                                                                             </p>
                                                                                             <div onclick="dismissCancelMessage(event, {{ $canceladaCita->id }})"
                                                                                                 class="ml-1 text-[10px] font-black text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0 cursor-pointer"

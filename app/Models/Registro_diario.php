@@ -14,8 +14,8 @@ class Registro_diario extends Model
     protected $table = 'registro_diario_c';
 
     protected $fillable = [
-        'id_persona',
-        'id_persona_pnf',
+        'per_id',
+        'ppr_id',
         'fecha_regis_diario_c',
         'hora',
     ];
@@ -29,7 +29,7 @@ class Registro_diario extends Model
 
     public function persona()
     {
-        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
 
@@ -41,13 +41,13 @@ class Registro_diario extends Model
     private static function relacionTable()
     {
         return \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c'), 'registro_diario_c.sed_id')
-            ->join('persona', 'registro_diario_c.id_persona', '=', 'persona.id_persona')
-            ->leftJoin('direccion', 'persona.id_persona', '=', 'direccion.id_persona')
+            ->join('persona', 'registro_diario_c.per_id', '=', 'persona.id_per')
+            ->leftJoin('direccion', 'persona.id_per', '=', 'direccion.per_id')
             ->leftJoin('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
             ->leftJoin('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
             ->leftJoin('estado', 'municipio.esd_id', '=', 'estado.id_esd')
-            ->join('persona_pnf', 'registro_diario_c.id_persona_pnf', '=', 'persona_pnf.id_persona_pnf')
-            ->join('programa', 'persona_pnf.prg_id', '=', 'programa.id_prg');
+            ->join('persona_programa', 'registro_diario_c.ppr_id', '=', 'persona_programa.id_ppr')
+            ->join('programa', 'persona_programa.prg_id', '=', 'programa.id_prg');
     }
 
     public static function getRegister(int $id)
@@ -63,22 +63,21 @@ class Registro_diario extends Model
         //Creamos una variable para almacenar la columnas que necesitamos
 
         $personaColumn = formatColumn([
-            'nombre_persona',
-            'segundo_nombre_persona',
-            'apellido_persona',
-            'segundo_apellido_persona',
-            'cedula_persona',
-            'telefono_persona',
-            'genero_persona',
-            'edad_persona',
-            'fecha_nacimiento_persona',
-            'email_persona',
-            'semestre_persona'
+            'nombres_per',
+            'segundo_nombre_per',
+            'apellidos_per',
+            'segundo_apellido_per',
+            'cedula_per',
+            'telefono_per',
+            'genero_per',
+            'fecha_nacimiento_per',
+            'correo_per',
+            'semestre_per'
         ], 'persona');
 
         $pnfColumn = formatColumn([
             'nombre_prg',
-        ], 'pnf');
+        ], 'programa');
 
         $registroColumn = formatColumn([
             'fecha_regis_diario_c',
@@ -86,21 +85,21 @@ class Registro_diario extends Model
         ], 'registro_diario_c');
 
         $direccionColumn = formatColumn([
-            'sector',
-            'calle'
+            'sector_dir',
+            'calle_dir'
         ], 'direccion');
 
         $localidadColumn = formatColumn([
             'nombre_par'
-        ], 'localidads');
+        ], 'parroquia');
 
         $municipioColumn = formatColumn([
             'nombre_mun'
-        ], 'municipios');
+        ], 'municipio');
 
         $estadoColumn = formatColumn([
             'nombre_esd'
-        ], 'estados');
+        ], 'estado');
 
         //Lo unimos en un solo array
         $colums = [...$personaColumn, ...$pnfColumn, ...$registroColumn, ...$direccionColumn, ...$localidadColumn, ...$municipioColumn, ...$estadoColumn];
@@ -112,15 +111,15 @@ class Registro_diario extends Model
     public static function showData(array $filter = [], bool $isPdf = false)
     {
         $query = self::relacionTable()
-            ->select('registro_diario_c.*', 'persona.nombre_persona', 'persona.apellido_persona', 'persona.cedula_persona', 'programa.nombre_prg', 'direccion.sector', 'direccion.calle', 'parroquia.nombre_par', 'municipio.nombre_mun', 'estado.nombre_esd');
+            ->select('registro_diario_c.*', 'persona.nombres_per', 'persona.apellidos_per', 'persona.cedula_per', 'programa.nombre_prg', 'direccion.sector_dir', 'direccion.calle_dir', 'parroquia.nombre_par', 'municipio.nombre_mun', 'estado.nombre_esd');
 
 
         //Por si hay que buscar por el input
         if (isset($filter['buscar']) && $filter['buscar']) {
             $query->where(function ($q) use ($filter) {
-                $q->where('persona.nombre_persona', 'like', '%' . $filter['buscar'] . '%')
-                    ->orWhere('persona.apellido_persona', 'like', '%' . $filter['buscar'] . '%')
-                    ->orWhere('persona.cedula_persona', 'like', '%' . $filter['buscar'] . '%')
+                $q->where('persona.nombres_per', 'like', '%' . $filter['buscar'] . '%')
+                    ->orWhere('persona.apellidos_per', 'like', '%' . $filter['buscar'] . '%')
+                    ->orWhere('persona.cedula_per', 'like', '%' . $filter['buscar'] . '%')
                     ->orWhere('programa.nombre_prg', 'like', "%{$filter['buscar']}%");
             });
         }

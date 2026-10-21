@@ -279,8 +279,8 @@ class CitaController extends Controller
         $paciente = Usuario::with('persona')->find($cita->user_id);
         $psicologo = Usuario::with('persona')->find($cita->psicologo_id);
 
-        $pacienteName = $paciente ? $paciente->persona->nombre_persona : 'Desconocido';
-        $psicologoName = $psicologo ? $psicologo->persona->nombre_persona : 'Desconocido';
+        $pacienteName = $paciente ? $paciente->persona->nombres_per : 'Desconocido';
+        $psicologoName = $psicologo ? $psicologo->persona->nombres_per : 'Desconocido';
 
         $headerLines = [
             'Psico-Guía UPTP',
@@ -413,16 +413,16 @@ class CitaController extends Controller
         }
 
         $pacienteShortName = 'Paciente';
-        if ($persona && !empty($persona->nombre_persona)) {
-            $pacienteNombresStr = explode(' ', trim($persona->nombre_persona))[0];
-            $pacienteApellidosStr = !empty($persona->apellido_persona) ? explode(' ', trim($persona->apellido_persona))[0] : '';
+        if ($persona && !empty($persona->nombres_per)) {
+            $pacienteNombresStr = explode(' ', trim($persona->nombres_per))[0];
+            $pacienteApellidosStr = !empty($persona->apellidos_per) ? explode(' ', trim($persona->apellidos_per))[0] : '';
             $pacienteShortName = trim($pacienteNombresStr . ' ' . $pacienteApellidosStr) ?: 'Paciente';
         }
 
         $psicologoShortName = 'Sin asignar';
-        if ($cita->psicologo && $cita->psicologo->persona && !empty($cita->psicologo->persona->nombre_persona)) {
-            $psicologoNombresStr = explode(' ', trim($cita->psicologo->persona->nombre_persona))[0];
-            $psicologoApellidosStr = !empty($cita->psicologo->persona->apellido_persona) ? explode(' ', trim($cita->psicologo->persona->apellido_persona))[0] : '';
+        if ($cita->psicologo && $cita->psicologo->persona && !empty($cita->psicologo->persona->nombres_per)) {
+            $psicologoNombresStr = explode(' ', trim($cita->psicologo->persona->nombres_per))[0];
+            $psicologoApellidosStr = !empty($cita->psicologo->persona->apellidos_per) ? explode(' ', trim($cita->psicologo->persona->apellidos_per))[0] : '';
             $psicologoShortName = trim($psicologoNombresStr . ' ' . $psicologoApellidosStr) ?: 'Sin asignar';
         }
 
@@ -447,20 +447,20 @@ class CitaController extends Controller
             'propuesta_bloque_seleccionado' => $cita->propuesta_bloque_seleccionado ?? null,
             'motivo_rechazo_propuesta' => $cita->motivo_rechazo_propuesta ?? null,
             'paciente_horario' => $paciente && isset($paciente->horario_path) && $paciente->horario_path ? asset('storage/' . $paciente->horario_path) : null,
-            'email' => $persona->email_persona ?? $paciente->email ?? null,
-            'telefono' => $persona->telefono_persona ?? null,
+            'email' => $persona->correo_per ?? $paciente->email ?? null,
+            'telefono' => $persona->telefono_per ?? null,
             'registrado_en' => $paciente?->created_at ? Carbon::parse($paciente->created_at)->format('d M, Y') : null,
-            'cedula' => $persona->cedula_persona ?? null,
-            'edad' => $persona->edad_persona ?? ($persona->fecha_nacimiento_persona ? Carbon::parse($persona->fecha_nacimiento_persona)->age : null),
-            'genero' => $persona->genero_persona ?? null,
-            'nacimiento' => $persona->fecha_nacimiento_persona ?? null,
+            'cedula' => $persona->cedula_per ?? null,
+            'edad' => ($persona->fecha_nacimiento_per ? Carbon::parse($persona->fecha_nacimiento_per)->age : null),
+            'genero' => $persona->genero_per ?? null,
+            'nacimiento' => $persona->fecha_nacimiento_per ?? null,
             'ubicacion' => $paciente->ubicacion ?? null,
             'discapacidad' => $paciente->discapacidad ?? null,
             'hijos' => $paciente->hijos ?? null,
             'civil' => $paciente->estado_civil ?? null,
             'perfil_academico' => $persona->perfil->nombre_perfil ?? null,
             'pnf' => $paciente->pnf ?? null,
-            'semestre' => $persona->semestre_persona ?? null,
+            'semestre' => $persona->semestre_per ?? null,
         ]);
     }
 
@@ -804,7 +804,7 @@ class CitaController extends Controller
         [$isPass, $message] = Cita::confirmar($cita->id, $user->id_usuario, $validated);
 
         $paciente = Usuario::with('persona')->find($cita->user_id);
-        $nombrePaciente = $paciente?->persona?->nombre_persona ?? 'Paciente';
+        $nombrePaciente = $paciente?->persona?->nombres_per ?? 'Paciente';
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -889,7 +889,7 @@ class CitaController extends Controller
 
         $citas->getCollection()->transform(fn($c) => [
             'id' => $c->id,
-            'psicologo' => $c->psicologo->persona->nombre_persona ?? 'Sin asignar',
+            'psicologo' => $c->psicologo->persona->nombres_per ?? 'Sin asignar',
             'fecha' => $c->fecha ? Carbon::parse($c->fecha)->format('d/m/Y') : 'S/F',
             'fecha_formateada' => $c->fecha ? Carbon::parse($c->fecha)->translatedFormat('l d \d\e F, Y') : 'S/F',
             'hora' => $c->hora ? Carbon::parse($c->hora)->format('g:i A') : 'S/H',
@@ -995,10 +995,10 @@ class CitaController extends Controller
         $psicologo = Usuario::with('persona')->find($cita->psicologo_id);
 
         if ($paciente) {
-            $paciente->name = $paciente->persona->nombre_persona ?? 'Paciente';
+            $paciente->name = $paciente->persona->nombres_per ?? 'Paciente';
         }
         if ($psicologo) {
-            $psicologo->name = $psicologo->persona->nombre_persona ?? 'Psicólogo';
+            $psicologo->name = $psicologo->persona->nombres_per ?? 'Psicólogo';
         }
 
         $pdf = Pdf::loadView('admin.psicologia.maestros.historias.constanciaPDF', compact('cita', 'paciente', 'psicologo'))

@@ -6,11 +6,11 @@
         $pacienteNombreInicial = old('paciente_nombre');
         if (!$pacienteNombreInicial && $consulta->paciente) {
             $pacienteNombreInicial = trim(
-                ($consulta->paciente->cedula_persona ?? '') .
+                ($consulta->paciente->cedula_per ?? '') .
                     ' ' .
-                    ($consulta->paciente->nombre_persona ?? '') .
+                    ($consulta->paciente->nombres_per ?? '') .
                     ' ' .
-                    ($consulta->paciente->apellido_persona ?? ''),
+                    ($consulta->paciente->apellidos_per ?? ''),
             );
         }
 
@@ -53,7 +53,7 @@
 
         // ── Configuración para Alpine ───────────────────────────
         $configForm = [
-            'pacienteId' => (string) old('id_persona', $consulta->id_persona ?? ''),
+            'pacienteId' => (string) old('per_id', $consulta->per_id ?? ''),
             'pacienteNombre' => (string) $pacienteNombreInicial,
             'medicoId' => (string) old('medico_id', $consulta->medico_id ?? ''),
             'motivo' => (string) old('motivo', $consulta->motivo ?? ''),
@@ -62,7 +62,7 @@
             'medicos' => collect($medicos)
                 ->map(
                     fn($m) => [
-                        'id' => (string) $m->id_persona,
+                        'id' => (string) $m->per_id,
                         'nombre' => $m->nombre_completo,
                         'consultorio_id' => (string) ($m->consultorio_id ?? ''),
                         'consultorio_nombre' => $m->consultorio_nombre ?? '',
@@ -162,7 +162,7 @@
                     :consulta="$consulta" />
 
                 {{-- Campos ocultos --}}
-                <input type="hidden" name="id_persona" id="id_persona" :value="pacienteId">
+                <input type="hidden" name="per_id" id="per_id" :value="pacienteId">
                 <input type="hidden" name="paciente_nombre" id="paciente_nombre" :value="pacienteNombre">
                 <input type="hidden" name="consultorio_id" id="consultorio_id" :value="consultorioId">
                 <input type="hidden" name="fecha" value="{{ $fechaValue }}">
@@ -207,7 +207,7 @@
                                         @input="buscarPaciente()"
                                         @focus="pacienteResultados.length && (pacienteAbierto = true)"
                                         @keydown="tecla($event, 'paciente')" placeholder="Nombre, apellido o cédula"
-                                        class="cx-input !pl-8 @error('id_persona') is-invalid @enderror">
+                                        class="cx-input !pl-8 @error('per_id') is-invalid @enderror">
 
                                     <span x-show="pacienteCargando" x-cloak
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] cx-faint">
@@ -218,7 +218,7 @@
                                     <div id="paciente_resultados" x-show="pacienteAbierto" x-cloak
                                         class="cx-dropdown" role="listbox">
                                         <template x-for="(item, i) in pacienteResultados"
-                                            :key="item.id_persona ?? item.id">
+                                            :key="item.per_id ?? item.id">
                                             <button type="button" class="cx-option" role="option"
                                                 :data-activo="i === pacienteActivo"
                                                 :aria-selected="i === pacienteActivo" @mouseenter="pacienteActivo = i"
@@ -240,7 +240,7 @@
                                     Escribe al menos 2 caracteres.
                                 </p>
 
-                                @error('id_persona')
+                                @error('per_id')
                                     <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
                                             aria-hidden="true"></i>{{ $message }}</p>
                                 @enderror
@@ -256,8 +256,8 @@
                                     class="cx-input @error('medico_id') is-invalid @enderror">
                                     <option value="" disabled>Selecciona un médico</option>
                                     @foreach ($medicos as $medico)
-                                        <option value="{{ $medico->id_persona }}"
-                                            {{ old('medico_id', $consulta->medico_id ?? null) == $medico->id_persona ? 'selected' : '' }}>
+                                        <option value="{{ $medico->per_id }}"
+                                            {{ old('medico_id', $consulta->medico_id ?? null) == $medico->per_id ? 'selected' : '' }}>
                                             {{ $medico->nombre_completo }} ({{ $medico->nombre_rol }})
                                         </option>
                                     @endforeach
@@ -559,7 +559,7 @@
                 },
 
                 elegirPaciente(item) {
-                    this.pacienteId = String(item.id_persona ?? item.id);
+                    this.pacienteId = String(item.per_id ?? item.id);
                     this.pacienteNombre = (item.nombre || '').trim();
                     this.pacienteQuery = '';
                     this.pacienteResultados = [];

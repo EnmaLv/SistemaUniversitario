@@ -104,8 +104,8 @@
                 <ul id="patientsWithoutAppointmentList" class="space-y-2">
                     @foreach ($pacientesSinCita as $pacienteSinCita)
                         @php
-                            $nombresArr = array_filter(explode(' ', $pacienteSinCita->persona->nombre_persona  ?? ''));
-                            $apellidosArr = array_filter(explode(' ', $pacienteSinCita->persona->apellido_persona  ?? ''));
+                            $nombresArr = array_filter(explode(' ', $pacienteSinCita->persona->nombres_per  ?? ''));
+                            $apellidosArr = array_filter(explode(' ', $pacienteSinCita->persona->apellidos_per  ?? ''));
                             $primerNombre = !empty($nombresArr) ? array_values($nombresArr)[0] : '';
                             $primerApellido = !empty($apellidosArr) ? array_values($apellidosArr)[0] : '';
                             $shortName = trim($primerNombre . ' ' . $primerApellido) ?: 'Paciente';

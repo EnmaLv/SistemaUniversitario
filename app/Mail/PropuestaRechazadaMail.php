@@ -25,7 +25,7 @@ class PropuestaRechazadaMail extends Mailable implements ShouldQueue
         return $this->subject('Contrapropuesta Rechazada')
             ->view('emails.propuesta_rechazada')
             ->with([
-                'paciente' => optional($this->paciente->persona)->nombre_persona ?: 'Paciente',
+                'paciente' => optional($this->paciente->persona)->nombres_per ?: 'Paciente',
                 'bloques_rechazados' => $this->cita->bloque_propuesto ?: 'los bloques sugeridos'
             ]);
     }

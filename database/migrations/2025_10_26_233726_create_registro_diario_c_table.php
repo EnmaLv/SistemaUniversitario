@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('registro_diario_c', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_persona')
-                ->constrained('persona', 'id_persona')
+            $table->foreignId('per_id')
+                ->constrained('persona', 'id_per')
                 ->onDelete('cascade');
-            $table->foreignId('id_persona_pnf')
-                ->constrained('persona_pnf', 'id_persona_pnf')
+            $table->foreignId('ppr_id')
+                ->constrained('persona_programa', 'id_ppr')
                 ->onDelete('cascade');
             $table->foreignId('sed_id')->constrained('sede', 'id_sed');
             $table->string('tipo_comida', 20)->default('desayuno');

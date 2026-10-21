@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Informe de Evolución - {{ $paciente->persona->nombre_persona }}</title>
+    <title>Informe de Evolución - {{ $paciente->persona->nombres_per }}</title>
     <style>
         @page { margin: 100px 60px 65px 60px;  }
         header { position: fixed; top: -60px; left: 0px; right: 0px; height: 50px; text-align: center; }
@@ -212,13 +212,13 @@
             </td>
             <td style="width: 50%;" class="doc-info">
                 <div class="doc-title">INFORME CLINICO DE EVOLUCION</div>
-                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombre_persona . ' ' . Auth::user()->persona->apellido_persona) }} | PSICOLOGO</div>
+                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombres_per . ' ' . Auth::user()->persona->apellidos_per) }} | PSICOLOGO</div>
             </td>
         </tr>
     </table>
 
     <div class="patient-card">
-        <div class="patient-name">{{ $paciente->persona->nombre_persona }} {{ $paciente->persona->apellido_persona }}</div>
+        <div class="patient-name">{{ $paciente->persona->nombres_per }} {{ $paciente->persona->apellidos_per }}</div>
         <div class="patient-meta">
             <span>Sesiones: {{ $stats['realizadas'] }}</span>
             <span>N Expediente: {{ $historia->id }}</span>

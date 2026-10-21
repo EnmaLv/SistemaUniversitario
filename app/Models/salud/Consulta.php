@@ -84,7 +84,7 @@ class Consulta extends Model
     ];
 
     protected $fillable = [
-        'id_persona',
+        'per_id',
         'medico_id',
         'consultorio_id',
         'enfermedad_id',
@@ -105,12 +105,12 @@ class Consulta extends Model
 
     public function paciente(): BelongsTo
     {
-        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
+        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
     }
 
     public function medico(): BelongsTo
     {
-        return $this->belongsTo(Persona::class, 'medico_id', 'id_persona');
+        return $this->belongsTo(Persona::class, 'medico_id', 'per_id');
     }
 
     public function consultorio(): BelongsTo
@@ -175,7 +175,7 @@ class Consulta extends Model
      */
     public function pacienteIdParaReceta(): ?int
     {
-        return $this->id_persona
+        return $this->per_id
             ?? $this->persona_id
             ?? $this->paciente_id
             ?? $this->paciente?->id;
@@ -232,7 +232,7 @@ class Consulta extends Model
     public function sincronizarReceta(): void
     {
         $this->receta?->update([
-            'id_persona' => $this->id_persona,
+            'per_id' => $this->per_id,
             'medico_id'  => $this->medico_id,
         ]);
     }
@@ -271,9 +271,9 @@ class Consulta extends Model
         }
 
         return $query->whereHas('paciente', function ($q) use ($buscar) {
-            $q->where('nombre_persona', 'like', "%{$buscar}%")
-                ->orWhere('apellido_persona', 'like', "%{$buscar}%")
-                ->orWhere('cedula_persona', 'like', "%{$buscar}%");
+            $q->where('nombres_per', 'like', "%{$buscar}%")
+                ->orWhere('apellidos_per', 'like', "%{$buscar}%")
+                ->orWhere('cedula_per', 'like', "%{$buscar}%");
         });
     }
 

@@ -144,11 +144,11 @@
                             </div>
                             <div class="min-w-0">
                                 <div class="font-bold text-sm truncate" style="color: var(--text-main);">
-                                    {{ $busViaje->conductor->persona->nombre_persona ?? 'Sin Asignar' }}
-                                    {{ $busViaje->conductor->persona->apellido_persona ?? '' }}
+                                    {{ $busViaje->conductor->persona->nombres_per ?? 'Sin Asignar' }}
+                                    {{ $busViaje->conductor->persona->apellidos_per ?? '' }}
                                 </div>
                                 <small class="text-xs text-gray-400">
-                                    C.I: {{ $busViaje->conductor->persona->cedula_persona ?? 'N/A' }}
+                                    C.I: {{ $busViaje->conductor->persona->cedula_per ?? 'N/A' }}
                                 </small>
                             </div>
                         </div>

@@ -76,7 +76,7 @@ class TransporteHomeService
             $q->whereIn('nombre', ['conductor', 'chofer']);
         })->get()->map(function ($u) {
             $u->nombre_completo = trim(
-                ($u->persona->nombre_persona ?? '') . ' ' . ($u->persona->apellido_persona ?? '')
+                ($u->persona->nombres_per ?? '') . ' ' . ($u->persona->apellidos_per ?? '')
             ) ?: ('Usuario #' . $u->id_usuario);
             return $u;
         });
@@ -177,8 +177,8 @@ class TransporteHomeService
 
             if ($v->conductor && $v->conductor->persona) {
                 $nombreCond = trim(
-                    ($v->conductor->persona->nombre_persona ?? '') . ' ' .
-                    ($v->conductor->persona->apellido_persona ?? '')
+                    ($v->conductor->persona->nombres_per ?? '') . ' ' .
+                    ($v->conductor->persona->apellidos_per ?? '')
                 ) ?: ('Conductor #' . $v->conductor_id);
                 $conductoresSet[$nombreCond] = ($conductoresSet[$nombreCond] ?? 0) + 1;
             }

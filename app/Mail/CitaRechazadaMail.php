@@ -25,7 +25,7 @@ class CitaRechazadaMail extends Mailable implements ShouldQueue
         return $this->subject('Aviso de Cita Rechazada')
             ->view('emails.cita_rechazada')
             ->with([
-                'psicologo' => optional($this->psicologo->persona)->nombre_persona ?: 'Psicólogo'
+                'psicologo' => optional($this->psicologo->persona)->nombres_per ?: 'Psicólogo'
             ]);
     }
 }

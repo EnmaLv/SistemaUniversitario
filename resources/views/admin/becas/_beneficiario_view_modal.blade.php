@@ -11,7 +11,7 @@
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Estudiante</label>
-                    <p class="text-sm text-slate-800 dark:text-slate-100"><strong>{{ $beneficiario->persona?->nombre_persona }} {{ $beneficiario->persona?->apellido_persona }} - {{ $beneficiario->persona?->cedula_persona }}</strong></p>
+                    <p class="text-sm text-slate-800 dark:text-slate-100"><strong>{{ $beneficiario->persona?->nombres_per }} {{ $beneficiario->persona?->apellidos_per }} - {{ $beneficiario->persona?->cedula_per }}</strong></p>
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Área</label>
@@ -26,7 +26,7 @@
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Tutor</label>
-                    <p class="text-sm text-slate-800 dark:text-slate-100">{{ $beneficiario->tutor?->nombre_persona }} {{ $beneficiario->tutor?->apellido_persona }}</p>
+                    <p class="text-sm text-slate-800 dark:text-slate-100">{{ $beneficiario->tutor?->nombres_per }} {{ $beneficiario->tutor?->apellidos_per }}</p>
                 </div>
             </div>
 

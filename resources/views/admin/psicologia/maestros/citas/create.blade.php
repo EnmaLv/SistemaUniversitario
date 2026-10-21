@@ -86,8 +86,8 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="psicologoCards">
                                     @foreach ($psicologos as $psicologo)
                                         @php
-                                            $firstName = explode(' ', trim($psicologo->nombre_persona ?? ''))[0] ?? '';
-                                            $firstLastName = explode(' ', trim($psicologo->apellido_persona ?? ''))[0] ?? '';
+                                            $firstName = explode(' ', trim($psicologo->nombres_per ?? ''))[0] ?? '';
+                                            $firstLastName = explode(' ', trim($psicologo->apellidos_per ?? ''))[0] ?? '';
                                             $fullName = trim("$firstName $firstLastName") ?: $psicologo->username;
 
                                             $photoPath =$psicologo->profile_photo_path ?? null;

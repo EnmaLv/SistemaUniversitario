@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Expediente Completo - {{ $paciente->persona->nombre_persona }}</title>
+    <title>Expediente Completo - {{ $paciente->persona->nombres_per }}</title>
     <style>
         @page { margin: 80px 18mm 80px 18mm; }
         header { position: fixed; top: -60px; left: 0px; right: 0px; height: 50px; text-align: center; }
@@ -227,14 +227,14 @@
             </td>
             <td style="width: 50%;" class="doc-info">
                 <div class="doc-title">Expediente Clínico General</div>
-                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombre_persona . ' ' . Auth::user()->persona->apellido_persona) }} | PSICÓLOGO</div>
+                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombres_per . ' ' . Auth::user()->persona->apellidos_per) }} | PSICÓLOGO</div>
                 <div class="doc-subtitle">Fecha: {{ date('d/m/Y') }}</div>
             </td>
         </tr>
     </table>
 
     <div class="patient-card">
-        <div class="patient-name">{{ $paciente->persona->nombre_persona }} {{ $paciente->persona->apellido_persona }}</div>
+        <div class="patient-name">{{ $paciente->persona->nombres_per }} {{ $paciente->persona->apellidos_per }}</div>
         <div class="patient-meta">
             <span>Sesiones Totales: {{ $stats['realizadas'] }}</span>
             <span>N° Expediente: {{ $historia->id }}</span>
@@ -245,10 +245,10 @@
     <table class="info-grid">
         <tr>
             <td>
-                <div class="info-label">Cédula: {{ $paciente->persona->cedula_persona ?? 'No registrada' }}</div>
+                <div class="info-label">Cédula: {{ $paciente->persona->cedula_per ?? 'No registrada' }}</div>
             </td>
             <td>
-                <div class="info-label">Teléfono: {{ $paciente->persona->telefono_persona ?? 'No registrado' }}</div>
+                <div class="info-label">Teléfono: {{ $paciente->persona->telefono_per ?? 'No registrado' }}</div>
             </td>
         </tr>
         <tr>
@@ -256,10 +256,10 @@
                 @php
                     $edad = 'No registrada';
                     if(!empty($paciente->fecha_nacimiento)) {
-                        $edad = \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->age . ' años';
+                        $edad = \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->age . ' años';
                     }
                 @endphp
-                <div class="info-label">Edad y Nacimiento: {{ $edad }} ({{ !empty($paciente->persona->fecha_nacimiento_persona) ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->format('d/m/Y') : 'N/A' }})</div>
+                <div class="info-label">Edad y Nacimiento: {{ $edad }} ({{ !empty($paciente->persona->fecha_nacimiento_per) ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->format('d/m/Y') : 'N/A' }})</div>
             </td>
             <td>
                 <div class="info-label">Perfil Académico / PNF: {{ $paciente->perfil_academico ?? 'No registrado' }}
@@ -271,7 +271,7 @@
         </tr>
         <tr>
             <td>
-                <div class="info-label">Género / Estado Civil: {{ $paciente->persona->genero_persona ?? 'N/A' }} / {{ $paciente->estado_civil ?? 'N/A' }}</div>
+                <div class="info-label">Género / Estado Civil: {{ $paciente->persona->genero_per ?? 'N/A' }} / {{ $paciente->estado_civil ?? 'N/A' }}</div>
             </td>
             <td>
                 <div class="info-label">Discapacidad: {{ ($paciente->discapacidad ?? 'No') == 'Si' ? 'Sí — ' . ($paciente->tipo_discapacidad ?? '') : 'Ninguna' }}</div>
@@ -315,7 +315,7 @@
             </td>
             <td style="width: 50%;" class="doc-info">
                 <div class="doc-title">Notas de Evolución</div>
-                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombre_persona . ' ' . Auth::user()->persona->apellido_persona) }} | PSICÓLOGO</div>
+                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombres_per . ' ' . Auth::user()->persona->apellidos_per) }} | PSICÓLOGO</div>
                 <div class="doc-subtitle">Fecha: {{ date('d/m/Y') }}</div>
             </td>
         </tr>

@@ -232,7 +232,7 @@ class DispensacionService
             'receta_medica_id'         => $receta->id,
             'detalle_receta_medica_id' => $detalle->id,
             'producto_id'              => $detalle->producto_id,
-            'id_persona'               => $consulta->id_persona,
+            'per_id'               => $consulta->per_id,
             'lote_id'                  => $lote->id,
             'cantidad'                 => $cantidad,
             'unidad_id'                => $detalle->unidad_id,

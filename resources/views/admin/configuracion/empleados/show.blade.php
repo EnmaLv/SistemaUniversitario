@@ -33,7 +33,7 @@
                         <i class="fas fa-user fa-3x" style="color: var(--color-secondary)"></i>
                     </div>
                 </div>
-                <h4 class="font-weight-bold mb-1">{{ optional($usuario->persona)->nombre_persona }}</h4>
+                <h4 class="font-weight-bold mb-1">{{ optional($usuario->persona)->nombres_per }}</h4>
                 <p class="text-muted mb-3">{{ $usuario->username }}</p>
                 <hr class="my-4">
                 <div class="text-left">
@@ -58,25 +58,25 @@
                     <div class="row p-4">
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Cédula de Identidad</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->cedula_persona ?? '”' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->cedula_per ?? '”' }}</div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Teléfono de Contacto</label>
                             <div class="h6 font-weight-bold">
                                 <i class="fas fa-phone mr-1 text-success small"></i>
-                                {{ optional($usuario->persona)->telefono_persona ?? '”' }}
+                                {{ optional($usuario->persona)->telefono_per ?? '”' }}
                             </div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Nombres</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->nombre_persona ?? '”' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->nombres_per ?? '”' }}</div>
                         </div>
 
                         <div class="col-sm-6 mb-4">
                             <label class="rd-label text-muted small">Apellidos</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->apellido_persona ?? '”' }}</div>
+                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->apellidos_per ?? '”' }}</div>
                         </div>
                     </div>
 

@@ -17,7 +17,7 @@
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         Bienvenido <span
-                            class="font-bold text-gray-700 dark:text-gray-200">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->username }}</span>
+                            class="font-bold text-gray-700 dark:text-gray-200">{{ auth()->user()->persona->nombres_per ?? auth()->user()->username }}</span>
                         ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>

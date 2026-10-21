@@ -115,7 +115,7 @@
                 @forelse($beca->tutores as $tutor)
                     <tr>
                         <td>{{ optional($tutor->rol)->nombre ?? 'Sin rol' }}</td>
-                        <td>{{ $tutor->tutor ? trim($tutor->tutor->nombre_persona . ' ' . $tutor->tutor->apellido_persona) : 'Sin tutor asignado' }}</td>
+                        <td>{{ $tutor->tutor ? trim($tutor->tutor->nombres_per . ' ' . $tutor->tutor->apellidos_per) : 'Sin tutor asignado' }}</td>
                         <td>{{ $tutor->descripcion ?: 'Sin descripción' }}</td>
                     </tr>
                 @empty

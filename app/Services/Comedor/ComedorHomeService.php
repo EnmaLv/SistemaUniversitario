@@ -40,19 +40,19 @@ class ComedorHomeService
     protected function consultarRegistros(array $f, string $inicio, string $fin)
     {
         $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c as r'), 'r.sed_id')
-            ->join('persona as p', 'r.id_persona', '=', 'p.id_persona')
-            ->leftJoin('persona_pnf as pp', 'r.id_persona_pnf', '=', 'pp.id_persona_pnf')
+            ->join('persona as p', 'r.per_id', '=', 'p.id_per')
+            ->leftJoin('persona_programa as pp', 'r.ppr_id', '=', 'pp.id_ppr')
             ->leftJoin('programa as n', 'pp.prg_id', '=', 'n.id_prg')
             ->whereBetween('r.fecha_regis_diario_c', [$inicio, $fin])
             ->select(
                 'r.id',
                 'r.fecha_regis_diario_c',
                 'r.hora',
-                'r.id_persona',
-                'r.id_persona_pnf',
-                'p.nombre_persona',
-                'p.apellido_persona',
-                'p.genero_persona',
+                'r.per_id',
+                'r.ppr_id',
+                'p.nombres_per',
+                'p.apellidos_per',
+                'p.genero_per',
                 'n.id_prg',
                 'n.nombre_prg'
             );
@@ -195,10 +195,10 @@ class ComedorHomeService
         $semanaBloques  = [];
 
         foreach ($registros as $r) {
-            $personas[$r->id_persona] = true;
+            $personas[$r->per_id] = true;
 
             // Género
-            $genero = strtolower(trim($r->genero_persona ?? ''));
+            $genero = strtolower(trim($r->genero_per ?? ''));
             if (in_array($genero, ['masculino', 'hombre', 'm'])) {
                 $resumen['genero']['masculino']++;
             } elseif (in_array($genero, ['femenino', 'mujer', 'f'])) {

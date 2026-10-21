@@ -3,7 +3,7 @@
     $totalModulos = $resumenGeneral['totalModulos'] ?? 0;
 
     $user   = auth()->user();
-    $nombre = $user->persona?->nombre_persona ?? $user->name ?? 'Usuario';
+    $nombre = $user->persona?->nombres_per ?? $user->name ?? 'Usuario';
     $hora   = (int) \Carbon\Carbon::now()->format('H');
     $saludo = match (true) {
         $hora >= 5  && $hora < 12 => 'Buenos días',

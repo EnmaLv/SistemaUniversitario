@@ -233,14 +233,14 @@ class RegisterNoti extends Component
             'hora'   => date('H:i:s'),
         ];
 
-        $persona = Persona::deSedeActiva()->where('cedula_persona', $this->cedula)
+        $persona = Persona::deSedeActiva()->where('cedula_per', $this->cedula)
             ->where('estado', true)
             ->where('id_perfil', 2)
             ->first();
 
         if ($persona) {
 
-            $is_register = Registro_diario::where('id_persona', $persona->id_persona)
+            $is_register = Registro_diario::where('per_id', $persona->id_per)
                 ->where('fecha_regis_diario_c', date('Y-m-d'))
                 ->where('tipo_comida', $tipo)
                 ->exists();
@@ -248,10 +248,10 @@ class RegisterNoti extends Component
             if ($is_register) {
                 $this->notification = [
                     'type'    => 'danger',
-                    'message' => "El estudiante {$persona->nombre_persona} {$persona->apellido_persona} ya se registró en {$this->tipoComidaLabel} hoy.",
+                    'message' => "El estudiante {$persona->nombres_per} {$persona->apellidos_per} ya se registró en {$this->tipoComidaLabel} hoy.",
                 ];
 
-                $DatosHistorial['nombre']      = $persona->nombre_persona;
+                $DatosHistorial['nombre']      = $persona->nombres_per;
                 $DatosHistorial['estado']      = 'Rechazado';
                 $DatosHistorial['observacion'] = "Ya registrado en {$this->tipoComidaLabel} hoy";
 
@@ -264,7 +264,7 @@ class RegisterNoti extends Component
             try {
                 DB::beginTransaction();
 
-                $personaPnf = PersonaPnf::where('id_persona', $persona->id_persona)->first();
+                $personaPnf = PersonaPnf::where('per_id', $persona->id_per)->first();
 
                 if (!$personaPnf) {
                     throw new Exception('El estudiante no tiene un PNF asignado.');
@@ -272,8 +272,8 @@ class RegisterNoti extends Component
 
                 DB::table('registro_diario_c')->insert([
                     'sed_id'              => \App\Support\Sedes\SedeActiva::idParaCrear(),
-                    'id_persona'           => $persona->id_persona,
-                    'id_persona_pnf'       => $personaPnf->id_persona_pnf,
+                    'per_id'           => $persona->id_per,
+                    'ppr_id'       => $personaPnf->id_ppr,
                     'tipo_comida'          => $tipo,
                     'fecha_regis_diario_c' => date('Y-m-d'),
                     'hora'                 => date('H:i:s'),
@@ -295,10 +295,10 @@ class RegisterNoti extends Component
 
                 $this->notification = [
                     'type'    => 'success',
-                    'message' => "El estudiante {$persona->nombre_persona} {$persona->apellido_persona} se registró exitosamente en {$this->tipoComidaLabel}.",
+                    'message' => "El estudiante {$persona->nombres_per} {$persona->apellidos_per} se registró exitosamente en {$this->tipoComidaLabel}.",
                 ];
 
-                $DatosHistorial['nombre']      = $persona->nombre_persona;
+                $DatosHistorial['nombre']      = $persona->nombres_per;
                 $DatosHistorial['estado']      = 'Aprobado';
                 $DatosHistorial['observacion'] = "Registro exitoso en {$this->tipoComidaLabel}";
 
@@ -312,7 +312,7 @@ class RegisterNoti extends Component
                     'message' => "No se pudo registrar al estudiante: " . \App\Support\Seguridad\MensajeError::de($e),
                 ];
 
-                $DatosHistorial['nombre']      = $persona->nombre_persona ?? 'Sin nombre';
+                $DatosHistorial['nombre']      = $persona->nombres_per ?? 'Sin nombre';
                 $DatosHistorial['estado']      = 'Rechazado';
                 $DatosHistorial['observacion'] = \App\Support\Seguridad\MensajeError::de($e);
 

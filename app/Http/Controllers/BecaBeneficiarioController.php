@@ -13,10 +13,10 @@ class BecaBeneficiarioController extends Controller
     public function store(HttpRequest $request, Beca $beca)
     {
         $data = $request->validate([
-            'persona_id' => ['required', 'exists:persona,id_persona'],
+            'persona_id' => ['required', 'exists:persona,id_per'],
             'area' => ['nullable', 'string', 'max:255'],
             'horario' => ['nullable', 'string', 'max:255'],
-            'tutor_id' => ['nullable', 'exists:persona,id_persona'],
+            'tutor_id' => ['nullable', 'exists:persona,id_per'],
             'observaciones' => ['nullable', 'string'],
             'estado' => ['nullable', 'in:activo,suspendido,finalizado'],
             'activo' => ['nullable', 'boolean'],
@@ -41,7 +41,7 @@ class BecaBeneficiarioController extends Controller
         $data = $request->validate([
             'area' => ['nullable', 'string', 'max:255'],
             'horario' => ['nullable', 'string', 'max:255'],
-            'tutor_id' => ['nullable', 'exists:persona,id_persona'],
+            'tutor_id' => ['nullable', 'exists:persona,id_per'],
             'observaciones' => ['nullable', 'string'],
             'estado' => ['nullable', 'in:activo,suspendido,finalizado'],
             'activo' => ['nullable', 'boolean'],

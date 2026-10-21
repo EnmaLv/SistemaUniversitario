@@ -25,7 +25,7 @@ class ContrapropuestaCitaMail extends Mailable implements ShouldQueue
         return $this->subject('Contrapropuesta de Horario')
             ->view('emails.contrapropuesta_cita')
             ->with([
-                'psicologo' => optional($this->psicologo->persona)->nombre_persona ?: 'Psicólogo'
+                'psicologo' => optional($this->psicologo->persona)->nombres_per ?: 'Psicólogo'
             ]);
     }
 }

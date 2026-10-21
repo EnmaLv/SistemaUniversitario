@@ -98,10 +98,10 @@ class EmpleosController extends Controller
         $rules = [
             'username'          => 'required|string|email|max:100|unique:usuario,username,' . $id . ',id_usuario',
             'role'              => 'nullable|integer|exists:rol,id_rol',
-            'cedula_persona'    => 'required|string|max:20',
-            'telefono_persona'  => 'required|string|max:20',
-            'nombre_persona'    => 'required|string|max:100',
-            'apellido_persona'  => 'required|string|max:100',
+            'cedula_per'    => 'required|string|max:20',
+            'telefono_per'  => 'required|string|max:20',
+            'nombres_per'    => 'required|string|max:100',
+            'apellidos_per'  => 'required|string|max:100',
         ];
 
         if ($request->boolean('modificar_seguridad')) {
@@ -114,10 +114,10 @@ class EmpleosController extends Controller
 
         if ($usuario->persona) {
             $usuario->persona->update([
-                'cedula_persona'   => $request->input('cedula_persona'),
-                'telefono_persona' => $request->input('telefono_persona'),
-                'nombre_persona'   => $request->input('nombre_persona'),
-                'apellido_persona' => $request->input('apellido_persona'),
+                'cedula_per'   => $request->input('cedula_per'),
+                'telefono_per' => $request->input('telefono_per'),
+                'nombres_per'   => $request->input('nombres_per'),
+                'apellidos_per' => $request->input('apellidos_per'),
             ]);
         }
 

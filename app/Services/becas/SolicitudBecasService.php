@@ -24,9 +24,9 @@ class SolicitudBecasService
         if (!empty($filtros['buscar'])) {
             $buscar = $filtros['buscar'];
             $query->whereHas('persona', function ($q) use ($buscar) {
-                $q->where('cedula_persona', 'like', "%{$buscar}%")
-                  ->orWhere('nombre_persona', 'like', "%{$buscar}%")
-                  ->orWhere('apellido_persona', 'like', "%{$buscar}%");
+                $q->where('cedula_per', 'like', "%{$buscar}%")
+                  ->orWhere('nombres_per', 'like', "%{$buscar}%")
+                  ->orWhere('apellidos_per', 'like', "%{$buscar}%");
             });
         }
 
@@ -44,7 +44,7 @@ class SolicitudBecasService
     public function crearSolicitud(array $data): SolicitudBeca
     {
         return DB::transaction(function () use ($data) {
-            $personaId = $data['id_persona'];
+            $personaId = $data['per_id'];
             $jornadaId = $data['jornada_id'];
 
             $jornada = JornadaBeca::findOrFail($jornadaId);
@@ -58,7 +58,7 @@ class SolicitudBecasService
                 throw new Exception("El período de solicitudes para esta jornada ya expiró o no ha iniciado.");
             }
 
-            $existe = SolicitudBeca::where('id_persona', $personaId)
+            $existe = SolicitudBeca::where('per_id', $personaId)
                 ->where('id_beneficio', $jornada->beneficio_id)
                 ->where('id_lapso', $jornada->lapsos_id)
                 ->whereIn('estado', [0, 1])
@@ -249,11 +249,11 @@ class SolicitudBecasService
         $aprobadosAnteriores = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
             ->where('estado', 1)
             ->where('id_lapso', '!=', $jornada->lapsos_id)
-            ->pluck('id_persona');
+            ->pluck('per_id');
 
         // Estudiantes que ya tienen solicitud (de cualquier estado) en la jornada actual
         $postuladosActuales = SolicitudBeca::where('jornada_id', $jornadaId)
-            ->pluck('id_persona');
+            ->pluck('per_id');
 
         // Los que faltan por postularse en esta jornada
         $pendientes = $aprobadosAnteriores->diff($postuladosActuales);
@@ -277,7 +277,7 @@ class SolicitudBecasService
             }
 
             // Verificar si tiene una solicitud previa aprobada para este beneficio
-            $solicitudPrevia = SolicitudBeca::where('id_persona', $personaId)
+            $solicitudPrevia = SolicitudBeca::where('per_id', $personaId)
                 ->where('id_beneficio', $jornada->beneficio_id)
                 ->where('estado', 1)
                 ->where('id_lapso', '!=', $jornada->lapsos_id)
@@ -289,7 +289,7 @@ class SolicitudBecasService
             }
 
             // Verificar si ya tiene solicitud en este lapso
-            $existe = SolicitudBeca::where('id_persona', $personaId)
+            $existe = SolicitudBeca::where('per_id', $personaId)
                 ->where('id_beneficio', $jornada->beneficio_id)
                 ->where('id_lapso', $jornada->lapsos_id)
                 ->exists();
@@ -303,7 +303,7 @@ class SolicitudBecasService
 
             // Crear la nueva solicitud
             $nuevaSolicitud = SolicitudBeca::create([
-                'id_persona' => $personaId,
+                'per_id' => $personaId,
                 'id_beneficio' => $jornada->beneficio_id,
                 'jornada_id' => $jornadaId,
                 'id_lapso' => $jornada->lapsos_id,

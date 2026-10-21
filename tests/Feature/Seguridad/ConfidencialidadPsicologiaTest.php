@@ -13,7 +13,7 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
     private function crearPaciente(string $nombre): Usuario
     {
         $paciente = $this->crearUsuario('Paciente');
-        $paciente->persona->update(['nombre_persona' => $nombre]);
+        $paciente->persona->update(['nombres_per' => $nombre]);
 
         return $paciente->fresh();
     }

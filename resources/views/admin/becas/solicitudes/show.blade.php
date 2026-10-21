@@ -17,9 +17,9 @@
                         <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                             Expediente de
                             <span class="font-bold">
-                                {{ $solicitud->persona->nombre_persona }} {{ $solicitud->persona->apellido_persona }}
+                                {{ $solicitud->persona->nombres_per }} {{ $solicitud->persona->apellidos_per }}
                             </span>
-                            · C.I. {{ $solicitud->persona->cedula_persona }}
+                            · C.I. {{ $solicitud->persona->cedula_per }}
                         </p>
                     </div>
                     <span
@@ -46,14 +46,14 @@
                         <span
                             class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Estudiante</span>
                         <span class="font-bold" style="color: var(--text-main);">
-                            {{ $solicitud->persona->nombre_persona }} {{ $solicitud->persona->apellido_persona }}
+                            {{ $solicitud->persona->nombres_per }} {{ $solicitud->persona->apellidos_per }}
                         </span>
                     </div>
                     <div>
                         <span
                             class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Cédula</span>
                         <span class="font-bold font-mono" style="color: var(--text-main);">
-                            {{ $solicitud->persona->cedula_persona }}
+                            {{ $solicitud->persona->cedula_per }}
                         </span>
                     </div>
                     <div>
@@ -319,8 +319,8 @@
                                     class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Verificado
                                     por</span>
                                 <span class="font-bold" style="color: var(--text-main);">
-                                    {{ $solicitud->verificador->persona->nombre_persona ?? 'N/A' }}
-                                    {{ $solicitud->verificador->persona->apellido_persona ?? '' }}
+                                    {{ $solicitud->verificador->persona->nombres_per ?? 'N/A' }}
+                                    {{ $solicitud->verificador->persona->apellidos_per ?? '' }}
                                 </span>
                                 <span class="block text-[10px] text-gray-400 font-mono mt-0.5">
                                     {{ $solicitud->verificador->username ?? 'N/A' }}

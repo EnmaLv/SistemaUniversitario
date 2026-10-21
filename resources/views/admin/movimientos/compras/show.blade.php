@@ -11,7 +11,7 @@
             </h1>
 
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.72;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
+                Bienvenido <strong>{{ auth()->user()->persona->nombres_per }}</strong>.
             </p>
         </div>
 

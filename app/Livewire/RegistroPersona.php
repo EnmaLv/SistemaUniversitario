@@ -54,8 +54,8 @@ class RegistroPersona extends Component
                 'required',
                 'numeric',
                 'min:1000000',
-                Rule::unique('persona', 'cedula_persona')
-                    ->where(fn($q) => $q->where('estado', 1)),
+                Rule::unique('persona', 'cedula_per')
+                    ->where(fn($q) => $q->where('status_id', 1)),
             ],
             'nombre' => 'required|min:3|max:50',
             'segundo_nombre' => 'nullable',
@@ -112,10 +112,10 @@ class RegistroPersona extends Component
             return;
         }
 
-        $persona = Persona::where('cedula_persona', $value)->first();
+        $persona = Persona::where('cedula_per', $value)->first();
 
         if ($persona) {
-            if ($persona->estado === 0) {
+            if ((int) $persona->status_id === 2) {
                 // Disparamos el evento con Livewire 3
                 $this->dispatch('confirm-reactivate', cedula: $value);
                 $this->formHabilitado = false;
@@ -168,7 +168,7 @@ class RegistroPersona extends Component
     public function reactivarEstudiante($cedula)
     {
         try {
-            $persona = Persona::where('cedula_persona', $cedula)->first();
+            $persona = Persona::where('cedula_per', $cedula)->first();
 
             if (!$persona) {
                 $this->dispatch(
@@ -180,31 +180,31 @@ class RegistroPersona extends Component
                 return;
             }
 
-            if ($persona->estado === 0) {
+            if ((int) $persona->status_id === 2) {
                 // Reactivamos el estudiante
                 $persona->update([
-                    'estado' => 1,
+                    'status_id' => 1,
                     'updated_at' => now(),
                 ]);
 
                 // Cargamos los datos en el formulario
-                $this->cedula = $persona->cedula_persona;
-                $this->nombre = $persona->nombre_persona;
-                $this->segundo_nombre = $persona->segundo_nombre_persona;
-                $this->apellido = $persona->apellido_persona;
-                $this->segundo_apellido = $persona->segundo_apellido_persona;
-                $this->fecha_nacimiento = $persona->fecha_nacimiento_persona;
-                $this->genero = $persona->genero_persona;
-                $this->telefono = $persona->telefono_persona;
-                $this->email = $persona->email_persona;
-                $this->semestreId = $persona->semestre_persona;
+                $this->cedula = $persona->cedula_per;
+                $this->nombre = $persona->nombres_per;
+                $this->segundo_nombre = $persona->segundo_nombre_per;
+                $this->apellido = $persona->apellidos_per;
+                $this->segundo_apellido = $persona->segundo_apellido_per;
+                $this->fecha_nacimiento = $persona->fecha_nacimiento_per;
+                $this->genero = $persona->genero_per;
+                $this->telefono = $persona->telefono_per;
+                $this->email = $persona->correo_per;
+                $this->semestreId = $persona->semestre_per;
                 $this->sedeId = $persona->sed_id;
 
                 // Cargamos datos de dirección si existen
                 $direccion = DB::table('direccion')
                     ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
                     ->join('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
-                    ->where('direccion.id_persona', $persona->id_persona)
+                    ->where('direccion.per_id', $persona->id_per)
                     ->select('direccion.*', 'parroquia.mun_id', 'municipio.esd_id')
                     ->first();
 
@@ -212,8 +212,8 @@ class RegistroPersona extends Component
                     $this->estadosVeId = $direccion->esd_id;
                     $this->municipiosId = $direccion->mun_id;
                     $this->parroquiaId = $direccion->par_id;
-                    $this->calle = $direccion->calle;
-                    $this->sector = $direccion->sector;
+                    $this->calle = $direccion->calle_dir;
+                    $this->sector = $direccion->sector_dir;
 
                     // Cargamos municipios y parroquias
                     $this->municipiosVE = DB::table('municipio')
@@ -231,7 +231,7 @@ class RegistroPersona extends Component
                 }
 
                 // Cargamos PNF
-                $personaPnf = PersonaPnf::where('id_persona', $persona->id_persona)->first();
+                $personaPnf = PersonaPnf::where('per_id', $persona->id_per)->first();
                 if ($personaPnf) {
                     $this->pnfId = $personaPnf->prg_id;
                     $this->showPnf = true;
@@ -269,15 +269,15 @@ class RegistroPersona extends Component
     public function create()
     {
         $data = $this->validate();
-        $persona = Persona::where('cedula_persona', $data['cedula'])->first();
+        $persona = Persona::where('cedula_per', $data['cedula'])->first();
 
         if ($persona) {
-            if ($persona->estado === 0) {
+            if ((int) $persona->status_id === 2) {
                 $persona->update([
-                    'estado' => 1,
-                    'nombre_persona' => $data['nombre'],
-                    'apellido_persona' => $data['apellido'],
-                    'fecha_nacimiento_persona' => $data['fecha_nacimiento'],
+                    'status_id' => 1,
+                    'nombres_per' => $data['nombre'],
+                    'apellidos_per' => $data['apellido'],
+                    'fecha_nacimiento_per' => $data['fecha_nacimiento'],
                     'updated_at' => now(),
                 ]);
 
@@ -304,7 +304,7 @@ class RegistroPersona extends Component
             $finish = Persona::crearPersona($data);
 
             if ($finish) {
-                $nueva = Persona::where('cedula_persona', $data['cedula'])->first();
+                $nueva = Persona::where('cedula_per', $data['cedula'])->first();
                 if ($nueva) {
                     \App\Support\Cuentas\CuentasComunidad::asegurarCuenta($nueva);
                 }
@@ -365,29 +365,29 @@ class RegistroPersona extends Component
 
             $id = request("id");
             $this->personaId = $id;
-            $persona = Persona::where('id_persona', $id)->where('estado', true)->first();
-            $personaPnf = PersonaPnf::with('pnf')->where('id_persona', $id)->first();
+            $persona = Persona::where('id_per', $id)->where('status_id', 1)->first();
+            $personaPnf = PersonaPnf::with('pnf')->where('per_id', $id)->first();
             $direccion = DB::table('direccion')
                 ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
                 ->join('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
                 ->join('estado', 'municipio.esd_id', '=', 'estado.id_esd')
-                ->where('direccion.id_persona', $id)
+                ->where('direccion.per_id', $id)
                 ->select('direccion.*', 'parroquia.*', 'municipio.*', 'estado.*')
                 ->first();
 
-            $this->cedula = $persona->cedula_persona;
+            $this->cedula = $persona->cedula_per;
             $this->perfil = DB::table('perfil')->get();
-            $this->fecha_nacimiento = $persona->fecha_nacimiento_persona;
-            $this->nombre = $persona->nombre_persona;
-            $this->segundo_nombre = $persona->segundo_nombre_persona;
-            $this->apellido = $persona->apellido_persona;
-            $this->segundo_apellido = $persona->segundo_apellido_persona;
-            $this->genero = $persona->genero_persona;
-            $this->telefono = $persona->telefono_persona;
-            $this->email = $persona->email_persona;
+            $this->fecha_nacimiento = $persona->fecha_nacimiento_per;
+            $this->nombre = $persona->nombres_per;
+            $this->segundo_nombre = $persona->segundo_nombre_per;
+            $this->apellido = $persona->apellidos_per;
+            $this->segundo_apellido = $persona->segundo_apellido_per;
+            $this->genero = $persona->genero_per;
+            $this->telefono = $persona->telefono_per;
+            $this->email = $persona->correo_per;
             $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
             $this->sede = DB::table('sede')->get();
-            $this->semestreId = $persona->semestre_persona;
+            $this->semestreId = $persona->semestre_per;
             $this->showPnf = true;
             $this->pnfId = $personaPnf->prg_id;
             $this->sedeId = $persona->sed_id;
@@ -417,8 +417,8 @@ class RegistroPersona extends Component
                 ->get();
 
             $this->parroquiaId = $direccion->par_id;
-            $this->calle = $direccion->calle;
-            $this->sector = $direccion->sector;
+            $this->calle = $direccion->calle_dir;
+            $this->sector = $direccion->sector_dir;
         }
 
         $this->pnfs = DB::table('programa')->where('status_id', 1)->get();

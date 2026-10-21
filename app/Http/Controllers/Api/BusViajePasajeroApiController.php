@@ -43,7 +43,7 @@ class BusViajePasajeroApiController extends Controller
                 ], 422);
             }
 
-            $persona = Persona::where('cedula_persona', $validated['cedula'])
+            $persona = Persona::where('cedula_per', $validated['cedula'])
                 ->where('estado', true)
                 ->first();
 
@@ -65,13 +65,13 @@ class BusViajePasajeroApiController extends Controller
         }
 
         $yaRegistrado = ViajePasajero::where('bus_viaje_id', $viaje->id)
-            ->where('persona_id', $persona->id_persona)
+            ->where('persona_id', $persona->id_per)
             ->exists();
 
         if ($yaRegistrado) {
             return response()->json([
                 'success' => false,
-                'message' => "{$persona->nombre_persona} ya está registrado en este viaje.",
+                'message' => "{$persona->nombres_per} ya está registrado en este viaje.",
                 'code'    => 'YA_REGISTRADO',
             ], 409);
         }
@@ -80,7 +80,7 @@ class BusViajePasajeroApiController extends Controller
             DB::transaction(function () use ($viaje, $persona, $validated) {
                 ViajePasajero::create([
                     'bus_viaje_id'  => $viaje->id,
-                    'persona_id'    => $persona->id_persona,
+                    'persona_id'    => $persona->id_per,
                     'bus_parada_id' => $validated['bus_parada_id'] ?? null,
                     'escaneado_at'  => now(),
                 ]);
@@ -91,7 +91,7 @@ class BusViajePasajeroApiController extends Controller
             if ($e->getCode() === '23000') {
                 return response()->json([
                     'success' => false,
-                    'message' => "{$persona->nombre_persona} ya está registrado en este viaje.",
+                    'message' => "{$persona->nombres_per} ya está registrado en este viaje.",
                     'code'    => 'YA_REGISTRADO',
                 ], 409);
             }
@@ -100,10 +100,10 @@ class BusViajePasajeroApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "{$persona->nombre_persona} {$persona->apellido_persona} registrado exitosamente.",
+            'message' => "{$persona->nombres_per} {$persona->apellidos_per} registrado exitosamente.",
             'data'    => [
-                'persona_id'     => $persona->id_persona,
-                'nombre'         => "{$persona->nombre_persona} {$persona->apellido_persona}",
+                'persona_id'     => $persona->id_per,
+                'nombre'         => "{$persona->nombres_per} {$persona->apellidos_per}",
                 'pasajeros_total' => $viaje->fresh()->pasajeros,
             ],
         ]);

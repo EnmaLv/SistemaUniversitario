@@ -14,23 +14,22 @@ class PersonaSeeder extends Seeder
     public function run(): void
     {
         DB::table('persona')->insert([
-            'nombre_persona' => 'Administrador',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'General',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '12345678',
-            'telefono_persona' => 04241234567,
-            'genero_persona' => 'Masculino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'admin@example.com',
-            'semestre_persona' => null,
+            'nombres_per' => 'Administrador',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'General',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '12345678',
+            'telefono_per' => 04241234567,
+            'genero_per' => 'Masculino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'admin@example.com',
+            'semestre_per' => null,
             'id_perfil' => 1,
             'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 1,
+            'per_id' => 1,
             'id_perfil' => 1,
             'username' => 'admin@example.com',
             'password' => bcrypt('12345678'),
@@ -54,23 +53,22 @@ class PersonaSeeder extends Seeder
 
         //Admin de salud
         DB::table('persona')->insert([
-            'nombre_persona' => 'Nohely',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Sosa',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '31710990',
-            'telefono_persona' => 04241234567,
-            'genero_persona' => 'Femenino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'nohelysq2006@gmail.com',
-            'semestre_persona' => null,
+            'nombres_per' => 'Nohely',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Sosa',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '31710990',
+            'telefono_per' => 04241234567,
+            'genero_per' => 'Femenino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'nohelysq2006@gmail.com',
+            'semestre_per' => null,
             'id_perfil' => 1,
             'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 2,
+            'per_id' => 2,
             'id_perfil' => 1,
             'username' => 'nohelysq2006@gmail.com',
             'password' => bcrypt('12345678'),
@@ -84,23 +82,22 @@ class PersonaSeeder extends Seeder
         ]);
 
         DB::table('persona')->insert([
-            'nombre_persona' => 'America',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'IDK',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '11223344',
-            'telefono_persona' => 04241234567,
-            'genero_persona' => 'Femenino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'america@example.com',
-            'semestre_persona' => 6,
+            'nombres_per' => 'America',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'IDK',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '11223344',
+            'telefono_per' => 04241234567,
+            'genero_per' => 'Femenino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'america@example.com',
+            'semestre_per' => 6,
             'id_perfil' => 2,
             'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 3,
+            'per_id' => 3,
             'id_perfil' => 1,
             'username' => 'america@example.com',
             'password' => bcrypt('12345678'),
@@ -115,23 +112,22 @@ class PersonaSeeder extends Seeder
 
         //Doctor
         DB::table('persona')->insert([
-            'nombre_persona' => 'Argenis',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Rivero',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '31008661',
-            'telefono_persona' => 04241234567,
-            'genero_persona' => 'Masculino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'argenisdoctor@gmail.com',
-            'semestre_persona' => null,
+            'nombres_per' => 'Argenis',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Rivero',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '31008661',
+            'telefono_per' => 04241234567,
+            'genero_per' => 'Masculino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'argenisdoctor@gmail.com',
+            'semestre_per' => null,
             'id_perfil' => 2,
             'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 4,
+            'per_id' => 4,
             'id_perfil' => 1,
             'username' => 'argenisdoctor@gmail.com',
             'password' => bcrypt('12345678'),
@@ -146,23 +142,22 @@ class PersonaSeeder extends Seeder
 
         //Doctora
         DB::table('persona')->insert([
-            'nombre_persona' => 'Genesis',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Escalona',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '31008662',
-            'telefono_persona' => 04241234567,
-            'genero_persona' => 'Femenino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'genesisdoctor@gmail.com',
-            'semestre_persona' => null,
+            'nombres_per' => 'Genesis',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Escalona',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '31008662',
+            'telefono_per' => 04241234567,
+            'genero_per' => 'Femenino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'genesisdoctor@gmail.com',
+            'semestre_per' => null,
             'id_perfil' => 2,
             'sed_id' => 2,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 5,
+            'per_id' => 5,
             'id_perfil' => 1,
             'username' => 'genesisdoctor@gmail.com',
             'password' => bcrypt('12345678'),
@@ -177,23 +172,22 @@ class PersonaSeeder extends Seeder
 
         //Enfermero
         DB::table('persona')->insert([
-            'nombre_persona' => 'Denis',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Gil',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '31710991',
-            'telefono_persona' => 04241234567,
-            'genero_persona' => 'Femenino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'denisenfermero@gmail.com',
-            'semestre_persona' => null,
+            'nombres_per' => 'Denis',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Gil',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '31710991',
+            'telefono_per' => 04241234567,
+            'genero_per' => 'Femenino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'denisenfermero@gmail.com',
+            'semestre_per' => null,
             'id_perfil' => 2,
             'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 6,
+            'per_id' => 6,
             'id_perfil' => 1,
             'username' => 'denisenfermero@gmail.com',
             'password' => bcrypt('12345678'),
@@ -208,23 +202,22 @@ class PersonaSeeder extends Seeder
 
         //Enfermero
         DB::table('persona')->insert([
-            'nombre_persona' => 'Carmen',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Pinero',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '31008663',
-            'telefono_persona' => 04241234567,
-            'genero_persona' => 'Femenino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'carmenenfermero@gmail.com',
-            'semestre_persona' => null,
+            'nombres_per' => 'Carmen',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Pinero',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '31008663',
+            'telefono_per' => 04241234567,
+            'genero_per' => 'Femenino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'carmenenfermero@gmail.com',
+            'semestre_per' => null,
             'id_perfil' => 2,
             'sed_id' => 2,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 7,
+            'per_id' => 7,
             'id_perfil' => 1,
             'username' => 'carmenenfermero@gmail.com',
             'password' => bcrypt('12345678'),
@@ -239,23 +232,22 @@ class PersonaSeeder extends Seeder
 
         // Becario (Paciente + Becario)
         DB::table('persona')->insert([
-            'nombre_persona' => 'Estudiante',
-            'segundo_nombre_persona' => null,
-            'apellido_persona' => 'Becario',
-            'segundo_apellido_persona' => null,
-            'cedula_persona' => '1234567890',
-            'telefono_persona' => 04120000000,
-            'genero_persona' => 'Masculino',
-            'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,
-            'fecha_nacimiento_persona' => now()->toDateString(),
-            'email_persona' => 'estudiantebecario@example.com',
-            'semestre_persona' => 4,
+            'nombres_per' => 'Estudiante',
+            'segundo_nombre_per' => null,
+            'apellidos_per' => 'Becario',
+            'segundo_apellido_per' => null,
+            'cedula_per' => '1234567890',
+            'telefono_per' => 04120000000,
+            'genero_per' => 'Masculino',
+            'fecha_nacimiento_per' => now()->toDateString(),
+            'correo_per' => 'estudiantebecario@example.com',
+            'semestre_per' => 4,
             'id_perfil' => 2,
             'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
-            'id_persona' => 8,
+            'per_id' => 8,
             'id_perfil' => 1,
             'username' => 'estudiantebecario@example.com',
             'password' => bcrypt('12345678'),
@@ -276,20 +268,19 @@ class PersonaSeeder extends Seeder
             ['Carlos', 'Rivas', '20333444', 'psicologo.carlos@example.com', 2],
         ] as [$nombre, $apellido, $cedula, $correo, $sede]) {
             $idPersona = DB::table('persona')->insertGetId([
-                'nombre_persona' => $nombre,
-                'apellido_persona' => $apellido,
-                'cedula_persona' => $cedula,
-                'telefono_persona' => '04140000000',
-                'genero_persona' => 'Otro',
-                'edad_persona' => 35,
-                'fecha_nacimiento_persona' => now()->subYears(35)->toDateString(),
-                'email_persona' => $correo,
+                'nombres_per' => $nombre,
+                'apellidos_per' => $apellido,
+                'cedula_per' => $cedula,
+                'telefono_per' => '04140000000',
+                'genero_per' => 'Otro',
+                'fecha_nacimiento_per' => now()->subYears(35)->toDateString(),
+                'correo_per' => $correo,
                 'id_perfil' => 1,
                 'sed_id' => $sede,
             ]);
 
             $idUsuario = DB::table('usuario')->insertGetId([
-                'id_persona' => $idPersona,
+                'per_id' => $idPersona,
                 'id_perfil' => 1,
                 'username' => $correo,
                 'password' => bcrypt('12345678'),
@@ -303,15 +294,14 @@ class PersonaSeeder extends Seeder
         }
 
         $estudianteGuanare = DB::table('persona')->insertGetId([
-            'nombre_persona' => 'Estudiante',
-            'apellido_persona' => 'Guanare',
-            'cedula_persona' => '30999888',
-            'telefono_persona' => '04120000001',
-            'genero_persona' => 'Femenino',
-            'edad_persona' => 20,
-            'fecha_nacimiento_persona' => now()->subYears(20)->toDateString(),
-            'email_persona' => 'estudiante.guanare@example.com',
-            'semestre_persona' => 2,
+            'nombres_per' => 'Estudiante',
+            'apellidos_per' => 'Guanare',
+            'cedula_per' => '30999888',
+            'telefono_per' => '04120000001',
+            'genero_per' => 'Femenino',
+            'fecha_nacimiento_per' => now()->subYears(20)->toDateString(),
+            'correo_per' => 'estudiante.guanare@example.com',
+            'semestre_per' => 2,
             'id_perfil' => 2,
             'sed_id' => 2,
         ]);

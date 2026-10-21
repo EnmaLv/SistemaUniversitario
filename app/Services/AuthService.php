@@ -33,7 +33,7 @@ class AuthService
             $persona = Persona::create($personaData);
 
             $usuario = new Usuario([
-                'id_persona' => $persona->id_persona,
+                'per_id' => $persona->id_per,
                 'id_perfil'  => $perfilId,
                 'username'   => $userData['username'],
             ]);

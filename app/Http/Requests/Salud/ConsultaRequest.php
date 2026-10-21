@@ -17,8 +17,8 @@ class ConsultaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id_persona'     => ['required', 'integer', 'exists:persona,id_persona'],
-            'medico_id'      => ['required', 'integer', 'different:id_persona', 'exists:persona,id_persona'],
+            'per_id'     => ['required', 'integer', 'exists:persona,id_per'],
+            'medico_id'      => ['required', 'integer', 'different:per_id', 'exists:persona,id_per'],
             'consultorio_id' => ['required', 'integer', 'exists:consultorios,id'],
             'fecha'          => ['required', 'date', 'before_or_equal:today'],
             'motivo'         => ['required', 'string', 'min:3', 'max:1000'],
@@ -44,7 +44,7 @@ class ConsultaRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'id_persona'     => 'paciente',
+            'per_id'     => 'paciente',
             'medico_id'      => 'médico',
             'consultorio_id' => 'consultorio',
             'fecha'          => 'fecha',

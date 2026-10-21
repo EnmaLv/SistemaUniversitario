@@ -36,7 +36,7 @@ class SolicitudBecaController extends Controller
         foreach($jornadasActivas as $jornada) {
             $ids = $this->solicitudService->obtenerPendientesPorRenovar($jornada->id);
             if($ids->isNotEmpty()) {
-                $personas = Persona::deSedeActiva()->whereIn('id_persona', $ids)->get();
+                $personas = Persona::deSedeActiva()->whereIn('id_per', $ids)->get();
                 $pendientesRenovacion->put($jornada->id, [
                     'jornada' => $jornada,
                     'personas' => $personas
@@ -61,8 +61,8 @@ class SolicitudBecaController extends Controller
             ->get();
 
         $estudiantes = Persona::deSedeActiva()->where('id_perfil', 2)
-            ->orderBy('nombre_persona')
-            ->orderBy('apellido_persona')
+            ->orderBy('nombres_per')
+            ->orderBy('apellidos_per')
             ->get();
 
         $formularios = $this->construirFormularios($jornadas);
@@ -156,7 +156,7 @@ class SolicitudBecaController extends Controller
         try {
             $datos = $request->validated();
             if (!$user->puedeAlguna(['solicitud', 'solicitudes_becas'], 'crear')) {
-                $datos['id_persona'] = $user->id_persona;
+                $datos['per_id'] = $user->per_id;
             }
 
             $this->solicitudService->crearSolicitud($datos);
@@ -186,13 +186,13 @@ class SolicitudBecaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        if (!$user || !$user->id_persona) {
+        if (!$user || !$user->per_id) {
             return redirect()->back()->with('error', 'No se pudo identificar al estudiante.');
         }
 
         try {
             $this->solicitudService->renovarSolicitudSimplificada(
-                $user->id_persona,
+                $user->per_id,
                 $request->input('jornada_id'),
                 $request->file('archivo_notas')
             );
@@ -228,7 +228,7 @@ class SolicitudBecaController extends Controller
 
         /** @var Usuario $usuario */
         $usuario = Auth::user();
-        $esPropia = (int) $solicitud->id_persona === (int) $usuario->id_persona;
+        $esPropia = (int) $solicitud->per_id === (int) $usuario->per_id;
         $puedeGestionar = $usuario->puedeAlguna(['solicitud', 'solicitudes_becas'], 'exportar')
             || $usuario->puedeAlguna(['solicitud', 'solicitudes_becas'], 'ver');
 

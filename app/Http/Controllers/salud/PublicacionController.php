@@ -73,7 +73,7 @@ class PublicacionController extends Controller
             'media_path' => $mediaPath
         ]);
 
-        $mensaje = "El psicólogo {$user->persona->nombre_persona} ha publicado un nuevo aviso: {$request->titulo}";
+        $mensaje = "El psicólogo {$user->persona->nombres_per} ha publicado un nuevo aviso: {$request->titulo}";
 
         $pacientes = Usuario::all()->filter(fn($usuario) => $usuario->tieneRol(['paciente']));
 

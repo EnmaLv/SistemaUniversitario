@@ -1,6 +1,6 @@
 @php
     $user   = auth()->user();
-    $nombre = $user->persona?->nombre_persona ?? $user->name ?? 'Usuario';
+    $nombre = $user->persona?->nombres_per ?? $user->name ?? 'Usuario';
     $hora   = (int) \Carbon\Carbon::now()->format('H');
     $saludo = match (true) {
         $hora >= 5  && $hora < 12 => 'Buenos días',
@@ -115,7 +115,7 @@
                             <span class="w-2 h-2 rounded-full {{ $colorPrioridad }} shrink-0"></span>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                    {{ $cita->paciente->persona->nombre_persona ?? 'Paciente' }}
+                                    {{ $cita->paciente->persona->nombres_per ?? 'Paciente' }}
                                 </p>
                                 <p class="text-[10px] text-gray-400 capitalize">
                                     Prioridad: {{ $cita->prioridad ?? 'media' }}

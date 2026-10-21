@@ -97,8 +97,8 @@
                                                 <i class="fas fa-user text-sm"></i>
                                             </span>
                                             <span class="font-bold" style="color: var(--text-main);">
-                                                {{ optional($usuario->persona)->nombre_persona ?? 'N/A' }}
-                                                {{ optional($usuario->persona)->apellido_persona ?? '' }}
+                                                {{ optional($usuario->persona)->nombres_per ?? 'N/A' }}
+                                                {{ optional($usuario->persona)->apellidos_per ?? '' }}
                                             </span>
                                         </div>
                                     </td>

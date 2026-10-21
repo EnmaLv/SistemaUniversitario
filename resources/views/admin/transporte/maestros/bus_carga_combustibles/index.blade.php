@@ -6,7 +6,7 @@
         <div>
             <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Cargas de Combustible</h1>
             <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
+                Bienvenido <strong>{{ auth()->user()->persona->nombres_per }}</strong>.
             </p>
         </div>
         <div>

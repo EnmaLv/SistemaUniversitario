@@ -8,7 +8,7 @@
                 Despacho y Control de Viajes
             </h1>
             <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·
                 {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
@@ -109,8 +109,8 @@
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 @if ($viaje->conductor && $viaje->conductor->persona)
                                     <span class="font-semibold" style="color: var(--text-main);">
-                                        {{ $viaje->conductor->persona->nombre_persona }}
-                                        {{ $viaje->conductor->persona->apellido_persona }}
+                                        {{ $viaje->conductor->persona->nombres_per }}
+                                        {{ $viaje->conductor->persona->apellidos_per }}
                                     </span>
                                 @else
                                     <span class="text-gray-400 italic">Por asignar</span>
