@@ -43,10 +43,12 @@
 
     $tipoActual = old('tipo_horario', isset($horario) && $horario->fecha_especifica ? 'fecha_especifica' : 'recurrente');
     $seleccionInicial = old('bloques', $bloquesSeleccionadosIniciales ?? []);
+    $seleccionInicialRecurrente = old('bloques_recurrente', $bloquesSeleccionadosInicialesRecurrente ?? []);
+    $seleccionInicialFechaEspecifica = old('bloques_fecha_especifica', $bloquesSeleccionadosInicialesFechaEspecifica ?? []);
     $diasSemana = array_values($dias);
 @endphp
 
-<form method="POST" action="{{ isset($horario) ? route('admin.deportes.maestros.horarios.update', $horario->id) : route('admin.deportes.maestros.horarios.store') }}" class="mx-auto w-full max-w-[1500px] space-y-4">
+<form id="formHorarioDeporte" method="POST" action="{{ isset($horario) ? route('admin.deportes.maestros.horarios.update', $horario->id) : route('admin.deportes.maestros.horarios.store') }}" class="mx-auto w-full max-w-[1500px] space-y-4">
     @csrf
     @if(isset($horario))
         @method('PUT')
@@ -66,7 +68,7 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Calendario</label>
                     <input type="text" value="{{ $horario->calendario ? $horario->calendario->nombre : 'Sin calendario' }}" readonly class="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2 text-gray-700" />
-                    <input type="hidden" name="id_calendario" id="id_calendario" value="{{ old('id_calendario', $horario->id_calendario) }}" />
+                    <input type="hidden" name="id_calendario" id="id_calendario_hidden" value="{{ old('id_calendario', $horario->id_calendario) }}" />
                 </div>
             @else
                 <div>
@@ -148,7 +150,7 @@
             </div>
 
             <div id="bloquesMessage" class="mb-3 hidden rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
-                Completa los datos generales para habilitar la selección de bloques.
+                Completa calendario, actividad y espacio para habilitar la selección de bloques.
             </div>
 
             <div class="space-y-4">
@@ -221,11 +223,20 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const tipoInputs = document.querySelectorAll('input[name="tipo_horario"]');
+    (function () {
+        function bootHorarioBloquesForm() {
+        const form = document.getElementById('formHorarioDeporte') || document.querySelector('form[action*="horarios"]');
+        if (form && form.dataset.bloquesBooted === '1') {
+            return;
+        }
+        if (form) {
+            form.dataset.bloquesBooted = '1';
+        }
+        const tipoInputs = form
+            ? form.querySelectorAll('input[name="tipo_horario"]')
+            : document.querySelectorAll('input[name="tipo_horario"]');
         const fechaInput = document.getElementById('fecha_especifica');
         const campoFechaEspecifica = document.getElementById('campo-fecha-especifica');
-        const espacioSelect = document.getElementById('id_espacio');
         const limpiarBtn = document.getElementById('limpiarSeleccion');
         const resumen = document.getElementById('resumenSeleccion');
         const hiddenContainer = document.getElementById('bloquesContainer');
@@ -234,7 +245,9 @@
         const jornadaNext = document.getElementById('jornadaNext');
         const jornadaIndicador = document.getElementById('jornadaIndicador');
 
-        const selectedKeys = new Set(@json($seleccionInicial ?? []));
+        const selectedKeys = new Set();
+        const recurrenteKeys = new Set();
+        const fechaEspecificaKeys = new Set();
         const activeRows = @json($horariosActivos ?? []);
         const horarioActualId = {{ isset($horario) ? $horario->id : 'null' }};
         const isEditMode = {{ isset($horario) ? 'true' : 'false' }};
@@ -242,6 +255,88 @@
         const cerrarModalSinBloques = document.getElementById('cerrarModalSinBloques');
 
         let currentJornadaIndex = 0;
+
+        function getSelectionSetForType(tipo) {
+            return tipo === 'fecha_especifica' ? fechaEspecificaKeys : recurrenteKeys;
+        }
+
+        function hydrateSelectionState() {
+            recurrenteKeys.clear();
+            fechaEspecificaKeys.clear();
+            selectedKeys.clear();
+
+            const inicialRecurrente = @json($seleccionInicialRecurrente ?? []);
+            const inicialFechaEspecifica = @json($seleccionInicialFechaEspecifica ?? []);
+
+            Array.from(inicialRecurrente).forEach((value) => {
+                if (typeof value === 'string' && value.trim() !== '') {
+                    recurrenteKeys.add(value.trim());
+                }
+            });
+
+            Array.from(inicialFechaEspecifica).forEach((value) => {
+                if (typeof value === 'string' && value.trim() !== '') {
+                    fechaEspecificaKeys.add(value.trim());
+                }
+            });
+
+            rebuildActiveSelection();
+        }
+
+        function isSpecificDateValid(dateValue) {
+            if (!dateValue) {
+                return false;
+            }
+
+            const selected = parseSafeDate(dateValue);
+            if (!selected) {
+                return false;
+            }
+
+            const today = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00');
+
+            return selected >= today && selected.getDay() !== 0 && selected.getDay() !== 6;
+        }
+
+        function rebuildActiveSelection() {
+            const tipoActual = getSelectedTipoHorario() || 'recurrente';
+            const setActivo = getSelectionSetForType(tipoActual);
+
+            selectedKeys.clear();
+            Array.from(setActivo).forEach((value) => selectedKeys.add(value));
+
+            return setActivo;
+        }
+
+        function clearActiveSelectionOnly() {
+            const tipoActual = getSelectedTipoHorario() || 'recurrente';
+            const setActivo = getSelectionSetForType(tipoActual);
+            setActivo.clear();
+            rebuildActiveSelection();
+        }
+
+        function resetSelectionForSpaceChange() {
+            recurrenteKeys.clear();
+            fechaEspecificaKeys.clear();
+            selectedKeys.clear();
+        }
+
+        function enforceModeSelectionIsolation() {
+            const tipoActual = getSelectedTipoHorario() || 'recurrente';
+
+            if (tipoActual === 'fecha_especifica') {
+                if (!fechaInput?.value || !isSpecificDateValid(fechaInput.value)) {
+                    fechaEspecificaKeys.clear();
+                    rebuildActiveSelection();
+                }
+                return;
+            }
+
+            if (tipoActual === 'recurrente' && fechaInput?.value && !isSpecificDateValid(fechaInput.value)) {
+                fechaEspecificaKeys.clear();
+                rebuildActiveSelection();
+            }
+        }
 
         function normalizeText(value) {
             return String(value ?? '')
@@ -267,9 +362,51 @@
             return normalizeId(row?.id) === normalizeId(horarioActualId);
         }
 
+        function normalizeDateValue(value) {
+            const raw = String(value ?? '').trim();
+            if (!raw) {
+                return '';
+            }
+
+            return raw.includes('T') ? raw.split('T')[0] : raw;
+        }
+
+        function parseSafeDate(value) {
+            if (value === null || value === undefined) {
+                return null;
+            }
+
+            const raw = String(value).trim();
+            if (!raw) {
+                return null;
+            }
+
+            let date = null;
+
+            const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+\d{2}:\d{2}:\d{2})?$/);
+            if (isoMatch) {
+                const [, year, month, day] = isoMatch;
+                date = new Date(`${year}-${month}-${day}T00:00:00`);
+            } else {
+                const dmyMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+                if (dmyMatch) {
+                    const [, day, month, year] = dmyMatch;
+                    date = new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00`);
+                } else {
+                    date = new Date(raw);
+                }
+            }
+
+            if (Number.isNaN(date?.getTime?.())) {
+                return null;
+            }
+
+            return date;
+        }
+
         function getDayFromDate(value) {
-            if (!value) return null;
-            const date = new Date(value + 'T00:00:00');
+            const date = parseSafeDate(value);
+            if (!date) return null;
             const days = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
             return days[date.getDay()];
         }
@@ -286,8 +423,8 @@
         }
 
         function getWeekStartDate(value) {
-            if (!value) return null;
-            const date = new Date(value + 'T00:00:00');
+            const date = parseSafeDate(value);
+            if (!date) return null;
             const day = date.getDay();
             const diffToMonday = day === 0 ? -6 : 1 - day;
             const monday = new Date(date);
@@ -296,7 +433,11 @@
         }
 
         function nextValidSpecificDate(dateValue) {
-            const date = new Date(dateValue + 'T00:00:00');
+            const date = parseSafeDate(dateValue);
+            if (!date) {
+                return '';
+            }
+
             while (date.getDay() === 0 || date.getDay() === 6) {
                 date.setDate(date.getDate() + 1);
             }
@@ -306,13 +447,15 @@
         function sanitizeSelectionByDate() {
             const selectedDateDay = getSelectedDateDay();
             if (!selectedDateDay) {
+                fechaEspecificaKeys.clear();
                 return;
             }
 
-            Array.from(selectedKeys).forEach((key) => {
+            const target = getSelectionSetForType('fecha_especifica');
+            Array.from(target).forEach((key) => {
                 const [dia] = key.split('|');
                 if (normalizeText(dia) !== normalizeText(selectedDateDay)) {
-                    selectedKeys.delete(key);
+                    target.delete(key);
                 }
             });
         }
@@ -332,26 +475,64 @@
             }
         }
 
+
+        function getNamedFieldValue(name) {
+            const scope = form || document;
+            const field = scope.querySelector(`[name="${name}"]`);
+
+            if (!field) {
+                return '';
+            }
+
+            if (field.type === 'radio') {
+                return String(
+                    scope.querySelector(`input[name="${name}"]:checked`)?.value || ''
+                ).trim();
+            }
+
+            return String(field.value ?? '').trim();
+        }
+
         function getSelectedTipoHorario() {
-            return document.querySelector('input[name="tipo_horario"]:checked')?.value || '';
+            const tipo = getNamedFieldValue('tipo_horario');
+            return tipo || 'recurrente';
+        }
+
+        function getSelectionGateState() {
+            const calendario = getNamedFieldValue('id_calendario');
+            const actividad = getNamedFieldValue('id_actividad');
+            const espacio = getNamedFieldValue('id_espacio');
+            const tipoSeleccionado = getSelectedTipoHorario();
+            const fechaSeleccionada = String(fechaInput?.value || '').trim();
+            const missing = [];
+
+            if (!calendario) {
+                missing.push('calendario');
+            }
+            if (!actividad) {
+                missing.push('actividad');
+            }
+            if (!espacio) {
+                missing.push('espacio');
+            }
+
+            if (tipoSeleccionado === 'fecha_especifica' && (!fechaSeleccionada || !isSpecificDateValid(fechaSeleccionada))) {
+                missing.push('una fecha específica válida (lunes a viernes, desde hoy)');
+            }
+
+            return {
+                calendario,
+                actividad,
+                espacio,
+                tipoSeleccionado,
+                fechaSeleccionada,
+                missing,
+                ready: missing.length === 0,
+            };
         }
 
         function isSelectionReady() {
-            const calendario = document.getElementById('id_calendario')?.value || '';
-            const actividad = document.getElementById('id_actividad')?.value || '';
-            const espacio = document.getElementById('id_espacio')?.value || '';
-            const tipoSeleccionado = getSelectedTipoHorario();
-            const fechaSeleccionada = fechaInput?.value || '';
-
-            if (!calendario || !actividad || !espacio || !tipoSeleccionado) {
-                return false;
-            }
-
-            if (tipoSeleccionado === 'fecha_especifica' && !fechaSeleccionada) {
-                return false;
-            }
-
-            return true;
+            return getSelectionGateState().ready;
         }
 
         function updateTipoHorarioUI() {
@@ -363,11 +544,20 @@
 
         function setSelectionMessageState() {
             const message = document.getElementById('bloquesMessage');
-            const ready = isSelectionReady();
+            const gate = getSelectionGateState();
 
-            if (message) {
-                message.classList.toggle('hidden', ready);
+            if (!message) {
+                return;
             }
+
+            if (!gate.ready) {
+                message.textContent = `Completa ${gate.missing.join(', ').replace(/, ([^,]*)$/, ' y $1')} para habilitar la selección de bloques.`;
+                message.classList.remove('hidden');
+                return;
+            }
+
+            message.textContent = 'Bloques disponibles. Puedes seleccionar o deseleccionar los que no estén ocupados.';
+            message.classList.add('hidden');
         }
 
         function isBlockedByExisting(dia, inicio, fin) {
@@ -375,9 +565,11 @@
             const selectedDate = fechaInput?.value;
             const blockStart = parseTime(inicio);
             const blockEnd = parseTime(fin);
-            const selectedWeek = document.querySelector('input[name="semana_inicio"]')?.value
-                ? getWeekStartDate(document.querySelector('input[name="semana_inicio"]').value)
-                : getWeekStartDate(new Date().toISOString().slice(0, 10));
+            const selectedWeek = selectedType === 'fecha_especifica' && selectedDate
+                ? getWeekStartDate(selectedDate)
+                : (document.querySelector('input[name="semana_inicio"]')?.value
+                    ? getWeekStartDate(document.querySelector('input[name="semana_inicio"]').value)
+                    : getWeekStartDate(new Date().toISOString().slice(0, 10)));
 
             for (const row of activeRows) {
                 if (isCurrentHorarioRow(row)) {
@@ -388,7 +580,7 @@
                     continue;
                 }
 
-                if (row.semana_inicio) {
+                if (row.semana_inicio && selectedType !== 'fecha_especifica') {
                     const rowWeek = getWeekStartDate(row.semana_inicio);
                     if (selectedWeek && rowWeek && rowWeek !== selectedWeek) {
                         continue;
@@ -401,16 +593,17 @@
                 let sameDayEffective = false;
 
                 if (selectedType === 'fecha_especifica' && selectedDate) {
-                    const dayOfSelectedDate = getDayFromDate(selectedDate);
-                    const selectedWeekDate = getWeekStartDate(selectedDate);
+                    const normalizedSelectedDate = normalizeDateValue(selectedDate);
+                    const dayOfSelectedDate = getDayFromDate(normalizedSelectedDate);
+                    const selectedWeekDate = getWeekStartDate(normalizedSelectedDate);
 
-                    if (row.fecha_especifica && row.fecha_especifica === selectedDate) {
+                    if (row.fecha_especifica && normalizeDateValue(row.fecha_especifica) === normalizedSelectedDate) {
                         sameDayEffective = true;
                     }
 
                     if (!row.fecha_especifica && row.dia_semana) {
                         if (normalizeText(row.dia_semana) === normalizeText(dayOfSelectedDate)) {
-                            if (row.semana_inicio && selectedWeekDate && getWeekStartDate(row.semana_inicio) !== selectedWeekDate) {
+                            if (row.semana_inicio && selectedWeekDate && getWeekStartDate(normalizeDateValue(row.semana_inicio)) !== selectedWeekDate) {
                                 continue;
                             }
                             sameDayEffective = true;
@@ -479,10 +672,13 @@
 
         function renderSummary() {
             if (!resumen) return;
+
             const keys = Array.from(selectedKeys);
 
+            const header = `<div class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-600">Bloques seleccionados (${keys.length})</div>`;
+
             if (!keys.length) {
-                resumen.innerHTML = '<div class="text-sm text-gray-500">Sin bloques seleccionados.</div>';
+                resumen.innerHTML = `${header}<div class="text-sm text-gray-500">Sin bloques seleccionados.</div>`;
                 return;
             }
 
@@ -510,48 +706,60 @@
                     `;
                 }).join('');
 
-            resumen.innerHTML = `
-                <div class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-600">Bloques seleccionados (${keys.length})</div>
-                ${html}
-            `;
+            resumen.innerHTML = `${header}${html}`;
         }
 
         function refreshBlockStates() {
             const selectedType = getSelectedTipoHorario() || 'recurrente';
             const selectedDate = fechaInput?.value;
+            const formReady = isSelectionReady();
 
-            setSelectionMessageState();
-
-            if (!isSelectionReady()) {
-                document.querySelectorAll('.bloque-celda').forEach((button) => {
-                    button.disabled = true;
-                    button.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-500', 'bg-red-100', 'border-red-300', 'text-red-700', 'bg-gray-100', 'border-gray-200', 'text-gray-500', 'text-gray-700', 'cursor-not-allowed', 'opacity-60');
-                    button.classList.add('bg-white', 'border-gray-200', 'text-gray-700', 'cursor-not-allowed', 'opacity-50');
-                    button.innerHTML = '<span class="block">Disponible</span>';
-                });
-
-                renderSummary();
-                syncHiddenInputs();
-                return;
+            if (formReady && selectedType === 'fecha_especifica') {
+                if (!selectedDate || !isSpecificDateValid(selectedDate)) {
+                    fechaEspecificaKeys.clear();
+                    rebuildActiveSelection();
+                } else {
+                    sanitizeSelectionByDate();
+                }
             }
 
-            if (selectedType === 'fecha_especifica') {
-                sanitizeSelectionByDate();
+            if (formReady) {
+                enforceModeSelectionIsolation();
             }
+
+            const activeSet = formReady
+                ? rebuildActiveSelection()
+                : new Set(selectedKeys);
 
             document.querySelectorAll('.bloque-celda').forEach((button) => {
                 const dia = button.dataset.dia;
                 const inicio = button.dataset.inicio;
                 const fin = button.dataset.fin;
                 const key = button.dataset.key;
-                const isSelected = selectedKeys.has(key);
-                const isEffectiveDay = selectedType !== 'fecha_especifica' || !selectedDate || normalizeText(dia) === normalizeText(getDayFromDate(selectedDate));
+                const isSelected = formReady && activeSet.has(key);
+                const isDateMismatch = formReady && selectedType === 'fecha_especifica' && selectedDate && normalizeText(dia) !== normalizeText(getDayFromDate(selectedDate));
+                const blocked = formReady && !isDateMismatch && isBlockedByExisting(dia, inicio, fin);
 
                 button.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-500', 'bg-red-100', 'border-red-300', 'text-red-700', 'bg-gray-100', 'border-gray-200', 'text-gray-500', 'text-gray-700', 'cursor-not-allowed', 'opacity-60', 'opacity-50');
+                button.removeAttribute('aria-disabled');
                 button.disabled = false;
                 button.innerHTML = '<span class="block">Disponible</span>';
 
-                if (selectedType === 'fecha_especifica' && selectedDate && !isEffectiveDay) {
+                if (!formReady) {
+                    // No usar disabled: un botón disabled no dispara click y no se puede resincronizar el estado.
+                    button.setAttribute('aria-disabled', 'true');
+                    button.classList.add('bg-white', 'border-gray-200', 'text-gray-500', 'cursor-not-allowed', 'opacity-50');
+                    return;
+                }
+
+                if (selectedType === 'fecha_especifica' && (!selectedDate || !isSpecificDateValid(selectedDate))) {
+                    button.setAttribute('aria-disabled', 'true');
+                    button.classList.add('bg-gray-100', 'border-gray-200', 'text-gray-500', 'cursor-not-allowed', 'opacity-60');
+                    button.innerHTML = '<span class="block text-[9px]">No aplica</span>';
+                    return;
+                }
+
+                if (isDateMismatch) {
                     button.disabled = true;
                     button.classList.add('bg-gray-100', 'border-gray-200', 'text-gray-500', 'cursor-not-allowed', 'opacity-60');
                     button.innerHTML = '<span class="block text-[9px]">No aplica</span>';
@@ -564,8 +772,6 @@
                     return;
                 }
 
-                const blocked = isEffectiveDay && isBlockedByExisting(dia, inicio, fin);
-
                 if (blocked) {
                     button.disabled = true;
                     button.classList.add('bg-red-100', 'border-red-300', 'text-red-700', 'cursor-not-allowed', 'opacity-60');
@@ -577,32 +783,83 @@
                 button.innerHTML = '<span class="block">Disponible</span>';
             });
 
+            setSelectionMessageState();
             renderSummary();
             syncHiddenInputs();
         }
 
-        document.querySelectorAll('.bloque-celda').forEach((button) => {
-            button.addEventListener('click', () => {
-                if (button.disabled) return;
-                const key = button.dataset.key;
-                if (selectedKeys.has(key)) {
-                    selectedKeys.delete(key);
-                } else {
-                    selectedKeys.add(key);
+        function toggleBloqueCelda(button) {
+            refreshBlockStates();
+
+            if (!isSelectionReady() || button.disabled || button.getAttribute('aria-disabled') === 'true') {
+                return;
+            }
+
+            const currentTipo = getSelectedTipoHorario() || 'recurrente';
+            const target = getSelectionSetForType(currentTipo);
+            const key = button.dataset.key;
+
+            if (target.has(key)) {
+                target.delete(key);
+            } else {
+                target.add(key);
+            }
+
+            rebuildActiveSelection();
+            refreshBlockStates();
+        }
+
+        if (form) {
+            form.addEventListener('click', (event) => {
+                const button = event.target.closest('.bloque-celda');
+                if (!button || !form.contains(button)) {
+                    return;
                 }
-                refreshBlockStates();
+
+                toggleBloqueCelda(button);
             });
-        });
+
+            form.addEventListener('change', (event) => {
+                const name = event.target && event.target.name;
+                if (!name) {
+                    return;
+                }
+
+                if (name === 'id_espacio') {
+                    resetSelectionForSpaceChange();
+                }
+
+                if (['id_calendario', 'id_actividad', 'id_espacio', 'tipo_horario', 'fecha_especifica'].includes(name)) {
+                    refreshBlockStates();
+                }
+            });
+
+            form.addEventListener('input', (event) => {
+                const name = event.target && event.target.name;
+                if (name === 'fecha_especifica') {
+                    refreshBlockStates();
+                }
+            });
+        } else {
+            document.querySelectorAll('.bloque-celda').forEach((button) => {
+                button.addEventListener('click', () => toggleBloqueCelda(button));
+            });
+        }
 
         tipoInputs.forEach((input) => {
             input.addEventListener('change', () => {
+                const tipoSeleccionado = getSelectedTipoHorario() || 'recurrente';
+
+                if (tipoSeleccionado === 'fecha_especifica' && !isSpecificDateValid(fechaInput?.value)) {
+                    fechaEspecificaKeys.clear();
+                }
+
+                enforceModeSelectionIsolation();
                 updateTipoHorarioUI();
+                rebuildActiveSelection();
                 refreshBlockStates();
             });
         });
-
-        document.getElementById('id_calendario')?.addEventListener('change', refreshBlockStates);
-        document.getElementById('id_actividad')?.addEventListener('change', refreshBlockStates);
 
         if (fechaInput) {
             const todayIso = new Date().toISOString().slice(0, 10);
@@ -610,6 +867,9 @@
             fechaInput.addEventListener('change', function () {
                 const selectedDate = fechaInput.value;
                 if (!selectedDate) {
+                    fechaEspecificaKeys.clear();
+                    rebuildActiveSelection();
+                    refreshBlockStates();
                     return;
                 }
 
@@ -618,12 +878,11 @@
                 if (selected < today || selected.getDay() === 0 || selected.getDay() === 6) {
                     fechaInput.value = nextValidSpecificDate(todayIso);
                 }
+
+                sanitizeSelectionByDate();
+                rebuildActiveSelection();
                 refreshBlockStates();
             });
-        }
-
-        if (espacioSelect) {
-            espacioSelect.addEventListener('change', refreshBlockStates);
         }
 
         if (jornadaPrev) {
@@ -642,12 +901,14 @@
 
         if (limpiarBtn) {
             limpiarBtn.addEventListener('click', () => {
-                selectedKeys.clear();
+                const tipoActual = getSelectedTipoHorario() || 'recurrente';
+                const setActivo = getSelectionSetForType(tipoActual);
+                setActivo.clear();
+                rebuildActiveSelection();
                 refreshBlockStates();
             });
         }
 
-        const form = document.querySelector('form[action*="horarios"]');
         if (form && isEditMode) {
             form.addEventListener('submit', (event) => {
                 if (selectedKeys.size === 0) {
@@ -678,8 +939,16 @@
             });
         }
 
+        hydrateSelectionState();
         updateTipoHorarioUI();
         updateJornadaView();
         refreshBlockStates();
-    });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootHorarioBloquesForm);
+        } else {
+            bootHorarioBloquesForm();
+        }
+    })();
 </script>

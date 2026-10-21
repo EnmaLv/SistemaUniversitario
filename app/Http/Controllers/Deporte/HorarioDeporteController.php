@@ -67,10 +67,21 @@ class HorarioDeporteController extends Controller
             ];
         }
 
+        $semanaInicioDate = $semanaInicio->format('Y-m-d');
+        $semanaFinDate = $semanaFin->format('Y-m-d');
+
         $horarios = DeporteHorario::query()
             ->where('estado', 'activo')
-            ->whereNotNull('semana_inicio')
-            ->whereDate('semana_inicio', $semanaInicio->format('Y-m-d'))
+            ->where(function ($q) use ($semanaInicioDate, $semanaFinDate) {
+                $q->where(function ($q2) use ($semanaInicioDate) {
+                    $q2->whereNotNull('semana_inicio')
+                        ->whereDate('semana_inicio', $semanaInicioDate);
+                })->orWhere(function ($q2) use ($semanaInicioDate, $semanaFinDate) {
+                    $q2->whereNotNull('fecha_especifica')
+                        ->whereDate('fecha_especifica', '>=', $semanaInicioDate)
+                        ->whereDate('fecha_especifica', '<=', $semanaFinDate);
+                });
+            })
             ->orderBy('hora_inicio')
             ->get();
 
@@ -273,8 +284,20 @@ class HorarioDeporteController extends Controller
                 : Carbon::now()->startOfWeek(Carbon::MONDAY));
 
         $bloquesSeleccionadosIniciales = [$this->bloqueKeyDelHorario($horario)];
+        $bloquesSeleccionadosInicialesRecurrente = $horario->dia_semana ? $bloquesSeleccionadosIniciales : [];
+        $bloquesSeleccionadosInicialesFechaEspecifica = $horario->fecha_especifica ? $bloquesSeleccionadosIniciales : [];
 
-        return view('admin.deportes.maestros.horarios.edit', compact('horario','calendarios','actividades','espacios','horariosActivos','bloquesSeleccionadosIniciales','semanaInicio'));
+        return view('admin.deportes.maestros.horarios.edit', compact(
+            'horario',
+            'calendarios',
+            'actividades',
+            'espacios',
+            'horariosActivos',
+            'bloquesSeleccionadosIniciales',
+            'bloquesSeleccionadosInicialesRecurrente',
+            'bloquesSeleccionadosInicialesFechaEspecifica',
+            'semanaInicio'
+        ));
     }
 
     public function update(Request $request, $id)
@@ -486,10 +509,31 @@ class HorarioDeporteController extends Controller
         return redirect()->route('admin.deportes.maestros.horarios.index')->with('success', 'Horario desactivado.');
     }
 
-    public function exportarPdf()
+    public function exportarPdf(Request $request)
     {
-        $horarios = DeporteHorario::orderBy('dia_semana')->orderBy('hora_inicio')->get();
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.deportes.maestros.horarios.pdf', compact('horarios'))->setPaper('a4', 'landscape');
+        $semanaParam = $request->query('semana');
+        $semanaInicio = $this->resolveSemanaInicio($semanaParam ?? $this->semanaActual()->format('Y-m-d'));
+        $semanaFin = $semanaInicio->copy()->addDays(4);
+
+        $semanaInicioDate = $semanaInicio->format('Y-m-d');
+        $semanaFinDate = $semanaFin->format('Y-m-d');
+
+        $horarios = DeporteHorario::query()
+            ->where('estado', 'activo')
+            ->where(function ($query) use ($semanaInicioDate, $semanaFinDate) {
+                $query->where(function ($q) use ($semanaInicioDate) {
+                    $q->whereNotNull('semana_inicio')
+                        ->whereDate('semana_inicio', $semanaInicioDate);
+                })->orWhere(function ($q) use ($semanaInicioDate, $semanaFinDate) {
+                    $q->whereNotNull('fecha_especifica')
+                        ->whereDate('fecha_especifica', '>=', $semanaInicioDate)
+                        ->whereDate('fecha_especifica', '<=', $semanaFinDate);
+                });
+            })
+            ->orderBy('hora_inicio')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.deportes.maestros.horarios.pdf', compact('horarios', 'semanaInicio'))->setPaper('a4', 'landscape');
         return $pdf->stream('horarios_deportes.pdf');
     }
 }

@@ -42,7 +42,6 @@ class DeporteHorario extends Model
     {
         $query = DB::table('deporte_horario')
             ->where('estado', 'activo')
-            ->where('id_espacio', $idEspacio)
             ->whereNotNull('semana_inicio');
 
         if ($excludeId) {

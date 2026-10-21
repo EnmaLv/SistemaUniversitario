@@ -1,5 +1,6 @@
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
 import Collapse from '@alpinejs/collapse'
+import 'flatpickr/dist/flatpickr.min.css';
 
 Alpine.plugin(Collapse)
 window.Alpine = Alpine;
