@@ -5,6 +5,8 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Receta;
 use App\Models\DetalleRegistroDiario;
+use App\Models\ConsumoDiario;
+use App\Models\ConsumoDiarioDetalle;
 use App\Models\InventarioSedeLote;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -366,6 +368,13 @@ class RegistroComida extends Component
 
                 $receta = Receta::with('recetaIngredientes.producto')->find($recetaId);
 
+                $consumo = ConsumoDiario::create([
+                    'receta_id'            => $recetaId,
+                    'sede_id'              => $sedeId,
+                    'fecha_consumo_diario' => now()->toDateString(),
+                    'porciones_servidas'   => $cantidadServido,
+                ]);
+
                 foreach ($receta->recetaIngredientes as $ingrediente) {
 
                     $cantidadPorUnidad = $this->resolverCantidadPorUnidad($ingrediente);
@@ -375,6 +384,7 @@ class RegistroComida extends Component
                     }
 
                     $pendiente = $cantidadPorUnidad * $cantidadServido;
+                    $totalIngrediente = $pendiente;
 
                     $servicio = app(\App\Support\Inventario\ServicioInventario::class);
 
@@ -386,8 +396,8 @@ class RegistroComida extends Component
 
                         $servicio->salidaPorConvertida((int) $inv->lote_id, (int) $sedeId, $tomarGramos, [
                             'unidad_id'       => $ingrediente->unidad_id,
-                            'referencia_type' => 'consumo_comedor',
-                            'referencia_id'   => $recetaId,
+                            'referencia_type' => 'consumo_diario',
+                            'referencia_id'   => $consumo->id,
                             'observaciones'   => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
                         ]);
 
@@ -397,6 +407,13 @@ class RegistroComida extends Component
                     if ($pendiente > 0) {
                         throw new Exception("No hay suficiente inventario para el ingrediente: {$ingrediente->producto->nombre}. Faltan " . round($pendiente, 2) . " gramos.");
                     }
+
+                    ConsumoDiarioDetalle::create([
+                        'consumo_diario_id' => $consumo->id,
+                        'producto_id'       => $ingrediente->producto_id,
+                        'cantidad_total'    => round($totalIngrediente, 2),
+                        'unidad_id'         => $ingrediente->unidad_id ?? $ingrediente->producto->unidad_id,
+                    ]);
                 }
             }
 
