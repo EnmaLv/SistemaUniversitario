@@ -9,11 +9,11 @@ use App\Models\Sede;
 use App\Models\Unidad;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\FiltroPorSede;
+use App\Traits\PerteneceASede;
 
 class Dispensacion extends Model
 {
-    use FiltroPorSede;
+    use PerteneceASede;
 
     protected $table = 'dispensacions';
 

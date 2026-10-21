@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASede;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class Registro_diario extends Model
 {
+    use PerteneceASede;
+
     protected $table = 'registro_diario_c';
 
     protected $fillable = [
@@ -26,7 +29,7 @@ class Registro_diario extends Model
 
     public function persona()
     {
-        return $this->belongsTo(Persona::class);
+        return $this->belongsTo(Persona::class, 'id_persona', 'id_persona');
     }
 
 
@@ -37,7 +40,7 @@ class Registro_diario extends Model
 
     private static function relacionTable()
     {
-        return DB::table('registro_diario_c')
+        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c'), 'registro_diario_c.sede_id')
             ->join('persona', 'registro_diario_c.id_persona', '=', 'persona.id_persona')
             ->leftJoin('direccion', 'persona.id_persona', '=', 'direccion.id_persona')
             ->leftJoin('localidads', 'direccion.id_localidad', '=', 'localidads.id')
@@ -114,10 +117,12 @@ class Registro_diario extends Model
 
         //Por si hay que buscar por el input
         if (isset($filter['buscar']) && $filter['buscar']) {
-            $query->where('persona.nombre_persona', 'like', '%' . $filter['buscar'] . '%')
-                ->orWhere('persona.apellido_persona', 'like', '%' . $filter['buscar'] . '%')
-                ->orWhere('persona.cedula_persona', 'like', '%' . $filter['buscar'] . '%')
-                ->orWhere('pnf.nombre_pnf', 'like', "%{$filter['buscar']}%");
+            $query->where(function ($q) use ($filter) {
+                $q->where('persona.nombre_persona', 'like', '%' . $filter['buscar'] . '%')
+                    ->orWhere('persona.apellido_persona', 'like', '%' . $filter['buscar'] . '%')
+                    ->orWhere('persona.cedula_persona', 'like', '%' . $filter['buscar'] . '%')
+                    ->orWhere('pnf.nombre_pnf', 'like', "%{$filter['buscar']}%");
+            });
         }
 
         //Por si hay que buscar entre 2 fechas

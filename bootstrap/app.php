@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             CheckTasaActualizada::class,
             CerrarSesionPorInactividad::class,
             VerificarUsuarioBloqueado::class,
+            \App\Http\Middleware\EstablecerSedeActiva::class,
             \App\Http\Middleware\ExigirCambioPassword::class,
             RegistrarActividad::class,
         ]);

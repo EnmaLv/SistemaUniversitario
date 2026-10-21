@@ -158,7 +158,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'genesisdoctor@gmail.com',
             'semestre_persona' => null,
             'id_perfil' => 2,
-            'id_sede' => 1,
+            'id_sede' => 2,
         ]);
 
         DB::table('usuario')->insert([
@@ -220,7 +220,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'carmenenfermero@gmail.com',
             'semestre_persona' => null,
             'id_perfil' => 2,
-            'id_sede' => 1,
+            'id_sede' => 2,
         ]);
 
         DB::table('usuario')->insert([
@@ -272,9 +272,9 @@ class PersonaSeeder extends Seeder
         $rolPsicologo = DB::table('rol')->where('slug', 'psicologo')->value('id_rol');
 
         foreach ([
-            ['Laura', 'Mendoza', '20111222', 'psicologa.laura@example.com'],
-            ['Carlos', 'Rivas', '20333444', 'psicologo.carlos@example.com'],
-        ] as [$nombre, $apellido, $cedula, $correo]) {
+            ['Laura', 'Mendoza', '20111222', 'psicologa.laura@example.com', 1],
+            ['Carlos', 'Rivas', '20333444', 'psicologo.carlos@example.com', 2],
+        ] as [$nombre, $apellido, $cedula, $correo, $sede]) {
             $idPersona = DB::table('persona')->insertGetId([
                 'nombre_persona' => $nombre,
                 'apellido_persona' => $apellido,
@@ -285,7 +285,7 @@ class PersonaSeeder extends Seeder
                 'fecha_nacimiento_persona' => now()->subYears(35)->toDateString(),
                 'email_persona' => $correo,
                 'id_perfil' => 1,
-                'id_sede' => 1,
+                'id_sede' => $sede,
             ]);
 
             $idUsuario = DB::table('usuario')->insertGetId([
@@ -301,5 +301,21 @@ class PersonaSeeder extends Seeder
                 DB::table('rol_usuario')->insert(['id_rol' => $rolPsicologo, 'id_usuario' => $idUsuario]);
             }
         }
+
+        $estudianteGuanare = DB::table('persona')->insertGetId([
+            'nombre_persona' => 'Estudiante',
+            'apellido_persona' => 'Guanare',
+            'cedula_persona' => '30999888',
+            'telefono_persona' => '04120000001',
+            'genero_persona' => 'Femenino',
+            'edad_persona' => 20,
+            'fecha_nacimiento_persona' => now()->subYears(20)->toDateString(),
+            'email_persona' => 'estudiante.guanare@example.com',
+            'semestre_persona' => 2,
+            'id_perfil' => 2,
+            'id_sede' => 2,
+        ]);
+
+        \App\Support\Cuentas\CuentasComunidad::procesarLote([$estudianteGuanare], 'seeder');
     }
 }

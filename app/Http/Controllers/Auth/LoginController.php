@@ -63,6 +63,8 @@ class LoginController extends Controller
         session(['ultima_actividad' => time()]);
 
         Bloqueos::registrarLoginExitoso($usuario, $request);
+        \App\Support\Sedes\SedeActiva::inicializar($usuario);
+        session(['sede_inicializada_para' => (int) $usuario->getKey()]);
         Bitacora::registrar(accion: 'login_exitoso', modulo: 'autenticacion', usuario: $usuario);
 
         $destino = (new \App\AdminLTE\Filters\ModuleFilter())->resolveInitialRoute($usuario->id_usuario ?? $usuario->id);

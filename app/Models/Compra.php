@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASede;
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 
 class Compra extends Model
 {
+    use PerteneceASede;
+
     use ConvierteAMayusculasNoEloquent;
     protected $table = 'compras';
 
@@ -72,7 +75,7 @@ class Compra extends Model
 
     public static function listarCompras($buscar = null, $estado = null, $fechas = null)
     {
-        $query = DB::table('compras')
+        $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sede_id')
             ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
             ->select(
                 'compras.*',
@@ -109,6 +112,7 @@ class Compra extends Model
         return DB::table('compras')->insertGetId([
             'proveedor_id'  => $data['proveedor_id'],
             'modulo_id'     => $data['modulo_id'],
+            'sede_id'       => $data['sede_id'] ?? \App\Support\Sedes\SedeActiva::idParaCrear(),
             'fecha'         => $data['fecha'],
             'observaciones' => $data['observaciones'] ?? null,
             'total'         => 0,
@@ -150,7 +154,7 @@ class Compra extends Model
 
     public static function obtenerCompra($id)
     {
-        return DB::table('compras')
+        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sede_id')
             ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
             ->select(
                 'compras.*',
@@ -169,6 +173,7 @@ class Compra extends Model
         $query = DB::table('detalle_compras')
             ->join('productos', 'productos.id', '=', 'detalle_compras.producto_id')
             ->join('compras', 'compras.id', '=', 'detalle_compras.compra_id')
+            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('compras.sede_id', $sede))
             ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
             ->join('unidades', 'unidades.id', '=', 'detalle_compras.unidad_id')
             ->select(

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASede;
 use App\Traits\ConvierteAMayusculas;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SobranteComedor extends Model
 {
+    use PerteneceASede;
+
     use ConvierteAMayusculas;
     use HasFactory;
 

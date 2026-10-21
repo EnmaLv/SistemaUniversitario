@@ -50,6 +50,8 @@ class AdminMasterKeyController extends Controller
             session(['ultima_actividad' => time()]);
 
             Bloqueos::registrarLoginExitoso($user, $request);
+            \App\Support\Sedes\SedeActiva::inicializar($user);
+            session(['sede_inicializada_para' => (int) $user->getKey()]);
             Bitacora::registrar(accion: 'llave_maestra_correcta', modulo: 'autenticacion', observacion: 'Inicio de sesión de administrador', usuario: $user);
             Bitacora::registrar(accion: 'login_exitoso', modulo: 'autenticacion', usuario: $user);
 

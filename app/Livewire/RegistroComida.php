@@ -331,7 +331,7 @@ class RegistroComida extends Component
 
         $this->validate($rules, $messages);
 
-        $sedeId = 1;
+        $sedeId = \App\Support\Sedes\SedeActiva::idParaCrear();
         $advertencias = [];
 
         try {

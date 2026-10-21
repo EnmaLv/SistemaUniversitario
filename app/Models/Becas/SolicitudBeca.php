@@ -2,6 +2,7 @@
 
 namespace App\Models\Becas;
 
+use App\Traits\PerteneceASedePorRelacion;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Persona;
 use App\Models\Becas\Beneficio;
@@ -11,6 +12,10 @@ use App\Models\Usuario;
 
 class SolicitudBeca extends Model
 {
+    use PerteneceASedePorRelacion;
+
+    protected $relacionSede = 'persona';
+
     protected $table = 'be_solicitud_becas';
 
     protected $fillable = [

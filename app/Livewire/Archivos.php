@@ -48,7 +48,7 @@ class Archivos extends Component
             $usuario = Auth::user();
             $extension = strtolower($this->archivo->getClientOriginalExtension() ?: 'xlsx');
             $ruta = $this->archivo->storeAs('importaciones', Str::uuid() . '.' . $extension, 'local');
-            $idSede = (int) ($usuario->persona->id_sede ?? 1);
+            $idSede = (int) (\App\Support\Sedes\SedeActiva::idParaCrear() ?? 1);
 
             $resumen = (new ImportadorPersonas())->importar(Storage::disk('local')->path($ruta), $idSede);
             $ids = $resumen['ids_persona'];

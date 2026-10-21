@@ -30,6 +30,7 @@ abstract class SeguridadTestCase extends TestCase
         static::prepararBaseDatos();
         Cache::flush();
         MapaRutas::limpiar();
+        \App\Support\Sedes\SedeActiva::olvidar();
 
         $this->iniciarTransaccion();
     }
@@ -57,14 +58,16 @@ abstract class SeguridadTestCase extends TestCase
             ]);
         }
 
-        if (! DB::table('sede')->exists()) {
-            DB::table('sede')->insert([
-                'nombre'     => 'Sede de pruebas',
-                'direccion'  => 'Dirección de pruebas',
-                'telefono'   => '0424-0000000',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        foreach (['Sede de pruebas', 'Sede B de pruebas'] as $nombreSede) {
+            if (! DB::table('sede')->where('nombre', $nombreSede)->exists()) {
+                DB::table('sede')->insert([
+                    'nombre'     => $nombreSede,
+                    'direccion'  => 'Dirección de pruebas',
+                    'telefono'   => '0424-0000000',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         if (! DB::table('modulos')->exists()) {
@@ -87,7 +90,17 @@ abstract class SeguridadTestCase extends TestCase
         return md5($archivos);
     }
 
-    protected function crearUsuario(array|string $roles = [], string $password = 'Secreta123', array $extra = []): Usuario
+    protected function sedeA(): int
+    {
+        return (int) DB::table('sede')->where('nombre', 'Sede de pruebas')->value('id');
+    }
+
+    protected function sedeB(): int
+    {
+        return (int) DB::table('sede')->where('nombre', 'Sede B de pruebas')->value('id');
+    }
+
+    protected function crearUsuario(array|string $roles = [], string $password = 'Secreta123', array $extra = [], ?int $sedeId = null): Usuario
     {
         $n = ++static::$consecutivo . '_' . bin2hex(random_bytes(3));
 
@@ -99,7 +112,7 @@ abstract class SeguridadTestCase extends TestCase
             'genero_persona'   => 'Otro',
             'email_persona'    => "persona{$n}@prueba.test",
             'id_perfil'        => DB::table('perfil')->value('id_perfil'),
-            'id_sede'          => DB::table('sede')->value('id'),
+            'id_sede'          => $sedeId ?? $this->sedeA(),
         ]);
 
         $usuario = new Usuario([

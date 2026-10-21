@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('receta_id')
                 ->constrained('recetas')
                 ->onDelete('cascade');
+            $table->foreignId('sede_id')->constrained('sede');
             $table->date('fecha_consumo_diario');
             $table->integer('porciones_servidas')->notNull();
             $table->timestamps();

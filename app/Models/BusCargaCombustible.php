@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASedePorRelacion;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\BusVehiculo;
 use App\Models\BusViaje;
@@ -9,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class BusCargaCombustible extends Model
 {
+    use PerteneceASedePorRelacion;
+
+    protected $relacionSede = 'vehiculo';
+
     protected $table = 'carga_combustibles';
 
     protected $fillable = [

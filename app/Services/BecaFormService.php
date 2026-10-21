@@ -30,7 +30,7 @@ class BecaFormService
                 ->orderBy('nombre_persona')
                 ->get(),
             'roles' => Rol::orderBy('nombre')->get(),
-            'estudiantes' => Persona::where('estado', true)
+            'estudiantes' => Persona::deSedeActiva()->where('estado', true)
                 ->whereHas('perfil', function ($query) {
                     $query->where('nombre_perfil', 'Estudiante');
                 })

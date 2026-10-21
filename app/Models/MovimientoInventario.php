@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASede;
 use Illuminate\Database\Eloquent\Model;
 
 class MovimientoInventario extends Model
 {
+    use PerteneceASede;
+
     protected $table = 'movimiento_inventarios';
 
     protected $fillable = [

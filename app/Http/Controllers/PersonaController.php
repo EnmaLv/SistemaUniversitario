@@ -9,7 +9,8 @@ class PersonaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Persona::select('id_persona', 'nombre_persona', 'apellido_persona', 'email_persona', 'cedula_persona')
+        $query = Persona::deSedeActiva()
+            ->select('id_persona', 'nombre_persona', 'apellido_persona', 'email_persona', 'cedula_persona')
             ->where('id_perfil', 2);
         
         if ($request->filled('buscar')) {

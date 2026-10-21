@@ -252,7 +252,7 @@ class ConsultaController extends Controller
 
         $q = $request->termino();
 
-        $personas = Persona::where(function ($query) use ($q) {
+        $personas = Persona::deSedeActiva()->where(function ($query) use ($q) {
             $query->where('nombre_persona', 'like', "%{$q}%")
                 ->orWhere('apellido_persona', 'like', "%{$q}%")
                 ->orWhere('cedula_persona', 'like', "%{$q}%");

@@ -50,6 +50,7 @@ class DatabaseSeeder extends Seeder
             BusParadaSeeder::class,
         ]);
         \App\Models\Proveedor::factory(1)->create();
+        $this->call(InventarioInicialSeeder::class);
         $this->call(PermisosSeeder::class);
     }
 }

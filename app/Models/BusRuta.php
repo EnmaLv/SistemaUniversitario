@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASede;
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
 
 class BusRuta extends Model
 {
+    use PerteneceASede;
+
     use ConvierteAMayusculasNoEloquent;
 
     protected $table = 'bus_rutas';

@@ -27,7 +27,7 @@ class DispensacionService
 
     public static function sedeDelUsuario($usuario): int
     {
-        return (int) ($usuario?->persona?->sede_id ?? self::SEDE_POR_DEFECTO);
+        return (int) (\App\Support\Sedes\SedeActiva::idParaCrear() ?? self::SEDE_POR_DEFECTO);
     }
 
     /**

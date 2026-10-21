@@ -2,6 +2,7 @@
 
 namespace App\Models\salud;
 
+use App\Traits\PerteneceASedePorRelacion;
 use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 
 class Consulta extends Model
 {
+    use PerteneceASedePorRelacion;
+
+    protected $relacionSede = 'consultorio';
+
     protected $table = 'consultas';
 
     /* ──────────────────────────────────────────────────────────────

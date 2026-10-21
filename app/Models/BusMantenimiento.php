@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASedePorRelacion;
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
 
 class BusMantenimiento extends Model
 {
+    use PerteneceASedePorRelacion;
+
+    protected $relacionSede = 'vehiculo';
+
     use ConvierteAMayusculasNoEloquent;
 
     protected $table = 'mantenimientos';
@@ -32,7 +37,7 @@ class BusMantenimiento extends Model
 
     public function vehiculo()
     {
-        return $this->belongsTo(BusVehiculo::class, 'bus_vehiculo_id');
+        return $this->belongsTo(BusVehiculo::class, 'vehiculo_id');
     }
 
     public function usuario()

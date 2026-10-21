@@ -77,6 +77,7 @@
                 @endif
             </div>
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
+                <x-selector-sede />
                 <div class="relative" x-data="{ openNotif: false, optionsOpen: false, filter: 'all' }" @click.away="openNotif = false; optionsOpen = false">
                     <button @click="openNotif = !openNotif"
                         class="relative p-2 text-gray-200 hover:text-white bg-white/10 {{ $btnHover }} rounded-full transition-all duration-200 focus:outline-none focus:ring-2 {{ $focusRing }}"

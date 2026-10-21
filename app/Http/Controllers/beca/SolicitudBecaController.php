@@ -36,7 +36,7 @@ class SolicitudBecaController extends Controller
         foreach($jornadasActivas as $jornada) {
             $ids = $this->solicitudService->obtenerPendientesPorRenovar($jornada->id);
             if($ids->isNotEmpty()) {
-                $personas = Persona::whereIn('id_persona', $ids)->get();
+                $personas = Persona::deSedeActiva()->whereIn('id_persona', $ids)->get();
                 $pendientesRenovacion->put($jornada->id, [
                     'jornada' => $jornada,
                     'personas' => $personas
@@ -60,7 +60,7 @@ class SolicitudBecaController extends Controller
             ->with(['beneficio', 'lapso'])
             ->get();
 
-        $estudiantes = Persona::where('id_perfil', 2)
+        $estudiantes = Persona::deSedeActiva()->where('id_perfil', 2)
             ->orderBy('nombre_persona')
             ->orderBy('apellido_persona')
             ->get();

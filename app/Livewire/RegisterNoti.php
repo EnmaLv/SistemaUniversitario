@@ -233,7 +233,7 @@ class RegisterNoti extends Component
             'hora'   => date('H:i:s'),
         ];
 
-        $persona = Persona::where('cedula_persona', $this->cedula)
+        $persona = Persona::deSedeActiva()->where('cedula_persona', $this->cedula)
             ->where('estado', true)
             ->where('id_perfil', 2)
             ->first();
@@ -271,6 +271,7 @@ class RegisterNoti extends Component
                 }
 
                 DB::table('registro_diario_c')->insert([
+                    'sede_id'              => \App\Support\Sedes\SedeActiva::idParaCrear(),
                     'id_persona'           => $persona->id_persona,
                     'id_persona_pnf'       => $personaPnf->id_persona_pnf,
                     'tipo_comida'          => $tipo,
@@ -342,7 +343,7 @@ class RegisterNoti extends Component
         $this->fecha_desde = empty($this->fecha_desde) ? $hoy : $this->fecha_desde;
         $this->fecha_hasta = empty($this->fecha_hasta) ? $hoy : $this->fecha_hasta;
 
-        $cierreHoy = DB::table('sobrantes_comedor')
+        $cierreHoy = \App\Support\Sedes\SedeActiva::filtrar(DB::table('sobrantes_comedor'), 'sede_id')
             ->whereDate('fecha', now()->format('Y-m-d'))
             ->exists();
 

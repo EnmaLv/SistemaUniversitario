@@ -4,11 +4,11 @@ namespace App\Models;
 
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\FiltroPorSede;
+use App\Traits\PerteneceASede;
 
 class BusVehiculo extends Model
 {
-    use FiltroPorSede;
+    use PerteneceASede;
 
     use ConvierteAMayusculasNoEloquent;
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\PerteneceASede;
 use App\Models\Becas\BecaBeneficiario;
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,11 @@ use Exception;
 class Persona extends Model
 {
     use ConvierteAMayusculasNoEloquent;
+    use PerteneceASede;
+
+    protected $columnaSede = 'id_sede';
+
+    protected $sedeSoloExplicita = true;
 
     protected $table = 'persona';
     protected $primaryKey = 'id_persona';
@@ -192,6 +198,11 @@ class Persona extends Model
             DB::rollBack();
             return [false, \App\Support\Seguridad\MensajeError::de($e)];
         }
+    }
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'id_sede', 'id');
     }
 
     public function perfil()

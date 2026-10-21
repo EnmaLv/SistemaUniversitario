@@ -443,6 +443,7 @@ Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'r
 
 Route::middleware('auth')->group(function () {
     Route::get('/seguridad/cambiar-password', [\App\Http\Controllers\Auth\CambioPasswordController::class, 'mostrar'])->name('password.cambiar');
+    Route::post('/seguridad/sede-activa', [\App\Http\Controllers\SedeActivaController::class, 'cambiar'])->name('sede.activa.cambiar');
     Route::post('/seguridad/cambiar-password', [\App\Http\Controllers\Auth\CambioPasswordController::class, 'guardar'])->middleware('throttle:10,1')->name('password.cambiar.guardar');
 });
 

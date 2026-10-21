@@ -2,6 +2,7 @@
 
 namespace App\Models\salud;
 
+use App\Traits\PerteneceASede;
 use App\Models\Sede;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +11,8 @@ use App\Traits\ConvierteAMayusculasNoEloquent;
 
 class Consultorio extends Model
 {
+    use PerteneceASede;
+
     use ConvierteAMayusculasNoEloquent;
 
     protected $table = 'consultorios';

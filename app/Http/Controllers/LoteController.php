@@ -71,7 +71,7 @@ class LoteController extends Controller
         $fecha_hasta = $request->input('fecha_hasta');
         $filtro      = $request->input('filtro');
 
-        $sedeId = 1;
+        $sedeId = \App\Support\Sedes\SedeActiva::idParaCrear();
 
         $query = Lote::with(['producto', 'proveedor'])
             ->addSelect([

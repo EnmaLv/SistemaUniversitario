@@ -2,11 +2,16 @@
 
 namespace App\Models\salud;
 
+use App\Traits\PerteneceASedePorRelacion;
 use App\Models\Persona;
 use Illuminate\Database\Eloquent\Model;
 
 class RecetasMedica extends Model
 {
+    use PerteneceASedePorRelacion;
+
+    protected $relacionSede = 'consulta';
+
     protected $table = 'recetas_medicas';
 
     protected $fillable = [
