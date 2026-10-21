@@ -3,32 +3,38 @@
 namespace App\Models;
 
 use App\Traits\PerteneceASede;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsumoDiario extends Model
 {
     use PerteneceASede;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'consumo_diarios';
+    protected $table = 'consumo_diario';
+
+    protected $primaryKey = 'id_cnd';
 
     protected $fillable = [
-        'receta_id',
+        'rct_id',
         'sed_id',
-        'fecha_consumo_diario',
-        'porciones_servidas',
+        'fecha_consumo_cnd',
+        'porciones_servidas_cnd',
     ];
 
     protected $casts = [
-        'fecha_consumo_diario' => 'date',
+        'fecha_consumo_cnd' => 'date',
     ];
 
     public function receta()
     {
-        return $this->belongsTo(Receta::class);
+        return $this->belongsTo(Receta::class, 'rct_id', 'id_rct');
     }
 
     public function detalles()
     {
-        return $this->hasMany(ConsumoDiarioDetalle::class);
+        return $this->hasMany(ConsumoDiarioDetalle::class, 'cnd_id', 'id_cnd');
     }
 }

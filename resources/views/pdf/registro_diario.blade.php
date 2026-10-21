@@ -378,8 +378,8 @@
                         <td>{{ $registro->nombre_prg ?? '—' }}</td>
                         <td>{{ $registro->sector_dir ?? '—' }}</td>
                         <td class="center">
-                            @if (!empty($registro->fecha_regis_diario_c))
-                                {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                            @if (!empty($registro->fecha_comedor_rgc))
+                                {{ \Carbon\Carbon::parse($registro->fecha_comedor_rgc)->format('d/m/Y') }}
                             @else
                                 —
                             @endif

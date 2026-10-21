@@ -2,22 +2,29 @@
 
 namespace App\Models;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConsumoDiarioDetalle extends Model
 {
-    protected $table = 'consumo_diario_detalles';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'consumo_diario_detalle';
+
+    protected $primaryKey = 'id_cdd';
 
     protected $fillable = [
-        'consumo_diario_id',
+        'cnd_id',
         'pdt_id',
-        'cantidad_total',
+        'cantidad_total_cdd',
         'unm_id',
     ];
 
     public function consumoDiario()
     {
-        return $this->belongsTo(ConsumoDiario::class);
+        return $this->belongsTo(ConsumoDiario::class, 'cnd_id', 'id_cnd');
     }
 
     public function producto()

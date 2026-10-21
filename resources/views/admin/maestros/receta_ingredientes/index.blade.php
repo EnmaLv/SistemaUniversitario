@@ -59,17 +59,17 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($recetas as $receta)
-                                <x-table-row :id="$receta->id">
+                                <x-table-row :id="$receta->id_rct">
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
                                             {{ ($recetas->currentPage() - 1) * $recetas->perPage() + $loop->iteration }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold" style="color: var(--text-main);">
-                                        <div class="leading-5">{{ $receta->nombre }}</div>
-                                        @if (!empty($receta->descripcion))
+                                        <div class="leading-5">{{ $receta->nombre_rct }}</div>
+                                        @if (!empty($receta->descripcion_rct))
                                             <div class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                                                {{ Str::limit($receta->descripcion, 90) }}
+                                                {{ Str::limit($receta->descripcion_rct, 90) }}
                                             </div>
                                         @endif
                                     </td>
@@ -84,20 +84,20 @@
                                                 $totalIngredientes = count($ingredientes);
                                                 $showMore = $totalIngredientes > 3;
                                             @endphp
-                                            <ul id="receta-{{ $receta->id }}" class="space-y-1 text-left inline-block">
+                                            <ul id="receta-{{ $receta->id_rct }}" class="space-y-1 text-left inline-block">
                                                 @foreach ($ingredientes as $index => $ing)
                                                     <li class="ingrediente-item text-sm text-gray-600 dark:text-gray-300 {{ $showMore && $index >= 3 ? 'hidden' : '' }}">
                                                         <span class="font-semibold text-gray-700 dark:text-gray-200">{{ optional($ing->producto)->nombre_pdt ?? 'Producto eliminado' }}</span>
-                                                        <span class="text-gray-500">- {{ round($ing->cantidad_porcion) }} {{ optional($ing->unidad)->nombre_unm ?? '' }}</span>
+                                                        <span class="text-gray-500">- {{ round($ing->cantidad_porcion_rci) }} {{ optional($ing->unidad)->nombre_unm ?? '' }}</span>
                                                     </li>
                                                 @endforeach
                                             </ul>
                                             @if ($showMore)
                                                 <div class="mt-2">
-                                                    <button type="button" class="text-[11px] font-bold text-red-700 hover:text-red-800 ver-mas-btn" data-recipiente-id="{{ $receta->id }}">
+                                                    <button type="button" class="text-[11px] font-bold text-red-700 hover:text-red-800 ver-mas-btn" data-recipiente-id="{{ $receta->id_rct }}">
                                                         Ver más...
                                                     </button>
-                                                    <button type="button" class="hidden text-[11px] font-bold text-red-700 hover:text-red-800 ver-menos-btn" data-recipiente-id="{{ $receta->id }}">
+                                                    <button type="button" class="hidden text-[11px] font-bold text-red-700 hover:text-red-800 ver-menos-btn" data-recipiente-id="{{ $receta->id_rct }}">
                                                         Ver menos
                                                     </button>
                                                 </div>
@@ -105,7 +105,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($receta->estado)
+                                        @if ($receta->status_id == 1)
                                             <span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-check-circle"></i> Activo
                                             </span>
@@ -116,9 +116,9 @@
                                         @endif
                                     </td>
                                     <x-table-actions
-                                        :id="$receta->id"
+                                        :id="$receta->id_rct"
                                         baseUrl="admin/maestros/receta_ingredientes"
-                                        :status="$receta->estado"
+                                        :status="$receta->status_id == 1"
                                         :show="false" />
                                 </x-table-row>
                             @empty

@@ -9,7 +9,7 @@
                         Editar Ingredientes de Receta
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Ajusta la composición de <span class="font-bold">{{ $receta->nombre }}</span>.
+                        Ajusta la composición de <span class="font-bold">{{ $receta->nombre_rct }}</span>.
                     </p>
                 </div>
 
@@ -25,7 +25,7 @@
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Agrega o elimina ingredientes de la preparación.</p>
                 </div>
 
-                <form action="{{ route('admin.maestros.receta_ingredientes.update', $receta->id) }}" method="POST" class="space-y-6 p-6">
+                <form action="{{ route('admin.maestros.receta_ingredientes.update', $receta->id_rct) }}" method="POST" class="space-y-6 p-6">
                     @csrf
                     @method('PUT')
 
@@ -33,9 +33,9 @@
                         <div class="lg:col-span-1">
                             <label class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Receta</label>
                             <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-medium text-slate-700 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
-                                {{ $receta->nombre }}
+                                {{ $receta->nombre_rct }}
                             </div>
-                            <input type="hidden" name="recetas_id" value="{{ $receta->id }}">
+                            <input type="hidden" name="rct_id" value="{{ $receta->id_rct }}">
                             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Estás editando la composición técnica de esta preparación.</p>
                         </div>
 
@@ -88,12 +88,12 @@
                                                 </div>
                                                 <div>
                                                     <div class="receta-ingrediente-name text-sm font-bold">{{ $ing->producto?->nombre_pdt }}</div>
-                                                    <div class="receta-ingrediente-detail text-xs font-medium">{{ $ing->cantidad_porcion }} {{ $ing->unidad?->nombre_unm }}</div>
+                                                    <div class="receta-ingrediente-detail text-xs font-medium">{{ $ing->cantidad_porcion_rci }} {{ $ing->unidad?->nombre_unm }}</div>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <input type="hidden" name="producto_id[]" value="{{ $ing->pdt_id }}">
-                                                <input type="hidden" name="cantidad_porcion[]" value="{{ $ing->cantidad_porcion }}">
+                                                <input type="hidden" name="cantidad_porcion_rci[]" value="{{ $ing->cantidad_porcion_rci }}">
                                                 <input type="hidden" name="unidad_id[]" value="{{ $ing->unm_id }}">
                                                 <button type="button" class="remove-item flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100" title="Eliminar">
                                                     <i class="fas fa-times text-xs"></i>
@@ -156,7 +156,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <input type="hidden" name="producto_id[]" value="${prodId}">
-                        <input type="hidden" name="cantidad_porcion[]" value="${cantidad}">
+                        <input type="hidden" name="cantidad_porcion_rci[]" value="${cantidad}">
                         <input type="hidden" name="unidad_id[]" value="${unidadId}">
                         <button type="button" class="remove-item flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100">
                             <i class="fas fa-trash-alt text-xs"></i>

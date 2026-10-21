@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('detalle_registro_diarios', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('receta_id')->constrained('recetas')->onDelete('cascade');
+        Schema::create('sobrante_comedor', function (Blueprint $table) {
+            $table->id('id_sbc');
             $table->foreignId('sed_id')->constrained('sede', 'id_sed');
-            $table->string('tipo_comida', 20)->default('desayuno');
-            $table->bigInteger('cantidad_servido');
-            $table->date('fecha');
+            $table->date('fecha_sbc');
+            $table->integer('cantidad_sobrante_sbc');
+            $table->text('motivo_sbc');
+            $table->text('accion_tomada_sbc');
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('detalle_registro_diarios');
+        Schema::dropIfExists('sobrante_comedor');
     }
 };

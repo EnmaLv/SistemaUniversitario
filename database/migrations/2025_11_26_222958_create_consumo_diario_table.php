@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('consumo_diarios', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('receta_id')
-                ->constrained('recetas')
+        Schema::create('consumo_diario', function (Blueprint $table) {
+            $table->id('id_cnd');
+            $table->foreignId('rct_id')
+                ->constrained('receta', 'id_rct')
                 ->onDelete('cascade');
             $table->foreignId('sed_id')->constrained('sede', 'id_sed');
-            $table->date('fecha_consumo_diario');
-            $table->integer('porciones_servidas')->notNull();
+            $table->date('fecha_consumo_cnd');
+            $table->integer('porciones_servidas_cnd')->notNull();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('consumo_diarios');
+        Schema::dropIfExists('consumo_diario');
     }
 };

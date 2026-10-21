@@ -371,7 +371,7 @@
                     </thead>
                     <tbody class="text-sm font-medium">
                         @forelse ($data as $registro)
-                            <x-table-row :id="$registro->id" class="border-b"
+                            <x-table-row :id="$registro->id_rgc" class="border-b"
                                 style="border-color: var(--border-color);">
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -402,7 +402,7 @@
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                     <i class="far fa-calendar mr-1.5 opacity-60"></i>
-                                    {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($registro->fecha_comedor_rgc)->format('d/m/Y') }}
                                 </td>
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -413,9 +413,9 @@
                                     </span>
                                 </td>
 
-                                <x-table-actions :id="$registro->id" :show="false" :edit="false"
+                                <x-table-actions :id="$registro->id_rgc" :show="false" :edit="false"
                                     :toggle="false">
-                                    <a href="{{ route('admin.movimientos.registro_diario.show', $registro->id) }}"
+                                    <a href="{{ route('admin.movimientos.registro_diario.show', $registro->id_rgc) }}"
                                         onclick="event.stopPropagation()"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors"
                                         title="Ver detalle">

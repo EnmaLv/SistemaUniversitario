@@ -13,15 +13,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('receta_ingredientes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('recetas_id')->constrained('recetas')->onDelete('cascade');
+        Schema::create('receta_ingrediente', function (Blueprint $table) {
+            $table->id('id_rci');
+            $table->foreignId('rct_id')->constrained('receta', 'id_rct')->onDelete('cascade');
             $table->foreignId('pdt_id')->constrained('producto', 'id_pdt')->onDelete('cascade');
-            $table->decimal('cantidad_porcion', 14, 2)->notNull();
-            $table->decimal('cantidad_gramos', 14, 2);
+            $table->decimal('cantidad_porcion_rci', 14, 2)->notNull();
+            $table->decimal('cantidad_convertida_rci', 14, 2);
             $table->foreignId('unm_id')->constrained('unidad_medida', 'id_unm')->onDelete('cascade');
-            $table->integer('estado')->default(1);
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('receta_ingredientes');
+        Schema::dropIfExists('receta_ingrediente');
     }
 };

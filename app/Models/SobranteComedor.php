@@ -2,29 +2,35 @@
 
 namespace App\Models;
 
-use App\Traits\PerteneceASede;
 use App\Traits\ConvierteAMayusculas;
+use App\Traits\PerteneceASede;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SobranteComedor extends Model
 {
-    use PerteneceASede;
-
     use ConvierteAMayusculas;
     use HasFactory;
+    use PerteneceASede;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'sobrantes_comedor';
+    protected $table = 'sobrante_comedor';
+
+    protected $primaryKey = 'id_sbc';
 
     protected $fillable = [
-        'fecha',
-        'cantidad_sobrante',
-        'motivo',
-        'accion_tomada',
+        'sed_id',
+        'fecha_sbc',
+        'cantidad_sobrante_sbc',
+        'motivo_sbc',
+        'accion_tomada_sbc',
     ];
 
     protected $mayusculas = [
-        'motivo',
-        'accion_tomada',
+        'motivo_sbc',
+        'accion_tomada_sbc',
     ];
 }

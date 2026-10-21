@@ -2,35 +2,34 @@
 
 namespace App\Models;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
 class RecetaIngrediente extends Model
 {
     use HasFactory;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'receta_ingredientes';
+    protected $table = 'receta_ingrediente';
+
+    protected $primaryKey = 'id_rci';
 
     protected $fillable = [
-        'recetas_id',
+        'rct_id',
         'pdt_id',
-        'cantidad_porcion',
-        'cantidad_gramos',
+        'cantidad_porcion_rci',
+        'cantidad_convertida_rci',
         'unm_id',
-        'estado',
+        'status_id',
     ];
-
-    // Relaciones
-
-    public function registro_diario()
-    {
-        return $this->hasMany(Registro_diario::class);
-    }
 
     public function receta()
     {
-        return $this->belongsTo(Receta::class, 'recetas_id', 'id');
+        return $this->belongsTo(Receta::class, 'rct_id', 'id_rct');
     }
 
     public function producto()
@@ -45,8 +44,8 @@ class RecetaIngrediente extends Model
 
     public static function eliminarIngredientes($id)
     {
-        return DB::table('receta_ingredientes')
-            ->where('id', $id)
+        return DB::table('receta_ingrediente')
+            ->where('id_rci', $id)
             ->delete();
     }
 }

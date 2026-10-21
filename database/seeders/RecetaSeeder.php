@@ -13,12 +13,12 @@ class RecetaSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('recetas')->insert([
-            ['nombre' => 'Arepa Con Carne Molida', 'descripcion' => null,  'estado' => 1],
-            ['nombre' => 'Arepa Con Salchicha', 'descripcion' => null,  'estado' => 1],
-            ['nombre' => 'Arepa Con Mortadela', 'descripcion' => null,  'estado' => 1],
-            ['nombre' => 'Arepa Con Mantequilla y Queso', 'descripcion' => null,  'estado' => 1],
-            ['nombre' => 'Arepa Con Pollo', 'descripcion' => null,  'estado' => 1]
+        DB::table('receta')->insert([
+            ['nombre_rct' => 'Arepa Con Carne Molida', 'descripcion_rct' => null, 'status_id' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['nombre_rct' => 'Arepa Con Salchicha', 'descripcion_rct' => null, 'status_id' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['nombre_rct' => 'Arepa Con Mortadela', 'descripcion_rct' => null, 'status_id' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['nombre_rct' => 'Arepa Con Mantequilla y Queso', 'descripcion_rct' => null, 'status_id' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['nombre_rct' => 'Arepa Con Pollo', 'descripcion_rct' => null, 'status_id' => 1, 'created_at' => now(), 'updated_at' => now()]
         ]);
     }
 }

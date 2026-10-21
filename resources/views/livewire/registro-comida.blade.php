@@ -220,7 +220,7 @@
                                                     class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                                                     <option value="">— Seleccione una opción —</option>
                                                     @foreach ($comidas as $comida)
-                                                        <option value="{{ $comida->id }}">{{ $comida->nombre }}</option>
+                                                        <option value="{{ $comida->id_rct }}">{{ $comida->nombre_rct }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -359,7 +359,7 @@
                     <tbody class="text-sm font-medium">
                         @forelse ($data as $registro)
                             @php
-                                $tipoReg = $registro->tipo_comida ?? null;
+                                $tipoReg = $registro->tipo_comida_drc ?? null;
                                 $labelTipo = match ($tipoReg) {
                                     'desayuno' => 'Desayuno',
                                     'almuerzo' => 'Almuerzo',
@@ -389,7 +389,7 @@
                                         <span class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-500 flex items-center justify-center shrink-0">
                                             <i class="fas fa-utensils text-xs"></i>
                                         </span>
-                                        <span class="font-bold">{{ $registro->receta->nombre ?? 'Receta eliminada' }}</span>
+                                        <span class="font-bold">{{ $registro->receta->nombre_rct ?? 'Receta eliminada' }}</span>
                                     </div>
                                 </td>
 
@@ -405,7 +405,7 @@
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black rounded-lg border"
                                         style="border-color: var(--border-color); color: var(--text-main);">
                                         <i class="fas fa-hashtag text-[10px] opacity-60"></i>
-                                        {{ $registro->cantidad_servido }}
+                                        {{ $registro->cantidad_servida_drc }}
                                     </span>
                                 </td>
 

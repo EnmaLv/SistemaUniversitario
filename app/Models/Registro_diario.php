@@ -3,29 +3,29 @@
 namespace App\Models;
 
 use App\Traits\PerteneceASede;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 
 class Registro_diario extends Model
 {
     use PerteneceASede;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'registro_diario_c';
+    protected $table = 'registro_comedor';
+
+    protected $primaryKey = 'id_rgc';
 
     protected $fillable = [
         'per_id',
         'pep_id',
-        'fecha_regis_diario_c',
-        'hora',
+        'sed_id',
+        'tipo_comida_rgc',
+        'fecha_comedor_rgc',
+        'hora_comedor_rgc',
     ];
-
-    public $timestamps = false;
-
-    public function receta_ingrediente()
-    {
-        return $this->belongsTo(RecetaIngrediente::class);
-    }
 
     public function persona()
     {
@@ -40,29 +40,22 @@ class Registro_diario extends Model
 
     private static function relacionTable()
     {
-        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c'), 'registro_diario_c.sed_id')
-            ->join('persona', 'registro_diario_c.per_id', '=', 'persona.id_per')
+        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_comedor'), 'registro_comedor.sed_id')
+            ->whereNull('registro_comedor.deleted_at')
+            ->join('persona', 'registro_comedor.per_id', '=', 'persona.id_per')
             ->leftJoin('direccion', 'persona.id_per', '=', 'direccion.per_id')
             ->leftJoin('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
             ->leftJoin('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
             ->leftJoin('estado', 'municipio.esd_id', '=', 'estado.id_esd')
-            ->join('persona_programa', 'registro_diario_c.pep_id', '=', 'persona_programa.id_pep')
+            ->join('persona_programa', 'registro_comedor.pep_id', '=', 'persona_programa.id_pep')
             ->join('programa', 'persona_programa.prg_id', '=', 'programa.id_prg');
     }
 
     public static function getRegister(int $id)
     {
+        $formatColumn = fn (array $column, string $prefix) => array_map(fn ($col) => $prefix . '.' . $col, $column);
 
-        function formatColumn(array $column, string $prefix)
-        {
-            // Esta función podría ser usada para formatear los nombres de las columnas con un prefijo
-            return array_map(function ($col) use ($prefix) {
-                return $prefix . '.' . $col;
-            }, $column);
-        }
-        //Creamos una variable para almacenar la columnas que necesitamos
-
-        $personaColumn = formatColumn([
+        $personaColumn = $formatColumn([
             'nombres_per',
             'segundo_nombre_per',
             'apellidos_per',
@@ -75,35 +68,35 @@ class Registro_diario extends Model
             'semestre_per'
         ], 'persona');
 
-        $pnfColumn = formatColumn([
+        $pnfColumn = $formatColumn([
             'nombre_prg',
         ], 'programa');
 
-        $registroColumn = formatColumn([
-            'fecha_regis_diario_c',
-            'hora'
-        ], 'registro_diario_c');
+        $registroColumn = $formatColumn([
+            'fecha_comedor_rgc',
+            'hora_comedor_rgc'
+        ], 'registro_comedor');
 
-        $direccionColumn = formatColumn([
+        $direccionColumn = $formatColumn([
             'sector_dir',
             'calle_dir'
         ], 'direccion');
 
-        $localidadColumn = formatColumn([
+        $localidadColumn = $formatColumn([
             'nombre_par'
         ], 'parroquia');
 
-        $municipioColumn = formatColumn([
+        $municipioColumn = $formatColumn([
             'nombre_mun'
         ], 'municipio');
 
-        $estadoColumn = formatColumn([
+        $estadoColumn = $formatColumn([
             'nombre_esd'
         ], 'estado');
 
         //Lo unimos en un solo array
         $colums = [...$personaColumn, ...$pnfColumn, ...$registroColumn, ...$direccionColumn, ...$localidadColumn, ...$municipioColumn, ...$estadoColumn];
-        $query = self::relacionTable()->select($colums)->where('registro_diario_c.id', $id);
+        $query = self::relacionTable()->select($colums)->where('registro_comedor.id_rgc', $id);
 
         return $query->first();
     }
@@ -111,7 +104,7 @@ class Registro_diario extends Model
     public static function showData(array $filter = [], bool $isPdf = false)
     {
         $query = self::relacionTable()
-            ->select('registro_diario_c.*', 'persona.nombres_per', 'persona.apellidos_per', 'persona.cedula_per', 'programa.nombre_prg', 'direccion.sector_dir', 'direccion.calle_dir', 'parroquia.nombre_par', 'municipio.nombre_mun', 'estado.nombre_esd');
+            ->select('registro_comedor.*', 'persona.nombres_per', 'persona.apellidos_per', 'persona.cedula_per', 'programa.nombre_prg', 'direccion.sector_dir', 'direccion.calle_dir', 'parroquia.nombre_par', 'municipio.nombre_mun', 'estado.nombre_esd');
 
 
         //Por si hay que buscar por el input
@@ -126,16 +119,16 @@ class Registro_diario extends Model
 
         //Por si hay que buscar entre 2 fechas
         if (isset($filter['fecha_desde']) && isset($filter['fecha_hasta'])) {
-            $query->whereBetween('registro_diario_c.fecha_regis_diario_c', [$filter['fecha_desde'], $filter['fecha_hasta']]);
+            $query->whereBetween('registro_comedor.fecha_comedor_rgc', [$filter['fecha_desde'], $filter['fecha_hasta']]);
         }
 
         //Por si hay que buscar por fecha
         if (isset($filter['fecha_desde'])) {
-            $query->where('registro_diario_c.fecha_regis_diario_c', '>=', $filter['fecha_desde']);
+            $query->where('registro_comedor.fecha_comedor_rgc', '>=', $filter['fecha_desde']);
         }
 
         if (isset($filter['fecha_hasta'])) {
-            $query->where('registro_diario_c.fecha_regis_diario_c', '<=', $filter['fecha_hasta']);
+            $query->where('registro_comedor.fecha_comedor_rgc', '<=', $filter['fecha_hasta']);
         }
 
         //En el caso de que los datos lo necesitos para generar un pdf

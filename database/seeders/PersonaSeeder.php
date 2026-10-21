@@ -316,5 +316,22 @@ class PersonaSeeder extends Seeder
         ], 'id_per');
 
         \App\Support\Cuentas\CuentasComunidad::procesarLote([$estudianteGuanare], 'seeder');
+
+        $programas = DB::table('programa')->orderBy('id_prg')->pluck('id_prg')->values();
+
+        if ($programas->isNotEmpty()) {
+            $filas = DB::table('persona')->where('id_perfil', 2)->orderBy('id_per')->pluck('id_per')
+                ->values()
+                ->map(fn ($personaId, $i) => [
+                    'per_id'           => $personaId,
+                    'prg_id'           => $programas[$i % $programas->count()],
+                    'fecha_inicio_pep' => now()->subYear()->toDateString(),
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ])
+                ->all();
+
+            DB::table('persona_programa')->insert($filas);
+        }
     }
 }

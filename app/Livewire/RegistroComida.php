@@ -94,7 +94,7 @@ class RegistroComida extends Component
     {
         $rules = [];
         foreach ($this->desayunos_agregados as $i => $item) {
-            $rules["desayunos_agregados.$i.receta_id"] = 'required|exists:recetas,id';
+            $rules["desayunos_agregados.$i.receta_id"] = 'required|exists:receta,id_rct';
             $rules["desayunos_agregados.$i.cantidad"]  = 'required|numeric|min:1';
         }
         return $rules;
@@ -135,18 +135,18 @@ class RegistroComida extends Component
 
         if ($tipo) {
             $registroActual = DetalleRegistroDiario::whereDate('created_at', $hoy)
-                ->where('tipo_comida', $tipo)
+                ->where('tipo_comida_drc', $tipo)
                 ->exists();
 
             $this->desayuno_registrado = $registroActual;
 
             if ($registroActual) {
                 $detalles = DetalleRegistroDiario::whereDate('created_at', $hoy)
-                    ->where('tipo_comida', $tipo)
-                    ->get(['receta_id', 'cantidad_servido']);
+                    ->where('tipo_comida_drc', $tipo)
+                    ->get(['rct_id', 'cantidad_servida_drc']);
 
                 $this->desayunos_agregados = $detalles->map(function ($item) {
-                    return ['receta_id' => $item->receta_id, 'cantidad' => $item->cantidad_servido];
+                    return ['receta_id' => $item->rct_id, 'cantidad' => $item->cantidad_servida_drc];
                 })->toArray();
             }
         }
@@ -181,7 +181,7 @@ class RegistroComida extends Component
     protected function resolverCantidadPorUnidad($ingrediente): float
     {
         $candidatos = [
-            'cantidad_gramos',
+            'cantidad_convertida_rci',
             'cantidad_convertida',
             'cantidad_convertida_base',
             'cantidad',
@@ -196,8 +196,8 @@ class RegistroComida extends Component
             }
         }
 
-        if (isset($ingrediente->cantidad_porcion)) {
-            $cantidadPorcion = (float) $ingrediente->cantidad_porcion;
+        if (isset($ingrediente->cantidad_porcion_rci)) {
+            $cantidadPorcion = (float) $ingrediente->cantidad_porcion_rci;
             $factorAGramo = (float) ($ingrediente->unidad?->factor_conversion_unm ?? 0);
 
             if ($cantidadPorcion > 0 && $factorAGramo > 0) {
@@ -218,7 +218,7 @@ class RegistroComida extends Component
 
         if ($receta->recetaIngredientes->isEmpty()) {
             throw new Exception(
-                "La receta «{$receta->nombre}» no tiene ingredientes registrados. " .
+                "La receta «{$receta->nombre_rct}» no tiene ingredientes registrados. " .
                     "Agrega sus ingredientes antes de poder registrarla."
             );
         }
@@ -231,7 +231,7 @@ class RegistroComida extends Component
             $producto = $ingrediente->producto;
 
             if (!$producto) {
-                $advertencias[] = "Un ingrediente de «{$receta->nombre}» no tiene producto asociado y fue omitido.";
+                $advertencias[] = "Un ingrediente de «{$receta->nombre_rct}» no tiene producto asociado y fue omitido.";
                 continue;
             }
 
@@ -275,7 +275,7 @@ class RegistroComida extends Component
             }
 
             throw new Exception(
-                "Inventario insuficiente para la receta «{$receta->nombre}»:"
+                "Inventario insuficiente para la receta «{$receta->nombre_rct}»:"
                     . PHP_EOL . PHP_EOL
                     . implode(PHP_EOL, $lineas)
             );
@@ -301,7 +301,7 @@ class RegistroComida extends Component
         $this->tipoComidaLabel  = $this->getVentanas()[$tipo]['label'];
 
         $yaRegistrado = DetalleRegistroDiario::whereDate('created_at', now()->toDateString())
-            ->where('tipo_comida', $tipo)
+            ->where('tipo_comida_drc', $tipo)
             ->exists();
 
         if ($yaRegistrado) {
@@ -318,7 +318,7 @@ class RegistroComida extends Component
         $messages = [];
 
         foreach ($this->desayunos_agregados as $i => $registro) {
-            $rules['desayunos_agregados.' . $i . '.receta_id'] = 'required|numeric|exists:recetas,id';
+            $rules['desayunos_agregados.' . $i . '.receta_id'] = 'required|numeric|exists:receta,id_rct';
             $rules['desayunos_agregados.' . $i . '.cantidad']  = 'required|numeric|min:1';
 
             $messages['desayunos_agregados.' . $i . '.receta_id.required'] = "Seleccione una opción para el registro #" . ($i + 1);
@@ -363,19 +363,19 @@ class RegistroComida extends Component
                 $cantidadServido = $registro['cantidad'];
 
                 DetalleRegistroDiario::create([
-                    'receta_id'        => $recetaId,
-                    'tipo_comida'      => $tipo,
-                    'cantidad_servido' => $cantidadServido,
-                    'fecha'            => now(),
+                    'rct_id'               => $recetaId,
+                    'tipo_comida_drc'      => $tipo,
+                    'cantidad_servida_drc' => $cantidadServido,
+                    'fecha_drc'            => now()->toDateString(),
                 ]);
 
                 $receta = Receta::with('recetaIngredientes.producto')->find($recetaId);
 
                 $consumo = ConsumoDiario::create([
-                    'receta_id'            => $recetaId,
-                    'sed_id'              => $sedeId,
-                    'fecha_consumo_diario' => now()->toDateString(),
-                    'porciones_servidas'   => $cantidadServido,
+                    'rct_id'                 => $recetaId,
+                    'sed_id'                 => $sedeId,
+                    'fecha_consumo_cnd'      => now()->toDateString(),
+                    'porciones_servidas_cnd' => $cantidadServido,
                 ]);
 
                 foreach ($receta->recetaIngredientes as $ingrediente) {
@@ -400,8 +400,8 @@ class RegistroComida extends Component
                         $servicio->salidaPorConvertida((int) $inv->lot_id, (int) $sedeId, $tomarGramos, [
                             'unm_id'              => $ingrediente->unm_id,
                             'referencia_type_moi' => 'consumo_diario',
-                            'referencia_id_moi'   => $consumo->id,
-                            'observacion_moi'     => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
+                            'referencia_id_moi'   => $consumo->id_cnd,
+                            'observacion_moi'     => "Consumo por receta {$receta->nombre_rct} ({$cantidadServido} raciones) · " . ucfirst($tipo),
                         ]);
 
                         $pendiente -= $tomarGramos;
@@ -412,9 +412,9 @@ class RegistroComida extends Component
                     }
 
                     ConsumoDiarioDetalle::create([
-                        'consumo_diario_id' => $consumo->id,
-                        'pdt_id'            => $ingrediente->pdt_id,
-                        'cantidad_total'    => round($totalIngrediente, 2),
+                        'cnd_id'             => $consumo->id_cnd,
+                        'pdt_id'             => $ingrediente->pdt_id,
+                        'cantidad_total_cdd' => round($totalIngrediente, 2),
                         'unm_id'            => $ingrediente->unm_id ?? $ingrediente->producto->unm_id,
                     ]);
                 }
@@ -471,12 +471,12 @@ class RegistroComida extends Component
 
         if ($buscar) {
             $query->whereHas('receta', function ($q) use ($buscar) {
-                $q->where('nombre', 'like', "%{$buscar}%");
+                $q->where('nombre_rct', 'like', "%{$buscar}%");
             });
         }
 
         $data = $query->paginate(10);
-        $comidas = Receta::orderBy('id', 'desc')->where('estado', true)->get();
+        $comidas = Receta::orderBy('id_rct', 'desc')->where('status_id', Receta::STATUS_ACTIVO)->get();
 
         return view('livewire.registro-comida', [
             'data'                => $data,

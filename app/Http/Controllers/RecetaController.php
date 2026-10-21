@@ -17,17 +17,17 @@ class RecetaController extends Controller
 
         if ($buscar) {
             $query->where(function ($q) use ($buscar) {
-                $q->where('nombre', 'like', "%{$buscar}%");
+                $q->where('nombre_rct', 'like', "%{$buscar}%");
             });
         }
 
         if ($estado !== null && $estado !== '') {
-            $query->where('estado', (int)$estado);
+            $query->where('status_id', (int) $estado === 1 ? Receta::STATUS_ACTIVO : Receta::STATUS_INACTIVO);
         } else {
-            $query->where('estado', 1);
+            $query->where('status_id', Receta::STATUS_ACTIVO);
         }
 
-        $recetas = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $recetas = $query->orderBy('id_rct', 'desc')->paginate(10)->withQueryString();
 
         return view('admin.maestros.recetas.index', compact('recetas', 'buscar', 'estado'));
     }
@@ -44,7 +44,7 @@ class RecetaController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:recetas,nombre'
+                'unique:receta,nombre_rct'
             ],
             'descripcion' => 'nullable|string',
         ], [
@@ -52,15 +52,15 @@ class RecetaController extends Controller
         ]);
 
         $receta = new Receta();
-        $receta->nombre = $validated['nombre'];
-        $receta->descripcion = $validated['descripcion'];
-        $receta->estado = true;
+        $receta->nombre_rct = $validated['nombre'];
+        $receta->descripcion_rct = $validated['descripcion'];
+        $receta->status_id = Receta::STATUS_ACTIVO;
         $receta->save();
 
         $from = $request->input('from');
 
         if ($from) {
-            return redirect($from . '?recetas_id=' . $receta->id)
+            return redirect($from . '?rct_id=' . $receta->id_rct)
                 ->with('success', 'Receta creada exitosamente.');
         } else {
             return redirect()->route('admin.maestros.recetas.index')
@@ -82,15 +82,15 @@ class RecetaController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('recetas', 'nombre')->ignore($receta->id),
+                Rule::unique('receta', 'nombre_rct')->ignore($receta->id_rct, 'id_rct'),
             ],
             'descripcion' => 'nullable|string',
         ], [
             'nombre.unique' => 'Ya existe una receta con este nombre',
         ]);
 
-        $receta->nombre = $validated['nombre'];
-        $receta->descripcion = $validated['descripcion'];
+        $receta->nombre_rct = $validated['nombre'];
+        $receta->descripcion_rct = $validated['descripcion'];
         $receta->save();
 
         return redirect()
@@ -120,6 +120,6 @@ class RecetaController extends Controller
     public function activar($id)
     {
         Receta::activarReceta($id);
-        return redirect()->route('admin.maestros.recetas.index')->with('success', 'Categoria activada exitosamente.');
+        return redirect()->route('admin.maestros.recetas.index')->with('success', 'Receta activada exitosamente.');
     }
 }

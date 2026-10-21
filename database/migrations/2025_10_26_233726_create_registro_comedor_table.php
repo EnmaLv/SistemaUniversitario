@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('registro_diario_c', function (Blueprint $table) {
-            $table->id();
+        Schema::create('registro_comedor', function (Blueprint $table) {
+            $table->id('id_rgc');
             $table->foreignId('per_id')
                 ->constrained('persona', 'id_per')
                 ->onDelete('cascade');
@@ -20,10 +20,11 @@ return new class extends Migration
                 ->constrained('persona_programa', 'id_pep')
                 ->onDelete('cascade');
             $table->foreignId('sed_id')->constrained('sede', 'id_sed');
-            $table->string('tipo_comida', 20)->default('desayuno');
-            $table->date('fecha_regis_diario_c');
-            $table->time('hora')->nullable();
+            $table->string('tipo_comida_rgc', 20)->default('desayuno');
+            $table->date('fecha_comedor_rgc');
+            $table->time('hora_comedor_rgc')->nullable();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -32,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('registro_diario_c');
+        Schema::dropIfExists('registro_comedor');
     }
 };

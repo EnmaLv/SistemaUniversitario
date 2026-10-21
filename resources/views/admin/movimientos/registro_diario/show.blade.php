@@ -192,7 +192,7 @@
                                     Fecha de registro
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($registro->fecha_comedor_rgc)->format('d/m/Y') }}
                                 </p>
                                 <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
                                     Información tomada del formulario enviado.
@@ -204,7 +204,7 @@
                                     Hora registrada
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ $registro->hora ?? '—' }}
+                                    {{ $registro->hora_comedor_rgc ?? '—' }}
                                 </p>
                                 <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
                                     Corresponde a la hora exacta de creación.

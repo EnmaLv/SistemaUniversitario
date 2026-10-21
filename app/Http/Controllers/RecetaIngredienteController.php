@@ -20,25 +20,25 @@ class RecetaIngredienteController extends Controller
 
         if ($buscar) {
             $query->where(function ($q) use ($buscar) {
-                $q->where('nombre', 'like', "%{$buscar}%");
+                $q->where('nombre_rct', 'like', "%{$buscar}%");
             });
         }
 
         if ($estado !== null && $estado !== '') {
-            $query->where('estado', (int)$estado);
+            $query->where('status_id', (int) $estado === 1 ? Receta::STATUS_ACTIVO : Receta::STATUS_INACTIVO);
         } else {
-            $query->where('estado', 1);
+            $query->where('status_id', Receta::STATUS_ACTIVO);
         }
 
-        $recetas = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $recetas = $query->orderBy('id_rct', 'desc')->paginate(10)->withQueryString();
 
         return view('admin.maestros.receta_ingredientes.index', compact('recetas', 'buscar', 'estado'));
     }
 
     public function create()
     {
-        $recetas = Receta::all();
-        $productos = Producto::all();
+        $recetas = Receta::activos()->get();
+        $productos = Producto::activos()->get();
         $unidades = Unidad::all();
         return view('admin.maestros.receta_ingredientes.create', compact('recetas', 'productos', 'unidades'));
     }
@@ -46,17 +46,17 @@ class RecetaIngredienteController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'recetas_id' => 'required|exists:recetas,id',
+            'rct_id' => 'required|exists:receta,id_rct',
 
             // arrays
             'producto_id' => 'required|array|min:1',
             'producto_id.*' => 'required|exists:producto,id_pdt',
 
-            'cantidad_porcion' => 'nullable|array',
-            'cantidad_porcion.*' => 'nullable|numeric',
+            'cantidad_porcion_rci' => 'nullable|array',
+            'cantidad_porcion_rci.*' => 'nullable|numeric',
 
-            'cantidad_gramos' => 'nullable|array',
-            'cantidad_gramos.*' => 'nullable|numeric',
+            'cantidad_convertida_rci' => 'nullable|array',
+            'cantidad_convertida_rci.*' => 'nullable|numeric',
 
             'unidad_id' => 'required|array',
             'unidad_id.*' => 'required|exists:unidad_medida,id_unm',
@@ -65,7 +65,7 @@ class RecetaIngredienteController extends Controller
         DB::beginTransaction();
         try {
             foreach ($validated['producto_id'] as $index => $productoId) {
-                $cantidad = $validated['cantidad_porcion'][$index] ?? null;
+                $cantidad = $validated['cantidad_porcion_rci'][$index] ?? null;
                 $unidadId = $validated['unidad_id'][$index] ?? null;
 
                 $unidad = Unidad::find($unidadId);
@@ -74,10 +74,10 @@ class RecetaIngredienteController extends Controller
                 if (!$cantidad || !$unidadId) continue;
 
                 RecetaIngrediente::create([
-                    'recetas_id' => $validated['recetas_id'],
+                    'rct_id' => $validated['rct_id'],
                     'pdt_id' => $productoId,
-                    'cantidad_porcion' => $cantidad,
-                    'cantidad_gramos' => $cantidadGramos,
+                    'cantidad_porcion_rci' => $cantidad,
+                    'cantidad_convertida_rci' => $cantidadGramos,
                     'unm_id' => $unidadId,
                 ]);
             }
@@ -95,7 +95,7 @@ class RecetaIngredienteController extends Controller
         $receta = Receta::with('recetaIngredientes.producto', 'recetaIngredientes.unidad')
             ->findOrFail($recetaId);
 
-        $productos = Producto::all();
+        $productos = Producto::activos()->get();
         $unidades = Unidad::all();
 
         return view('admin.maestros.receta_ingredientes.edit', compact(
@@ -108,25 +108,25 @@ class RecetaIngredienteController extends Controller
     public function update(Request $request, $recetaId)
     {
         $validated = $request->validate([
-            'recetas_id' => 'required|exists:recetas,id',
+            'rct_id' => 'required|exists:receta,id_rct',
             'producto_id' => 'nullable|array',
             'producto_id.*' => 'required|exists:producto,id_pdt',
-            'cantidad_porcion' => 'nullable|array',
-            'cantidad_porcion.*' => 'required|numeric|min:0.0001',
+            'cantidad_porcion_rci' => 'nullable|array',
+            'cantidad_porcion_rci.*' => 'required|numeric|min:0.0001',
             'unidad_id' => 'nullable|array',
             'unidad_id.*' => 'required|exists:unidad_medida,id_unm',
         ]);
 
-        if ((int)$validated['recetas_id'] !== (int)$recetaId) {
+        if ((int)$validated['rct_id'] !== (int)$recetaId) {
             return redirect()->back()->withInput()->with('error', 'Id de receta inválido.');
         }
 
         DB::beginTransaction();
         try {
-            RecetaIngrediente::where('recetas_id', $recetaId)->delete();
+            RecetaIngrediente::where('rct_id', $recetaId)->delete();
 
             foreach ($validated['producto_id'] ?? [] as $index => $productoId) {
-                $cantidad = $validated['cantidad_porcion'][$index] ?? null;
+                $cantidad = $validated['cantidad_porcion_rci'][$index] ?? null;
                 $unidadId = $validated['unidad_id'][$index] ?? null;
 
                 $unidad = Unidad::find($unidadId);
@@ -136,10 +136,10 @@ class RecetaIngredienteController extends Controller
                 if (!$cantidad || !$unidadId) continue;
 
                 RecetaIngrediente::create([
-                    'recetas_id' => $recetaId,
+                    'rct_id' => $recetaId,
                     'pdt_id' => $productoId,
-                    'cantidad_porcion' => $cantidad,
-                    'cantidad_gramos' => $cantidadGramos,
+                    'cantidad_porcion_rci' => $cantidad,
+                    'cantidad_convertida_rci' => $cantidadGramos,
                     'unm_id' => $unidadId,
                 ]);
             }
@@ -155,7 +155,7 @@ class RecetaIngredienteController extends Controller
 
     public function destroy($recetaId)
     {
-        RecetaIngrediente::where('recetas_id', $recetaId)->delete();
+        RecetaIngrediente::where('rct_id', $recetaId)->delete();
 
         return redirect()
             ->route('admin.maestros.receta_ingredientes.index')

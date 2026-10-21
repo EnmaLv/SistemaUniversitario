@@ -39,7 +39,7 @@ class RegisterNoti extends Component
     ];
 
     public $receta_id = null;
-    public $cantidad_servido = null;
+    public $cantidad_servida_drc = null;
     public $desayuno_registrado = false;
     public $desayuno_del_dia = null;
     public $horarioPermitido = false;
@@ -131,12 +131,10 @@ class RegisterNoti extends Component
         ]);
 
         SobranteComedor::create([
-            'fecha'             => $validated['fecha'],
-            'cantidad_sobrante' => $validated['sobrante'],
-            'motivo'            => $validated['motivo'],
-            'accion_tomada'     => $validated['accion'],
-            'created_at'        => now(),
-            'updated_at'        => now(),
+            'fecha_sbc'             => $validated['fecha'],
+            'cantidad_sobrante_sbc' => $validated['sobrante'],
+            'motivo_sbc'            => $validated['motivo'],
+            'accion_tomada_sbc'     => $validated['accion'],
         ]);
 
         $this->enableInput      = false;
@@ -151,15 +149,15 @@ class RegisterNoti extends Component
 
     private function recalcularSobrante()
     {
-        $registradosHoy = Registro_diario::where('fecha_regis_diario_c', date('Y-m-d'))->count();
-        $desayunoDelDia = DetalleRegistroDiario::whereDate('fecha', now()->format('Y-m-d'))->get();
+        $registradosHoy = Registro_diario::where('fecha_comedor_rgc', date('Y-m-d'))->count();
+        $desayunoDelDia = DetalleRegistroDiario::whereDate('fecha_drc', now()->format('Y-m-d'))->get();
 
         if ($desayunoDelDia->isEmpty()) {
             $this->sobrante = 0;
             return;
         }
 
-        $desayunoTotal = $desayunoDelDia->sum('cantidad_servido');
+        $desayunoTotal = $desayunoDelDia->sum('cantidad_servida_drc');
 
         $this->sobrante = $desayunoTotal - $registradosHoy;
     }
@@ -167,11 +165,11 @@ class RegisterNoti extends Component
     private function calcularRacionesDeComida(string $tipo): array
     {
         $servidas = (int) DetalleRegistroDiario::whereDate('created_at', now()->toDateString())
-            ->where('tipo_comida', $tipo)
-            ->sum('cantidad_servido');
+            ->where('tipo_comida_drc', $tipo)
+            ->sum('cantidad_servida_drc');
 
-        $registradas = Registro_diario::where('fecha_regis_diario_c', now()->toDateString())
-            ->where('tipo_comida', $tipo)
+        $registradas = Registro_diario::where('fecha_comedor_rgc', now()->toDateString())
+            ->where('tipo_comida_rgc', $tipo)
             ->count();
 
         return [
@@ -203,7 +201,7 @@ class RegisterNoti extends Component
         $this->tipoComidaLabel  = $this->getVentanas()[$tipo]['label'];
 
         $detalleComida = DetalleRegistroDiario::whereDate('created_at', now()->toDateString())
-            ->where('tipo_comida', $tipo)
+            ->where('tipo_comida_drc', $tipo)
             ->exists();
 
         if (!$detalleComida) {
@@ -241,8 +239,8 @@ class RegisterNoti extends Component
         if ($persona) {
 
             $is_register = Registro_diario::where('per_id', $persona->id_per)
-                ->where('fecha_regis_diario_c', date('Y-m-d'))
-                ->where('tipo_comida', $tipo)
+                ->where('fecha_comedor_rgc', date('Y-m-d'))
+                ->where('tipo_comida_rgc', $tipo)
                 ->exists();
 
             if ($is_register) {
@@ -270,13 +268,16 @@ class RegisterNoti extends Component
                     throw new Exception('El estudiante no tiene un PNF asignado.');
                 }
 
-                DB::table('registro_diario_c')->insert([
-                    'sed_id'              => \App\Support\Sedes\SedeActiva::idParaCrear(),
-                    'per_id'           => $persona->id_per,
-                    'pep_id'       => $personaPnf->id_pep,
-                    'tipo_comida'          => $tipo,
-                    'fecha_regis_diario_c' => date('Y-m-d'),
-                    'hora'                 => date('H:i:s'),
+                DB::table('registro_comedor')->insert([
+                    'sed_id'            => \App\Support\Sedes\SedeActiva::idParaCrear(),
+                    'per_id'            => $persona->id_per,
+                    'pep_id'            => $personaPnf->id_pep,
+                    'tipo_comida_rgc'   => $tipo,
+                    'fecha_comedor_rgc' => date('Y-m-d'),
+                    'hora_comedor_rgc'  => date('H:i:s'),
+                    'created_id'        => auth()->id(),
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
                 ]);
 
                 DB::commit();
@@ -343,8 +344,9 @@ class RegisterNoti extends Component
         $this->fecha_desde = empty($this->fecha_desde) ? $hoy : $this->fecha_desde;
         $this->fecha_hasta = empty($this->fecha_hasta) ? $hoy : $this->fecha_hasta;
 
-        $cierreHoy = \App\Support\Sedes\SedeActiva::filtrar(DB::table('sobrantes_comedor'), 'sed_id')
-            ->whereDate('fecha', now()->format('Y-m-d'))
+        $cierreHoy = \App\Support\Sedes\SedeActiva::filtrar(DB::table('sobrante_comedor'), 'sed_id')
+            ->whereNull('deleted_at')
+            ->whereDate('fecha_sbc', now()->format('Y-m-d'))
             ->exists();
 
         $this->recalcularSobrante();
@@ -407,7 +409,7 @@ class RegisterNoti extends Component
 
         if ($tipo) {
             $receta_diario = DetalleRegistroDiario::whereDate('created_at', now()->toDateString())
-                ->where('tipo_comida', $tipo)
+                ->where('tipo_comida_drc', $tipo)
                 ->exists();
         }
 
@@ -418,8 +420,8 @@ class RegisterNoti extends Component
         ];
 
         $data = Registro_diario::showData($filter);
-        $comidas = Receta::orderBy('id', 'desc')
-            ->where('estado', true)
+        $comidas = Receta::orderBy('id_rct', 'desc')
+            ->where('status_id', Receta::STATUS_ACTIVO)
             ->get();
 
         return view('livewire.register-noti', [

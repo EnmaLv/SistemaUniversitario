@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sobrantes_comedor', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('sed_id')->constrained('sede', 'id_sed');
-            $table->date('fecha');
-            $table->integer('cantidad_sobrante');
-            $table->text('motivo');
-            $table->text('accion_tomada');
+        Schema::create('receta', function (Blueprint $table) {
+            $table->id('id_rct');
+            $table->string('nombre_rct');
+            $table->text('descripcion_rct')->nullable();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sobrante_comedors');
+        Schema::dropIfExists('receta');
     }
 };
