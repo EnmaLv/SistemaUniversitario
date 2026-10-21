@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('inventario_totals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('protucto_id')->constrained('productos')->onDelete('cascade');
+            $table->foreignId('producto_id')->constrained('productos')->onDelete('cascade');
             $table->foreignId('sede_id')->constrained('sede')->onDelete('cascade');
             $table->decimal('cantidad_total', 14, 2)->default(0);
+            $table->decimal('cantidad_convertida_total', 14, 2)->default(0);
             $table->timestamps();
+
+            $table->unique(['producto_id', 'sede_id']);
         });
     }
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\Inventario\ServicioInventario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -34,8 +35,8 @@ class InventarioInicialSeeder extends Seeder
                 'codigo_lote'       => 'INI-' . $codigo,
                 'fecha_entrada'     => now()->toDateString(),
                 'fecha_vencimiento' => now()->addMonths(6)->toDateString(),
-                'cantidad_inicial'  => $total,
-                'cantidad_actual'   => $total,
+                'cantidad_inicial'  => $total * (float) ($producto->peso_contenido ?: 1),
+                'cantidad_actual'   => 0,
                 'precio_compra'     => 1,
                 'estado'            => 1,
                 'producto_id'       => $producto->id,
@@ -45,32 +46,10 @@ class InventarioInicialSeeder extends Seeder
             ]);
 
             foreach ($porSede as $sede => $cantidad) {
-                $convertida = $cantidad * (float) ($producto->peso_contenido ?: 1);
-
-                DB::table('inventario_sede_lotes')->insert([
-                    'sede_id'             => $sede,
-                    'lote_id'             => $loteId,
-                    'cantidad'            => $cantidad,
-                    'cantidad_convertida' => $convertida,
-                    'created_at'          => now(),
-                    'updated_at'          => now(),
-                ]);
-
-                DB::table('movimiento_inventarios')->insert([
-                    'producto_id'         => $producto->id,
-                    'lote_id'             => $loteId,
-                    'sede_id'             => $sede,
-                    'tipo_movimiento'     => 'ENTRADA',
-                    'cantidad'            => $cantidad,
-                    'cantidad_convertida' => $convertida,
-                    'cantidad_anterior'   => 0,
-                    'cantidad_final'      => $cantidad,
-                    'referencia_type'     => 'inventario_inicial',
-                    'unidad_id'           => $producto->unidad_id,
-                    'fecha'               => now(),
-                    'observaciones'       => 'Inventario inicial de los seeders',
-                    'created_at'          => now(),
-                    'updated_at'          => now(),
+                app(ServicioInventario::class)->entrada($loteId, $sede, $cantidad, $cantidad * (float) ($producto->peso_contenido ?: 1), [
+                    'unidad_id'       => $producto->unidad_id,
+                    'referencia_type' => 'inventario_inicial',
+                    'observaciones'   => 'Inventario inicial de los seeders',
                 ]);
             }
         }

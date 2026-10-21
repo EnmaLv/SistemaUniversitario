@@ -34,6 +34,45 @@
                 </a>
             </div>
 
+            @if ($totales->isNotEmpty())
+                <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                    class="rounded-2xl border shadow-sm overflow-hidden mb-6">
+                    <div class="p-5 sm:p-6 border-b" style="border-color: var(--border-color);">
+                        <h3 class="text-lg font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                            <i class="fas fa-boxes-stacked text-red-700 dark:text-red-500"></i>
+                            Total por producto
+                        </h3>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Consolidado de todos los lotes de la sede, comparado con el stock mínimo y máximo del producto.
+                        </p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="text-[11px] font-black uppercase tracking-wider border-b" style="border-color: var(--border-color); color: var(--text-muted);">
+                                    <th class="px-6 py-3">Producto</th>
+                                    <th class="px-6 py-3 text-center">Existencia</th>
+                                    <th class="px-6 py-3 text-center">Unidad base</th>
+                                    <th class="px-6 py-3 text-center">Mínimo / Máximo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($totales as $total)
+                                    <tr class="border-b" style="border-color: var(--border-color); color: var(--text-main);">
+                                        <td class="px-6 py-3 font-bold">{{ $total->producto->nombre ?? 'Producto' }}</td>
+                                        <td class="px-6 py-3 text-center">
+                                            <x-alerta-stock :total="$total->cantidad_total" :minimo="$total->producto?->stock_minimo" :maximo="$total->producto?->stock_maximo" />
+                                        </td>
+                                        <td class="px-6 py-3 text-center">{{ number_format($total->cantidad_convertida_total, 2, ',', '.') }}</td>
+                                        <td class="px-6 py-3 text-center">{{ $total->producto->stock_minimo ?? '—' }} / {{ $total->producto->stock_maximo ?? '—' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm overflow-hidden">
 

@@ -16,43 +16,35 @@ class LoteController extends Controller
 {
     private function procesarLotesVencidos()
     {
-        DB::transaction(function () {
-            $lotesVencidos = Lote::with(['producto', 'inventarioSedeLotes'])
-                ->whereDate('fecha_vencimiento', '<=', now())
+        $servicio = app(\App\Support\Inventario\ServicioInventario::class);
+        $sede = \App\Support\Sedes\SedeActiva::id();
+
+        DB::transaction(function () use ($servicio, $sede) {
+            $lotesVencidos = Lote::whereDate('fecha_vencimiento', '<=', now())
                 ->where('estado', 1)
                 ->get();
 
             foreach ($lotesVencidos as $lote) {
-                $unidadId = $lote->producto->unidad_id;
+                $existencias = DB::table('inventario_sede_lotes')
+                    ->where('lote_id', $lote->id)
+                    ->when($sede !== null, fn ($consulta) => $consulta->where('sede_id', $sede))
+                    ->where('cantidad', '>', 0)
+                    ->get();
 
-                foreach ($lote->inventarioSedeLotes as $inv) {
-                    if ($inv->cantidad_gramos <= 0) {
-                        continue;
-                    }
-
-                    MovimientoInventario::create([
-                        'producto_id'     => $lote->producto_id,
-                        'lote_id'         => $lote->id,
-                        'sede_id'         => $inv->sede_id,
-                        'tipo_movimiento' => 'MERMA',
-                        'unidad_id'       => $unidadId,
-                        'cantidad'        => 0,
-                        'cantidad_gramos' => $inv->cantidad_gramos,
-                        'fecha'           => now(),
-                        'observaciones'   => 'Producto vencido – merma manual'
-                    ]);
-
-                    $inv->update([
-                        'cantidad'        => 0,
-                        'cantidad_gramos' => 0
+                foreach ($existencias as $existencia) {
+                    $servicio->salida((int) $lote->id, (int) $existencia->sede_id, (float) $existencia->cantidad, (float) $existencia->cantidad_convertida, [
+                        'tipo'            => \App\Support\Inventario\ServicioInventario::MERMA,
+                        'referencia_type' => 'lote_vencido',
+                        'referencia_id'   => $lote->id,
+                        'observaciones'   => 'Producto vencido – merma manual',
                     ]);
                 }
 
-                $lote->update([
-                    'cantidad_inicial' => 0,
-                    'cantidad_actual'  => 0,
-                    'estado'           => 0
-                ]);
+                $quedaStock = DB::table('inventario_sede_lotes')->where('lote_id', $lote->id)->where('cantidad', '>', 0)->exists();
+
+                if (! $quedaStock) {
+                    $lote->update(['estado' => 0]);
+                }
             }
         });
     }

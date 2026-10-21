@@ -24,6 +24,8 @@ return new class extends Migration
             $table->decimal('cantidad_anterior', 14, 2)->nullable();
             $table->decimal('cantidad_final', 14, 2)->nullable();
             $table->string('referencia_type', 50)->nullable();
+            $table->unsignedBigInteger('referencia_id')->nullable();
+            $table->foreignId('usuario_id')->nullable()->constrained('usuario', 'id_usuario')->nullOnDelete();
             $table->foreignId('unidad_id')->constrained('unidades')->onDelete('cascade');
             $table->timestamp('fecha')->useCurrent();
             $table->text('observaciones')->nullable();

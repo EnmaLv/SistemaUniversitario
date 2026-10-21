@@ -5,7 +5,6 @@ namespace App\Services\Salud;
 use App\Exceptions\Salud\StockInsuficienteException;
 use App\Models\InventarioSedeLote;
 use App\Models\Lote;
-use App\Models\MovimientoInventario;
 use App\Models\Unidad;
 use App\Models\salud\Consulta;
 use App\Models\salud\DetalleRecetasMedica;
@@ -228,19 +227,8 @@ class DispensacionService
         }
 
         $cantidadConvertida = round($cantidad * $factor, 2);
-        $cantAntes          = (float) $inventario->cantidad;
-        $cantDespues        = $cantAntes - $cantidad;
 
-        $inventario->update([
-            'cantidad'            => $cantDespues,
-            'cantidad_convertida' => max(0, (float) $inventario->cantidad_convertida - $cantidadConvertida),
-        ]);
-
-        $lote->update([
-            'cantidad_actual' => max(0, (float) $lote->cantidad_actual - $cantidad),
-        ]);
-
-        Dispensacion::create([
+        $dispensacion = Dispensacion::create([
             'receta_medica_id'         => $receta->id,
             'detalle_receta_medica_id' => $detalle->id,
             'producto_id'              => $detalle->producto_id,
@@ -254,20 +242,12 @@ class DispensacionService
             'observaciones'            => $observaciones,
         ]);
 
-        MovimientoInventario::create([
-            'producto_id'         => $detalle->producto_id,
-            'lote_id'             => $lote->id,
-            'sede_id'             => $sedeId,
-            'modulo_origen_id'    => null,
-            'tipo_movimiento'     => 'SALIDA',
-            'unidad_id'           => $detalle->unidad_id,
-            'cantidad'            => $cantidad,
-            'cantidad_convertida' => $cantidadConvertida,
-            'cantidad_anterior'   => $cantAntes,
-            'cantidad_final'      => $cantDespues,
-            'referencia_type'     => 'Dispensacion',
-            'fecha'               => now()->toDateString(),
-            'observaciones'       => 'Dispensación en consulta #' . $consulta->id . ' · Lote ' . $lote->codigo_lote,
+        app(\App\Support\Inventario\ServicioInventario::class)->salida($lote->id, $sedeId, $cantidad, $cantidadConvertida, [
+            'unidad_id'       => $detalle->unidad_id,
+            'referencia_type' => 'Dispensacion',
+            'referencia_id'   => $dispensacion->id,
+            'usuario_id'      => $usuarioId,
+            'observaciones'   => 'Dispensación en consulta #' . $consulta->id . ' · Lote ' . $lote->codigo_lote,
         ]);
 
         return $cantidad;

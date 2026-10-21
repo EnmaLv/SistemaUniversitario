@@ -289,144 +289,42 @@ class Compra extends Model
 
     public static function finalizarCompraDistribuida($compra)
     {
-        DB::beginTransaction();
+        return DB::transaction(function () use ($compra) {
+            $registro = DB::table('compras')->where('id', $compra->id)->lockForUpdate()->first();
 
-        try {
-            $sedes = DB::table('sede')
-                ->where('activo', 1)
-                ->orderByRaw("id = 1 DESC")
-                ->get();
-
-            if ($sedes->isEmpty()) {
-                throw new \Exception('No existen sedes activas.');
+            if (! $registro) {
+                throw new \Exception('La requisición no existe.');
             }
 
-            $acariguaId = 1;
-            $cantidadSedes = $sedes->count();
+            if ($registro->estado === 'Finalizada') {
+                throw new \Exception('La requisición ya fue finalizada.');
+            }
 
-            $detalles = DB::table('detalle_compras')
-                ->where('compra_id', $compra->id)
-                ->get();
+            $sedeId = (int) ($registro->sede_id ?: \App\Support\Sedes\SedeActiva::idParaCrear());
+            $servicio = app(\App\Support\Inventario\ServicioInventario::class);
+
+            $detalles = DB::table('detalle_compras')->where('compra_id', $registro->id)->get();
 
             foreach ($detalles as $detalle) {
-                $producto = DB::table('productos')->where('id', $detalle->producto_id)->first();
-                if (!$producto) {
-                    throw new \Exception("Producto {$detalle->producto_id} no encontrado.");
+                if ((float) $detalle->cantidad <= 0) {
+                    continue;
                 }
 
-                $stockMaximo = $producto->stock_maximo;
-                $gramosPorUnidad = $detalle->cantidad_convertida / $detalle->cantidad;
-                $cantidadBase = intdiv($detalle->cantidad, $cantidadSedes);
-                $resto = $detalle->cantidad % $cantidadSedes;
-                $cantidadRestante = 0;
-
-                foreach ($sedes as $index => $sede) {
-                    $cantidadEquitativa = $cantidadBase + ($index < $resto ? 1 : 0);
-
-                    if ($cantidadEquitativa <= 0) {
-                        continue;
-                    }
-
-                    if ($sede->id != $acariguaId) {
-                        $stockActual = DB::table('inventario_sede_lotes')
-                            ->join('lotes', 'lotes.id', '=', 'inventario_sede_lotes.lote_id')
-                            ->where('lotes.producto_id', $producto->id)
-                            ->where('inventario_sede_lotes.sede_id', $sede->id)
-                            ->sum('inventario_sede_lotes.cantidad');
-
-                        $espacioDisponible = max(0, $stockMaximo - $stockActual);
-                        $cantidadAsignada = min($cantidadEquitativa, $espacioDisponible);
-                        $sobrante = $cantidadEquitativa - $cantidadAsignada;
-                        $cantidadRestante += $sobrante;
-                    } else {
-                        $cantidadAsignada = $cantidadEquitativa;
-                    }
-
-                    if ($cantidadAsignada > 0) {
-                        $gramosAsignados = $cantidadAsignada * $gramosPorUnidad;
-                        $inventario = DB::table('inventario_sede_lotes')
-                            ->where('lote_id', $detalle->lote_id)
-                            ->where('sede_id', $sede->id)
-                            ->first();
-
-                        if ($inventario) {
-                            DB::table('inventario_sede_lotes')
-                                ->where('id', $inventario->id)
-                                ->update([
-                                    'cantidad'        => $inventario->cantidad + $cantidadAsignada,
-                                    'cantidad_convertida' => $inventario->cantidad_convertida + $gramosAsignados,
-                                ]);
-                        } else {
-                            DB::table('inventario_sede_lotes')->insert([
-                                'lote_id'         => $detalle->lote_id,
-                                'sede_id'         => $sede->id,
-                                'cantidad'        => $cantidadAsignada,
-                                'cantidad_convertida' => $gramosAsignados,
-                            ]);
-                        }
-
-                        DB::table('movimiento_inventarios')->insert([
-                            'producto_id'     => $detalle->producto_id,
-                            'lote_id'         => $detalle->lote_id,
-                            'sede_id'         => $sede->id,
-                            'tipo_movimiento' => 'ENTRADA',
-                            'unidad_id'       => $detalle->unidad_id,
-                            'cantidad'        => $cantidadAsignada,
-                            'cantidad_convertida' => $gramosAsignados,
-                            'fecha'           => now(),
-                        ]);
-                    }
-                }
-
-                if ($cantidadRestante > 0) {
-                    $gramosAsignados = $cantidadRestante * $gramosPorUnidad;
-
-                    $inventario = DB::table('inventario_sede_lotes')
-                        ->where('lote_id', $detalle->lote_id)
-                        ->where('sede_id', $acariguaId)
-                        ->first();
-
-                    if ($inventario) {
-                        DB::table('inventario_sede_lotes')
-                            ->where('id', $inventario->id)
-                            ->update([
-                                'cantidad'        => $inventario->cantidad + $cantidadRestante,
-                                'cantidad_convertida' => $inventario->cantidad_convertida + $gramosAsignados,
-                            ]);
-                    } else {
-                        DB::table('inventario_sede_lotes')->insert([
-                            'lote_id'         => $detalle->lote_id,
-                            'sede_id'         => $acariguaId,
-                            'cantidad'        => $cantidadRestante,
-                            'cantidad_convertida' => $gramosAsignados,
-                        ]);
-                    }
-
-                    DB::table('movimiento_inventarios')->insert([
-                        'producto_id'     => $detalle->producto_id,
-                        'lote_id'         => $detalle->lote_id,
-                        'sede_id'         => $acariguaId,
-                        'tipo_movimiento' => 'ENTRADA',
-                        'unidad_id'       => $detalle->unidad_id,
-                        'cantidad'        => $cantidadRestante,
-                        'cantidad_convertida' => $gramosAsignados,
-                        'fecha'           => now(),
-                    ]);
-                }
+                $servicio->entrada((int) $detalle->lote_id, $sedeId, (float) $detalle->cantidad, (float) $detalle->cantidad_convertida, [
+                    'unidad_id'        => $detalle->unidad_id,
+                    'modulo_origen_id' => $registro->modulo_id,
+                    'referencia_type'  => 'compra',
+                    'referencia_id'    => $registro->id,
+                    'observaciones'    => 'Entrada por requisición #' . $registro->id,
+                ]);
             }
 
-            DB::table('compras')
-                ->where('id', $compra->id)
-                ->update([
-                    'estado' => 'Finalizada',
-                    'updated_at' => now(),
-                ]);
+            DB::table('compras')->where('id', $registro->id)->update([
+                'estado'     => 'Finalizada',
+                'updated_at' => now(),
+            ]);
 
-            DB::commit();
             return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        });
     }
 }

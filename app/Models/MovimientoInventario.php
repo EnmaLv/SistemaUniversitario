@@ -23,6 +23,8 @@ class MovimientoInventario extends Model
         'cantidad_anterior',
         'cantidad_final',
         'referencia_type',
+        'referencia_id',
+        'usuario_id',
         'fecha',
         'observaciones',
     ];

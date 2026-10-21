@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
         ]);
         \App\Models\Proveedor::factory(1)->create();
         $this->call(InventarioInicialSeeder::class);
+        \Illuminate\Support\Facades\Artisan::call('inventario:recalcular-totales');
         $this->call(PermisosSeeder::class);
     }
 }

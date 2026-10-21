@@ -6,7 +6,6 @@ use Livewire\Component;
 use App\Models\Receta;
 use App\Models\DetalleRegistroDiario;
 use App\Models\InventarioSedeLote;
-use App\Models\MovimientoInventario;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -375,56 +374,21 @@ class RegistroComida extends Component
                         continue;
                     }
 
-                    $totalDescontarGramos = $cantidadPorUnidad * $cantidadServido;
-                    $pesoUnidad = (float) $ingrediente->producto->peso_contenido;
+                    $pendiente = $cantidadPorUnidad * $cantidadServido;
 
-                    if ($pesoUnidad <= 0) {
-                        $pesoUnidad = 1;
-                    }
+                    $servicio = app(\App\Support\Inventario\ServicioInventario::class);
 
-                    $lotes = InventarioSedeLote::where('sede_id', $sedeId)
-                        ->whereHas('lote', function ($q) use ($ingrediente) {
-                            $q->where('producto_id', $ingrediente->producto_id)
-                                ->whereDate('fecha_vencimiento', '>=', now()->toDateString())
-                                ->where('estado', 1);
-                        })
-                        ->where('cantidad_convertida', '>', 0)
-                        ->orderBy('lote_id', 'asc')
-                        ->get();
-
-                    $pendiente = $totalDescontarGramos;
-
-                    foreach ($lotes as $inv) {
+                    foreach ($servicio->existenciasDisponibles((int) $ingrediente->producto_id, (int) $sedeId) as $inv) {
 
                         if ($pendiente <= 0) break;
 
-                        $dispGramos  = $inv->cantidad_convertida;
-                        $tomarGramos = min($pendiente, $dispGramos);
+                        $tomarGramos = min($pendiente, (float) $inv->cantidad_convertida);
 
-                        $inv->cantidad_convertida -= $tomarGramos;
-                        $inv->cantidad = max(0, (int) floor($inv->cantidad_convertida / $pesoUnidad));
-                        $inv->save();
-
-                        $lote = $inv->lote;
-                        $lote->cantidad_actual = (float) InventarioSedeLote::where('lote_id', $lote->id)
-                            ->sum('cantidad_convertida');
-                        $lote->save();
-
-                        $factorUnidad = (float) ($ingrediente->unidad?->factor_a_gramo ?? 0);
-                        $cantidadEnUnidad = $factorUnidad > 0
-                            ? $tomarGramos / $factorUnidad
-                            : $tomarGramos;
-
-                        MovimientoInventario::create([
-                            'producto_id'         => $ingrediente->producto_id,
-                            'lote_id'             => $lote->id,
-                            'sede_id'             => $sedeId,
-                            'tipo_movimiento'     => 'SALIDA',
-                            'unidad_id'           => $ingrediente->unidad_id,
-                            'cantidad'            => $cantidadEnUnidad,
-                            'cantidad_convertida' => $tomarGramos,
-                            'fecha'               => now(),
-                            'observaciones'       => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
+                        $servicio->salidaPorConvertida((int) $inv->lote_id, (int) $sedeId, $tomarGramos, [
+                            'unidad_id'       => $ingrediente->unidad_id,
+                            'referencia_type' => 'consumo_comedor',
+                            'referencia_id'   => $recetaId,
+                            'observaciones'   => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
                         ]);
 
                         $pendiente -= $tomarGramos;

@@ -62,16 +62,9 @@ class Producto extends Model
         return $this->hasMany(Lote::class);
     }
 
-    public function inventarioSedeAcarigua()
+    public function totales()
     {
-        return $this->hasManyThrough(
-            InventarioSedeLote::class,
-            Lote::class,
-            'producto_id',
-            'lote_id',
-            'id',
-            'id'
-        )->where('inventario_sede_lotes.sede_id', 1);
+        return $this->hasMany(InventarioTotal::class);
     }
 
     public function movimientos()
@@ -94,9 +87,8 @@ class Producto extends Model
         $query = self::with(['categoria', 'unidad'])
             ->select('productos.*')
             ->join('categorias', 'productos.categoria_id', '=', 'categorias.id')
-            ->withSum([
-                'inventarioSedeAcarigua as cantidad_actual' => function ($query) {}
-            ], 'cantidad_convertida');
+            ->withSum('totales as cantidad_actual', 'cantidad_convertida_total')
+            ->withSum('totales as total_presentacion', 'cantidad_total');
 
         if ($tipoProductoId !== null) {
             $query->where('categorias.tipo_producto_id', $tipoProductoId);
@@ -357,20 +349,11 @@ class Producto extends Model
 
     public static function tieneInventarioEnAcarigua($productoId)
     {
-        return DB::table('inventario_sede_lotes as isl')
-            ->join('lotes as l', 'l.id', '=', 'isl.lote_id')
-            ->where('l.producto_id', $productoId)
-            ->where('isl.sede_id', 1)
-            ->where('isl.cantidad_convertida', '>', 0)
-            ->exists();
+        return InventarioTotal::where('producto_id', $productoId)->where('cantidad_convertida_total', '>', 0)->exists();
     }
 
     public static function cantidadEnAcarigua($productoId)
     {
-        return DB::table('inventario_sede_lotes as isl')
-            ->join('lotes as l', 'l.id', '=', 'isl.lote_id')
-            ->where('l.producto_id', $productoId)
-            ->where('isl.sede_id', 1)
-            ->sum('isl.cantidad_convertida');
+        return (float) InventarioTotal::where('producto_id', $productoId)->sum('cantidad_convertida_total');
     }
 }

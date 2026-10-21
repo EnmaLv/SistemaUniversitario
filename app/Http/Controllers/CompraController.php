@@ -96,9 +96,13 @@ class CompraController extends Controller
             ]);
         }
 
-        Compra::finalizarCompraDistribuida($compra);
+        try {
+            Compra::finalizarCompraDistribuida($compra);
+        } catch (\Throwable $e) {
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e));
+        }
 
-        return redirect()->route('admin.movimientos.compras.index')->with('success', 'Requisición finalizada y distribuida equitativamente.');
+        return redirect()->route('admin.movimientos.compras.index')->with('success', 'Requisición finalizada: el stock entró a la sede de la requisición.');
     }
 
     public function cancelar(Compra $compra)

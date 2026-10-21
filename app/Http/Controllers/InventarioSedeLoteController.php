@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventarioSedeLote;
+use App\Models\InventarioTotal;
 use App\Models\Sede;
 use Illuminate\Http\Request;
 
@@ -46,6 +47,11 @@ class InventarioSedeLoteController extends Controller
 
         $sedes = Sede::withCount('inventarioSedeLotes')->get();
 
-        return view('admin.movimientos.sedes_lotes.show', compact('sede', 'sedes', 'buscar', 'activo'));
+        $totales = InventarioTotal::with('producto')
+            ->where('sede_id', $id)
+            ->orderByDesc('cantidad_total')
+            ->get();
+
+        return view('admin.movimientos.sedes_lotes.show', compact('sede', 'sedes', 'buscar', 'activo', 'totales'));
     }
 }

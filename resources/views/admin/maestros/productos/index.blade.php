@@ -166,6 +166,11 @@
                                                 {{ $producto->cantidad_actual }}
                                             </span>
                                         @endif
+                                        @if ($producto->total_presentacion !== null)
+                                            <div class="mt-1">
+                                                <x-alerta-stock :total="$producto->total_presentacion" :minimo="$producto->stock_minimo" :maximo="$producto->stock_maximo" />
+                                            </div>
+                                        @endif
                                     </td>
                                     <td
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">

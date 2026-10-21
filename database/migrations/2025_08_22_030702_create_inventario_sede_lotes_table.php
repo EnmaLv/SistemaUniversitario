@@ -16,10 +16,12 @@ return new class extends Migration
 
             $table->foreignId('sede_id')->constrained('sede')->onDelete('cascade');
             $table->foreignId('lote_id')->constrained('lotes')->onDelete('cascade');
-            $table->decimal('cantidad', 14, 2);
-            $table->decimal('cantidad_convertida', 14, 2);
+            $table->decimal('cantidad', 14, 2)->default(0);
+            $table->decimal('cantidad_convertida', 14, 2)->default(0);
 
             $table->timestamps();
+
+            $table->unique(['sede_id', 'lote_id']);
         });
     }
 
