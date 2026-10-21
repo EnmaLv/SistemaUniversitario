@@ -15,6 +15,8 @@ class BecaAsignacionServiceTest extends TestCase
 
     public function test_it_persists_assignment_when_syncing_assignments(): void
     {
+        $this->markTestIncomplete('Prueba previa a la rama de seguridad: usa App\\Models\\Becas\\Beca, que no existe en el proyecto. Reescribir con los modelos actuales.');
+
         $beca = Beca::create([
             'codigo' => 'Beca-test-1',
             'nombre' => 'Beca prueba',

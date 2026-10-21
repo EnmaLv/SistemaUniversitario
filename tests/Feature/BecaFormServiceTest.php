@@ -17,6 +17,8 @@ class BecaFormServiceTest extends TestCase
 
     public function test_tutor_list_contains_only_people_with_roles()
     {
+        $this->markTestIncomplete('Prueba previa a la rama de seguridad: inserta perfil.id_estatus y sucursals, que no existen en el esquema actual. Reescribir con las tablas actuales.');
+
         $estatusId = DB::table('estatus')->insertGetId([
             'nombre_estatus' => 'Activo',
             'created_at' => now(),
@@ -122,6 +124,8 @@ class BecaFormServiceTest extends TestCase
 
     public function test_tutor_list_includes_personas_with_roles_even_if_persona_is_inactive()
     {
+        $this->markTestIncomplete('Prueba previa a la rama de seguridad: inserta perfil.id_estatus y sucursals, que no existen en el esquema actual. Reescribir con las tablas actuales.');
+
         $estatusId = DB::table('estatus')->insertGetId([
             'nombre_estatus' => 'Activo',
             'created_at' => now(),
@@ -194,6 +198,8 @@ class BecaFormServiceTest extends TestCase
 
     public function test_edit_form_defaults_to_no_when_beca_has_no_tutores()
     {
+        $this->markTestIncomplete('Prueba previa a la rama de seguridad: usa App\\Models\\Becas\\Beca, que no existe en el proyecto. Reescribir con los modelos actuales.');
+
         $beca = Beca::create([
             'codigo' => 'TEST-001',
             'nombre' => 'Beca de prueba',
