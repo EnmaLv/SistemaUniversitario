@@ -445,6 +445,11 @@ Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'logout
 Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
 
+Route::middleware('auth')->prefix('seguridad/sesion')->group(function () {
+    Route::get('/estado', [App\Http\Controllers\SesionController::class, 'estado'])->name('seguridad.sesion.estado');
+    Route::post('/mantener', [App\Http\Controllers\SesionController::class, 'mantener'])->name('seguridad.sesion.mantener');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('security-questions', [App\Http\Controllers\Auth\RegisterController::class, 'showSecurityQuestionsForm'])->name('security.questions');
     Route::post('security-questions', [App\Http\Controllers\Auth\RegisterController::class, 'saveSecurityQuestions'])->name('security.questions.save');

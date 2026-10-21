@@ -539,6 +539,8 @@
         </div>
     </div>
 
+    @include('components.aviso-inactividad')
+
     <script>
         const logAuthMenuDiagnostic = () => {
             console.groupCollapsed(`[Auth/Menu Diagnostic] ${@json($authMenuDiagnostic['path'])}`);

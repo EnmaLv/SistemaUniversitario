@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Configuration\Exceptions;
+use App\Http\Middleware\CerrarSesionPorInactividad;
 use App\Http\Middleware\CheckTasaActualizada;
 use App\Http\Middleware\IgnorarTasaHoy;
 use App\Http\Middleware\RegistrarActividad;
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             CheckTasaActualizada::class,
+            CerrarSesionPorInactividad::class,
             VerificarUsuarioBloqueado::class,
             RegistrarActividad::class,
         ]);
