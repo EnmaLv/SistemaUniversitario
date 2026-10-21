@@ -75,11 +75,11 @@ abstract class SeguridadTestCase extends TestCase
         }
 
         foreach (['Sede de pruebas', 'Sede B de pruebas'] as $nombreSede) {
-            if (! DB::table('sede')->where('nombre', $nombreSede)->exists()) {
+            if (! DB::table('sede')->where('nombre_sed', $nombreSede)->exists()) {
                 DB::table('sede')->insert([
-                    'nombre'     => $nombreSede,
-                    'direccion'  => 'Dirección de pruebas',
-                    'telefono'   => '0424-0000000',
+                    'nombre_sed'    => $nombreSede,
+                    'direccion_sed' => 'Dirección de pruebas',
+                    'telefono_sed'  => '0424-0000000',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -111,12 +111,12 @@ abstract class SeguridadTestCase extends TestCase
 
     protected function sedeA(): int
     {
-        return (int) DB::table('sede')->where('nombre', 'Sede de pruebas')->value('id');
+        return (int) DB::table('sede')->where('nombre_sed', 'Sede de pruebas')->value('id_sed');
     }
 
     protected function sedeB(): int
     {
-        return (int) DB::table('sede')->where('nombre', 'Sede B de pruebas')->value('id');
+        return (int) DB::table('sede')->where('nombre_sed', 'Sede B de pruebas')->value('id_sed');
     }
 
     protected function crearUsuario(array|string $roles = [], string $password = 'Secreta123', array $extra = [], ?int $sedeId = null): Usuario
@@ -131,7 +131,7 @@ abstract class SeguridadTestCase extends TestCase
             'genero_persona'   => 'Otro',
             'email_persona'    => "persona{$n}@prueba.test",
             'id_perfil'        => DB::table('perfil')->value('id_perfil'),
-            'id_sede'          => $sedeId ?? $this->sedeA(),
+            'sed_id'          => $sedeId ?? $this->sedeA(),
         ]);
 
         $usuario = new Usuario([

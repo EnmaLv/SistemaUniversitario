@@ -40,12 +40,12 @@ class Registro_diario extends Model
 
     private static function relacionTable()
     {
-        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c'), 'registro_diario_c.sede_id')
+        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c'), 'registro_diario_c.sed_id')
             ->join('persona', 'registro_diario_c.id_persona', '=', 'persona.id_persona')
             ->leftJoin('direccion', 'persona.id_persona', '=', 'direccion.id_persona')
-            ->leftJoin('localidads', 'direccion.id_localidad', '=', 'localidads.id')
-            ->leftJoin('municipios', 'localidads.municipio_id', '=', 'municipios.id')
-            ->leftJoin('estados', 'municipios.estado_id', '=', 'estados.id')
+            ->leftJoin('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
+            ->leftJoin('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
+            ->leftJoin('estado', 'municipio.esd_id', '=', 'estado.id_esd')
             ->join('persona_pnf', 'registro_diario_c.id_persona_pnf', '=', 'persona_pnf.id_persona_pnf')
             ->join('programa', 'persona_pnf.prg_id', '=', 'programa.id_prg');
     }
@@ -91,15 +91,15 @@ class Registro_diario extends Model
         ], 'direccion');
 
         $localidadColumn = formatColumn([
-            'nombre_localidad'
+            'nombre_par'
         ], 'localidads');
 
         $municipioColumn = formatColumn([
-            'nombre_municipio'
+            'nombre_mun'
         ], 'municipios');
 
         $estadoColumn = formatColumn([
-            'nombre_estado'
+            'nombre_esd'
         ], 'estados');
 
         //Lo unimos en un solo array
@@ -112,7 +112,7 @@ class Registro_diario extends Model
     public static function showData(array $filter = [], bool $isPdf = false)
     {
         $query = self::relacionTable()
-            ->select('registro_diario_c.*', 'persona.nombre_persona', 'persona.apellido_persona', 'persona.cedula_persona', 'programa.nombre_prg', 'direccion.sector', 'direccion.calle', 'localidads.nombre_localidad', 'municipios.nombre_municipio', 'estados.nombre_estado');
+            ->select('registro_diario_c.*', 'persona.nombre_persona', 'persona.apellido_persona', 'persona.cedula_persona', 'programa.nombre_prg', 'direccion.sector', 'direccion.calle', 'parroquia.nombre_par', 'municipio.nombre_mun', 'estado.nombre_esd');
 
 
         //Por si hay que buscar por el input

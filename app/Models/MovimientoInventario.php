@@ -14,7 +14,7 @@ class MovimientoInventario extends Model
     protected $fillable = [
         'producto_id',
         'lote_id',
-        'sede_id',
+        'sed_id',
         'modulo_origen_id',
         'tipo_movimiento',
         'unidad_id',
@@ -46,7 +46,7 @@ class MovimientoInventario extends Model
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id');
     }
 
     public static function getData(array $filtro, bool $isPdf)

@@ -6,7 +6,7 @@
 
             @php
                 $sedeId = request()->segment(count(request()->segments()));
-                $sedeNombre = $sedes->firstWhere('id', $sedeId)?->nombre ?? 'Sede';
+                $sedeNombre = $sedes->firstWhere('id_sed', $sedeId)?->nombre_sed ?? 'Sede';
             @endphp
 
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">

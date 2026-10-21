@@ -138,7 +138,7 @@
                                         </div>
                                         <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="sede_destino"
                                             name="sede_destino" placeholder="Sede de destino"
-                                            value="{{ $sede_destino ? $sede_destino->nombre : 'Sin concluir' }}" readonly>
+                                            value="{{ $sede_destino ? $sede_destino->nombre_sed : 'Sin concluir' }}" readonly>
                                     </div>
                                     @error('sede_destino')
                                         <div class="alert text-danger p-0 m-0">

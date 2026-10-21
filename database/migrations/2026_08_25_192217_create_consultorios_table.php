@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('consultorios', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->foreignId('sede_id')->constrained('sede')->onDelete('cascade');
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed')->onDelete('cascade');
             $table->text('descripcion')->nullable();
             $table->tinyInteger('activo')->default(1);
             $table->timestamps();

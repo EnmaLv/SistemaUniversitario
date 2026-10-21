@@ -13,7 +13,7 @@ class InventarioTotal extends Model
 
     protected $fillable = [
         'producto_id',
-        'sede_id',
+        'sed_id',
         'cantidad_total',
         'cantidad_convertida_total',
     ];
@@ -30,7 +30,7 @@ class InventarioTotal extends Model
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id');
     }
 
     public function estadoStock(): string

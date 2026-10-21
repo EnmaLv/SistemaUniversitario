@@ -9,7 +9,7 @@ class VehiculoSeeder extends Seeder
 {
     public function run(): void
     {
-        $sedeId = DB::table('sede')->orderBy('id')->value('id');
+        $sedeId = DB::table('sede')->orderBy('id_sed')->value('id_sed');
 
         if (!$sedeId) {
             $this->command->error('No hay sedes registradas. Ejecuta SedeSeeder antes.');
@@ -114,7 +114,7 @@ class VehiculoSeeder extends Seeder
                     'consumo_relenti'           => $v['consumo_relenti'],
                     'km_actual'                 => $v['km_actual'],
                     'km_proximo_mantenimiento'  => $v['km_proximo_mantenimiento'],
-                    'sede_id'                   => $sedeId,
+                    'sed_id'                   => $sedeId,
                     'activo'                    => $v['activo'],
                     'estado'                    => $v['estado'],
                     'created_at'                => now(),

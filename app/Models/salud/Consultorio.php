@@ -19,14 +19,14 @@ class Consultorio extends Model
 
     protected $fillable = [
         'nombre',
-        'sede_id',
+        'sed_id',
         'descripcion',
         'activo',
     ];
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id');
     }
 
     public function horarios()
@@ -61,7 +61,7 @@ class Consultorio extends Model
         return DB::table('consultorios')->insertGetId([
             'nombre'      => $data['nombre'],
             'descripcion' => $data['descripcion'] ?? null,
-            'sede_id'     => $data['sede_id'],
+            'sed_id'     => $data['sed_id'],
             'activo'      => 1,
             'created_at'  => now(),
             'updated_at'  => now(),
@@ -79,7 +79,7 @@ class Consultorio extends Model
             ->update([
                 'nombre'      => $data['nombre'],
                 'descripcion' => $data['descripcion'],
-                'sede_id'     => $data['sede_id'],
+                'sed_id'     => $data['sed_id'],
                 'updated_at'  => now(),
             ]);
     }

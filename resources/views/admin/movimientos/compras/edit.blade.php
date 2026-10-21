@@ -345,11 +345,10 @@
                                     <i class="fas fa-info-circle text-xs"></i>
                                 </div>
                                 <div class="text-xs" style="color: var(--text-main);">
-                                    <p class="font-bold mb-1">¿Cómo se distribuye?</p>
+                                    <p class="font-bold mb-1">¿A qué sede entra?</p>
                                     <p class="text-gray-500 dark:text-gray-400 leading-relaxed">
-                                        Al finalizar, cada producto se repartirá en <strong>envases completos</strong> entre las sedes activas.
-                                        El sobrante quedará en la sede central (Acarigua). Si una sede necesita menos de un envase
-                                        completo, deberá solicitar una <strong>transferencia interna</strong>.
+                                        Al finalizar, los productos entran completos al inventario de la <strong>sede de la requisición</strong>.
+                                        Para enviar existencias a otra sede se registra una <strong>transferencia interna</strong>.
                                     </p>
                                 </div>
                             </div>

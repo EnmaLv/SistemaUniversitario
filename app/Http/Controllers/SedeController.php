@@ -29,7 +29,7 @@ class SedeController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:sede,nombre'
+                'unique:sede,nombre_sed'
             ],
             'direccion' => 'required|string|max:255',
             'telefono'  => 'required|string|max:20',
@@ -42,7 +42,7 @@ class SedeController extends Controller
         $from = $request->input('from');
 
         if ($from) {
-            return redirect($from . '?sede_id=' . $fromidreuse)
+            return redirect($from . '?sed_id=' . $fromidreuse)
                 ->with('success', 'Sede creada exitosamente.');
         } else {
             return redirect()->route('admin.maestros.sedes.index')
@@ -84,7 +84,7 @@ class SedeController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('sede', 'nombre')->ignore($id),
+                Rule::unique('sede', 'nombre_sed')->ignore($id, 'id_sed'),
             ],
             'direccion' => 'required|string|max:255',
             'telefono'  => 'required|string|max:20',
@@ -148,11 +148,11 @@ class SedeController extends Controller
             fputcsv($out, ['ID', 'Nombre', 'Dirección', 'Teléfono', 'Estado']);
             foreach ($rows as $row) {
                 fputcsv($out, [
-                    $row->id,
-                    $row->nombre,
-                    $row->direccion,
-                    $row->telefono,
-                    $row->activo ? 'Activo' : 'Inactivo'
+                    $row->id_sed,
+                    $row->nombre_sed,
+                    $row->direccion_sed,
+                    $row->telefono_sed,
+                    (int) $row->status_id === 1 ? 'Activo' : 'Inactivo'
                 ]);
             }
 

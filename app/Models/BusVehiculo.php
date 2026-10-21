@@ -30,7 +30,7 @@ class BusVehiculo extends Model
         'consumo_relenti',
         'km_actual',
         'km_proximo_mantenimiento',
-        'sede_id',
+        'sed_id',
         'activo',
         'estado',
     ];
@@ -57,7 +57,7 @@ class BusVehiculo extends Model
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id');
     }
 
     public function conductor()

@@ -66,7 +66,7 @@ class BecaFormServiceTest extends TestCase
             'semestre_persona' => '1',
             'estado' => true,
             'id_perfil' => $perfilId,
-            'id_sede' => $sedeId,
+            'sed_id' => $sedeId,
         ]);
 
         $tutor = Persona::create([
@@ -83,7 +83,7 @@ class BecaFormServiceTest extends TestCase
             'semestre_persona' => null,
             'estado' => true,
             'id_perfil' => $tutorPerfilId,
-            'id_sede' => $sedeId,
+            'sed_id' => $sedeId,
         ]);
 
         $roleId = DB::table('rol')->insertGetId([
@@ -166,7 +166,7 @@ class BecaFormServiceTest extends TestCase
             'semestre_persona' => null,
             'estado' => false,
             'id_perfil' => $perfilId,
-            'id_sede' => $sedeId,
+            'sed_id' => $sedeId,
         ]);
 
         $roleId = DB::table('rol')->insertGetId([

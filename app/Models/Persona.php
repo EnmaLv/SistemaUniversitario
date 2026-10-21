@@ -15,7 +15,7 @@ class Persona extends Model
     use ConvierteAMayusculasNoEloquent;
     use PerteneceASede;
 
-    protected $columnaSede = 'id_sede';
+    protected $columnaSede = 'sed_id';
 
     protected $sedeSoloExplicita = true;
 
@@ -37,7 +37,7 @@ class Persona extends Model
         'semestre_persona',
         'estado',
         'id_perfil',
-        'id_sede',
+        'sed_id',
         
     ];
     private static function formatearTelefono($numero)
@@ -84,7 +84,7 @@ class Persona extends Model
                 'email_persona' => $data['email'],
                 'semestre_persona' => $data['semestreId'],
                 'id_perfil' => 2,
-                'id_sede' => $data['sedeId'] ?? null,
+                'sed_id' => $data['sedeId'] ?? null,
             ]);
 
             //Guardamos la direccion
@@ -93,7 +93,7 @@ class Persona extends Model
                 'sector' => $data['sector'],
                 'calle' => $data['calle'],
                 'id_persona' => $personaId,
-                'id_localidad' => $data['parroquiaId'],
+                'par_id' => $data['parroquiaId'],
             ]);
 
             //Guardamos el pnf y la sede si es un estudiante
@@ -101,7 +101,7 @@ class Persona extends Model
 
             //Asignar la sede
             DB::table('persona')->where('id_persona', $personaId)->update([
-                'id_sede' => $data['sedeId'],
+                'sed_id' => $data['sedeId'],
             ]);
 
 
@@ -144,7 +144,7 @@ class Persona extends Model
                 'fecha_nacimiento_persona' => $data['fecha_nacimiento'],
                 'email_persona'            => $data['email'],
                 'semestre_persona'         => $data['semestreId'],
-                'id_sede'                  => $data['sedeId'] ?? null,
+                'sed_id'                  => $data['sedeId'] ?? null,
             ]);
 
             $personaExistente = DB::table('persona')
@@ -177,7 +177,7 @@ class Persona extends Model
                 [
                     'sector'       => $data['sector'],
                     'calle'        => $data['calle'],
-                    'id_localidad' => $data['parroquiaId'],
+                    'par_id' => $data['parroquiaId'],
                 ]
             );
 
@@ -202,7 +202,7 @@ class Persona extends Model
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'id_sede', 'id');
+        return $this->belongsTo(Sede::class, 'sed_id', 'id_sed');
     }
 
     public function perfil()

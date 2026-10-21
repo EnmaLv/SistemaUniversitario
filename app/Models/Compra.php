@@ -66,16 +66,17 @@ class Compra extends Model
                 ->get(),
 
             'sedes' => DB::table('sede')
-                ->select('id', 'nombre')
-                ->where('activo', 1)
-                ->orderBy('nombre')
+                ->select('id_sed', 'nombre_sed')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->orderBy('nombre_sed')
                 ->get(),
         ];
     }
 
     public static function listarCompras($buscar = null, $estado = null, $fechas = null)
     {
-        $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sede_id')
+        $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sed_id')
             ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
             ->select(
                 'compras.*',
@@ -112,7 +113,7 @@ class Compra extends Model
         return DB::table('compras')->insertGetId([
             'proveedor_id'  => $data['proveedor_id'],
             'modulo_id'     => $data['modulo_id'],
-            'sede_id'       => $data['sede_id'] ?? \App\Support\Sedes\SedeActiva::idParaCrear(),
+            'sed_id'       => $data['sed_id'] ?? \App\Support\Sedes\SedeActiva::idParaCrear(),
             'fecha'         => $data['fecha'],
             'observaciones' => $data['observaciones'] ?? null,
             'total'         => 0,
@@ -145,16 +146,16 @@ class Compra extends Model
     public static function obtenerSedeDestino($compra_id)
     {
         return DB::table('movimiento_inventarios')
-            ->join('sede', 'sede.id', '=', 'movimiento_inventarios.sede_id')
+            ->join('sede', 'sede.id_sed', '=', 'movimiento_inventarios.sed_id')
             ->join('detalle_compras', 'detalle_compras.lote_id', '=', 'movimiento_inventarios.lote_id')
             ->where('detalle_compras.compra_id', $compra_id)
-            ->select('sede.id', 'sede.nombre')
+            ->select('sede.id_sed', 'sede.nombre_sed')
             ->first();
     }
 
     public static function obtenerCompra($id)
     {
-        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sede_id')
+        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sed_id')
             ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
             ->select(
                 'compras.*',
@@ -173,7 +174,7 @@ class Compra extends Model
         $query = DB::table('detalle_compras')
             ->join('productos', 'productos.id', '=', 'detalle_compras.producto_id')
             ->join('compras', 'compras.id', '=', 'detalle_compras.compra_id')
-            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('compras.sede_id', $sede))
+            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('compras.sed_id', $sede))
             ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
             ->join('unidades', 'unidades.id', '=', 'detalle_compras.unidad_id')
             ->select(
@@ -230,7 +231,7 @@ class Compra extends Model
         }
     }
 
-    public static function finalizarCompra($compra, $sede_id)
+    public static function finalizarCompra($compra, $sed_id)
     {
         DB::beginTransaction();
         try {
@@ -241,7 +242,7 @@ class Compra extends Model
             foreach ($detalles as $detalle) {
                 $inventario = DB::table('inventario_sede_lotes')
                     ->where('lote_id', $detalle->lote_id)
-                    ->where('sede_id', $sede_id)
+                    ->where('sed_id', $sed_id)
                     ->first();
 
                 if ($inventario) {
@@ -254,7 +255,7 @@ class Compra extends Model
                 } else {
                     DB::table('inventario_sede_lotes')->insert([
                         'lote_id'         => $detalle->lote_id,
-                        'sede_id'         => $sede_id,
+                        'sed_id'         => $sed_id,
                         'cantidad'        => $detalle->cantidad,
                         'cantidad_convertida' => $detalle->cantidad_convertida
                     ]);
@@ -263,7 +264,7 @@ class Compra extends Model
                 DB::table('movimiento_inventarios')->insert([
                     'producto_id'     => $detalle->producto_id,
                     'lote_id'         => $detalle->lote_id,
-                    'sede_id'         => $sede_id,
+                    'sed_id'         => $sed_id,
                     'tipo_movimiento' => 'ENTRADA',
                     'unidad_id'       => $detalle->unidad_id,
                     'cantidad'        => $detalle->cantidad,
@@ -300,7 +301,7 @@ class Compra extends Model
                 throw new \Exception('La requisición ya fue finalizada.');
             }
 
-            $sedeId = (int) ($registro->sede_id ?: \App\Support\Sedes\SedeActiva::idParaCrear());
+            $sedeId = (int) ($registro->sed_id ?: \App\Support\Sedes\SedeActiva::idParaCrear());
             $servicio = app(\App\Support\Inventario\ServicioInventario::class);
 
             $detalles = DB::table('detalle_compras')->where('compra_id', $registro->id)->get();

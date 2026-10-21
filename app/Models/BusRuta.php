@@ -18,7 +18,7 @@ class BusRuta extends Model
         'nombre',
         'distancia_km',
         'descripcion',
-        'sede_id',
+        'sed_id',
         'estado',
     ];
 
@@ -28,7 +28,7 @@ class BusRuta extends Model
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id');
     }
 
     public function horarios()
@@ -65,7 +65,7 @@ class BusRuta extends Model
             'nombre'       => $datos['nombre'],
             'distancia_km' => $datos['distancia_km'],
             'descripcion'  => $datos['descripcion'] ?? null,
-            'sede_id'      => $datos['sede_id'],
+            'sed_id'      => $datos['sed_id'],
             'estado'       => 1,
         ]);
     }
@@ -76,7 +76,7 @@ class BusRuta extends Model
             'nombre'       => $datos['nombre'],
             'distancia_km' => $datos['distancia_km'],
             'descripcion'  => $datos['descripcion'] ?? null,
-            'sede_id'      => $datos['sede_id'],
+            'sed_id'      => $datos['sed_id'],
         ]);
         return $ruta;
     }

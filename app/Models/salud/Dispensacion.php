@@ -25,7 +25,7 @@ class Dispensacion extends Model
         'lote_id',
         'cantidad',
         'unidad_id',
-        'sede_id',
+        'sed_id',
         'usuario_id',
         'fecha',
         'observaciones',
@@ -68,7 +68,7 @@ class Dispensacion extends Model
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id');
     }
 
     public function usuario()

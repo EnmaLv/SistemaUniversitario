@@ -318,7 +318,7 @@
                         </span>
                     </td>
                     <td class="right">{{ number_format($item->cantidad_convertida, 2, ',', '.') }}</td>
-                    <td>{{ $item->sede->nombre ?? 'N/A' }}</td>
+                    <td>{{ $item->sede->nombre_sed ?? 'N/A' }}</td>
                 </tr>
             @endforeach
         </tbody>

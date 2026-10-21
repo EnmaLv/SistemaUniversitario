@@ -14,8 +14,8 @@ class ConsultorioSeeder extends Seeder
     public function run(): void
     {
         DB::table('consultorios')->insert([
-            ['nombre' => 'Consultorio 1', 'descripcion' => null, 'sede_id' => 1, 'activo' => 1],
-            ['nombre' => 'Consultorio 2', 'descripcion' => null, 'sede_id' => 2, 'activo' => 1],
+            ['nombre' => 'Consultorio 1', 'descripcion' => null, 'sed_id' => 1, 'activo' => 1],
+            ['nombre' => 'Consultorio 2', 'descripcion' => null, 'sed_id' => 2, 'activo' => 1],
 
         ]);
     }

@@ -23,18 +23,18 @@ class MunicipioSeeder extends Seeder
             $nombreMunicipio = trim($item['municipio']);
 
             // Buscamos el estado ignorando mayúsculas/minúsculas
-            $estado = DB::table('estados')
-                ->whereRaw('LOWER(nombre_estado) = ?', [mb_strtolower($nombreEstado)])
+            $estado = DB::table('estado')
+                ->whereRaw('LOWER(nombre_esd) = ?', [mb_strtolower($nombreEstado)])
                 ->first();
 
             if ($estado) {
-                DB::table('municipios')->updateOrInsert(
+                DB::table('municipio')->updateOrInsert(
                     [
-                        'nombre_municipio' => $nombreMunicipio,
-                        'estado_id'        => $estado->id,
+                        'nombre_mun' => $nombreMunicipio,
+                        'esd_id'        => $estado->id_esd,
                     ],
                     [
-                        'status'           => 1,
+                        'status_id'        => 1,
                         'created_at'       => now(),
                         'updated_at'       => now(),
                     ]

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('sector');
             $table->string('calle');
             $table->foreignId('id_persona')->references('id_persona')->on('persona')->onDelete('cascade');
-            $table->foreignId('id_localidad')->constrained('localidads')->cascadeOnDelete();
+            $table->foreignId('par_id')->constrained('parroquia', 'id_par')->cascadeOnDelete();
 
             $table->timestamps();
         });

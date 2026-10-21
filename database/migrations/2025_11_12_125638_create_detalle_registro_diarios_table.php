@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('detalle_registro_diarios', function (Blueprint $table) {
             $table->id();
             $table->foreignId('receta_id')->constrained('recetas')->onDelete('cascade');
-            $table->foreignId('sede_id')->constrained('sede');
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed');
             $table->string('tipo_comida', 20)->default('desayuno');
             $table->bigInteger('cantidad_servido');
             $table->date('fecha');

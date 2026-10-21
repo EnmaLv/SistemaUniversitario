@@ -423,7 +423,7 @@ class Usuario extends Authenticatable
                     ->orWhere('rol.nombre', 'Paciente');
             })
             ->where('persona.estado', 1)
-            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.id_sede', $sede))
+            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.sed_id', $sede))
             ->where('usuario.id_usuario', '!=', $psicologoId)
             ->whereNotExists(function ($subquery) {
                 $subquery->select(DB::raw(1))
@@ -494,7 +494,7 @@ class Usuario extends Authenticatable
                     ->orWhere('rol.nombre', 'like', '%administrador%');
             })
             ->where('grupos_horarios.activo', 1)
-            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.id_sede', $sede))
+            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.sed_id', $sede))
             ->distinct()
             ->get();
 

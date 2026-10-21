@@ -12,7 +12,7 @@ class InventarioSedeLote extends Model
     protected $table = 'inventario_sede_lotes';
 
     protected $fillable = [
-        'sede_id',
+        'sed_id',
         'lote_id',
         'cantidad',
         'cantidad_convertida',
@@ -20,7 +20,7 @@ class InventarioSedeLote extends Model
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id');
     }
 
     public function lote()

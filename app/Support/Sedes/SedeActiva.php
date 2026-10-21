@@ -69,7 +69,7 @@ class SedeActiva
 
         return static::id()
             ?? ($usuario ? static::sedeDe($usuario) : null)
-            ?? DB::table('sede')->orderBy('id')->value('id');
+            ?? DB::table('sede')->orderBy('id_sed')->value('id_sed');
     }
 
     public static function fijar(?int $sedeId): void
@@ -96,7 +96,7 @@ class SedeActiva
         $clave = (int) $usuario->getKey();
 
         if (! array_key_exists($clave, static::$sedePorUsuario)) {
-            $sede = DB::table('persona')->where('id_persona', $usuario->id_persona)->value('id_sede');
+            $sede = DB::table('persona')->where('id_persona', $usuario->id_persona)->value('sed_id');
             static::$sedePorUsuario[$clave] = $sede === null ? null : (int) $sede;
         }
 
@@ -110,6 +110,6 @@ class SedeActiva
 
     private static function existe($sedeId): bool
     {
-        return $sedeId !== null && $sedeId !== '' && DB::table('sede')->where('id', (int) $sedeId)->exists();
+        return $sedeId !== null && $sedeId !== '' && DB::table('sede')->where('id_sed', (int) $sedeId)->exists();
     }
 }

@@ -12,15 +12,15 @@ class EstadoIndex extends Component
     use WithPagination;
 
     public $filtroEstado = true;
-    public $nombre_estado;
-    public $estado_id;
+    public $nombre_esd;
+    public $esd_id;
     public $updateMode = false;
     public $search = '';
     public $from;
 
 
     protected $rules = [
-        'nombre_estado' => 'required|string|max:255',
+        'nombre_esd' => 'required|string|max:255',
     ];
 
     public function mount()
@@ -30,11 +30,11 @@ class EstadoIndex extends Component
 
     public function render()
     {
-        $estados = Estado::where('status', $this->filtroEstado)
+        $estados = Estado::where('status_id', $this->filtroEstado ? 1 : 2)
             ->when($this->search, function ($query) {
-                $query->where('nombre_estado', 'like', '%' . $this->search . '%');
+                $query->where('nombre_esd', 'like', '%' . $this->search . '%');
             })
-            ->orderBy('nombre_estado', 'asc')
+            ->orderBy('nombre_esd', 'asc')
             ->paginate(10);
 
         return view('livewire.admin.estado-index', compact('estados'));
@@ -52,8 +52,8 @@ class EstadoIndex extends Component
 
     public function resetInputFields()
     {
-        $this->nombre_estado = '';
-        $this->estado_id = null;
+        $this->nombre_esd = '';
+        $this->esd_id = null;
         $this->updateMode = false;
     }
 
@@ -61,8 +61,8 @@ class EstadoIndex extends Component
     {
         $this->validate();
 
-        if (Estado::where('nombre_estado', $this->nombre_estado)
-            ->where('status', true)
+        if (Estado::where('nombre_esd', $this->nombre_esd)
+            ->where('status_id', 1)
             ->exists()
         ) {
 
@@ -76,13 +76,13 @@ class EstadoIndex extends Component
         }
 
         $estado = Estado::create([
-            'nombre_estado' => $this->nombre_estado,
-            'status' => true,
+            'nombre_esd' => $this->nombre_esd,
+            'status_id' => 1,
         ]);
 
         if ($this->from) {
             return redirect()->to(
-                $this->from . '?estado_id=' . $estado->id
+                $this->from . '?esd_id=' . $estado->id_esd
             );
         }
 
@@ -99,8 +99,8 @@ class EstadoIndex extends Component
     public function edit($id)
     {
         $estado = Estado::findOrFail($id);
-        $this->estado_id = $id;
-        $this->nombre_estado = $estado->nombre_estado;
+        $this->esd_id = $id;
+        $this->nombre_esd = $estado->nombre_esd;
         $this->updateMode = true;
     }
 
@@ -108,8 +108,8 @@ class EstadoIndex extends Component
     {
         $this->validate();
 
-        Estado::find($this->estado_id)
-            ->update(['nombre_estado' => $this->nombre_estado]);
+        Estado::find($this->esd_id)
+            ->update(['nombre_esd' => $this->nombre_esd]);
 
         $this->dispatch(
             'swal',
@@ -133,7 +133,7 @@ class EstadoIndex extends Component
     public function destroy($id)
     {
         Estado::findOrFail($id)->update([
-            'status' => false
+            'status_id' => 2
         ]);
 
         $this->dispatch(
@@ -148,7 +148,7 @@ class EstadoIndex extends Component
     public function activate($id)
     {
         Estado::findOrFail($id)->update([
-            'status' => true
+            'status_id' => 1
         ]);
 
         $this->dispatch(

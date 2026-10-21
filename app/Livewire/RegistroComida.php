@@ -244,7 +244,7 @@ class RegistroComida extends Component
 
             $totalNecesario = $cantidadPorUnidad * $cantidadServido;
 
-            $disponibleTotal = (float) InventarioSedeLote::where('sede_id', $sedeId)
+            $disponibleTotal = (float) InventarioSedeLote::where('sed_id', $sedeId)
                 ->whereHas('lote', function ($q) use ($ingrediente) {
                     $q->where('producto_id', $ingrediente->producto_id)
                         ->whereDate('fecha_vencimiento', '>=', now()->toDateString())
@@ -370,7 +370,7 @@ class RegistroComida extends Component
 
                 $consumo = ConsumoDiario::create([
                     'receta_id'            => $recetaId,
-                    'sede_id'              => $sedeId,
+                    'sed_id'              => $sedeId,
                     'fecha_consumo_diario' => now()->toDateString(),
                     'porciones_servidas'   => $cantidadServido,
                 ]);

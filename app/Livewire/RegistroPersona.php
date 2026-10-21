@@ -148,9 +148,9 @@ class RegistroPersona extends Component
     {
         $this->validateOnly('estadosVeId');
 
-        $this->municipiosVE = DB::table('municipios')
-            ->where('estado_id', $value)
-            ->where('status', 1)
+        $this->municipiosVE = DB::table('municipio')
+            ->where('esd_id', $value)
+            ->where('status_id', 1)
             ->get();
 
         $this->enabledMunicipio = ($value && $this->formHabilitado);
@@ -160,7 +160,7 @@ class RegistroPersona extends Component
     {
         $this->validateOnly('municipiosId');
 
-        $this->parroquiasVE = DB::table('localidads')->where('municipio_id', $value)->where('status', 1)->get();
+        $this->parroquiasVE = DB::table('parroquia')->where('mun_id', $value)->where('status_id', 1)->get();
 
         $this->enabledParroquia = ($value && $this->formHabilitado);
     }
@@ -198,32 +198,32 @@ class RegistroPersona extends Component
                 $this->telefono = $persona->telefono_persona;
                 $this->email = $persona->email_persona;
                 $this->semestreId = $persona->semestre_persona;
-                $this->sedeId = $persona->id_sede;
+                $this->sedeId = $persona->sed_id;
 
                 // Cargamos datos de dirección si existen
                 $direccion = DB::table('direccion')
-                    ->join('localidads', 'direccion.id_localidad', '=', 'localidads.id')
-                    ->join('municipios', 'localidads.municipio_id', '=', 'municipios.id')
+                    ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
+                    ->join('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
                     ->where('direccion.id_persona', $persona->id_persona)
-                    ->select('direccion.*', 'localidads.municipio_id', 'municipios.estado_id')
+                    ->select('direccion.*', 'parroquia.mun_id', 'municipio.esd_id')
                     ->first();
 
                 if ($direccion) {
-                    $this->estadosVeId = $direccion->estado_id;
-                    $this->municipiosId = $direccion->municipio_id;
-                    $this->parroquiaId = $direccion->id_localidad;
+                    $this->estadosVeId = $direccion->esd_id;
+                    $this->municipiosId = $direccion->mun_id;
+                    $this->parroquiaId = $direccion->par_id;
                     $this->calle = $direccion->calle;
                     $this->sector = $direccion->sector;
 
                     // Cargamos municipios y parroquias
-                    $this->municipiosVE = DB::table('municipios')
-                        ->where('estado_id', $this->estadosVeId)
-                        ->where('status', 1)
+                    $this->municipiosVE = DB::table('municipio')
+                        ->where('esd_id', $this->estadosVeId)
+                        ->where('status_id', 1)
                         ->get();
 
-                    $this->parroquiasVE = DB::table('localidads')
-                        ->where('municipio_id', $this->municipiosId)
-                        ->where('status', 1)
+                    $this->parroquiasVE = DB::table('parroquia')
+                        ->where('mun_id', $this->municipiosId)
+                        ->where('status_id', 1)
                         ->get();
 
                     $this->enabledMunicipio = true;
@@ -368,11 +368,11 @@ class RegistroPersona extends Component
             $persona = Persona::where('id_persona', $id)->where('estado', true)->first();
             $personaPnf = PersonaPnf::with('pnf')->where('id_persona', $id)->first();
             $direccion = DB::table('direccion')
-                ->join('localidads', 'direccion.id_localidad', '=', 'localidads.id')
-                ->join('municipios', 'localidads.municipio_id', '=', 'municipios.id')
-                ->join('estados', 'municipios.estado_id', '=', 'estados.id')
+                ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
+                ->join('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
+                ->join('estado', 'municipio.esd_id', '=', 'estado.id_esd')
                 ->where('direccion.id_persona', $id)
-                ->select('direccion.*', 'localidads.*', 'municipios.*', 'estados.*')
+                ->select('direccion.*', 'parroquia.*', 'municipio.*', 'estado.*')
                 ->first();
 
             $this->cedula = $persona->cedula_persona;
@@ -390,12 +390,12 @@ class RegistroPersona extends Component
             $this->semestreId = $persona->semestre_persona;
             $this->showPnf = true;
             $this->pnfId = $personaPnf->prg_id;
-            $this->sedeId = $persona->id_sede;
+            $this->sedeId = $persona->sed_id;
 
             if (!$direccion) {
                 $this->enabledMunicipio = false;
                 $this->enabledParroquia = false;
-                $this->estadosVE = DB::table('estados')->get();
+                $this->estadosVE = DB::table('estado')->get();
 
                 $this->dispatch(
                     'alert',
@@ -405,25 +405,25 @@ class RegistroPersona extends Component
                 );
                 return;
             }
-            $this->estadosVeId = $direccion->estado_id;
-            $this->municipiosVE = DB::table('municipios')
-                ->where('estado_id', $this->estadosVeId)
+            $this->estadosVeId = $direccion->esd_id;
+            $this->municipiosVE = DB::table('municipio')
+                ->where('esd_id', $this->estadosVeId)
                 ->get();
 
-            $this->municipiosId = $direccion->municipio_id;
+            $this->municipiosId = $direccion->mun_id;
 
-            $this->parroquiasVE = DB::table('localidads')
-                ->where('municipio_id', $this->municipiosId)
+            $this->parroquiasVE = DB::table('parroquia')
+                ->where('mun_id', $this->municipiosId)
                 ->get();
 
-            $this->parroquiaId = $direccion->id_localidad;
+            $this->parroquiaId = $direccion->par_id;
             $this->calle = $direccion->calle;
             $this->sector = $direccion->sector;
         }
 
         $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
-        $this->estadosVE = DB::table('estados')->where('status', 1)->get();
-        $this->sede = DB::table('sede')->where('activo', 1)->get();
+        $this->estadosVE = DB::table('estado')->where('status_id', 1)->get();
+        $this->sede = DB::table('sede')->where('status_id', 1)->get();
     }
 
     public function render()

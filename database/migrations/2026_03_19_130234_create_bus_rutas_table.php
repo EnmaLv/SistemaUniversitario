@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre', 100);
             $table->decimal('distancia_km', 8, 2)->default(0.00);
             $table->text('descripcion')->nullable();
-            $table->foreignId('sede_id')->constrained('sede')->onDelete('cascade');
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed')->onDelete('cascade');
             $table->integer('estado')->default(1);
             $table->timestamps();
         });

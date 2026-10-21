@@ -20,7 +20,7 @@ class MultisedeTest extends SeguridadTestCase
             'genero_persona'   => 'FEMENINO',
             'email_persona'    => strtolower($apellido) . '@prueba.test',
             'id_perfil'        => 2,
-            'id_sede'          => $sede,
+            'sed_id'          => $sede,
         ]);
     }
 
@@ -39,7 +39,7 @@ class MultisedeTest extends SeguridadTestCase
         return Compra::crearCompra([
             'proveedor_id' => $proveedor,
             'modulo_id'    => null,
-            'sede_id'      => $sede,
+            'sed_id'      => $sede,
             'fecha'        => now(),
         ]);
     }
@@ -68,7 +68,7 @@ class MultisedeTest extends SeguridadTestCase
             ->assertSee('DESEDEA')
             ->assertSee('DESEDEB');
 
-        $this->post(route('sede.activa.cambiar'), ['sede_id' => $this->sedeB()])->assertRedirect();
+        $this->post(route('sede.activa.cambiar'), ['sed_id' => $this->sedeB()])->assertRedirect();
         $this->assertSame($this->sedeB(), session(SedeActiva::CLAVE_SESION));
 
         $this->get(route('admin.configuracion.persona.index'))
@@ -76,7 +76,7 @@ class MultisedeTest extends SeguridadTestCase
             ->assertSee('DESEDEB')
             ->assertDontSee('DESEDEA');
 
-        $this->post(route('sede.activa.cambiar'), ['sede_id' => ''])->assertRedirect();
+        $this->post(route('sede.activa.cambiar'), ['sed_id' => ''])->assertRedirect();
         $this->assertNull(session(SedeActiva::CLAVE_SESION));
     }
 
@@ -86,7 +86,7 @@ class MultisedeTest extends SeguridadTestCase
 
         $this->actingAs($usuario)
             ->withSession([SedeActiva::CLAVE_SESION => $this->sedeB()])
-            ->post(route('sede.activa.cambiar'), ['sede_id' => $this->sedeB()])
+            ->post(route('sede.activa.cambiar'), ['sed_id' => $this->sedeB()])
             ->assertForbidden();
 
         $this->assertSame($this->sedeA(), SedeActiva::id());
@@ -95,13 +95,13 @@ class MultisedeTest extends SeguridadTestCase
     public function test_los_registros_nuevos_toman_la_sede_activa_y_las_consultas_se_filtran(): void
     {
         $usuarioA = $this->crearUsuario('Obrero', sedeId: $this->sedeA());
-        Consultorio::create(['nombre' => 'CONSULTORIO B', 'sede_id' => $this->sedeB(), 'activo' => 1]);
+        Consultorio::create(['nombre' => 'CONSULTORIO B', 'sed_id' => $this->sedeB(), 'activo' => 1]);
 
         $this->actingAs($usuarioA);
 
         $nuevo = Consultorio::create(['nombre' => 'CONSULTORIO A', 'activo' => 1]);
 
-        $this->assertSame($this->sedeA(), (int) $nuevo->sede_id);
+        $this->assertSame($this->sedeA(), (int) $nuevo->sed_id);
         $this->assertSame(['CONSULTORIO A'], Consultorio::pluck('nombre')->all());
         $this->assertSame(2, Consultorio::todasLasSedes()->whereIn('nombre', ['CONSULTORIO A', 'CONSULTORIO B'])->count());
     }

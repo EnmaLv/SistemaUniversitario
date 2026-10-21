@@ -126,7 +126,7 @@ class Producto extends Model
         return DB::table('inventario_sede_lotes')
             ->join('lotes', 'lotes.id', '=', 'inventario_sede_lotes.lote_id')
             ->where('lotes.producto_id', $this->id)
-            ->where('inventario_sede_lotes.sede_id', $sedeId)
+            ->where('inventario_sede_lotes.sed_id', $sedeId)
             ->sum('inventario_sede_lotes.cantidad_convertida');
     }
 

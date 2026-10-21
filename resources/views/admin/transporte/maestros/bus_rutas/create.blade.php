@@ -92,15 +92,15 @@
                                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1"
                                             style="border-color:var(--border-color); background-color:var(--input-bg);">
                                             <span class="px-3 text-slate-500"><i class="fas fa-building"></i></span>
-                                            <select name="sede_id"
+                                            <select name="sed_id"
                                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-input"
                                                 required
                                                 style="border-color:var(--border-color); background-color:var(--input-bg); color:var(--text-main);">
                                                 <option value="">-- Seleccione --</option>
                                                 @foreach ($sedes as $sede)
-                                                    <option value="{{ $sede->id }}"
-                                                        {{ old('sede_id') == $sede->id ? 'selected' : '' }}>
-                                                        {{ $sede->nombre_sede ?? $sede->nombre }}
+                                                    <option value="{{ $sede->id_sed }}"
+                                                        {{ old('sed_id') == $sede->id_sed ? 'selected' : '' }}>
+                                                        {{ $sede->nombre_sed }}
                                                     </option>
                                                 @endforeach
                                             </select>

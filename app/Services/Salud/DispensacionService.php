@@ -48,7 +48,7 @@ class DispensacionService
                     ->orWhere('fecha_vencimiento', '>=', now()->toDateString());
             })
             ->whereHas('inventarioSedeLotes', function ($q) use ($sedeId) {
-                $q->where('sede_id', $sedeId)->where('cantidad', '>', 0);
+                $q->where('sed_id', $sedeId)->where('cantidad', '>', 0);
             })
             ->orderByRaw('fecha_vencimiento IS NULL ASC')
             ->orderBy('fecha_vencimiento', 'asc')
@@ -74,7 +74,7 @@ class DispensacionService
             }
 
             $lotesPorDetalle[$detalle->id] = $this->lotesDisponiblesQuery($detalle->producto_id, $sedeId)
-                ->with(['inventarioSedeLotes' => fn($q) => $q->where('sede_id', $sedeId)])
+                ->with(['inventarioSedeLotes' => fn($q) => $q->where('sed_id', $sedeId)])
                 ->get();
         }
 
@@ -212,7 +212,7 @@ class DispensacionService
         int $usuarioId
     ): float {
         $inventario = InventarioSedeLote::where('lote_id', $lote->id)
-            ->where('sede_id', $sedeId)
+            ->where('sed_id', $sedeId)
             ->lockForUpdate()
             ->first();
 
@@ -236,7 +236,7 @@ class DispensacionService
             'lote_id'                  => $lote->id,
             'cantidad'                 => $cantidad,
             'unidad_id'                => $detalle->unidad_id,
-            'sede_id'                  => $sedeId,
+            'sed_id'                  => $sedeId,
             'usuario_id'               => $usuarioId,
             'fecha'                    => now()->toDateString(),
             'observaciones'            => $observaciones,

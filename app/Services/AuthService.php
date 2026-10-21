@@ -25,9 +25,9 @@ class AuthService
             if (empty($personaData['id_perfil'])) {
                 $personaData['id_perfil'] = $perfilId;
             }
-            if (empty($personaData['sede_id']) && empty($personaData['id_sede'])) {
-                $personaData['sede_id'] = $sedeId;
-                $personaData['id_sede'] = $sedeId;
+            if (empty($personaData['sed_id']) && empty($personaData['sed_id'])) {
+                $personaData['sed_id'] = $sedeId;
+                $personaData['sed_id'] = $sedeId;
             }
 
             $persona = Persona::create($personaData);
@@ -69,13 +69,13 @@ class AuthService
 
     private function ensureSede(): int
     {
-        $row = DB::table('sede')->orderBy('id')->first();
-        if ($row) return $row->id;
+        $row = DB::table('sede')->orderBy('id_sed')->first();
+        if ($row) return $row->id_sed;
 
         return DB::table('sede')->insertGetId([
-            'nombre'    => 'Acarigua',
-            'direccion' => 'Avenida Circunvalacion Sur, Sector Bellas Artes',
-            'telefono'  => '0424-5556666',
+            'nombre_sed'    => 'Acarigua',
+            'direccion_sed' => 'Avenida Circunvalacion Sur, Sector Bellas Artes',
+            'telefono_sed'  => '0424-5556666',
             'created_at' => now(),
             'updated_at' => now()
         ]);

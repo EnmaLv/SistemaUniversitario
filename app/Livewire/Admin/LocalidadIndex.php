@@ -14,9 +14,9 @@ class LocalidadIndex extends Component
     use WithPagination;
 
     public $filtroEstado = true;
-    public $nombre_localidad;
-    public $estado_id;
-    public $municipio_id;
+    public $nombre_par;
+    public $esd_id;
+    public $mun_id;
     public $localidad_id;
     public $updateMode = false;
     public $search = '';
@@ -24,9 +24,9 @@ class LocalidadIndex extends Component
     public $municipios = [];
 
     protected $rules = [
-        'nombre_localidad' => 'required|string|max:255',
-        'estado_id' => 'required|integer|exists:estados,id',
-        'municipio_id' => 'required|integer|exists:municipios,id',
+        'nombre_par' => 'required|string|max:255',
+        'esd_id' => 'required|integer|exists:estado,id_esd',
+        'mun_id' => 'required|integer|exists:municipio,id_mun',
     ];
 
     public function mount()
@@ -42,22 +42,22 @@ class LocalidadIndex extends Component
 
     public function render()
     {
-        $estados = Estado::where('status', true)->get();
+        $estados = Estado::where('status_id', 1)->get();
 
-        $localidades = Localidad::where('status', $this->filtroEstado)
+        $localidades = Localidad::where('status_id', $this->filtroEstado ? 1 : 2)
             ->when($this->search, function ($query) {
                 // Encapsulamos las búsquedas relacionales para que no rompan el filtro de status superior
                 $query->where(function ($q) {
-                    $q->where('nombre_localidad', 'like', '%' . $this->search . '%')
+                    $q->where('nombre_par', 'like', '%' . $this->search . '%')
                       ->orWhereHas('municipio', function ($subQ) {
-                          $subQ->where('nombre_municipio', 'like', '%' . $this->search . '%');
+                          $subQ->where('nombre_mun', 'like', '%' . $this->search . '%');
                       })
                       ->orWhereHas('municipio.estado', function ($subQ) {
-                          $subQ->where('nombre_estado', 'like', '%' . $this->search . '%');
+                          $subQ->where('nombre_esd', 'like', '%' . $this->search . '%');
                       });
                 });
             })
-            ->orderBy('nombre_localidad', 'asc')
+            ->orderBy('nombre_par', 'asc')
             ->paginate(10);
 
         return view('livewire.admin.localidad-index', compact('estados', 'localidades'));
@@ -68,21 +68,21 @@ class LocalidadIndex extends Component
         $this->resetPage();
     }
 
-    public function updatedEstadoId($estado_id)
+    public function updatedEsdId($esd_id)
     {
-        $this->municipios = Municipio::where('estado_id', $estado_id)
-            ->where('status', true)
-            ->orderBy('nombre_municipio', 'asc')
+        $this->municipios = Municipio::where('esd_id', $esd_id)
+            ->where('status_id', 1)
+            ->orderBy('nombre_mun', 'asc')
             ->get();
 
-        $this->municipio_id = null;
+        $this->mun_id = null;
     }
 
     public function resetInputFields()
     {
-        $this->nombre_localidad = '';
-        $this->estado_id = null;
-        $this->municipio_id = null;
+        $this->nombre_par = '';
+        $this->esd_id = null;
+        $this->mun_id = null;
         $this->localidad_id = null;
         $this->municipios = [];
         $this->updateMode = false;
@@ -92,7 +92,7 @@ class LocalidadIndex extends Component
     {
         $this->validate();
 
-        if (Localidad::where('nombre_localidad', $this->nombre_localidad)->where('status', true)->exists()) {
+        if (Localidad::where('nombre_par', $this->nombre_par)->where('status_id', 1)->exists()) {
             $this->dispatch(
                 'swal',
                 icon: 'error',
@@ -103,14 +103,14 @@ class LocalidadIndex extends Component
         }
 
         $localidad = Localidad::create([
-            'nombre_localidad' => $this->nombre_localidad,
-            'municipio_id' => $this->municipio_id,
-            'status' => true,
+            'nombre_par' => $this->nombre_par,
+            'mun_id' => $this->mun_id,
+            'status_id' => 1,
         ]);
 
         if ($this->from) {
             return redirect()->to(
-                $this->from . '?localidad_id=' . $localidad->id
+                $this->from . '?localidad_id=' . $localidad->id_par
             );
         }
 
@@ -128,15 +128,15 @@ class LocalidadIndex extends Component
     {
         $localidad = Localidad::with('municipio.estado')->findOrFail($id);
 
-        $this->localidad_id = $localidad->id;
-        $this->nombre_localidad = $localidad->nombre_localidad;
-        $this->estado_id = $localidad->municipio->estado->id ?? null;
-        $this->municipio_id = $localidad->municipio_id;
+        $this->localidad_id = $localidad->id_par;
+        $this->nombre_par = $localidad->nombre_par;
+        $this->esd_id = $localidad->municipio->estado->id_esd ?? null;
+        $this->mun_id = $localidad->mun_id;
 
-        if ($this->estado_id) {
-            $this->municipios = Municipio::where('estado_id', $this->estado_id)
-                ->where('status', true)
-                ->orderBy('nombre_municipio', 'asc')
+        if ($this->esd_id) {
+            $this->municipios = Municipio::where('esd_id', $this->esd_id)
+                ->where('status_id', 1)
+                ->orderBy('nombre_mun', 'asc')
                 ->get();
         }
 
@@ -149,8 +149,8 @@ class LocalidadIndex extends Component
 
         $localidad = Localidad::findOrFail($this->localidad_id);
         $localidad->update([
-            'nombre_localidad' => $this->nombre_localidad,
-            'municipio_id' => $this->municipio_id,
+            'nombre_par' => $this->nombre_par,
+            'mun_id' => $this->mun_id,
         ]);
 
         $this->dispatch(
@@ -175,7 +175,7 @@ class LocalidadIndex extends Component
     public function destroy($id)
     {
         Localidad::findOrFail($id)->update([
-            'status' => false
+            'status_id' => 2
         ]);
 
         $this->dispatch(
@@ -190,7 +190,7 @@ class LocalidadIndex extends Component
     public function activate($id)
     {
         Localidad::findOrFail($id)->update([
-            'status' => true
+            'status_id' => 1
         ]);
 
         $this->dispatch(

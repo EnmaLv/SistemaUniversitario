@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('lote_id')->nullable()->constrained('lotes', 'id')->nullOnDelete();
             $table->decimal('cantidad', 14, 2);
             $table->foreignId('unidad_id')->constrained('unidades', 'id')->onDelete('cascade');
-            $table->foreignId('sede_id')->constrained('sede', 'id')->onDelete('cascade');
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed')->onDelete('cascade');
             $table->foreignId('usuario_id')->constrained('usuario', 'id_usuario')->onDelete('cascade');
             $table->date('fecha');
             $table->text('observaciones')->nullable();

@@ -16,7 +16,7 @@ class BusRutaController extends Controller
             'nombre'                => 'required|string|max:100|unique:bus_rutas,nombre,' . $excludeId,
             'distancia_km'          => 'required|numeric|min:0.1|max:9999',
             'descripcion'           => 'nullable|string|max:1000',
-            'sede_id'               => 'required|exists:sede,id',
+            'sed_id'               => 'required|exists:sede,id_sed',
             'horarios'              => 'required|array|min:1',
             'horarios.*.hora_salida' => 'required|date_format:H:i',
             'horarios.*.tipo_viaje'  => 'required|in:entrada,salida',
@@ -33,7 +33,7 @@ class BusRutaController extends Controller
 
     public function create()
     {
-        $sedes = Sede::orderBy('nombre')->get();
+        $sedes = Sede::orderBy('nombre_sed')->get();
         $paradas = BusParada::where('estado', 1)
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'lat', 'lng']);
@@ -75,7 +75,7 @@ class BusRutaController extends Controller
     public function edit(BusRuta $busRuta)
     {
         $busRuta->load(['horarios' => fn($q) => $q->orderBy('hora_salida'), 'paradas']);
-        $sedes = Sede::orderBy('nombre')->get();
+        $sedes = Sede::orderBy('nombre_sed')->get();
         $paradas = BusParada::orderBy('nombre')->get(['id', 'nombre', 'lat', 'lng']);
         return view('admin.transporte.maestros.bus_rutas.edit', compact('busRuta', 'sedes', 'paradas'));
     }

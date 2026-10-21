@@ -26,7 +26,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'admin@example.com',
             'semestre_persona' => null,
             'id_perfil' => 1,
-            'id_sede' => 1,
+            'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
@@ -66,7 +66,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'nohelysq2006@gmail.com',
             'semestre_persona' => null,
             'id_perfil' => 1,
-            'id_sede' => 1,
+            'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
@@ -96,7 +96,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'america@example.com',
             'semestre_persona' => 6,
             'id_perfil' => 2,
-            'id_sede' => 1,
+            'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
@@ -127,7 +127,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'argenisdoctor@gmail.com',
             'semestre_persona' => null,
             'id_perfil' => 2,
-            'id_sede' => 1,
+            'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
@@ -158,7 +158,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'genesisdoctor@gmail.com',
             'semestre_persona' => null,
             'id_perfil' => 2,
-            'id_sede' => 2,
+            'sed_id' => 2,
         ]);
 
         DB::table('usuario')->insert([
@@ -189,7 +189,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'denisenfermero@gmail.com',
             'semestre_persona' => null,
             'id_perfil' => 2,
-            'id_sede' => 1,
+            'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
@@ -220,7 +220,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'carmenenfermero@gmail.com',
             'semestre_persona' => null,
             'id_perfil' => 2,
-            'id_sede' => 2,
+            'sed_id' => 2,
         ]);
 
         DB::table('usuario')->insert([
@@ -251,7 +251,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'estudiantebecario@example.com',
             'semestre_persona' => 4,
             'id_perfil' => 2,
-            'id_sede' => 1,
+            'sed_id' => 1,
         ]);
 
         DB::table('usuario')->insert([
@@ -285,7 +285,7 @@ class PersonaSeeder extends Seeder
                 'fecha_nacimiento_persona' => now()->subYears(35)->toDateString(),
                 'email_persona' => $correo,
                 'id_perfil' => 1,
-                'id_sede' => $sede,
+                'sed_id' => $sede,
             ]);
 
             $idUsuario = DB::table('usuario')->insertGetId([
@@ -313,7 +313,7 @@ class PersonaSeeder extends Seeder
             'email_persona' => 'estudiante.guanare@example.com',
             'semestre_persona' => 2,
             'id_perfil' => 2,
-            'id_sede' => 2,
+            'sed_id' => 2,
         ]);
 
         \App\Support\Cuentas\CuentasComunidad::procesarLote([$estudianteGuanare], 'seeder');

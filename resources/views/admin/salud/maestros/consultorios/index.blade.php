@@ -95,7 +95,7 @@
                                     {{-- Sede --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $data->sede->nombre }}
+                                        {{ $data->sede->nombre_sed }}
                                     </td>
 
                                     {{-- Estado --}}

@@ -31,7 +31,7 @@
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @forelse ($sedes as $sede)
-            <a href="{{ route('admin.movimientos.sedes_lotes.show', $sede->id) }}"
+            <a href="{{ route('admin.movimientos.sedes_lotes.show', $sede->id_sed) }}"
                 class="group rounded-2xl border p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
                 style="background-color: var(--bg-card); border-color: var(--border-color);">
                 <div class="flex items-start justify-between gap-3">
@@ -41,7 +41,7 @@
                     <i class="fas fa-arrow-up-right-from-square text-sm text-gray-400 transition group-hover:text-red-600"></i>
                 </div>
                 <h2 class="mt-5 truncate text-base font-extrabold" style="color: var(--text-main);">
-                    {{ $sede->nombre_sede ?? $sede->nombre }}
+                    {{ $sede->nombre_sed }}
                 </h2>
                 <div class="mt-2 flex items-end justify-between gap-2">
                     <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Inventario disponible</span>

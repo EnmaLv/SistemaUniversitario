@@ -3,10 +3,10 @@
     $puedeElegirSede = \App\Support\Sedes\SedeActiva::puedeElegir($usuarioSede);
     $sedeActualId = $usuarioSede ? \App\Support\Sedes\SedeActiva::id() : null;
     $sedesDisponibles = $puedeElegirSede
-        ? \Illuminate\Support\Facades\DB::table('sede')->where('activo', 1)->orderBy('nombre')->get(['id', 'nombre'])
+        ? \Illuminate\Support\Facades\DB::table('sede')->where('status_id', 1)->whereNull('deleted_at')->orderBy('nombre_sed')->get(['id_sed', 'nombre_sed'])
         : collect();
     $nombreSedeActual = $sedeActualId
-        ? (\Illuminate\Support\Facades\DB::table('sede')->where('id', $sedeActualId)->value('nombre') ?? 'Sede')
+        ? (\Illuminate\Support\Facades\DB::table('sede')->where('id_sed', $sedeActualId)->value('nombre_sed') ?? 'Sede')
         : 'Todas las sedes';
 @endphp
 
@@ -25,16 +25,16 @@
                 <p class="px-4 pt-3 pb-1 text-[10px] font-black uppercase tracking-wider" style="color: var(--text-muted);">Sede activa</p>
                 <form method="POST" action="{{ route('sede.activa.cambiar') }}" class="pb-2">
                     @csrf
-                    <button type="submit" name="sede_id" value=""
+                    <button type="submit" name="sed_id" value=""
                         class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold hover:bg-red-800 hover:text-white {{ $sedeActualId === null ? 'text-red-800' : '' }}"
                         style="{{ $sedeActualId === null ? '' : 'color: var(--text-main);' }}">
                         <i class="fas fa-globe-americas w-4"></i> Todas las sedes
                     </button>
                     @foreach ($sedesDisponibles as $sedeOpcion)
-                        <button type="submit" name="sede_id" value="{{ $sedeOpcion->id }}"
-                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold hover:bg-red-800 hover:text-white {{ $sedeActualId === (int) $sedeOpcion->id ? 'text-red-800' : '' }}"
-                            style="{{ $sedeActualId === (int) $sedeOpcion->id ? '' : 'color: var(--text-main);' }}">
-                            <i class="fas fa-building w-4"></i> {{ $sedeOpcion->nombre }}
+                        <button type="submit" name="sed_id" value="{{ $sedeOpcion->id_sed }}"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold hover:bg-red-800 hover:text-white {{ $sedeActualId === (int) $sedeOpcion->id_sed ? 'text-red-800' : '' }}"
+                            style="{{ $sedeActualId === (int) $sedeOpcion->id_sed ? '' : 'color: var(--text-main);' }}">
+                            <i class="fas fa-building w-4"></i> {{ $sedeOpcion->nombre_sed }}
                         </button>
                     @endforeach
                 </form>

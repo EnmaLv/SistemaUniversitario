@@ -150,7 +150,7 @@
                                         {{ $movimientos->unidad->nombre ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->sede->nombre ?? 'N/A' }}
+                                        {{ $movimientos->sede->nombre_sed ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         {{ $movimientos->fecha }}

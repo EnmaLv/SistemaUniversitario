@@ -27,7 +27,7 @@ class CuentasComunidadTest extends SeguridadTestCase
             'genero_persona'   => 'FEMENINO',
             'email_persona'    => 'estudiante' . random_int(1, 999999) . '@prueba.test',
             'id_perfil'        => DB::table('perfil')->value('id_perfil'),
-            'id_sede'          => DB::table('sede')->value('id'),
+            'sed_id'          => DB::table('sede')->value('id_sed'),
         ]);
     }
 

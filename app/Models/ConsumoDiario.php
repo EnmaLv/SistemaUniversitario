@@ -13,7 +13,7 @@ class ConsumoDiario extends Model
 
     protected $fillable = [
         'receta_id',
-        'sede_id',
+        'sed_id',
         'fecha_consumo_diario',
         'porciones_servidas',
     ];

@@ -26,10 +26,10 @@
             <h2 class="text-lg font-bold" style="color: var(--text-main);">Datos de la sede</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Modifica los datos necesarios.</p>
         </div>
-        <form action="{{ route('admin.maestros.sedes.update', $sede->id) }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.maestros.sedes.update', $sede->id_sed) }}" method="POST" class="space-y-6">
             @csrf @method('PUT')
             <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
-                @foreach ([['nombre','Nombre de la sede','Ingrese el nombre','fa-tag',$sede->nombre],['direccion','Direccion','Ingrese la direccion','fa-map-marker-alt',$sede->direccion],['telefono','Telefono','(123) 456-7890','fa-phone',$sede->telefono]] as [$name,$label,$placeholder,$icon,$value])
+                @foreach ([['nombre','Nombre de la sede','Ingrese el nombre','fa-tag',$sede->nombre_sed],['direccion','Direccion','Ingrese la direccion','fa-map-marker-alt',$sede->direccion_sed],['telefono','Telefono','(123) 456-7890','fa-phone',$sede->telefono_sed]] as [$name,$label,$placeholder,$icon,$value])
                     <div><label for="{{ $name }}" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">{{ $label }}</label><div class="flex items-center rounded-xl border" style="background-color: var(--input-bg); border-color: var(--border-color);"><span class="px-3 text-gray-400"><i class="fas {{ $icon }}"></i></span><input id="{{ $name }}" type="text" name="{{ $name }}" value="{{ old($name, $value) }}" placeholder="{{ $placeholder }}" @if($name === 'telefono') data-inputmask="'mask': '(999) 999-9999'" data-mask @endif class="w-full rounded-xl border-0 bg-transparent px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-red-500/30" style="color: var(--text-main);"></div>@error($name)<p class="mt-1 text-xs font-semibold text-red-600">{{ $message }}</p>@enderror</div>
                 @endforeach
             </div>

@@ -40,7 +40,7 @@ class BecaAsignacionServiceTest extends TestCase
             'semestre_persona' => '1',
             'estado' => true,
             'id_perfil' => $perfilId,
-            'id_sede' => $sedeId,
+            'sed_id' => $sedeId,
         ]);
 
         $service = new BecaAsignacionService();

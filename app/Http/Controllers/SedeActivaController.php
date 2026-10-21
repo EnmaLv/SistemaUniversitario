@@ -13,11 +13,11 @@ class SedeActivaController extends Controller
         abort_unless(SedeActiva::puedeElegir(), 403, 'Solo los administradores pueden cambiar de sede.');
 
         $datos = $request->validate([
-            'sede_id' => ['nullable', 'integer', 'exists:sede,id'],
+            'sed_id' => ['nullable', 'integer', 'exists:sede,id_sed'],
         ]);
 
         $anterior = SedeActiva::id();
-        $nueva = isset($datos['sede_id']) ? (int) $datos['sede_id'] : null;
+        $nueva = isset($datos['sed_id']) ? (int) $datos['sed_id'] : null;
 
         SedeActiva::fijar($nueva);
 

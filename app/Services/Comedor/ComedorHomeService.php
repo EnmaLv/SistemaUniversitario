@@ -39,7 +39,7 @@ class ComedorHomeService
      */
     protected function consultarRegistros(array $f, string $inicio, string $fin)
     {
-        $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c as r'), 'r.sede_id')
+        $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c as r'), 'r.sed_id')
             ->join('persona as p', 'r.id_persona', '=', 'p.id_persona')
             ->leftJoin('persona_pnf as pp', 'r.id_persona_pnf', '=', 'pp.id_persona_pnf')
             ->leftJoin('programa as n', 'pp.prg_id', '=', 'n.id_prg')
@@ -270,7 +270,7 @@ class ComedorHomeService
             $prevFin    = $inicio->copy()->subDay();
             $prevInicio = $prevFin->copy()->subDays($dias);
 
-            $prev = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c'), 'sede_id')
+            $prev = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c'), 'sed_id')
                 ->whereBetween('fecha_regis_diario_c', [
                     $prevInicio->toDateString(),
                     $prevFin->toDateString(),

@@ -28,7 +28,7 @@ return new class extends Migration
             $table->decimal('consumo_relenti', 6, 3)->default(0);
             $table->decimal('km_actual', 10, 2)->default(0);
             $table->decimal('km_proximo_mantenimiento', 10, 2)->default(0);
-            $table->foreignId('sede_id')->constrained('sede')->onDelete('cascade');
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed')->onDelete('cascade');
             $table->tinyInteger('activo')->default(1);
             $table->enum('estado', ['disponible', 'en_ruta', 'mantenimiento'])->default('disponible');
             $table->timestamps();

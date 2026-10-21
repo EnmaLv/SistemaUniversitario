@@ -111,7 +111,7 @@ class ImportadorPersonas
             $registros[] = array_merge($nuevos, [
                 'cedula_persona' => $cedula,
                 'id_perfil'      => $previa->id_perfil ?? self::PERFIL_ESTUDIANTE,
-                'id_sede'        => $previa->id_sede ?? $idSede,
+                'sed_id'        => $previa->sed_id ?? $idSede,
                 'estado'         => 1,
                 'created_at'     => $previa->created_at ?? $ahora,
                 'updated_at'     => $ahora,

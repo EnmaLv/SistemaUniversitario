@@ -27,12 +27,12 @@ class LoteController extends Controller
             foreach ($lotesVencidos as $lote) {
                 $existencias = DB::table('inventario_sede_lotes')
                     ->where('lote_id', $lote->id)
-                    ->when($sede !== null, fn ($consulta) => $consulta->where('sede_id', $sede))
+                    ->when($sede !== null, fn ($consulta) => $consulta->where('sed_id', $sede))
                     ->where('cantidad', '>', 0)
                     ->get();
 
                 foreach ($existencias as $existencia) {
-                    $servicio->salida((int) $lote->id, (int) $existencia->sede_id, (float) $existencia->cantidad, (float) $existencia->cantidad_convertida, [
+                    $servicio->salida((int) $lote->id, (int) $existencia->sed_id, (float) $existencia->cantidad, (float) $existencia->cantidad_convertida, [
                         'tipo'            => \App\Support\Inventario\ServicioInventario::MERMA,
                         'referencia_type' => 'lote_vencido',
                         'referencia_id'   => $lote->id,
@@ -71,11 +71,11 @@ class LoteController extends Controller
                 'cantidad_sede' => DB::table('inventario_sede_lotes')
                     ->selectRaw('COALESCE(SUM(cantidad), 0)')
                     ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
-                    ->where('inventario_sede_lotes.sede_id', $sedeId),
+                    ->where('inventario_sede_lotes.sed_id', $sedeId),
                 'cantidad_gramos_sede' => DB::table('inventario_sede_lotes')
                     ->selectRaw('COALESCE(SUM(cantidad_convertida), 0)')
                     ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
-                    ->where('inventario_sede_lotes.sede_id', $sedeId)
+                    ->where('inventario_sede_lotes.sed_id', $sedeId)
             ]);
 
         if ($filtro === 'vencido') {
@@ -116,7 +116,7 @@ class LoteController extends Controller
             ->where('estado', 1)
             ->exists();
 
-        $sedeNombre = Sede::where('id', $sedeId)->value('nombre');
+        $sedeNombre = Sede::where('id_sed', $sedeId)->value('nombre_sed');
 
         return view('admin.movimientos.lotes.index', compact('lotes', 'hayLotesVencidosSinMerma', 'sedeNombre'));
     }

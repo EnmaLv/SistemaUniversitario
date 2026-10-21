@@ -14,7 +14,7 @@ class InventarioSedeLoteController extends Controller
         $sedes = Sede::withCount('inventarioSedeLotes')->get();
 
         foreach ($sedes as $sede) {
-            $sede->totalInventarioSedeLotes = InventarioSedeLote::where('sede_id', $sede->id)->sum('cantidad');
+            $sede->totalInventarioSedeLotes = InventarioSedeLote::where('sed_id', $sede->id_sed)->sum('cantidad');
         }
 
         return view('admin.movimientos.sedes_lotes.index', compact('sedes'));
@@ -26,7 +26,7 @@ class InventarioSedeLoteController extends Controller
         $activo = $request->has('estado') ? (int) $request->input('estado') : 1;
 
         $query = InventarioSedeLote::query()
-            ->where('sede_id', $id)
+            ->where('sed_id', $id)
             ->with(['lote.producto', 'lote.proveedor']);
 
         if ($buscar) {
@@ -48,7 +48,7 @@ class InventarioSedeLoteController extends Controller
         $sedes = Sede::withCount('inventarioSedeLotes')->get();
 
         $totales = InventarioTotal::with('producto')
-            ->where('sede_id', $id)
+            ->where('sed_id', $id)
             ->orderByDesc('cantidad_total')
             ->get();
 

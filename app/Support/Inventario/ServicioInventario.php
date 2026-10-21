@@ -130,21 +130,21 @@ class ServicioInventario
         return DB::transaction(function () use ($productoId, $sedeId) {
             $borrar = DB::table('inventario_totals');
             $productoId !== null && $borrar->where('producto_id', $productoId);
-            $sedeId !== null && $borrar->where('sede_id', $sedeId);
+            $sedeId !== null && $borrar->where('sed_id', $sedeId);
             $borrar->delete();
 
             $filas = DB::table('inventario_sede_lotes as existencia')
                 ->join('lotes', 'lotes.id', '=', 'existencia.lote_id')
                 ->when($productoId !== null, fn ($consulta) => $consulta->where('lotes.producto_id', $productoId))
-                ->when($sedeId !== null, fn ($consulta) => $consulta->where('existencia.sede_id', $sedeId))
-                ->groupBy('lotes.producto_id', 'existencia.sede_id')
-                ->selectRaw('lotes.producto_id, existencia.sede_id, SUM(existencia.cantidad) AS cantidad_total, SUM(existencia.cantidad_convertida) AS cantidad_convertida_total')
+                ->when($sedeId !== null, fn ($consulta) => $consulta->where('existencia.sed_id', $sedeId))
+                ->groupBy('lotes.producto_id', 'existencia.sed_id')
+                ->selectRaw('lotes.producto_id, existencia.sed_id, SUM(existencia.cantidad) AS cantidad_total, SUM(existencia.cantidad_convertida) AS cantidad_convertida_total')
                 ->get();
 
             $ahora = now();
             $registros = $filas->map(fn ($fila) => [
                 'producto_id'               => $fila->producto_id,
-                'sede_id'                   => $fila->sede_id,
+                'sed_id'                   => $fila->sed_id,
                 'cantidad_total'            => round((float) $fila->cantidad_total, 2),
                 'cantidad_convertida_total' => round((float) $fila->cantidad_convertida_total, 2),
                 'created_at'                => $ahora,
@@ -164,7 +164,7 @@ class ServicioInventario
         return DB::table('inventario_sede_lotes as existencia')
             ->join('lotes', 'lotes.id', '=', 'existencia.lote_id')
             ->where('lotes.producto_id', $productoId)
-            ->where('existencia.sede_id', $sedeId)
+            ->where('existencia.sed_id', $sedeId)
             ->where('lotes.estado', 1)
             ->where('existencia.cantidad_convertida', '>', 0)
             ->where(fn ($consulta) => $consulta->whereNull('lotes.fecha_vencimiento')->orWhereDate('lotes.fecha_vencimiento', '>=', now()->toDateString()))
@@ -192,12 +192,12 @@ class ServicioInventario
             'updated_at'      => now(),
         ]);
 
-        $this->actualizarTotal((int) $lote->producto_id, (int) $existencia->sede_id);
+        $this->actualizarTotal((int) $lote->producto_id, (int) $existencia->sed_id);
 
         return MovimientoInventario::todasLasSedes()->create([
             'producto_id'         => $lote->producto_id,
             'lote_id'             => $lote->id,
-            'sede_id'             => $existencia->sede_id,
+            'sed_id'             => $existencia->sed_id,
             'tipo_movimiento'     => $tipo,
             'modulo_origen_id'    => $datos['modulo_origen_id'] ?? null,
             'cantidad'            => round(abs($deltaCantidad), 2),
@@ -218,20 +218,20 @@ class ServicioInventario
         $suma = DB::table('inventario_sede_lotes as existencia')
             ->join('lotes', 'lotes.id', '=', 'existencia.lote_id')
             ->where('lotes.producto_id', $productoId)
-            ->where('existencia.sede_id', $sedeId)
+            ->where('existencia.sed_id', $sedeId)
             ->selectRaw('COALESCE(SUM(existencia.cantidad), 0) AS cantidad, COALESCE(SUM(existencia.cantidad_convertida), 0) AS convertida')
             ->first();
 
         DB::table('inventario_totals')->upsert(
             [[
                 'producto_id'               => $productoId,
-                'sede_id'                   => $sedeId,
+                'sed_id'                   => $sedeId,
                 'cantidad_total'            => round((float) $suma->cantidad, 2),
                 'cantidad_convertida_total' => round((float) $suma->convertida, 2),
                 'created_at'                => now(),
                 'updated_at'                => now(),
             ]],
-            ['producto_id', 'sede_id'],
+            ['producto_id', 'sed_id'],
             ['cantidad_total', 'cantidad_convertida_total', 'updated_at']
         );
     }
@@ -251,7 +251,7 @@ class ServicioInventario
     {
         $existencia = DB::table('inventario_sede_lotes')
             ->where('lote_id', $loteId)
-            ->where('sede_id', $sedeId)
+            ->where('sed_id', $sedeId)
             ->lockForUpdate()
             ->first();
 
@@ -261,7 +261,7 @@ class ServicioInventario
 
         DB::table('inventario_sede_lotes')->insertOrIgnore([
             'lote_id'             => $loteId,
-            'sede_id'             => $sedeId,
+            'sed_id'             => $sedeId,
             'cantidad'            => 0,
             'cantidad_convertida' => 0,
             'created_at'          => now(),
@@ -270,7 +270,7 @@ class ServicioInventario
 
         return DB::table('inventario_sede_lotes')
             ->where('lote_id', $loteId)
-            ->where('sede_id', $sedeId)
+            ->where('sed_id', $sedeId)
             ->lockForUpdate()
             ->first();
     }

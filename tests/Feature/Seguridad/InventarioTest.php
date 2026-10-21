@@ -56,7 +56,7 @@ class InventarioTest extends SeguridadTestCase
 
     private function total(int $sede): ?InventarioTotal
     {
-        return InventarioTotal::todasLasSedes()->where('producto_id', $this->productoId)->where('sede_id', $sede)->first();
+        return InventarioTotal::todasLasSedes()->where('producto_id', $this->productoId)->where('sed_id', $sede)->first();
     }
 
     public function test_la_entrada_actualiza_lote_sede_total_y_movimiento(): void
@@ -66,7 +66,7 @@ class InventarioTest extends SeguridadTestCase
         $movimiento = $this->servicio->entrada($lote, $this->sedeA(), 10);
         $this->servicio->entrada($lote, $this->sedeA(), 5);
 
-        $existencia = DB::table('inventario_sede_lotes')->where('lote_id', $lote)->where('sede_id', $this->sedeA())->first();
+        $existencia = DB::table('inventario_sede_lotes')->where('lote_id', $lote)->where('sed_id', $this->sedeA())->first();
         $this->assertEquals(15, $existencia->cantidad);
         $this->assertEquals(15000, $existencia->cantidad_convertida);
         $this->assertEquals(15000, DB::table('lotes')->where('id', $lote)->value('cantidad_actual'));
@@ -109,7 +109,7 @@ class InventarioTest extends SeguridadTestCase
             $this->assertStringContainsString('Stock insuficiente', $e->getMessage());
         }
 
-        $this->assertEquals(10, DB::table('inventario_sede_lotes')->where('lote_id', $lote)->where('sede_id', $this->sedeA())->value('cantidad'));
+        $this->assertEquals(10, DB::table('inventario_sede_lotes')->where('lote_id', $lote)->where('sed_id', $this->sedeA())->value('cantidad'));
         $this->assertEquals(10, $this->total($this->sedeA())->cantidad_total);
         $this->assertSame($movimientos, DB::table('movimiento_inventarios')->where('lote_id', $lote)->count());
 

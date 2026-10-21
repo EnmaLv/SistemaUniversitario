@@ -12,34 +12,34 @@ class LocalidadController extends Controller
 {
     public function index()
     {
-        $municipios = Municipio::where('status', true)
-            ->orderBy('nombre_municipio', 'asc')
+        $municipios = Municipio::where('status_id', 1)
+            ->orderBy('nombre_mun', 'asc')
             ->get();
-        $estados = Estado::where('status', true)
-            ->orderBy('nombre_estado', 'asc')
+        $estados = Estado::where('status_id', 1)
+            ->orderBy('nombre_esd', 'asc')
             ->get();
         $localidades = Localidad::with(['estado', 'municipio'])
-            ->orderBy('nombre_localidad', 'asc')
+            ->orderBy('nombre_par', 'asc')
             ->get();
         return view('admin.localidad.index', compact('localidades', 'municipios', 'estados'));
     }
 
     public function createModal()
     {
-        $municipios = Municipio::where('status', true)
-            ->orderBy('nombre_municipio', 'asc')
+        $municipios = Municipio::where('status_id', 1)
+            ->orderBy('nombre_mun', 'asc')
             ->get();
-        $estados = Estado::where('status', true)
-            ->orderBy('nombre_estado', 'asc')
+        $estados = Estado::where('status_id', 1)
+            ->orderBy('nombre_esd', 'asc')
             ->get();
         return view('admin.localidad.modales.createModal', compact('municipios', 'estados'));
     }
     
-    public function getByMunicipio($municipio_id)
+    public function getByMunicipio($mun_id)
     {
-        $localidades = Localidad::where('municipio_id', $municipio_id)
-            ->where('status', true)
-            ->get(['id', 'nombre_localidad']);
+        $localidades = Localidad::where('mun_id', $mun_id)
+            ->where('status_id', 1)
+            ->get(['id_par', 'nombre_par']);
         return response()->json($localidades);
     }
 
@@ -48,12 +48,12 @@ class LocalidadController extends Controller
         try {
             $request->validate([
                 'nombre' => 'required|string|max:255',
-                'municipio_id' => 'required|exists:municipios,id',
+                'mun_id' => 'required|exists:municipio,id_mun',
             ]);
 
-            $existe = Localidad::where('nombre_localidad', $request->nombre)
-                ->where('municipio_id', $request->municipio_id)
-                ->where('status', true)
+            $existe = Localidad::where('nombre_par', $request->nombre)
+                ->where('mun_id', $request->mun_id)
+                ->where('status_id', 1)
                 ->exists();
 
             return response()->json([
@@ -75,13 +75,13 @@ class LocalidadController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre_localidad' => 'required|string|max:255',
-            'municipio_id' => 'required|exists:municipios,id',
+            'nombre_par' => 'required|string|max:255',
+            'mun_id' => 'required|exists:municipio,id_mun',
         ]);
 
-        $existe = Localidad::where('nombre_localidad', $validated['nombre_localidad'])
-            ->where('municipio_id', $validated['municipio_id'])
-            ->where('status', true)
+        $existe = Localidad::where('nombre_par', $validated['nombre_par'])
+            ->where('mun_id', $validated['mun_id'])
+            ->where('status_id', 1)
             ->exists();
 
         if ($existe) {
@@ -92,9 +92,9 @@ class LocalidadController extends Controller
 
         try {
             $localidad = new Localidad();
-            $localidad->nombre_localidad = $validated['nombre_localidad'];
-            $localidad->municipio_id = $validated['municipio_id'];
-            $localidad->status = true;
+            $localidad->nombre_par = $validated['nombre_par'];
+            $localidad->mun_id = $validated['mun_id'];
+            $localidad->status_id = 1;
             $localidad->save();
 
             return redirect()
@@ -111,14 +111,14 @@ class LocalidadController extends Controller
     {
         $localidad = Localidad::findOrFail($id);
         $validated = $request->validate([
-            'nombre_localidad' => 'required|string|max:255',
-            'municipio_id' => 'required|exists:municipios,id',
+            'nombre_par' => 'required|string|max:255',
+            'mun_id' => 'required|exists:municipio,id_mun',
         ]);
 
-        $existe = Localidad::where('nombre_localidad', $validated['nombre_localidad'])
-            ->where('municipio_id', $validated['municipio_id'])
-            ->where('id', '!=', $localidad->id)
-            ->where('status', true)
+        $existe = Localidad::where('nombre_par', $validated['nombre_par'])
+            ->where('mun_id', $validated['mun_id'])
+            ->where('id_par', '!=', $localidad->id_par)
+            ->where('status_id', 1)
             ->exists();
 
         if ($existe) {
@@ -128,9 +128,9 @@ class LocalidadController extends Controller
         }
 
         try {
-            $localidad->nombre_localidad = $validated['nombre_localidad'];
-            $localidad->municipio_id = $validated['municipio_id'];
-            $localidad->status = true;
+            $localidad->nombre_par = $validated['nombre_par'];
+            $localidad->mun_id = $validated['mun_id'];
+            $localidad->status_id = 1;
             $localidad->save();
 
             return redirect()
@@ -148,7 +148,7 @@ class LocalidadController extends Controller
         $localidad = Localidad::find($id);
 
         if ($localidad) {
-            $localidad->update(['status' => false]);
+            $localidad->update(['status_id' => 2]);
             return redirect()
                 ->route('admin.localidad.index')
                 ->with('success', 'La localidad fue eliminada Exitosamente.');

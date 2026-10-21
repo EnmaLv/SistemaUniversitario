@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sobrantes_comedor', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sede_id')->constrained('sede');
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed');
             $table->date('fecha');
             $table->integer('cantidad_sobrante');
             $table->text('motivo');

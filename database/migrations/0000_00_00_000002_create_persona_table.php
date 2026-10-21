@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('semestre_persona')->nullable();
             $table->boolean('estado')->default(true);
             $table->foreignId('id_perfil')->references('id_perfil')->on('perfil')->onDelete('cascade');
-            $table->foreignId('id_sede')->constrained('sede')->cascadeOnDelete();
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed')->cascadeOnDelete();
             $table->timestamps();
         });
     }

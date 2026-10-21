@@ -116,7 +116,7 @@
 
             // Sede
             const sedeInput = document.getElementById(targetModalId + 'Sede');
-            if (sedeInput) sedeInput.value = data.sede ? data.sede.nombre : '-';
+            if (sedeInput) sedeInput.value = data.sede ? data.sede.nombre_sed : '-';
 
             // Descripción
             const descTextarea = document.getElementById(targetModalId + 'Descripcion');

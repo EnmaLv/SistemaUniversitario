@@ -28,7 +28,7 @@ trait PerteneceASede
 
     public function columnaSede(): string
     {
-        return property_exists($this, 'columnaSede') ? $this->columnaSede : 'sede_id';
+        return property_exists($this, 'columnaSede') ? $this->columnaSede : 'sed_id';
     }
 
     public function sedeComoAmbitoGlobal(): bool

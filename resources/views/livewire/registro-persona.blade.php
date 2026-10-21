@@ -307,9 +307,9 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione sede</option>
                                 @foreach ($sede as $sed)
-                                    <option value="{{ $sed->id }}"
-                                        {{ old('sede_id', request('sede_id')) == $sed->id ? 'selected' : '' }}>
-                                        {{ $sed->nombre }}
+                                    <option value="{{ $sed->id_sed }}"
+                                        {{ old('sed_id', request('sed_id')) == $sed->id_sed ? 'selected' : '' }}>
+                                        {{ $sed->nombre_sed }}
                                     </option>
                                 @endforeach
                             </select>
@@ -400,13 +400,13 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-map text-sm"></i>
                             </span>
-                            <select wire:model.lazy="estadosVeId" name="estado_id" id="estadosVeId"
+                            <select wire:model.lazy="estadosVeId" name="esd_id" id="estadosVeId"
                                 {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione estado</option>
                                 @foreach ($estadosVE as $estado)
-                                    <option value="{{ $estado->id }}">{{ $estado->nombre_estado }}</option>
+                                    <option value="{{ $estado->id_esd }}">{{ $estado->nombre_esd }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -437,14 +437,14 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-city text-sm"></i>
                             </span>
-                            <select wire:model.lazy="municipiosId" name="municipio_id" id="municipiosId"
+                            <select wire:model.lazy="municipiosId" name="mun_id" id="municipiosId"
                                 {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                                 @if (!$enabledMunicipio) disabled @endif
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione municipio</option>
                                 @foreach ($municipiosVE as $municipio)
-                                    <option value="{{ $municipio->id }}">{{ $municipio->nombre_municipio }}</option>
+                                    <option value="{{ $municipio->id_mun }}">{{ $municipio->nombre_mun }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -482,7 +482,7 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione localidad</option>
                                 @foreach ($parroquiasVE as $parroquia)
-                                    <option value="{{ $parroquia->id }}">{{ $parroquia->nombre_localidad }}</option>
+                                    <option value="{{ $parroquia->id_par }}">{{ $parroquia->nombre_par }}</option>
                                 @endforeach
                             </select>
                         </div>

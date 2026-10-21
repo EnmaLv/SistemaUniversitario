@@ -10,26 +10,26 @@ class MunicipioController extends Controller
 {
     public function index()
     {
-        $estados = Estado::where('status', true)
-            ->orderBy('nombre_estado', 'asc')
+        $estados = Estado::where('status_id', 1)
+            ->orderBy('nombre_esd', 'asc')
             ->get();
-        $municipios = Municipio::orderBy('nombre_municipio', 'asc')->get();
+        $municipios = Municipio::orderBy('nombre_mun', 'asc')->get();
         return view('admin.municipio.index', compact('municipios', 'estados'));
     }
 
     public function createModal()
     {
-        $estados = Estado::where('status', true)
-            ->orderBy('nombre_estado', 'asc')
+        $estados = Estado::where('status_id', 1)
+            ->orderBy('nombre_esd', 'asc')
             ->get();
         return view('admin.municipio.modales.createModal', compact('estados'));
     }
 
-    public function getByEstado($estado_id)
+    public function getByEstado($esd_id)
     {
-        $municipios = Municipio::where('estado_id', $estado_id)
-            ->where('status', true)
-            ->get(['id', 'nombre_municipio']);
+        $municipios = Municipio::where('esd_id', $esd_id)
+            ->where('status_id', 1)
+            ->get(['id_mun', 'nombre_mun']);
         return response()->json($municipios);
     }
 
@@ -38,12 +38,12 @@ class MunicipioController extends Controller
         try {
             $request->validate([
                 'nombre' => 'required|string|max:255',
-                'estado_id' => 'required|exists:estados,id',
+                'esd_id' => 'required|exists:estado,id_esd',
             ]);
 
-            $existe = Municipio::where('nombre_municipio', $request->nombre)
-                ->where('estado_id', $request->estado_id)
-                ->where('status', true)
+            $existe = Municipio::where('nombre_mun', $request->nombre)
+                ->where('esd_id', $request->esd_id)
+                ->where('status_id', 1)
                 ->exists();
 
             return response()->json([
@@ -65,13 +65,13 @@ class MunicipioController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre_municipio' => 'required|string|max:255',
-            'estado_id' => 'required|exists:estados,id',
+            'nombre_mun' => 'required|string|max:255',
+            'esd_id' => 'required|exists:estado,id_esd',
         ]);
 
-        $existe = Municipio::where('nombre_municipio', $validated['nombre_municipio'])
-            ->where('estado_id', $validated['estado_id'])
-            ->where('status', true)
+        $existe = Municipio::where('nombre_mun', $validated['nombre_mun'])
+            ->where('esd_id', $validated['esd_id'])
+            ->where('status_id', 1)
             ->exists();
 
         if ($existe) {
@@ -82,9 +82,9 @@ class MunicipioController extends Controller
 
         try {
             $municipio = new Municipio();
-            $municipio->nombre_municipio = $validated['nombre_municipio'];
-            $municipio->estado_id = $validated['estado_id'];
-            $municipio->status = true;
+            $municipio->nombre_mun = $validated['nombre_mun'];
+            $municipio->esd_id = $validated['esd_id'];
+            $municipio->status_id = 1;
             $municipio->save();
 
             return redirect()
@@ -102,14 +102,14 @@ class MunicipioController extends Controller
         $municipio = Municipio::findOrFail($id);
 
         $validated = $request->validate([
-            'nombre_municipio' => 'required|string|max:255',
-            'estado_id' => 'required|exists:estados,id',
+            'nombre_mun' => 'required|string|max:255',
+            'esd_id' => 'required|exists:estado,id_esd',
         ]);
 
-        $existe = Municipio::where('nombre_municipio', $validated['nombre_municipio'])
-            ->where('estado_id', $validated['estado_id'])
-            ->where('id', '!=', $municipio->id)
-            ->where('status', true)
+        $existe = Municipio::where('nombre_mun', $validated['nombre_mun'])
+            ->where('esd_id', $validated['esd_id'])
+            ->where('id_mun', '!=', $municipio->id_mun)
+            ->where('status_id', 1)
             ->exists();
 
         if ($existe) {
@@ -119,8 +119,8 @@ class MunicipioController extends Controller
         }
 
         try {
-            $municipio->nombre_municipio = $validated['nombre_municipio'];
-            $municipio->estado_id = $validated['estado_id'];
+            $municipio->nombre_mun = $validated['nombre_mun'];
+            $municipio->esd_id = $validated['esd_id'];
             $municipio->save();
 
             return redirect()
@@ -139,7 +139,7 @@ class MunicipioController extends Controller
 
         if ($municipio) {
             $municipio->update([
-                'status' => false,
+                'status_id' => 2,
             ]);
             return redirect()
                 ->route('admin.municipio.index')

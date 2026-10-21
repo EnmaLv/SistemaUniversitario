@@ -70,7 +70,7 @@ class AccesosDenegadosTest extends SeguridadTestCase
     public function test_sin_permiso_editar_recibe_403_en_update_y_con_permiso_pasa(): void
     {
         $usuario = $this->crearUsuario('Obrero');
-        $sedeId = DB::table('sede')->value('id');
+        $sedeId = DB::table('sede')->value('id_sed');
         $datos = ['nombre' => 'Sede editada', 'direccion' => 'Dirección', 'telefono' => '0424-1234567'];
 
         $this->actingAs($usuario)->put("/admin/maestros/sedes/{$sedeId}", $datos)->assertForbidden();
