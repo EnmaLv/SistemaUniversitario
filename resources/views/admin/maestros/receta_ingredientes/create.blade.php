@@ -62,8 +62,8 @@
                                         class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                                         <option value="">Buscar producto...</option>
                                         @foreach ($productos as $producto)
-                                            <option value="{{ $producto->id }}" data-nombre="{{ $producto->nombre }}">
-                                                {{ $producto->nombre }}
+                                            <option value="{{ $producto->id_pdt }}" data-nombre="{{ $producto->nombre_pdt }}">
+                                                {{ $producto->nombre_pdt }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -79,8 +79,8 @@
                                         class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                                         <option value="">Unidad</option>
                                         @foreach ($unidades as $unidad)
-                                            <option value="{{ $unidad->id }}" data-nombre="{{ $unidad->nombre }}">
-                                                {{ $unidad->nombre }}
+                                            <option value="{{ $unidad->id_unm }}" data-nombre="{{ $unidad->nombre_unm }}">
+                                                {{ $unidad->nombre_unm }}
                                             </option>
                                         @endforeach
                                     </select>

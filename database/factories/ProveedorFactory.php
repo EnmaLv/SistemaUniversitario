@@ -17,12 +17,12 @@ class ProveedorFactory extends Factory
     public function definition(): array
     {
         return [
-            'empresa' => "Hiper Sol",
-            'nombre' => "Orianna",
-            'direccion' => "Prados del Sol Acarigua",
-            'telefono' => "0424-5345568",
-            'email' => "oriana@gmail.com",
-            'estado' => 1,
+            'empresa_prv' => "Hiper Sol",
+            'nombre_contacto_prv' => "Orianna",
+            'direccion_prv' => "Prados del Sol Acarigua",
+            'telefono_prv' => "0424-5345568",
+            'email_prv' => "oriana@gmail.com",
+            'status_id' => 1,
         ];
     }
 }

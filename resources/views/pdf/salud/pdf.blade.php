@@ -1171,9 +1171,9 @@
                                         <td>{{ \Carbon\Carbon::parse($disp->fecha)->format('d/m/Y') }}</td>
                                         <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                         </td>
-                                        <td>{{ $det->producto->nombre ?? '—' }}</td>
+                                        <td>{{ $det->producto->nombre_pdt ?? '—' }}</td>
                                         <td class="center">{{ number_format($disp->cantidad, 2) }}</td>
-                                        <td>{{ $disp->lote->codigo ?? '—' }}</td>
+                                        <td>{{ $disp->lote->codigo_lote_lot ?? '—' }}</td>
                                         <td>{{ trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—' }}
                                         </td>
                                     </tr>

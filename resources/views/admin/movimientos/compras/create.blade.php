@@ -55,9 +55,9 @@
                                     class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                     <option value="" selected disabled>Seleccione proveedor</option>
                                     @foreach ($proveedores as $proveedor)
-                                        <option value="{{ $proveedor->id }}"
-                                            {{ old('proveedor_id', request('proveedor_id')) == $proveedor->id ? 'selected' : '' }}>
-                                            {{ $proveedor->nombre }}
+                                        <option value="{{ $proveedor->id_prv }}"
+                                            {{ old('proveedor_id', request('proveedor_id')) == $proveedor->id_prv ? 'selected' : '' }}>
+                                            {{ $proveedor->nombre_contacto_prv }}
                                         </option>
                                     @endforeach
                                 </select>

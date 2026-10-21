@@ -21,9 +21,9 @@ class ProductoController extends Controller
 
         $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, 1);
 
-        $categorias = Categoria::select('id', 'nombre')
-            ->where('activo', 1)
-            ->where('tipo_producto_id', 1)
+        $categorias = Categoria::select('id_cap', 'nombre_cap')
+            ->where('status_id', Categoria::STATUS_ACTIVO)
+            ->where('tpr_id', 1)
             ->get();
 
         return view('admin.maestros.productos.index', compact('productos', 'categorias'));
@@ -97,7 +97,7 @@ class ProductoController extends Controller
         $producto = Producto::findOrFail($id);
 
         $tipo = $request->input('tipo', 'alimento');
-        $esMedicamento = ($tipo === 'medicamento') || ($producto->presentacion_id !== null);
+        $esMedicamento = ($tipo === 'medicamento') || ($producto->enp_id !== null);
 
         $tipoProductoId = $esMedicamento ? 2 : 1;
 
@@ -205,24 +205,24 @@ class ProductoController extends Controller
                     continue;
                 }
 
-                $precioUSD = $producto->precioProducto->precio_usd
-                    ?? $producto->precioProducto->costo_usd;
+                $precioUSD = $producto->precioProducto->precio_usd_ppr
+                    ?? $producto->precioProducto->costo_usd_ppr;
 
                 if (!$precioUSD || $precioUSD <= 0) {
                     continue;
                 }
 
-                $margen = $producto->precioProducto->margen ?? 0;
+                $margen = $producto->precioProducto->margen_ppr ?? 0;
 
                 $precioBs = round(
                     $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                     2
                 );
 
-                DB::table('productos')
-                    ->where('id', $producto->id)
+                DB::table('producto')
+                    ->where('id_pdt', $producto->id_pdt)
                     ->update([
-                        'precio_compra' => $precioBs,
+                        'precio_compra_pdt' => $precioBs,
                         'updated_at'    => now()
                     ]);
             }
@@ -261,7 +261,7 @@ class ProductoController extends Controller
         $query = Producto::with('precioProducto');
 
         if ($productoId) {
-            $query->where('id', $productoId);
+            $query->where('id_pdt', $productoId);
         }
 
         $productos = $query->get();
@@ -273,25 +273,25 @@ class ProductoController extends Controller
             }
 
             $precioUSD =
-                $producto->precioProducto->costo_usd ??
-                $producto->precioProducto->precio_usd ??
+                $producto->precioProducto->costo_usd_ppr ??
+                $producto->precioProducto->precio_usd_ppr ??
                 0;
 
             if ($precioUSD <= 0) {
                 continue;
             }
 
-            $margen = $producto->precioProducto->margen ?? 0;
+            $margen = $producto->precioProducto->margen_ppr ?? 0;
 
             $precioBs = round(
                 $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                 2
             );
 
-            DB::table('productos')
-                ->where('id', $producto->id)
+            DB::table('producto')
+                ->where('id_pdt', $producto->id_pdt)
                 ->update([
-                    'precio_compra' => $precioBs,
+                    'precio_compra_pdt' => $precioBs,
                     'updated_at'    => now()
                 ]);
         }

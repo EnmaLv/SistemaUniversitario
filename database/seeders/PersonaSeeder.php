@@ -285,7 +285,7 @@ class PersonaSeeder extends Seeder
                 'correo_per' => $correo,
                 'id_perfil' => 1,
                 'sed_id' => $sede,
-            ]);
+            ], 'id_per');
 
             $idUsuario = DB::table('user')->insertGetId([
                 'per_id' => $idPersona,
@@ -295,7 +295,7 @@ class PersonaSeeder extends Seeder
                 'password_use' => bcrypt('12345678'),
                 'master_key_use' => bcrypt('masterkey123'),
                 'security_questions_use' => null,
-            ]);
+            ], 'id_use');
 
             if ($rolPsicologo) {
                 DB::table('usuario_rol')->insert(['rol_id' => $rolPsicologo, 'use_id' => $idUsuario]);
@@ -313,7 +313,7 @@ class PersonaSeeder extends Seeder
             'semestre_per' => 2,
             'id_perfil' => 2,
             'sed_id' => 2,
-        ]);
+        ], 'id_per');
 
         \App\Support\Cuentas\CuentasComunidad::procesarLote([$estudianteGuanare], 'seeder');
     }

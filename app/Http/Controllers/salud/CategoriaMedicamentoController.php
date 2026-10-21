@@ -30,7 +30,7 @@ class CategoriaMedicamentoController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:categorias,nombre'
+                'unique:categoria_producto,nombre_cap'
             ],
             'descripcion' => 'nullable|string',
         ], [
@@ -88,7 +88,7 @@ class CategoriaMedicamentoController extends Controller
         try {
             // Lógica para inactivar categoría
             $categoria = Categoria::findOrFail($id);
-            $categoria->update(['activo' => 0]);
+            $categoria->update(['status_id' => Categoria::STATUS_INACTIVO]);
 
             return redirect()->route('admin.salud.maestros.categorias.index')
                 ->with('success', 'Categoría inactivada correctamente.');
@@ -105,7 +105,7 @@ class CategoriaMedicamentoController extends Controller
         try {
             // Lógica para activar categoría
             $categoria = Categoria::findOrFail($id);
-            $categoria->update(['activo' => 1]);
+            $categoria->update(['status_id' => Categoria::STATUS_ACTIVO]);
 
             return redirect()->route('admin.salud.maestros.categorias.index')
                 ->with('success', 'Categoría activada correctamente.');

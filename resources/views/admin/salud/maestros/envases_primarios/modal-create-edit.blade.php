@@ -101,7 +101,7 @@
         const icon = document.getElementById(modalId + 'Icon');
         if (icon) icon.className = `fas fa-edit ${ICON_COLOR_CLASS_ENVASE}`;
 
-        document.getElementById(modalId + 'Nombre').value = envase.nombre || '';
+        document.getElementById(modalId + 'Nombre').value = envase.nombre_enp || '';
 
         openModal(modalId);
     }

@@ -92,9 +92,9 @@
                                 class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                 <option value="">Todas las categorías</option>
                                 @foreach ($categorias as $categoria)
-                                    <option value="{{ $categoria->id }}"
-                                        @if (request('categoria') == $categoria->id) selected @endif>
-                                        {{ $categoria->nombre }}
+                                    <option value="{{ $categoria->id_cap }}"
+                                        @if (request('categoria') == $categoria->id_cap) selected @endif>
+                                        {{ $categoria->nombre_cap }}
                                     </option>
                                 @endforeach
                             </select>
@@ -134,28 +134,28 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($productos as $producto)
-                                <x-table-row :id="$producto->id">
+                                <x-table-row :id="$producto->id_pdt">
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
                                             class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
-                                            {{ $producto->codigo }}
+                                            {{ $producto->codigo_pdt }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $producto->nombre }}
+                                        {{ $producto->nombre_pdt }}
                                     </td>
                                     <td
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $producto->categoria->nombre }}
+                                        {{ $producto->categoria->nombre_cap }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($producto->cantidad_actual == null)
+                                        @if ($producto->existencia_convertida == null)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800">
                                                 <i class="fas fa-info-circle"></i> Sin compra
                                             </span>
-                                        @elseif ($producto->cantidad_actual == 0)
+                                        @elseif ($producto->existencia_convertida == 0)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg border border-amber-300 dark:border-amber-900">
                                                 <i class="fas fa-exclamation-triangle"></i> Agotado
@@ -163,18 +163,18 @@
                                         @else
                                             <span
                                                 class="inline-flex items-center px-3 py-1 text-[10px] font-black rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-900">
-                                                {{ $producto->cantidad_actual }}
+                                                {{ $producto->existencia_convertida }}
                                             </span>
                                         @endif
                                     </td>
                                     <td
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $producto->unidad->nombre }}
+                                        {{ $producto->unidad->nombre_unm }}
                                     </td>
 
                                     {{-- Componente de Acciones --}}
-                                    <x-table-actions :id="$producto->id" baseUrl="admin/salud/maestros/medicamentos"
-                                        :status="$producto->estado" />
+                                    <x-table-actions :id="$producto->id_pdt" baseUrl="admin/salud/maestros/medicamentos"
+                                        :status="$producto->status_id == 1" />
                                 </x-table-row>
                             @empty
                                 <tr>

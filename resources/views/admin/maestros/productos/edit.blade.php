@@ -10,7 +10,7 @@
                         Editar Producto
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Editando: <span class="font-bold">{{ $producto->nombre }}</span>
+                        Editando: <span class="font-bold">{{ $producto->nombre_pdt }}</span>
                     </p>
                 </div>
                 <a href="{{ route('admin.maestros.productos.index') }}"
@@ -22,7 +22,7 @@
 
             @include('admin.maestros.productos._form', [
                 'titulo'          => 'Actualizar Producto',
-                'action'          => route('admin.maestros.productos.update', $producto->id),
+                'action'          => route('admin.maestros.productos.update', $producto->id_pdt),
                 'metodo'          => 'PUT',
                 'rutaVolver'      => route('admin.maestros.productos.index'),
                 'categorias'      => $categorias,

@@ -234,7 +234,7 @@ class RegisterNoti extends Component
         ];
 
         $persona = Persona::deSedeActiva()->where('cedula_per', $this->cedula)
-            ->where('estado', true)
+            ->where('status_id', 1)
             ->where('id_perfil', 2)
             ->first();
 
@@ -273,7 +273,7 @@ class RegisterNoti extends Component
                 DB::table('registro_diario_c')->insert([
                     'sed_id'              => \App\Support\Sedes\SedeActiva::idParaCrear(),
                     'per_id'           => $persona->id_per,
-                    'ppr_id'       => $personaPnf->id_ppr,
+                    'pep_id'       => $personaPnf->id_pep,
                     'tipo_comida'          => $tipo,
                     'fecha_regis_diario_c' => date('Y-m-d'),
                     'hora'                 => date('H:i:s'),

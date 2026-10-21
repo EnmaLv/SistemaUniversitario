@@ -25,9 +25,9 @@ class RecetaRequest extends FormRequest
             'descripcion' => ['nullable', 'string', 'max:500'],
 
             'detalles'                   => ['required', 'array', 'min:1', 'max:50'],
-            'detalles.*.producto_id'     => ['required', 'integer', 'exists:productos,id'],
+            'detalles.*.producto_id'     => ['required', 'integer', 'exists:producto,id_pdt'],
             'detalles.*.cantidad'        => ['required', 'numeric', 'min:0.01', 'max:99999'],
-            'detalles.*.unidad_id'       => ['required', 'integer', 'exists:unidades,id'],
+            'detalles.*.unidad_id'       => ['required', 'integer', 'exists:unidad_medida,id_unm'],
             'detalles.*.frecuencia'      => ['required', 'string', 'max:255'],
             'detalles.*.equivalencia_ml' => ['nullable', 'numeric', 'min:0', 'max:99999'],
             'detalles.*.fecha_inicio'    => ['nullable', 'date', 'after_or_equal:fecha'],
@@ -52,8 +52,8 @@ class RecetaRequest extends FormRequest
             $idsSolicitados = collect($detalles)->pluck('producto_id')->map(fn($id) => (int) $id)->unique();
             $idsValidos = app(RecetaService::class)
                 ->productosSaludQuery()
-                ->whereIn('id', $idsSolicitados)
-                ->pluck('id')
+                ->whereIn('id_pdt', $idsSolicitados)
+                ->pluck('id_pdt')
                 ->map(fn($id) => (int) $id);
 
             foreach ($detalles as $i => $item) {

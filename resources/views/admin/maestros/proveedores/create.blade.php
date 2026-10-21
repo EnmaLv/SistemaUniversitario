@@ -72,22 +72,42 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label for="direccion" class="mb-2 block text-sm font-bold"
-                            style="color: var(--text-main);">
-                            Dirección
-                        </label>
-                        <div class="relative">
-                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </span>
-                            <input id="direccion" name="direccion" type="text" value="{{ old('direccion') }}"
-                                required maxlength="255" placeholder="Dirección completa"
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div>
+                            <label for="rif" class="mb-2 block text-sm font-bold"
+                                style="color: var(--text-main);">
+                                RIF <span class="text-xs font-medium text-gray-400">(opcional)</span>
+                            </label>
+                            <div class="relative">
+                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                                    <i class="fas fa-id-card"></i>
+                                </span>
+                                <input id="rif" name="rif" type="text" value="{{ old('rif') }}"
+                                    maxlength="30" placeholder="J-12345678-9"
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
+                            </div>
+                            @error('rif')
+                                <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
-                        @error('direccion')
-                            <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p>
-                        @enderror
+
+                        <div class="md:col-span-2">
+                            <label for="direccion" class="mb-2 block text-sm font-bold"
+                                style="color: var(--text-main);">
+                                Dirección
+                            </label>
+                            <div class="relative">
+                                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </span>
+                                <input id="direccion" name="direccion" type="text" value="{{ old('direccion') }}"
+                                    required maxlength="255" placeholder="Dirección completa"
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
+                            </div>
+                            @error('direccion')
+                                <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">

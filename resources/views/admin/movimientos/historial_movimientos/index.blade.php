@@ -62,18 +62,18 @@
                     </div>
 
                     <div>
-                        <label for="tipo_movimiento"
+                        <label for="tipo_movimiento_moi"
                             class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             Tipo de movimiento
                         </label>
-                        <select name="tipo_movimiento" id="tipo_movimiento"
+                        <select name="tipo_movimiento_moi" id="tipo_movimiento_moi"
                             style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
                             class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
                             <option value="">Todos</option>
-                            <option value="ENTRADA" {{ request('tipo_movimiento') === 'ENTRADA' ? 'selected' : '' }}>
+                            <option value="ENTRADA" {{ request('tipo_movimiento_moi') === 'ENTRADA' ? 'selected' : '' }}>
                                 Entrada
                             </option>
-                            <option value="SALIDA" {{ request('tipo_movimiento') === 'SALIDA' ? 'selected' : '' }}>
+                            <option value="SALIDA" {{ request('tipo_movimiento_moi') === 'SALIDA' ? 'selected' : '' }}>
                                 Salida
                             </option>
                         </select>
@@ -124,7 +124,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($movimientos->tipo_movimiento === 'ENTRADA')
+                                        @if ($movimientos->tipo_movimiento_moi === 'ENTRADA')
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-arrow-down"></i> Entrada
@@ -138,25 +138,25 @@
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $movimientos->producto->nombre ?? 'N/A' }}
+                                        {{ $movimientos->producto->nombre_pdt ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
-                                        {{ $movimientos->lote->codigo_lote ?? 'N/A' }}
+                                        {{ $movimientos->lote->codigo_lote_lot ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->cantidad_convertida }}
+                                        {{ $movimientos->cantidad_convertida_moi }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->unidad->nombre ?? 'N/A' }}
+                                        {{ $movimientos->unidad->nombre_unm ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         {{ $movimientos->sede->nombre_sed ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->fecha }}
+                                        {{ $movimientos->fecha_movimiento_moi }}
                                     </td>
                                     <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->observaciones ?: 'Sin observación' }}
+                                        {{ $movimientos->observacion_moi ?: 'Sin observación' }}
                                     </td>
                                 </tr>
                             @empty

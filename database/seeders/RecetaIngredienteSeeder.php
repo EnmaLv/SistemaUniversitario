@@ -29,10 +29,10 @@ class RecetaIngredienteSeeder extends Seeder
 
             DB::table('receta_ingredientes')->insert([
                 'recetas_id' => $item['recetas_id'],
-                'producto_id' => $item['producto_id'],
+                'pdt_id' => $item['producto_id'],
                 'cantidad_porcion' => $item['cantidad_porcion'],
-                'cantidad_gramos' => $item['cantidad_porcion'] * $unidad->factor_a_gramo,
-                'unidad_id' => $item['unidad_id'],
+                'cantidad_gramos' => $item['cantidad_porcion'] * $unidad->factor_conversion_unm,
+                'unm_id' => $item['unidad_id'],
             ]);
         }
     }

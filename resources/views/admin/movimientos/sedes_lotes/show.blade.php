@@ -59,12 +59,12 @@
                             <tbody>
                                 @foreach ($totales as $total)
                                     <tr class="border-b" style="border-color: var(--border-color); color: var(--text-main);">
-                                        <td class="px-6 py-3 font-bold">{{ $total->producto->nombre ?? 'Producto' }}</td>
+                                        <td class="px-6 py-3 font-bold">{{ $total->producto->nombre_pdt ?? 'Producto' }}</td>
                                         <td class="px-6 py-3 text-center">
-                                            <x-alerta-stock :total="$total->cantidad_total" :minimo="$total->producto?->stock_minimo" :maximo="$total->producto?->stock_maximo" />
+                                            <x-alerta-stock :total="$total->cantidad_total_int" :minimo="$total->producto?->stock_minimo_pdt" :maximo="$total->producto?->stock_maximo_pdt" />
                                         </td>
-                                        <td class="px-6 py-3 text-center">{{ number_format($total->cantidad_convertida_total, 2, ',', '.') }}</td>
-                                        <td class="px-6 py-3 text-center">{{ $total->producto->stock_minimo ?? '—' }} / {{ $total->producto->stock_maximo ?? '—' }}</td>
+                                        <td class="px-6 py-3 text-center">{{ number_format($total->cantidad_convertida_total_int, 2, ',', '.') }}</td>
+                                        <td class="px-6 py-3 text-center">{{ $total->producto->stock_minimo_pdt ?? '—' }} / {{ $total->producto->stock_maximo_pdt ?? '—' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -136,13 +136,13 @@
                             @forelse ($sede as $loteSede)
                                 @php
                                     $lote = $loteSede->lote;
-                                    $fechaVencimiento = $lote?->fecha_vencimiento
-                                        ? \Carbon\Carbon::parse($lote->fecha_vencimiento)
+                                    $fechaVencimiento = $lote?->fecha_vencimiento_lot
+                                        ? \Carbon\Carbon::parse($lote->fecha_vencimiento_lot)
                                         : null;
 
                                     $estaVencido    = $fechaVencimiento && $fechaVencimiento->isPast();
-                                    $agotado        = $loteSede->cantidad_convertida <= 0;
-                                    $loteActivo     = (bool) ($lote?->estado ?? false);
+                                    $agotado        = $loteSede->cantidad_convertida_isl <= 0;
+                                    $loteActivo     = (int) ($lote?->status_id ?? 0) === 1;
                                     $diasParaVencer = $fechaVencimiento
                                         ? \Carbon\Carbon::now()->diffInDays($fechaVencimiento, false)
                                         : null;
@@ -168,7 +168,7 @@
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-black rounded-md border font-mono"
                                             style="border-color: var(--border-color); color: var(--text-main);">
                                             <i class="fas fa-barcode text-[10px] opacity-60"></i>
-                                            {{ $loteSede->lote->codigo_lote }}
+                                            {{ $loteSede->lote->codigo_lote_lot }}
                                         </span>
                                     </td>
 
@@ -177,32 +177,32 @@
                                             <span class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-500 flex items-center justify-center shrink-0">
                                                 <i class="fas fa-box text-xs"></i>
                                             </span>
-                                            <span class="font-bold">{{ $loteSede->lote->producto->nombre ?? '—' }}</span>
+                                            <span class="font-bold">{{ $loteSede->lote->producto->nombre_pdt ?? '—' }}</span>
                                         </div>
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
-                                        <span class="font-black tabular-nums">{{ number_format($loteSede->cantidad, 0) }}</span>
+                                        <span class="font-black tabular-nums">{{ number_format($loteSede->cantidad_isl, 0) }}</span>
                                         <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 ml-1">u</span>
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        <span class="tabular-nums">{{ number_format($loteSede->cantidad_convertida, 0) }}</span>
+                                        <span class="tabular-nums">{{ number_format($loteSede->cantidad_convertida_isl, 0) }}</span>
                                         <span class="text-[10px] font-black uppercase tracking-wider opacity-60 ml-1">g</span>
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_entrada)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_entrada_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_vencimiento)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_vencimiento_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $loteSede->lote->proveedor->nombre ?? '—' }}
+                                        {{ $loteSede->lote->proveedor->nombre_contacto_prv ?? '—' }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap">

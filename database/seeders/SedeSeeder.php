@@ -18,7 +18,7 @@ class SedeSeeder extends Seeder
             'sitio_web_uni' => 'https://uptp.edu.ve',
             'created_at'    => now(),
             'updated_at'    => now(),
-        ]);
+        ], 'id_uni');
 
         DB::table('sede')->insert([
             ['nombre_sed' => 'Acarigua', 'direccion_sed' => 'Bellas Artes', 'telefono_sed' => '0424-2222232', 'uni_id' => $universidad, 'status_id' => 1],

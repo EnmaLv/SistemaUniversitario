@@ -13,20 +13,20 @@ class CategoriaSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('categorias')->insert([
-            ['nombre' => 'Embutidos', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Frutas', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Verduras', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Legumbres', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Carnes', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Lácteos', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Cereales', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Aceite', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Carbohidrato', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Grasas', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Bebidas', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Enlatados', 'descripcion' => null, 'tipo_producto_id' => 1],
-            ['nombre' => 'Condimentos', 'descripcion' => null, 'tipo_producto_id' => 1],
+        DB::table('categoria_producto')->insert([
+            ['nombre_cap' => 'Embutidos', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Frutas', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Verduras', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Legumbres', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Carnes', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Lácteos', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Cereales', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Aceite', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Carbohidrato', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Grasas', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Bebidas', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Enlatados', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
+            ['nombre_cap' => 'Condimentos', 'descripcion_cap' => null, 'tpr_id' => 1, 'status_id' => 1],
             
         ]);
     }

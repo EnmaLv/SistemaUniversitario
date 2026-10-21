@@ -141,22 +141,24 @@ class Sede extends Model
             ->first();
 
         if ($sede) {
-            $sede->inventario = DB::table('inventario_sede_lotes as isl')
-                ->join('lotes', 'lotes.id', '=', 'isl.lote_id')
-                ->join('productos', 'productos.id', '=', 'lotes.producto_id')
+            $sede->inventario = DB::table('inventario_sede_lote as isl')
+                ->join('lote', 'lote.id_lot', '=', 'isl.lot_id')
+                ->join('producto', 'producto.id_pdt', '=', 'lote.pdt_id')
                 ->where('isl.sed_id', $id)
-                ->where('isl.cantidad', '>', 0)
+                ->where('isl.cantidad_isl', '>', 0)
+                ->whereNull('isl.deleted_at')
+                ->whereNull('lote.deleted_at')
                 ->select(
-                    'productos.nombre as producto_nombre',
-                    'productos.codigo as producto_codigo',
-                    'lotes.codigo_lote',
-                    'lotes.fecha_vencimiento',
-                    'isl.cantidad'
+                    'producto.nombre_pdt as producto_nombre',
+                    'producto.codigo_pdt as producto_codigo',
+                    'lote.codigo_lote_lot',
+                    'lote.fecha_vencimiento_lot',
+                    'isl.cantidad_isl'
                 )
                 ->get();
 
             $sede->total_productos = $sede->inventario->count();
-            $sede->cantidad_total = $sede->inventario->sum('cantidad');
+            $sede->cantidad_total = $sede->inventario->sum('cantidad_isl');
         }
 
         return $sede;
@@ -164,15 +166,16 @@ class Sede extends Model
 
     public static function tieneInventario($id)
     {
-        return DB::table('inventario_sede_lotes')
+        return DB::table('inventario_sede_lote')
             ->where('sed_id', $id)
-            ->where('cantidad', '>', 0)
+            ->where('cantidad_isl', '>', 0)
+            ->whereNull('deleted_at')
             ->exists();
     }
 
     public static function tieneMovimientos($id)
     {
-        return DB::table('movimiento_inventarios')
+        return DB::table('movimiento_inventario')
             ->where('sed_id', $id)
             ->exists();
     }
@@ -189,22 +192,25 @@ class Sede extends Model
     public static function obtenerEstadisticas($id)
     {
         return [
-            'total_productos' => DB::table('inventario_sede_lotes as isl')
-                ->join('lotes', 'lotes.id', '=', 'isl.lote_id')
+            'total_productos' => DB::table('inventario_sede_lote as isl')
+                ->join('lote', 'lote.id_lot', '=', 'isl.lot_id')
                 ->where('isl.sed_id', $id)
-                ->where('isl.cantidad', '>', 0)
-                ->distinct('lotes.producto_id')
-                ->count('lotes.producto_id'),
+                ->where('isl.cantidad_isl', '>', 0)
+                ->whereNull('isl.deleted_at')
+                ->distinct('lote.pdt_id')
+                ->count('lote.pdt_id'),
 
-            'total_lotes' => DB::table('inventario_sede_lotes')
+            'total_lotes' => DB::table('inventario_sede_lote')
                 ->where('sed_id', $id)
-                ->where('cantidad', '>', 0)
+                ->where('cantidad_isl', '>', 0)
+                ->whereNull('deleted_at')
                 ->count(),
 
-            'movimientos_mes' => DB::table('movimiento_inventarios')
+            'movimientos_mes' => DB::table('movimiento_inventario')
                 ->where('sed_id', $id)
-                ->whereMonth('fecha', date('m'))
-                ->whereYear('fecha', date('Y'))
+                ->whereNull('deleted_at')
+                ->whereMonth('fecha_movimiento_moi', date('m'))
+                ->whereYear('fecha_movimiento_moi', date('Y'))
                 ->count(),
         ];
     }

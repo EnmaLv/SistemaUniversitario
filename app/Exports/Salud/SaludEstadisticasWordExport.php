@@ -238,9 +238,9 @@ class SaludEstadisticasWordExport
                             trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')),
                             $cellFontStyle
                         );
-                        $table->addCell()->addText($det->producto->nombre ?? '—', $cellFontStyle);
+                        $table->addCell()->addText($det->producto->nombre_pdt ?? '—', $cellFontStyle);
                         $table->addCell()->addText(number_format($disp->cantidad, 2), $cellFontStyle);
-                        $table->addCell()->addText($disp->lote->codigo ?? '—', $cellFontStyle);
+                        $table->addCell()->addText($disp->lote->codigo_lote_lot ?? '—', $cellFontStyle);
                         $table->addCell()->addText(
                             trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—',
                             $cellFontStyle

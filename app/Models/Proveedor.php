@@ -2,80 +2,92 @@
 
 namespace App\Models;
 
+use App\Traits\ConvierteAMayusculasNoEloquent;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Traits\ConvierteAMayusculasNoEloquent;
 
 class Proveedor extends Model
 {
     use ConvierteAMayusculasNoEloquent;
     use HasFactory;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'proveedors';
+    protected $table = 'proveedor';
+
+    protected $primaryKey = 'id_prv';
 
     protected $fillable = [
-        'empresa',
-        'direccion',
-        'nombre',
-        'telefono',
-        'email',
-        'estado',
+        'empresa_prv',
+        'rif_prv',
+        'direccion_prv',
+        'nombre_contacto_prv',
+        'telefono_prv',
+        'email_prv',
+        'status_id',
     ];
 
     public function lotes()
     {
-        return $this->hasMany(Lote::class);
+        return $this->hasMany(Lote::class, 'prv_id', 'id_prv');
     }
 
     public function compras()
     {
-        return $this->hasMany(Compra::class);
+        return $this->hasMany(Compra::class, 'prv_id', 'id_prv');
     }
 
     public static function listarProveedores($buscar = null, $activo = null)
     {
-        $query = DB::table('proveedors')
-            ->select('proveedors.*');
+        $query = DB::table('proveedor')
+            ->select('proveedor.*')
+            ->whereNull('deleted_at');
 
         if ($buscar) {
             $query->where(function ($q) use ($buscar) {
-                $q->where('empresa', 'like', "%{$buscar}%")
-                    ->orWhere('nombre', 'like', "%{$buscar}%")
-                    ->orWhere('email', 'like', "%{$buscar}%");
+                $q->where('empresa_prv', 'like', "%{$buscar}%")
+                    ->orWhere('rif_prv', 'like', "%{$buscar}%")
+                    ->orWhere('nombre_contacto_prv', 'like', "%{$buscar}%")
+                    ->orWhere('email_prv', 'like', "%{$buscar}%");
             });
         }
 
         if ($activo !== null && $activo !== '') {
-            $query->where('estado', (int)$activo);
+            $query->where('status_id', (int) $activo === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO);
         } else {
-            $query->where('estado', 1);
+            $query->where('status_id', self::STATUS_ACTIVO);
         }
 
-        return $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        return $query->orderBy('id_prv', 'desc')->paginate(10)->withQueryString();
     }
 
     public static function crearProveedor(array $data)
     {
         $helper = new self();
 
-        $data = $helper->convertirCamposAMayusculas($data, ['empresa', 'direccion', 'nombre']);
-        return DB::table('proveedors')->insertGetId([
-            'empresa'    => $data['empresa'],
-            'direccion'  => $data['direccion'],
-            'nombre'     => $data['nombre'],
-            'telefono'   => $data['telefono'],
-            'email'      => $data['email'],
-            'estado'     => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $data = $helper->convertirCamposAMayusculas($data, ['empresa', 'rif', 'direccion', 'nombre']);
+        return DB::table('proveedor')->insertGetId([
+            'empresa_prv'         => $data['empresa'] ?? null,
+            'rif_prv'             => $data['rif'] ?? null,
+            'direccion_prv'       => $data['direccion'] ?? null,
+            'nombre_contacto_prv' => $data['nombre'] ?? null,
+            'telefono_prv'        => $data['telefono'],
+            'email_prv'           => $data['email'],
+            'status_id'           => self::STATUS_ACTIVO,
+            'created_id'          => Auth::id(),
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ], 'id_prv');
     }
 
     public static function obtenerProveedor($id)
     {
-        return DB::table('proveedors')
-            ->where('id', $id)
+        return DB::table('proveedor')
+            ->where('id_prv', $id)
             ->first();
     }
 
@@ -83,59 +95,65 @@ class Proveedor extends Model
     {
         $helper = new self();
 
-        $data = $helper->convertirCamposAMayusculas($data, ['empresa', 'direccion', 'nombre']);
-        return DB::table('proveedors')
-            ->where('id', $id)
+        $data = $helper->convertirCamposAMayusculas($data, ['empresa', 'rif', 'direccion', 'nombre']);
+        return DB::table('proveedor')
+            ->where('id_prv', $id)
             ->update([
-                'empresa'    => $data['empresa'],
-                'direccion'  => $data['direccion'],
-                'nombre'     => $data['nombre'],
-                'telefono'   => $data['telefono'],
-                'email'      => $data['email'],
-                'updated_at' => now(),
+                'empresa_prv'         => $data['empresa'] ?? null,
+                'rif_prv'             => $data['rif'] ?? null,
+                'direccion_prv'       => $data['direccion'] ?? null,
+                'nombre_contacto_prv' => $data['nombre'] ?? null,
+                'telefono_prv'        => $data['telefono'],
+                'email_prv'           => $data['email'],
+                'updated_id'          => Auth::id(),
+                'updated_at'          => now(),
             ]);
     }
 
     public static function eliminarProveedor($id)
     {
-        return DB::table('proveedors')
-            ->where('id', $id)
+        return DB::table('proveedor')
+            ->where('id_prv', $id)
             ->update([
-                'estado' => 0,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_INACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 
     public static function activarProveedor($id)
     {
-        return DB::table('proveedors')
-            ->where('id', $id)
+        return DB::table('proveedor')
+            ->where('id_prv', $id)
             ->update([
-                'estado' => 1,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_ACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 
     public static function cambiarEstado($id, $estado)
     {
-        return DB::table('proveedors')
-            ->where('id', $id)
+        return DB::table('proveedor')
+            ->where('id_prv', $id)
             ->update([
-                'estado'     => $estado,
+                'status_id'  => (int) $estado === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO,
+                'updated_id' => Auth::id(),
                 'updated_at' => now(),
             ]);
     }
 
     public static function obtenerProveedorConCompras($id)
     {
-        $proveedor = DB::table('proveedors')
-            ->where('id', $id)
+        $proveedor = DB::table('proveedor')
+            ->where('id_prv', $id)
             ->first();
 
         if ($proveedor) {
-            $proveedor->compras = \App\Support\Sedes\SedeActiva::filtrar(DB::table('compras'), 'compras.sed_id')
-                ->where('proveedor_id', $id)
-                ->orderBy('fecha', 'desc')
+            $proveedor->compras = \App\Support\Sedes\SedeActiva::filtrar(DB::table('compra'), 'compra.sed_id')
+                ->where('prv_id', $id)
+                ->whereNull('deleted_at')
+                ->orderBy('fecha_compra_cmp', 'desc')
                 ->get();
         }
 
@@ -144,8 +162,8 @@ class Proveedor extends Model
 
     public static function tieneCompras($id)
     {
-        return DB::table('compras')
-            ->where('proveedor_id', $id)
+        return DB::table('compra')
+            ->where('prv_id', $id)
             ->exists();
     }
 }

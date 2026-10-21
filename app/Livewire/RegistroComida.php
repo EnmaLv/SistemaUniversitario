@@ -198,7 +198,7 @@ class RegistroComida extends Component
 
         if (isset($ingrediente->cantidad_porcion)) {
             $cantidadPorcion = (float) $ingrediente->cantidad_porcion;
-            $factorAGramo = (float) ($ingrediente->unidad?->factor_a_gramo ?? 0);
+            $factorAGramo = (float) ($ingrediente->unidad?->factor_conversion_unm ?? 0);
 
             if ($cantidadPorcion > 0 && $factorAGramo > 0) {
                 return $cantidadPorcion * $factorAGramo;
@@ -238,7 +238,7 @@ class RegistroComida extends Component
             $cantidadPorUnidad = $this->resolverCantidadPorUnidad($ingrediente);
 
             if ($cantidadPorUnidad <= 0) {
-                $advertencias[] = "El ingrediente «{$producto->nombre}» no tiene cantidad configurada en la receta y no se descontará del inventario. Edita la receta para corregirlo.";
+                $advertencias[] = "El ingrediente «{$producto->nombre_pdt}» no tiene cantidad configurada en la receta y no se descontará del inventario. Edita la receta para corregirlo.";
                 continue;
             }
 
@@ -246,16 +246,19 @@ class RegistroComida extends Component
 
             $disponibleTotal = (float) InventarioSedeLote::where('sed_id', $sedeId)
                 ->whereHas('lote', function ($q) use ($ingrediente) {
-                    $q->where('producto_id', $ingrediente->producto_id)
-                        ->whereDate('fecha_vencimiento', '>=', now()->toDateString())
-                        ->where('estado', 1);
+                    $q->where('pdt_id', $ingrediente->pdt_id)
+                        ->where(function ($vencimiento) {
+                            $vencimiento->whereNull('fecha_vencimiento_lot')
+                                ->orWhereDate('fecha_vencimiento_lot', '>=', now()->toDateString());
+                        })
+                        ->where('status_id', 1);
                 })
-                ->where('cantidad_convertida', '>', 0)
-                ->sum('cantidad_convertida');
+                ->where('cantidad_convertida_isl', '>', 0)
+                ->sum('cantidad_convertida_isl');
 
             if ($disponibleTotal < $totalNecesario) {
                 $faltantes[] = [
-                    'producto'   => $producto->nombre,
+                    'producto'   => $producto->nombre_pdt,
                     'necesario'  => round($totalNecesario, 2),
                     'disponible' => round($disponibleTotal, 2),
                     'faltante'   => round($totalNecesario - $disponibleTotal, 2),
@@ -388,31 +391,31 @@ class RegistroComida extends Component
 
                     $servicio = app(\App\Support\Inventario\ServicioInventario::class);
 
-                    foreach ($servicio->existenciasDisponibles((int) $ingrediente->producto_id, (int) $sedeId) as $inv) {
+                    foreach ($servicio->existenciasDisponibles((int) $ingrediente->pdt_id, (int) $sedeId) as $inv) {
 
                         if ($pendiente <= 0) break;
 
-                        $tomarGramos = min($pendiente, (float) $inv->cantidad_convertida);
+                        $tomarGramos = min($pendiente, (float) $inv->cantidad_convertida_isl);
 
-                        $servicio->salidaPorConvertida((int) $inv->lote_id, (int) $sedeId, $tomarGramos, [
-                            'unidad_id'       => $ingrediente->unidad_id,
-                            'referencia_type' => 'consumo_diario',
-                            'referencia_id'   => $consumo->id,
-                            'observaciones'   => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
+                        $servicio->salidaPorConvertida((int) $inv->lot_id, (int) $sedeId, $tomarGramos, [
+                            'unm_id'              => $ingrediente->unm_id,
+                            'referencia_type_moi' => 'consumo_diario',
+                            'referencia_id_moi'   => $consumo->id,
+                            'observacion_moi'     => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
                         ]);
 
                         $pendiente -= $tomarGramos;
                     }
 
                     if ($pendiente > 0) {
-                        throw new Exception("No hay suficiente inventario para el ingrediente: {$ingrediente->producto->nombre}. Faltan " . round($pendiente, 2) . " gramos.");
+                        throw new Exception("No hay suficiente inventario para el ingrediente: {$ingrediente->producto->nombre_pdt}. Faltan " . round($pendiente, 2) . " gramos.");
                     }
 
                     ConsumoDiarioDetalle::create([
                         'consumo_diario_id' => $consumo->id,
-                        'producto_id'       => $ingrediente->producto_id,
+                        'pdt_id'            => $ingrediente->pdt_id,
                         'cantidad_total'    => round($totalIngrediente, 2),
-                        'unidad_id'         => $ingrediente->unidad_id ?? $ingrediente->producto->unidad_id,
+                        'unm_id'            => $ingrediente->unm_id ?? $ingrediente->producto->unm_id,
                     ]);
                 }
             }

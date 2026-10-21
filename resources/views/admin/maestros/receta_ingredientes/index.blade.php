@@ -87,8 +87,8 @@
                                             <ul id="receta-{{ $receta->id }}" class="space-y-1 text-left inline-block">
                                                 @foreach ($ingredientes as $index => $ing)
                                                     <li class="ingrediente-item text-sm text-gray-600 dark:text-gray-300 {{ $showMore && $index >= 3 ? 'hidden' : '' }}">
-                                                        <span class="font-semibold text-gray-700 dark:text-gray-200">{{ optional($ing->producto)->nombre ?? 'Producto eliminado' }}</span>
-                                                        <span class="text-gray-500">- {{ round($ing->cantidad_porcion) }} {{ optional($ing->unidad)->nombre ?? '' }}</span>
+                                                        <span class="font-semibold text-gray-700 dark:text-gray-200">{{ optional($ing->producto)->nombre_pdt ?? 'Producto eliminado' }}</span>
+                                                        <span class="text-gray-500">- {{ round($ing->cantidad_porcion) }} {{ optional($ing->unidad)->nombre_unm ?? '' }}</span>
                                                     </li>
                                                 @endforeach
                                             </ul>

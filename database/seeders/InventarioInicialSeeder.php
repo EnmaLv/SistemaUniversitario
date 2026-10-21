@@ -17,39 +17,39 @@ class InventarioInicialSeeder extends Seeder
 
     public function run(): void
     {
-        $proveedor = DB::table('proveedors')->orderBy('id')->value('id');
+        $proveedor = DB::table('proveedor')->orderBy('id_prv')->value('id_prv');
 
         if (! $proveedor) {
             return;
         }
 
         foreach (self::EXISTENCIAS as $codigo => $porSede) {
-            $producto = DB::table('productos')->where('codigo', $codigo)->first();
+            $producto = DB::table('producto')->where('codigo_pdt', $codigo)->first();
 
             if (! $producto) {
                 continue;
             }
 
             $total = array_sum($porSede);
-            $loteId = DB::table('lotes')->insertGetId([
-                'codigo_lote'       => 'INI-' . $codigo,
-                'fecha_entrada'     => now()->toDateString(),
-                'fecha_vencimiento' => now()->addMonths(6)->toDateString(),
-                'cantidad_inicial'  => $total * (float) ($producto->peso_contenido ?: 1),
-                'cantidad_actual'   => 0,
-                'precio_compra'     => 1,
-                'estado'            => 1,
-                'producto_id'       => $producto->id,
-                'proveedor_id'      => $proveedor,
-                'created_at'        => now(),
-                'updated_at'        => now(),
-            ]);
+            $loteId = DB::table('lote')->insertGetId([
+                'codigo_lote_lot'       => 'INI-' . $codigo,
+                'fecha_entrada_lot'     => now()->toDateString(),
+                'fecha_vencimiento_lot' => now()->addMonths(6)->toDateString(),
+                'cantidad_inicial_lot'  => $total * (float) ($producto->peso_contenido_pdt ?: 1),
+                'cantidad_actual_lot'   => 0,
+                'precio_compra_lot'     => 1,
+                'status_id'             => 1,
+                'pdt_id'                => $producto->id_pdt,
+                'prv_id'                => $proveedor,
+                'created_at'            => now(),
+                'updated_at'            => now(),
+            ], 'id_lot');
 
             foreach ($porSede as $sede => $cantidad) {
-                app(ServicioInventario::class)->entrada($loteId, $sede, $cantidad, $cantidad * (float) ($producto->peso_contenido ?: 1), [
-                    'unidad_id'       => $producto->unidad_id,
-                    'referencia_type' => 'inventario_inicial',
-                    'observaciones'   => 'Inventario inicial de los seeders',
+                app(ServicioInventario::class)->entrada($loteId, $sede, $cantidad, $cantidad * (float) ($producto->peso_contenido_pdt ?: 1), [
+                    'unm_id'              => $producto->unm_id,
+                    'referencia_type_moi' => 'inventario_inicial',
+                    'observacion_moi'     => 'Inventario inicial de los seeders',
                 ]);
             }
         }

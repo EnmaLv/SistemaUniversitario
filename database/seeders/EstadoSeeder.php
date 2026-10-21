@@ -14,7 +14,7 @@ class EstadoSeeder extends Seeder
     public function run(): void
     {
         $pais = DB::table('pais')->where('nombre_pai', 'Venezuela')->value('id_pai')
-            ?? DB::table('pais')->insertGetId(['nombre_pai' => 'Venezuela', 'created_at' => now(), 'updated_at' => now()]);
+            ?? DB::table('pais')->insertGetId(['nombre_pai' => 'Venezuela', 'created_at' => now(), 'updated_at' => now()], 'id_pai');
 
         $estados = [
             ['id_esd' => 1, 'nombre_esd' => 'Amazonas', 'pai_id' => $pais],

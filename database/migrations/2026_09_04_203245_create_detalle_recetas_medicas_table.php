@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('detalle_recetas_medicas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('receta_id')->constrained('recetas_medicas', 'id')->onDelete('cascade');
-            $table->foreignId('producto_id')->constrained('productos', 'id')->onDelete('cascade');
-            $table->foreignId('unidad_id')->constrained('unidades', 'id')->onDelete('cascade');
+            $table->foreignId('pdt_id')->constrained('producto', 'id_pdt')->onDelete('cascade');
+            $table->foreignId('unm_id')->constrained('unidad_medida', 'id_unm')->onDelete('cascade');
             $table->decimal('cantidad', 14, 2);
             $table->decimal('cantidad_prescrita', 10, 2);
             $table->string('unidad_prescrita', 100);

@@ -16,12 +16,12 @@ return new class extends Migration
             $table->foreignId('consumo_diario_id')
                 ->constrained('consumo_diarios')
                 ->onDelete('cascade');
-            $table->foreignId('producto_id')
-                ->constrained('productos')
+            $table->foreignId('pdt_id')
+                ->constrained('producto', 'id_pdt')
                 ->onDelete('cascade');
             $table->decimal('cantidad_total', 14, 2)->notNull();
-            $table->foreignId('unidad_id')
-                ->constrained('unidades')
+            $table->foreignId('unm_id')
+                ->constrained('unidad_medida', 'id_unm')
                 ->onDelete('cascade');
             $table->timestamps();
         });

@@ -42,17 +42,17 @@ class DispensacionService
      */
     public function lotesDisponiblesQuery(int $productoId, int $sedeId): Builder
     {
-        return Lote::where('producto_id', $productoId)
+        return Lote::where('pdt_id', $productoId)
             ->where(function ($q) {
-                $q->whereNull('fecha_vencimiento')
-                    ->orWhere('fecha_vencimiento', '>=', now()->toDateString());
+                $q->whereNull('fecha_vencimiento_lot')
+                    ->orWhere('fecha_vencimiento_lot', '>=', now()->toDateString());
             })
             ->whereHas('inventarioSedeLotes', function ($q) use ($sedeId) {
-                $q->where('sed_id', $sedeId)->where('cantidad', '>', 0);
+                $q->where('sed_id', $sedeId)->where('cantidad_isl', '>', 0);
             })
-            ->orderByRaw('fecha_vencimiento IS NULL ASC')
-            ->orderBy('fecha_vencimiento', 'asc')
-            ->orderBy('id', 'asc');
+            ->orderByRaw('fecha_vencimiento_lot IS NULL ASC')
+            ->orderBy('fecha_vencimiento_lot', 'asc')
+            ->orderBy('id_lot', 'asc');
     }
 
     /* ──────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ class DispensacionService
                 continue;
             }
 
-            $lotesPorDetalle[$detalle->id] = $this->lotesDisponiblesQuery($detalle->producto_id, $sedeId)
+            $lotesPorDetalle[$detalle->id] = $this->lotesDisponiblesQuery($detalle->pdt_id, $sedeId)
                 ->with(['inventarioSedeLotes' => fn($q) => $q->where('sed_id', $sedeId)])
                 ->get();
         }
@@ -150,10 +150,10 @@ class DispensacionService
         int $sedeId,
         int $usuarioId
     ): void {
-        $nombreProducto = $detalle->producto->nombre ?? 'producto';
+        $nombreProducto = $detalle->producto->nombre_pdt ?? 'producto';
 
-        $lotes = $this->lotesDisponiblesQuery($detalle->producto_id, $sedeId)
-            ->where('cantidad_actual', '>', 0)
+        $lotes = $this->lotesDisponiblesQuery($detalle->pdt_id, $sedeId)
+            ->where('cantidad_actual_lot', '>', 0)
             ->lockForUpdate()
             ->get();
 
@@ -161,7 +161,7 @@ class DispensacionService
             throw StockInsuficienteException::sinStock($nombreProducto, $sedeId);
         }
 
-        $factor    = (float) (Unidad::find($detalle->unidad_id)?->factor_a_gramo ?? 1);
+        $factor    = (float) (Unidad::find($detalle->unm_id)?->factor_conversion_unm ?? 1);
         $restante  = $cantidad;
         $entregado = 0;
 
@@ -211,16 +211,16 @@ class DispensacionService
         int $sedeId,
         int $usuarioId
     ): float {
-        $inventario = InventarioSedeLote::where('lote_id', $lote->id)
+        $inventario = InventarioSedeLote::where('lot_id', $lote->id_lot)
             ->where('sed_id', $sedeId)
             ->lockForUpdate()
             ->first();
 
-        if (!$inventario || (float) $inventario->cantidad <= 0) {
+        if (!$inventario || (float) $inventario->cantidad_isl <= 0) {
             return 0;
         }
 
-        $cantidad = min((float) $inventario->cantidad, $restante);
+        $cantidad = min((float) $inventario->cantidad_isl, $restante);
 
         if ($cantidad <= 0) {
             return 0;
@@ -231,23 +231,23 @@ class DispensacionService
         $dispensacion = Dispensacion::create([
             'receta_medica_id'         => $receta->id,
             'detalle_receta_medica_id' => $detalle->id,
-            'producto_id'              => $detalle->producto_id,
-            'per_id'               => $consulta->per_id,
-            'lote_id'                  => $lote->id,
+            'pdt_id'                   => $detalle->pdt_id,
+            'per_id'                   => $consulta->per_id,
+            'lot_id'                   => $lote->id_lot,
             'cantidad'                 => $cantidad,
-            'unidad_id'                => $detalle->unidad_id,
+            'unm_id'                   => $detalle->unm_id,
             'sed_id'                  => $sedeId,
             'usuario_id'               => $usuarioId,
             'fecha'                    => now()->toDateString(),
             'observaciones'            => $observaciones,
         ]);
 
-        app(\App\Support\Inventario\ServicioInventario::class)->salida($lote->id, $sedeId, $cantidad, $cantidadConvertida, [
-            'unidad_id'       => $detalle->unidad_id,
-            'referencia_type' => 'Dispensacion',
-            'referencia_id'   => $dispensacion->id,
-            'usuario_id'      => $usuarioId,
-            'observaciones'   => 'Dispensación en consulta #' . $consulta->id . ' · Lote ' . $lote->codigo_lote,
+        app(\App\Support\Inventario\ServicioInventario::class)->salida($lote->id_lot, $sedeId, $cantidad, $cantidadConvertida, [
+            'unm_id'              => $detalle->unm_id,
+            'referencia_type_moi' => 'Dispensacion',
+            'referencia_id_moi'   => $dispensacion->id,
+            'use_id'              => $usuarioId,
+            'observacion_moi'     => 'Dispensación en consulta #' . $consulta->id . ' · Lote ' . $lote->codigo_lote_lot,
         ]);
 
         return $cantidad;

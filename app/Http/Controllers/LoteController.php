@@ -20,30 +20,30 @@ class LoteController extends Controller
         $sede = \App\Support\Sedes\SedeActiva::id();
 
         DB::transaction(function () use ($servicio, $sede) {
-            $lotesVencidos = Lote::whereDate('fecha_vencimiento', '<=', now())
-                ->where('estado', 1)
+            $lotesVencidos = Lote::whereDate('fecha_vencimiento_lot', '<=', now())
+                ->where('status_id', Lote::STATUS_ACTIVO)
                 ->get();
 
             foreach ($lotesVencidos as $lote) {
-                $existencias = DB::table('inventario_sede_lotes')
-                    ->where('lote_id', $lote->id)
+                $existencias = DB::table('inventario_sede_lote')
+                    ->where('lot_id', $lote->id_lot)
                     ->when($sede !== null, fn ($consulta) => $consulta->where('sed_id', $sede))
-                    ->where('cantidad', '>', 0)
+                    ->where('cantidad_isl', '>', 0)
                     ->get();
 
                 foreach ($existencias as $existencia) {
-                    $servicio->salida((int) $lote->id, (int) $existencia->sed_id, (float) $existencia->cantidad, (float) $existencia->cantidad_convertida, [
-                        'tipo'            => \App\Support\Inventario\ServicioInventario::MERMA,
-                        'referencia_type' => 'lote_vencido',
-                        'referencia_id'   => $lote->id,
-                        'observaciones'   => 'Producto vencido – merma manual',
+                    $servicio->salida((int) $lote->id_lot, (int) $existencia->sed_id, (float) $existencia->cantidad_isl, (float) $existencia->cantidad_convertida_isl, [
+                        'tipo'                => \App\Support\Inventario\ServicioInventario::MERMA,
+                        'referencia_type_moi' => 'lote_vencido',
+                        'referencia_id_moi'   => $lote->id_lot,
+                        'observacion_moi'     => 'Producto vencido – merma manual',
                     ]);
                 }
 
-                $quedaStock = DB::table('inventario_sede_lotes')->where('lote_id', $lote->id)->where('cantidad', '>', 0)->exists();
+                $quedaStock = DB::table('inventario_sede_lote')->where('lot_id', $lote->id_lot)->where('cantidad_isl', '>', 0)->exists();
 
                 if (! $quedaStock) {
-                    $lote->update(['estado' => 0]);
+                    $lote->update(['status_id' => Lote::STATUS_INACTIVO]);
                 }
             }
         });
@@ -67,53 +67,55 @@ class LoteController extends Controller
 
         $query = Lote::with(['producto', 'proveedor'])
             ->addSelect([
-                'lotes.*',
-                'cantidad_sede' => DB::table('inventario_sede_lotes')
-                    ->selectRaw('COALESCE(SUM(cantidad), 0)')
-                    ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
-                    ->where('inventario_sede_lotes.sed_id', $sedeId),
-                'cantidad_gramos_sede' => DB::table('inventario_sede_lotes')
-                    ->selectRaw('COALESCE(SUM(cantidad_convertida), 0)')
-                    ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
-                    ->where('inventario_sede_lotes.sed_id', $sedeId)
+                'lote.*',
+                'cantidad_sede' => DB::table('inventario_sede_lote')
+                    ->selectRaw('COALESCE(SUM(cantidad_isl), 0)')
+                    ->whereColumn('inventario_sede_lote.lot_id', 'lote.id_lot')
+                    ->where('inventario_sede_lote.sed_id', $sedeId)
+                    ->whereNull('inventario_sede_lote.deleted_at'),
+                'cantidad_gramos_sede' => DB::table('inventario_sede_lote')
+                    ->selectRaw('COALESCE(SUM(cantidad_convertida_isl), 0)')
+                    ->whereColumn('inventario_sede_lote.lot_id', 'lote.id_lot')
+                    ->where('inventario_sede_lote.sed_id', $sedeId)
+                    ->whereNull('inventario_sede_lote.deleted_at')
             ]);
 
         if ($filtro === 'vencido') {
-            $query->whereDate('fecha_vencimiento', '<', now()->addDays(1));
+            $query->whereDate('fecha_vencimiento_lot', '<', now()->addDays(1));
         }
 
         if ($filtro === 'por_vencer') {
-            $query->whereDate('fecha_vencimiento', '>', now());
+            $query->whereDate('fecha_vencimiento_lot', '>', now());
         }
 
         if ($request->filled('estado')) {
-            $query->where('estado', (int) $estado);
+            $query->where('status_id', (int) $estado === 1 ? Lote::STATUS_ACTIVO : Lote::STATUS_INACTIVO);
         } else {
-            $query->where('estado', 1);
+            $query->where('status_id', Lote::STATUS_ACTIVO);
         }
 
         if ($buscar) {
-            $query->where('codigo_lote', 'like', "%{$buscar}%");
+            $query->where('codigo_lote_lot', 'like', "%{$buscar}%");
         }
 
         if ($fecha_desde && $fecha_hasta) {
-            $query->whereBetween('fecha_vencimiento', [$fecha_desde, $fecha_hasta]);
+            $query->whereBetween('fecha_vencimiento_lot', [$fecha_desde, $fecha_hasta]);
         } elseif ($fecha_desde) {
-            $query->where('fecha_entrada', '>=', $fecha_desde);
+            $query->where('fecha_entrada_lot', '>=', $fecha_desde);
         } elseif ($fecha_hasta) {
-            $query->where('fecha_vencimiento', '<=', $fecha_hasta);
+            $query->where('fecha_vencimiento_lot', '<=', $fecha_hasta);
         }
 
-        $lotes = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $lotes = $query->orderBy('id_lot', 'desc')->paginate(10)->withQueryString();
 
         $lotes->each(function ($lote) {
-            $fecha = Carbon::parse($lote->fecha_vencimiento);
+            $fecha = Carbon::parse($lote->fecha_vencimiento_lot);
             $lote->is_expired      = $fecha->isPast();
             $lote->days_to_expire = now()->diffInDays($fecha, false);
         });
 
-        $hayLotesVencidosSinMerma = Lote::whereDate('fecha_vencimiento', '<=', now())
-            ->where('estado', 1)
+        $hayLotesVencidosSinMerma = Lote::whereDate('fecha_vencimiento_lot', '<=', now())
+            ->where('status_id', Lote::STATUS_ACTIVO)
             ->exists();
 
         $sedeNombre = Sede::where('id_sed', $sedeId)->value('nombre_sed');

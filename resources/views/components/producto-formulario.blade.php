@@ -40,7 +40,7 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-barcode text-sm"></i>
                             </span>
-                            <input type="text" value="{{ optional($modelo)->codigo ?? 'Automático' }}" disabled
+                            <input type="text" value="{{ optional($modelo)->codigo_pdt ?? 'Automático' }}" disabled
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                         </div>
@@ -72,9 +72,9 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                 <option value="" selected disabled>Seleccione...</option>
                                 @foreach ($categorias as $categoria)
-                                    <option value="{{ $categoria->id }}"
-                                        {{ old('categoria_id', optional($modelo)->categoria_id ?? request('categoria_id')) == $categoria->id ? 'selected' : '' }}>
-                                        {{ $categoria->nombre }}
+                                    <option value="{{ $categoria->id_cap }}"
+                                        {{ old('categoria_id', optional($modelo)->cap_id ?? request('categoria_id')) == $categoria->id_cap ? 'selected' : '' }}>
+                                        {{ $categoria->nombre_cap }}
                                     </option>
                                 @endforeach
                             </select>
@@ -97,7 +97,7 @@
                                 <i class="fas fa-tag text-sm"></i>
                             </span>
                             <input type="text" name="nombre" placeholder="Ej: Paracetamol 500mg"
-                                value="{{ old('nombre', optional($modelo)->nombre) }}"
+                                value="{{ old('nombre', optional($modelo)->nombre_pdt) }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                         </div>
@@ -131,9 +131,9 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                 <option value="" selected disabled>Seleccione...</option>
                                 @foreach ($unidades as $unidad)
-                                    <option value="{{ $unidad->id }}" data-abreviatura="{{ $unidad->abreviatura }}"
-                                        {{ old('unidad_id', optional($modelo)->unidad_id) == $unidad->id ? 'selected' : '' }}>
-                                        {{ $unidad->nombre }}
+                                    <option value="{{ $unidad->id_unm }}" data-abreviatura="{{ $unidad->abreviatura_unm }}"
+                                        {{ old('unidad_id', optional($modelo)->unm_id) == $unidad->id_unm ? 'selected' : '' }}>
+                                        {{ $unidad->nombre_unm }}
                                     </option>
                                 @endforeach
                             </select>
@@ -156,12 +156,12 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-weight text-sm"></i>
                             </span>
-                            <input type="number" name="peso_contenido" min="0" step="0.01" placeholder="0.00"
-                                value="{{ old('peso_contenido', optional($modelo)->peso_contenido) }}"
+                            <input type="number" name="peso_contenido_pdt" min="0" step="0.01" placeholder="0.00"
+                                value="{{ old('peso_contenido_pdt', optional($modelo)->peso_contenido_pdt) }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                         </div>
-                        @error('peso_contenido')
+                        @error('peso_contenido_pdt')
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
                     </div>
@@ -185,9 +185,9 @@
                                     class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                     <option value="" selected disabled>Seleccione...</option>
                                     @foreach ($envases as $envase)
-                                        <option value="{{ $envase->id }}"
-                                            {{ old('envase_primario_id', optional($modelo)->presentacion_id) == $envase->id ? 'selected' : '' }}>
-                                            {{ $envase->nombre }}
+                                        <option value="{{ $envase->id_enp }}"
+                                            {{ old('envase_primario_id', optional($modelo)->enp_id) == $envase->id_enp ? 'selected' : '' }}>
+                                            {{ $envase->nombre_enp }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -213,12 +213,12 @@
                                 style="border-color: var(--border-color);">
                                 $
                             </span>
-                            <input type="number" name="costo_usd" min="0" step="0.01" placeholder="0.00"
-                                value="{{ old('costo_usd', optional($modelo)->precioProducto) }}"
+                            <input type="number" name="costo_usd_ppr" min="0" step="0.01" placeholder="0.00"
+                                value="{{ old('costo_usd_ppr', optional(optional($modelo)->precioProducto)->costo_usd_ppr) }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                         </div>
-                        @error('costo_usd')
+                        @error('costo_usd_ppr')
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
                     </div>
@@ -235,12 +235,12 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-arrow-down text-sm"></i>
                             </span>
-                            <input type="number" name="stock_minimo" min="0" placeholder="Ej: 10"
-                                value="{{ old('stock_minimo', optional($modelo)->stock_minimo ? intval($modelo->stock_minimo) : '') }}"
+                            <input type="number" name="stock_minimo_pdt" min="0" placeholder="Ej: 10"
+                                value="{{ old('stock_minimo_pdt', optional($modelo)->stock_minimo_pdt ? intval($modelo->stock_minimo_pdt) : '') }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                         </div>
-                        @error('stock_minimo')
+                        @error('stock_minimo_pdt')
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
                     </div>
@@ -257,12 +257,12 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-arrow-up text-sm"></i>
                             </span>
-                            <input type="number" name="stock_maximo" min="0" placeholder="Ej: 100"
-                                value="{{ old('stock_maximo', optional($modelo)->stock_maximo ? intval($modelo->stock_maximo) : '') }}"
+                            <input type="number" name="stock_maximo_pdt" min="0" placeholder="Ej: 100"
+                                value="{{ old('stock_maximo_pdt', optional($modelo)->stock_maximo_pdt ? intval($modelo->stock_maximo_pdt) : '') }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                         </div>
-                        @error('stock_maximo')
+                        @error('stock_maximo_pdt')
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
                     </div>
@@ -273,7 +273,7 @@
                     <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400 mb-1.5">
                         Descripción detallada
                     </label>
-                    <textarea name="descripcion" id="descripcion">{{ old('descripcion', optional($modelo)->descripcion) }}</textarea>
+                    <textarea name="descripcion" id="descripcion">{{ old('descripcion', optional($modelo)->descripcion_pdt) }}</textarea>
                     @error('descripcion')
                         <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                     @enderror
@@ -289,7 +289,7 @@
                     </label>
 
                     @php
-                        $imagenActual = optional($modelo)->imagen;
+                        $imagenActual = optional($modelo)->imagen_pdt;
                     @endphp
 
                     <label for="imagen"

@@ -132,8 +132,8 @@
         const icon = document.getElementById(modalId + 'Icon');
         if (icon) icon.className = `fas fa-edit ${ICON_COLOR_CLASS}`;
 
-        document.getElementById(modalId + 'Nombre').value = categoria.nombre || '';
-        document.getElementById(modalId + 'Descripcion').value = categoria.descripcion || '';
+        document.getElementById(modalId + 'Nombre').value = categoria.nombre_cap || '';
+        document.getElementById(modalId + 'Descripcion').value = categoria.descripcion_cap || '';
 
         openModal(modalId);
     }

@@ -6,8 +6,8 @@
             ($consulta->medico->nombres_per ?? '') . ' ' . ($consulta->medico->apellidos_per ?? ''),
         );
 
-        $productosJs = $productos->map(fn($p) => ['id' => (string) $p->id, 'nombre' => $p->nombre])->values();
-        $unidadesJs = $unidades->map(fn($u) => ['id' => (string) $u->id, 'nombre' => $u->nombre])->values();
+        $productosJs = $productos->map(fn($p) => ['id' => (string) $p->id_pdt, 'nombre' => $p->nombre_pdt])->values();
+        $unidadesJs = $unidades->map(fn($u) => ['id' => (string) $u->id_unm, 'nombre' => $u->nombre_unm])->values();
 
         $frecuenciasSugeridas = [
             'Cada 4 horas',
@@ -276,7 +276,7 @@
                                             x-model="item.unidad_id" required class="cx-input">
                                             <option value="" disabled>Elige</option>
                                             @foreach ($unidades as $u)
-                                                <option value="{{ $u->id }}">{{ $u->nombre }}</option>
+                                                <option value="{{ $u->id_unm }}">{{ $u->nombre_unm }}</option>
                                             @endforeach
                                         </select>
                                     </div>

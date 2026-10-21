@@ -20,11 +20,11 @@ class Dispensacion extends Model
     protected $fillable = [
         'receta_medica_id',
         'detalle_receta_medica_id',
-        'producto_id',
+        'pdt_id',
         'per_id',
-        'lote_id',
+        'lot_id',
         'cantidad',
-        'unidad_id',
+        'unm_id',
         'sed_id',
         'usuario_id',
         'fecha',
@@ -48,7 +48,7 @@ class Dispensacion extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class, 'producto_id');
+        return $this->belongsTo(Producto::class, 'pdt_id', 'id_pdt');
     }
 
     public function paciente()
@@ -58,17 +58,17 @@ class Dispensacion extends Model
 
     public function lote()
     {
-        return $this->belongsTo(Lote::class, 'lote_id');
+        return $this->belongsTo(Lote::class, 'lot_id', 'id_lot');
     }
 
     public function unidad()
     {
-        return $this->belongsTo(Unidad::class, 'unidad_id');
+        return $this->belongsTo(Unidad::class, 'unm_id', 'id_unm');
     }
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sed_id');
+        return $this->belongsTo(Sede::class, 'sed_id', 'id_sed');
     }
 
     public function usuario()

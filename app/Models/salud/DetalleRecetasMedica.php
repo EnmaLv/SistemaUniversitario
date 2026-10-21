@@ -12,8 +12,8 @@ class DetalleRecetasMedica extends Model
 
     protected $fillable = [
         'receta_id',
-        'producto_id',
-        'unidad_id',
+        'pdt_id',
+        'unm_id',
         'cantidad',              // total dispensado acumulado
         'cantidad_prescrita',    // cantidad recetada (fija)
         'unidad_prescrita',      // texto: nombre de la unidad
@@ -39,12 +39,12 @@ class DetalleRecetasMedica extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class, 'producto_id');
+        return $this->belongsTo(Producto::class, 'pdt_id', 'id_pdt');
     }
 
     public function unidad()
     {
-        return $this->belongsTo(Unidad::class, 'unidad_id');
+        return $this->belongsTo(Unidad::class, 'unm_id', 'id_unm');
     }
 
     public function dispensaciones()

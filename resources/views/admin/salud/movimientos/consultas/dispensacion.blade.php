@@ -71,26 +71,26 @@
                                 @php
                                     $lotesDisponibles = $lotesPorDetalle[$detalle->id] ?? collect();
                                     $lotesJs = $lotesDisponibles->map(function ($l) {
-                                        $vence = $l->fecha_vencimiento ? \Carbon\Carbon::parse($l->fecha_vencimiento) : null;
+                                        $vence = $l->fecha_vencimiento_lot ? \Carbon\Carbon::parse($l->fecha_vencimiento_lot) : null;
                                         return [
-                                            'codigo' => $l->codigo_lote,
+                                            'codigo' => $l->codigo_lote_lot,
                                             'vence' => $vence?->format('d/m/Y'),
                                             'proximo' => $vence ? $vence->lte(now()->addDays(30)) : false,
-                                            'stock' => (float) ($l->inventarioSedeLotes->first()->cantidad ?? 0),
+                                            'stock' => (float) ($l->inventarioSedeLotes->first()->cantidad_isl ?? 0),
                                         ];
                                     })->values();
                                     $stockTotalSede = $lotesJs->sum('stock');
                                     $sinStock = $stockTotalSede <= 0;
                                     $pendiente = (float) $detalle->cantidad_pendiente;
-                                    $unidadNombre = optional($detalle->unidad)->nombre ?? '';
-                                    $unidadCorta = optional($detalle->unidad)->abreviatura ?? $unidadNombre;
+                                    $unidadNombre = optional($detalle->unidad)->nombre_unm ?? '';
+                                    $unidadCorta = optional($detalle->unidad)->abreviatura_unm ?? $unidadNombre;
                                     $prescrita = $detalle->cantidad_prescrita ?? null;
                                     // Tras un error de validación se respeta lo que el usuario había marcado
                                     $oldDispensar = old("items.{$detalle->id}.dispensar");
                                     $oldCantidad = old("items.{$detalle->id}.cantidad");
                                     $configDetalle = [
                                         'id' => $detalle->id,
-                                        'nombre' => optional($detalle->producto)->nombre ?? '—',
+                                        'nombre' => optional($detalle->producto)->nombre_pdt ?? '—',
                                         'unidad' => $unidadCorta,
                                         'dispensar' => !$sinStock && ($oldDispensar === null || filter_var($oldDispensar, FILTER_VALIDATE_BOOLEAN)),
                                         'cantidad' => $sinStock ? 0 : (float) ($oldCantidad ?? $fmt(min($pendiente, $stockTotalSede))),
@@ -115,7 +115,7 @@
                                         <span class="flex-1 min-w-0">
                                             <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
                                                 <span class="text-[15px] font-bold cx-text">
-                                                    {{ optional($detalle->producto)->nombre ?? '—' }}
+                                                    {{ optional($detalle->producto)->nombre_pdt ?? '—' }}
                                                 </span>
                                                 @if ($sinStock)
                                                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300">
@@ -268,17 +268,17 @@
                                         <li class="flex items-center gap-4 px-5 py-3" style="border-color: var(--border-color);">
                                             <div class="flex-1 min-w-0">
                                                 <p class="text-sm font-semibold cx-text truncate">
-                                                    {{ optional($detalle->producto)->nombre ?? '—' }}
+                                                    {{ optional($detalle->producto)->nombre_pdt ?? '—' }}
                                                 </p>
                                                 <p class="text-xs cx-muted mt-0.5">
                                                     {{ optional($disp->fecha)->format('d/m/Y') }},
-                                                    lote {{ optional($disp->lote)->codigo_lote ?? '—' }},
+                                                    lote {{ optional($disp->lote)->codigo_lote_lot ?? '—' }},
                                                     entregó {{ optional(optional($disp->usuario)->persona)->nombres_per ?? '—' }}
                                                 </p>
                                             </div>
                                             <span class="text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400 shrink-0">
                                                 {{ $fmt($disp->cantidad) }}
-                                                <span class="text-xs font-medium cx-muted">{{ optional($detalle->unidad)->abreviatura ?? optional($detalle->unidad)->nombre }}</span>
+                                                <span class="text-xs font-medium cx-muted">{{ optional($detalle->unidad)->abreviatura_unm ?? optional($detalle->unidad)->nombre_unm }}</span>
                                             </span>
                                         </li>
                                     @endforeach

@@ -17,9 +17,9 @@ class FechasCompra extends Component
         $this->compra = $compra;
 
         foreach ($compra->detalleCompras as $detalle) {
-            $this->fechas[$detalle->id] = [
-                'fecha_vencimiento' => optional($detalle->lote)->fecha_vencimiento,
-                'lote_id' => $detalle->lote_id,
+            $this->fechas[$detalle->id_dcm] = [
+                'fecha_vencimiento_lot' => optional($detalle->lote)->fecha_vencimiento_lot,
+                'lote_id' => $detalle->lot_id,
             ];
         }
     }
@@ -30,17 +30,17 @@ class FechasCompra extends Component
 
         foreach ($this->fechas as $detalleId => $datos) {
             $this->validate([
-                "fechas.$detalleId.fecha_vencimiento" => 'required|date|after:today',
+                "fechas.$detalleId.fecha_vencimiento_lot" => 'required|date|after:today',
             ], [
-                "fechas.$detalleId.fecha_vencimiento.required" => 'La fecha es obligatoria.',
-                "fechas.$detalleId.fecha_vencimiento.after" => 'Debe ser mayor a hoy.',
+                "fechas.$detalleId.fecha_vencimiento_lot.required" => 'La fecha es obligatoria.',
+                "fechas.$detalleId.fecha_vencimiento_lot.after" => 'Debe ser mayor a hoy.',
             ]);
         }
 
         DB::transaction(function () {
             foreach ($this->fechas as $datos) {
                 Lote::whereKey($datos['lote_id'])->update([
-                    'fecha_vencimiento' => $datos['fecha_vencimiento'],
+                    'fecha_vencimiento_lot' => $datos['fecha_vencimiento_lot'],
                 ]);
             }
         });

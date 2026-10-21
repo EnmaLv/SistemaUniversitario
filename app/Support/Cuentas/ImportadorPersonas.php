@@ -159,7 +159,7 @@ class ImportadorPersonas
             }
 
             if (! $conPnf->has($idPersona)) {
-                $insertar[] = ['per_id' => $idPersona, 'prg_id' => $idPnf, 'fecha_inicio_ppr' => $hoy, 'fecha_fin_ppr' => $hoy];
+                $insertar[] = ['per_id' => $idPersona, 'prg_id' => $idPnf, 'fecha_inicio_pep' => $hoy, 'fecha_fin_pep' => $hoy];
             } elseif ($textoPnf !== '' && (int) $conPnf[$idPersona] !== $idPnf) {
                 $actualizar[$idPnf][] = $idPersona;
             }

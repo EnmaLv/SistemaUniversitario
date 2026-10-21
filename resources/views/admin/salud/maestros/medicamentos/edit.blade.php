@@ -24,8 +24,8 @@
 
             {{-- Formulario --}}
             @include('admin.maestros.productos._form', [
-                'titulo'         => 'Editar medicamento: ' . $medicamento->nombre,
-                'action'         => route('admin.salud.maestros.medicamentos.update', $medicamento->id),
+                'titulo'         => 'Editar medicamento: ' . $medicamento->nombre_pdt,
+                'action'         => route('admin.salud.maestros.medicamentos.update', $medicamento->id_pdt),
                 'metodo'         => 'PUT',
                 'rutaVolver'     => route('admin.salud.maestros.medicamentos.index'),
                 'categorias'     => $categorias,

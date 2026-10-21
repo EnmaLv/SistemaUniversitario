@@ -21,7 +21,7 @@ class RegistroComidaCantidadTest extends TestCase
     {
         $ingrediente = (object) [
             'cantidad_porcion' => 2,
-            'unidad' => (object) ['factor_a_gramo' => 500],
+            'unidad' => (object) ['factor_conversion_unm' => 500],
         ];
 
         $this->assertSame(1000.0, $this->resolverCantidad($ingrediente));

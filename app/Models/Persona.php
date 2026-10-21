@@ -82,7 +82,7 @@ class Persona extends Model
                 'semestre_per' => $data['semestreId'],
                 'id_perfil' => 2,
                 'sed_id' => $data['sedeId'] ?? null,
-            ]);
+            ], 'id_per');
 
             //Guardamos la direccion
 
@@ -106,8 +106,8 @@ class Persona extends Model
             DB::table('persona_programa')->insert([
                 'per_id' => $personaId,
                 'prg_id' => $data['pnfId'],
-                'fecha_inicio_ppr' => Carbon::now(),
-                'fecha_fin_ppr' => Carbon::now(),
+                'fecha_inicio_pep' => Carbon::now(),
+                'fecha_fin_pep' => Carbon::now(),
             ]);
 
             DB::commit();
@@ -183,8 +183,8 @@ class Persona extends Model
                 ['per_id' => $personaId], // Condición
                 [
                     'prg_id'       => $data['pnfId'],
-                    'fecha_inicio_ppr' => Carbon::now(),
-                    'fecha_fin_ppr'    => Carbon::now(),
+                    'fecha_inicio_pep' => Carbon::now(),
+                    'fecha_fin_pep'    => Carbon::now(),
                 ]
             );
 

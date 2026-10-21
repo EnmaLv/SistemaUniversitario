@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('per_id')
                 ->constrained('persona', 'id_per')
                 ->onDelete('cascade');
-            $table->foreignId('ppr_id')
-                ->constrained('persona_programa', 'id_ppr')
+            $table->foreignId('pep_id')
+                ->constrained('persona_programa', 'id_pep')
                 ->onDelete('cascade');
             $table->foreignId('sed_id')->constrained('sede', 'id_sed');
             $table->string('tipo_comida', 20)->default('desayuno');

@@ -24,13 +24,13 @@ class RecetaService
 
     public function productosSaludQuery(): Builder
     {
-        return Producto::where('estado', true)
-            ->whereHas('categoria', fn($q) => $q->where('tipo_producto_id', self::TIPO_PRODUCTO_SALUD));
+        return Producto::where('status_id', Producto::STATUS_ACTIVO)
+            ->whereHas('categoria', fn($q) => $q->where('tpr_id', self::TIPO_PRODUCTO_SALUD));
     }
 
     public function productosSalud(): Collection
     {
-        return $this->productosSaludQuery()->orderBy('nombre')->get();
+        return $this->productosSaludQuery()->orderBy('nombre_pdt')->get();
     }
 
     public function unidades(): Collection
@@ -54,10 +54,10 @@ class RecetaService
     private function detallesParaFormulario(RecetasMedica $receta): array
     {
         return $receta->detalles->map(fn($det) => [
-            'producto_id'     => $det->producto_id,
-            'producto_nombre' => optional($det->producto)->nombre ?? '',
+            'producto_id'     => $det->pdt_id,
+            'producto_nombre' => optional($det->producto)->nombre_pdt ?? '',
             'cantidad'        => $det->cantidad,
-            'unidad_id'       => $det->unidad_id,
+            'unidad_id'       => $det->unm_id,
             'frecuencia'      => $det->frecuencia,
             'fecha_inicio'    => $this->formatearFecha($det->fecha_inicio),
             'fecha_fin'       => $this->formatearFecha($det->fecha_fin),
@@ -120,19 +120,19 @@ class RecetaService
 
     private function crearDetalles(RecetasMedica $receta, array $datos): void
     {
-        $unidades = Unidad::whereIn('id', collect($datos['detalles'])->pluck('unidad_id'))
+        $unidades = Unidad::whereIn('id_unm', collect($datos['detalles'])->pluck('unidad_id'))
             ->get()
-            ->keyBy('id');
+            ->keyBy('id_unm');
 
         foreach ($datos['detalles'] as $item) {
             $unidad = $unidades->get((int) $item['unidad_id']);
 
             $receta->detalles()->create([
-                'producto_id'        => $item['producto_id'],
-                'unidad_id'          => $item['unidad_id'],
+                'pdt_id'             => $item['producto_id'],
+                'unm_id'             => $item['unidad_id'],
                 'cantidad'           => 0,
                 'cantidad_prescrita' => $item['cantidad'],
-                'unidad_prescrita'   => $unidad->nombre ?? 'Unidad',
+                'unidad_prescrita'   => $unidad->nombre_unm ?? 'Unidad',
                 'equivalencia_ml'    => $item['equivalencia_ml'] ?? 0,
                 'frecuencia'         => $item['frecuencia'],
                 'fecha_inicio'       => $item['fecha_inicio'] ?? $datos['fecha'],

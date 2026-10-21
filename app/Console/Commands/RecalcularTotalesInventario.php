@@ -22,7 +22,7 @@ class RecalcularTotalesInventario extends Command
         Bitacora::registrar(
             accion: 'inventario_totales_recalculados',
             modulo: 'administracion',
-            tablaAfectada: 'inventario_totals',
+            tablaAfectada: 'inventario_total',
             datosModificados: ['producto' => $producto, 'sede' => $sede, 'filas' => $filas],
             observacion: 'consola: inventario:recalcular-totales',
         );

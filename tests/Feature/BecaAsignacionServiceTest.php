@@ -23,8 +23,8 @@ class BecaAsignacionServiceTest extends TestCase
 
         $estatusId = DB::table('estatus')->insertGetId(['nombre_estatus' => 'Activo', 'created_at' => now(), 'updated_at' => now()]);
         $sucursalId = DB::table('sucursals')->insertGetId(['nombre' => 'Sucursal Prueba', 'direccion' => 'Dirección Prueba', 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
-        $perfilId = DB::table('perfil')->insertGetId(['nombre_perfil' => 'Estudiante', 'id_estatus' => $estatusId, 'created_at' => now(), 'updated_at' => now()]);
-        $sedeId = DB::table('sede')->insertGetId(['nombre_sede' => 'Sede Prueba', 'estatus' => 1, 'id_sucursal' => $sucursalId, 'created_at' => now(), 'updated_at' => now()]);
+        $perfilId = DB::table('perfil')->insertGetId(['nombre_perfil' => 'Estudiante', 'id_estatus' => $estatusId, 'created_at' => now(), 'updated_at' => now()], 'id_perfil');
+        $sedeId = DB::table('sede')->insertGetId(['nombre_sede' => 'Sede Prueba', 'estatus' => 1, 'id_sucursal' => $sucursalId, 'created_at' => now(), 'updated_at' => now()], 'id_sed');
 
         $persona = Persona::create([
             'nombres_per' => 'Ana',

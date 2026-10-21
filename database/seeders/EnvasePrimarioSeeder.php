@@ -34,9 +34,9 @@ class EnvasePrimarioSeeder extends Seeder
         ];
 
         foreach ($envases as $envase) {
-            DB::table('envase_primarios')->insert([
-                'nombre' => $envase,
-                'estado' => 1,
+            DB::table('envase_primario')->insert([
+                'nombre_enp' => $envase,
+                'status_id' => 1,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ]);

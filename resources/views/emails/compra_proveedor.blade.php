@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Orden de Compra Nro: {{ $compra->id }}</title>
+    <title>Orden de Compra Nro: {{ $compra->id_cmp }}</title>
 </head>
 
 <body>
@@ -270,21 +270,21 @@
         <div class="decorative-lines"></div>
 
         <div class="document-header">
-            <h3>Orden de Compra Nro: {{ $compra->id }}</h3>
+            <h3>Orden de Compra Nro: {{ $compra->id_cmp }}</h3>
             <p>Fecha de emisión: {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</p>
         </div>
 
         <div class="content-wrapper">
             <div class="info-section">
-                <p><strong>Proveedor:</strong> {{ $proveedor->nombre }}</p>
-                <p><strong>Empresa:</strong> {{ $proveedor->empresa ?? 'N/A' }}</p>
-                <p><strong>Fecha de Orden:</strong> {{ \Carbon\Carbon::parse($compra->fecha)->format('d/m/Y') }}</p>
+                <p><strong>Proveedor:</strong> {{ $proveedor->nombre_contacto_prv }}</p>
+                <p><strong>Empresa:</strong> {{ $proveedor->empresa_prv ?? 'N/A' }}</p>
+                <p><strong>Fecha de Orden:</strong> {{ \Carbon\Carbon::parse($compra->fecha_compra_cmp)->format('d/m/Y') }}</p>
                 <p><strong>Registro en Sistema:</strong> {{ \Carbon\Carbon::parse($compra->created_at)->format('d/m/Y H:i:s') }}</p>
             </div>
 
             <div class="greeting">
-                <p>Estimado/a <strong>{{ $proveedor->nombre }}</strong>,</p>
-                <p>Por medio del presente, le enviamos los detalles de la orden de compra <strong>Nro: {{ $compra->id }}</strong> para su procesamiento.</p>
+                <p>Estimado/a <strong>{{ $proveedor->nombre_contacto_prv }}</strong>,</p>
+                <p>Por medio del presente, le enviamos los detalles de la orden de compra <strong>Nro: {{ $compra->id_cmp }}</strong> para su procesamiento.</p>
             </div>
 
             <h2 class="section-title">Productos Solicitados</h2>
@@ -302,17 +302,17 @@
                     @foreach ($detalleCompras as $detalle)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ $detalle->producto->nombre }}</td>
-                            <td>{{ number_format($detalle->cantidad, 2, ',', '.') }}</td>
-                            <td>{{ $detalle->unidad->abreviatura ?? 'UND' }}</td>
+                            <td>{{ $detalle->producto->nombre_pdt }}</td>
+                            <td>{{ number_format($detalle->cantidad_dcm, 2, ',', '.') }}</td>
+                            <td>{{ $detalle->unidad->abreviatura_unm ?? 'UND' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
 
-            @if($compra->observaciones)
+            @if($compra->observacion_cmp)
             <div class="observaciones-section">
-                <p><strong>Observaciones:</strong> {{ $compra->observaciones }}</p>
+                <p><strong>Observaciones:</strong> {{ $compra->observacion_cmp }}</p>
             </div>
             @endif
 

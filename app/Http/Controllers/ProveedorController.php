@@ -26,10 +26,11 @@ class ProveedorController extends Controller
     {
         $validated = $request->validate([
             'empresa'   => 'required|string|max:255',
+            'rif'       => 'nullable|string|max:30',
             'direccion' => 'required|string|max:255',
             'nombre'    => 'required|string|max:255',
             'telefono'  => 'required|string|max:255',
-            'email'     => 'required|email|max:255|unique:proveedors,email',
+            'email'     => 'required|email|max:255|unique:proveedor,email_prv',
         ]);
 
         $fromidreuse = Proveedor::crearProveedor($validated);
@@ -77,10 +78,11 @@ class ProveedorController extends Controller
     {
         $validated = $request->validate([
             'empresa'   => 'required|string|max:255',
+            'rif'       => 'nullable|string|max:30',
             'direccion' => 'required|string|max:255',
             'nombre'    => 'required|string|max:255',
             'telefono'  => 'required|string|max:255',
-            'email'     => 'required|email|max:255|unique:proveedors,email,' . $id,
+            'email'     => 'required|email|max:255|unique:proveedor,email_prv,' . $id . ',id_prv',
         ]);
 
         Proveedor::actualizarProveedor($id, $validated);
@@ -107,6 +109,6 @@ class ProveedorController extends Controller
     public function activar($id)
     {
         Proveedor::activarProveedor($id);
-        return redirect()->route('admin.maestros.proveedores.index')->with('success', 'Categoria activada exitosamente.');
+        return redirect()->route('admin.maestros.proveedores.index')->with('success', 'Proveedor activado exitosamente.');
     }
 }

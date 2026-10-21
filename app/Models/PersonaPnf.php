@@ -13,13 +13,13 @@ class PersonaPnf extends Model
 
     protected $table = 'persona_programa';
 
-    protected $primaryKey = 'id_ppr';
+    protected $primaryKey = 'id_pep';
 
     protected $fillable = [
         'per_id',
         'prg_id',
-        'fecha_inicio_ppr',
-        'fecha_fin_ppr',
+        'fecha_inicio_pep',
+        'fecha_fin_pep',
     ];
 
     public function persona()

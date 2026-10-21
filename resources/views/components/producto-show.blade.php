@@ -11,7 +11,7 @@
         <div class="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
             <div class="flex-1">
                 <h1 class="text-2xl md:text-3xl font-black mb-3 tracking-tight" style="color: var(--text-main);">
-                    {{ $producto->nombre }}
+                    {{ $producto->nombre_pdt }}
                 </h1>
                 
                 <div class="flex flex-wrap items-center gap-2 md:gap-3">
@@ -19,14 +19,14 @@
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border bg-gray-50 dark:bg-black/20"
                         style="border-color: var(--border-color); color: var(--text-main);">
                         <i class="fas fa-barcode text-gray-400"></i>
-                        {{ $producto->codigo }}
+                        {{ $producto->codigo_pdt }}
                     </span>
 
                     {{-- Badge Categoría --}}
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border bg-gray-50 dark:bg-black/20"
                         style="border-color: var(--border-color); color: var(--text-main);">
                         <i class="fas fa-tags text-gray-400"></i>
-                        {{ optional($producto->categoria)->nombre ?? 'Sin Categoría' }}
+                        {{ optional($producto->categoria)->nombre_cap ?? 'Sin Categoría' }}
                     </span>
 
                     {{-- Badge Presentación (Si es medicamento) --}}
@@ -34,7 +34,7 @@
                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400"
                             style="border-color: var(--border-color);">
                             <i class="fas fa-box"></i>
-                            {{ optional($producto->presentacion)->nombre ?? 'Presentación no definida' }}
+                            {{ optional($producto->presentacion)->nombre_enp ?? 'Presentación no definida' }}
                         </span>
                     @endif
                 </div>
@@ -49,8 +49,8 @@
             <div class="xl:col-span-4 flex flex-col gap-4">
                 <div class="rounded-2xl border overflow-hidden bg-gray-50 dark:bg-black/20 group relative aspect-square flex items-center justify-center" 
                      style="border-color: var(--border-color);">
-                    @if ($producto->imagen && $producto->imagen !== 'imagenes/productos/product-defect.webp')
-                        <img src="{{ asset('storage/' . $producto->imagen) }}" alt="Imagen de {{ $producto->nombre }}"
+                    @if ($producto->imagen_pdt && $producto->imagen_pdt !== 'imagenes/productos/product-defect.webp')
+                        <img src="{{ asset('storage/' . $producto->imagen_pdt) }}" alt="Imagen de {{ $producto->nombre_pdt }}"
                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                     @else
                         <div class="flex flex-col items-center justify-center text-center p-6">
@@ -75,7 +75,7 @@
                                 <i class="fas fa-money-bill-wave"></i>
                             </div>
                             <span class="text-2xl font-black" style="color: var(--text-main);">
-                                {{ number_format($producto->precio_compra, 2, ',', '.') }} <span class="text-sm font-bold text-gray-400">BS</span>
+                                {{ number_format($producto->precio_compra_pdt, 2, ',', '.') }} <span class="text-sm font-bold text-gray-400">BS</span>
                             </span>
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
                             <span class="text-2xl font-black" style="color: var(--text-main);">
-                                {{ optional($producto->precioProducto)->costo_usd ?? (optional($producto->precioProducto)->precio_usd ?? '0.00') }} <span class="text-sm font-bold text-gray-400">USD</span>
+                                {{ optional($producto->precioProducto)->costo_usd_ppr ?? (optional($producto->precioProducto)->precio_usd_ppr ?? '0.00') }} <span class="text-sm font-bold text-gray-400">USD</span>
                             </span>
                         </div>
                     </div>
@@ -105,22 +105,22 @@
                         <div class="rounded-xl border p-4 bg-gray-50 dark:bg-black/20 text-center" style="border-color: var(--border-color);">
                             <i class="fas fa-arrow-down text-rose-500 mb-2 text-lg"></i>
                             <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1">Stock Mín.</p>
-                            <p class="text-lg font-black" style="color: var(--text-main);">{{ $producto->stock_minimo }}</p>
+                            <p class="text-lg font-black" style="color: var(--text-main);">{{ $producto->stock_minimo_pdt }}</p>
                         </div>
                         
                         {{-- Stock Máximo --}}
                         <div class="rounded-xl border p-4 bg-gray-50 dark:bg-black/20 text-center" style="border-color: var(--border-color);">
                             <i class="fas fa-arrow-up text-sky-500 mb-2 text-lg"></i>
                             <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1">Stock Máx.</p>
-                            <p class="text-lg font-black" style="color: var(--text-main);">{{ $producto->stock_maximo }}</p>
+                            <p class="text-lg font-black" style="color: var(--text-main);">{{ $producto->stock_maximo_pdt }}</p>
                         </div>
 
                         {{-- Unidad --}}
                         <div class="rounded-xl border p-4 bg-gray-50 dark:bg-black/20 text-center" style="border-color: var(--border-color);">
                             <i class="fas fa-balance-scale text-indigo-500 mb-2 text-lg"></i>
                             <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1">Unidad</p>
-                            <p class="text-lg font-black truncate px-2" style="color: var(--text-main);" title="{{ optional($producto->unidad)->nombre ?? '—' }}">
-                                {{ optional($producto->unidad)->nombre ?? '—' }}
+                            <p class="text-lg font-black truncate px-2" style="color: var(--text-main);" title="{{ optional($producto->unidad)->nombre_unm ?? '—' }}">
+                                {{ optional($producto->unidad)->nombre_unm ?? '—' }}
                             </p>
                         </div>
 
@@ -128,7 +128,7 @@
                         <div class="rounded-xl border p-4 bg-gray-50 dark:bg-black/20 text-center" style="border-color: var(--border-color);">
                             <i class="fas fa-weight text-amber-500 mb-2 text-lg"></i>
                             <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 mb-1">Peso</p>
-                            <p class="text-lg font-black" style="color: var(--text-main);">{{ round($producto->peso_contenido, 2) }}</p>
+                            <p class="text-lg font-black" style="color: var(--text-main);">{{ round($producto->peso_contenido_pdt, 2) }}</p>
                         </div>
                     </div>
                 </div>
@@ -140,8 +140,8 @@
                     </h3>
                     <div class="rounded-xl border p-5 text-sm leading-relaxed"
                         style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02); color: var(--text-main);">
-                        @if ($producto->descripcion)
-                            {!! \App\Support\Seguridad\HtmlSeguro::limpiar($producto->descripcion) !!}
+                        @if ($producto->descripcion_pdt)
+                            {!! \App\Support\Seguridad\HtmlSeguro::limpiar($producto->descripcion_pdt) !!}
                         @else
                             <div class="flex items-center gap-2 text-gray-400 italic">
                                 <i class="fas fa-info-circle"></i>

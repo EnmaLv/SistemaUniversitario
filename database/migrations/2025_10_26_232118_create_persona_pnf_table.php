@@ -20,15 +20,15 @@ return new class extends Migration
         });
 
         Schema::create('persona_programa', function (Blueprint $table) {
-            $table->id('id_ppr');
+            $table->id('id_pep');
             $table->foreignId('per_id')
                 ->references('id_per')->on('persona')
                 ->onDelete('cascade');
             $table->foreignId('prg_id')
                 ->references('id_prg')->on("programa")
                 ->onDelete('cascade');
-            $table->date('fecha_inicio_ppr');
-            $table->date('fecha_fin_ppr')->nullable();
+            $table->date('fecha_inicio_pep');
+            $table->date('fecha_fin_pep')->nullable();
             $table->timestamps();
             $table->auditoria();
         });

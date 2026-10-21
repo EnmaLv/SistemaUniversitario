@@ -41,7 +41,7 @@ class ComedorHomeService
     {
         $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_diario_c as r'), 'r.sed_id')
             ->join('persona as p', 'r.per_id', '=', 'p.id_per')
-            ->leftJoin('persona_programa as pp', 'r.ppr_id', '=', 'pp.id_ppr')
+            ->leftJoin('persona_programa as pp', 'r.pep_id', '=', 'pp.id_pep')
             ->leftJoin('programa as n', 'pp.prg_id', '=', 'n.id_prg')
             ->whereBetween('r.fecha_regis_diario_c', [$inicio, $fin])
             ->select(
@@ -49,7 +49,7 @@ class ComedorHomeService
                 'r.fecha_regis_diario_c',
                 'r.hora',
                 'r.per_id',
-                'r.ppr_id',
+                'r.pep_id',
                 'p.nombres_per',
                 'p.apellidos_per',
                 'p.genero_per',
@@ -84,9 +84,9 @@ class ComedorHomeService
 
         return Producto::whereHas('categoria', function ($q) use ($comedor) {
             $q->whereHas('tipoProducto', function ($t) use ($comedor) {
-                $t->where('modulo_id', $comedor->id_mod);
+                $t->where('mod_id', $comedor->id_mod);
             });
-        })->pluck('id')->toArray();
+        })->pluck('id_pdt')->toArray();
     }
 
     /**
@@ -117,16 +117,16 @@ class ComedorHomeService
         $lotesVigentes  = 0;
 
         if (!empty($productosIds)) {
-            $lotes = Lote::whereIn('producto_id', $productosIds)
-                ->where('estado', 1)
-                ->get(['id', 'fecha_vencimiento']);
+            $lotes = Lote::whereIn('pdt_id', $productosIds)
+                ->where('status_id', 1)
+                ->get(['id_lot', 'fecha_vencimiento_lot']);
 
             foreach ($lotes as $lote) {
-                if (!$lote->fecha_vencimiento) {
+                if (!$lote->fecha_vencimiento_lot) {
                     $lotesVigentes++;
                     continue;
                 }
-                $fecha = Carbon::parse($lote->fecha_vencimiento);
+                $fecha = Carbon::parse($lote->fecha_vencimiento_lot);
                 if ($fecha->lte($hoy)) {
                     $lotesVencidos++;
                 } elseif ($fecha->lte($limite)) {
@@ -140,16 +140,16 @@ class ComedorHomeService
         // ── Top ingredientes (productos del comedor) por gramos usados en recetas ──
         $topProductos = [];
         if (!empty($productosIds)) {
-            $topProductos = RecetaIngrediente::whereIn('producto_id', $productosIds)
+            $topProductos = RecetaIngrediente::whereIn('pdt_id', $productosIds)
                 ->where('estado', 1)
-                ->select('producto_id', DB::raw('SUM(cantidad_gramos) as total_gramos'))
-                ->groupBy('producto_id')
+                ->select('pdt_id', DB::raw('SUM(cantidad_gramos) as total_gramos'))
+                ->groupBy('pdt_id')
                 ->orderByDesc('total_gramos')
                 ->take(8)
-                ->with('producto:id,nombre')
+                ->with('producto:id_pdt,nombre_pdt')
                 ->get()
                 ->mapWithKeys(function ($item) {
-                    $nombre = $item->producto->nombre ?? ('Producto #' . $item->producto_id);
+                    $nombre = $item->producto->nombre_pdt ?? ('Producto #' . $item->pdt_id);
                     return [$nombre => (float) $item->total_gramos];
                 })
                 ->toArray();

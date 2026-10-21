@@ -10,9 +10,9 @@ class ConsumoDiarioDetalle extends Model
 
     protected $fillable = [
         'consumo_diario_id',
-        'producto_id',
+        'pdt_id',
         'cantidad_total',
-        'unidad_id',
+        'unm_id',
     ];
 
     public function consumoDiario()
@@ -22,11 +22,11 @@ class ConsumoDiarioDetalle extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class);
+        return $this->belongsTo(Producto::class, 'pdt_id', 'id_pdt');
     }
 
     public function unidad()
     {
-        return $this->belongsTo(Unidad::class);
+        return $this->belongsTo(Unidad::class, 'unm_id', 'id_unm');
     }
 }

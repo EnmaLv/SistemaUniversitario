@@ -15,7 +15,7 @@ class Registro_diario extends Model
 
     protected $fillable = [
         'per_id',
-        'ppr_id',
+        'pep_id',
         'fecha_regis_diario_c',
         'hora',
     ];
@@ -35,7 +35,7 @@ class Registro_diario extends Model
 
     public function persona_pnf()
     {
-        return $this->belongsTo(PersonaPnf::class, 'ppr_id', 'id_ppr');
+        return $this->belongsTo(PersonaPnf::class, 'pep_id', 'id_pep');
     }
 
     private static function relacionTable()
@@ -46,7 +46,7 @@ class Registro_diario extends Model
             ->leftJoin('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
             ->leftJoin('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
             ->leftJoin('estado', 'municipio.esd_id', '=', 'estado.id_esd')
-            ->join('persona_programa', 'registro_diario_c.ppr_id', '=', 'persona_programa.id_ppr')
+            ->join('persona_programa', 'registro_diario_c.pep_id', '=', 'persona_programa.id_pep')
             ->join('programa', 'persona_programa.prg_id', '=', 'programa.id_prg');
     }
 

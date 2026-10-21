@@ -77,10 +77,10 @@
                             <ul style="text-align:left; font-size:14px; max-height:200px; overflow-y:auto;">
                                 @foreach ($productos_stock_minimo as $producto)
                                     <li>
-                                        <strong>{{ $producto->nombre }}</strong>
+                                        <strong>{{ $producto->nombre_pdt }}</strong>
                                         <small class="text-danger">
                                             ({{ number_format($producto->stock_actual, 2) }} /
-                                            {{ number_format($producto->stock_minimo, 2) }})
+                                            {{ number_format($producto->stock_minimo_pdt, 2) }})
                                         </small>
                                     </li>
                                 @endforeach
@@ -97,7 +97,7 @@
 
                     if (result.isConfirmed) {
                         window.location.href =
-                            "{{ url('/admin/maestros/productos?filtro=stock_minimo') }}";
+                            "{{ url('/admin/maestros/productos?filtro=stock_minimo_pdt') }}";
                     }
                 });
             }

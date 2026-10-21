@@ -323,9 +323,9 @@
                 <div class="medication-item">
                     <div class="med-body">
                         <div class="med-name">
-                            &mdash; {{ optional($detalle->producto)->nombre ?? 'Producto no especificado' }}
+                            &mdash; {{ optional($detalle->producto)->nombre_pdt ?? 'Producto no especificado' }}
                             <span class="med-qty">- {{ floatval($detalle->cantidad) }}
-                                {{ optional($detalle->unidad)->nombre ?? 'Und' }}</span>
+                                {{ optional($detalle->unidad)->nombre_unm ?? 'Und' }}</span>
                         </div>
                         <div class="med-instructions">
                             <strong>Tomar / Aplicar:</strong> {{ $detalle->frecuencia }}

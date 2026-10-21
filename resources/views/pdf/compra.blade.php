@@ -351,14 +351,14 @@
         @forelse ($compras as $compra)
             <div class="compra-item">
                 <div class="compra-header">
-                    <h2>COMPRA N° {{ $compra->id ?? 'N/A' }}</h2>
+                    <h2>COMPRA N° {{ $compra->id_cmp ?? 'N/A' }}</h2>
                     <p>Proveedor: {{ $compra->proveedor_empresa }}</p>
                 </div>
 
                 <div class="info-grid">
                     <div class="info-row">
                         <div class="info-label">Fecha de Compra:</div>
-                        <div class="info-value">{{ \Carbon\Carbon::parse($compra->fecha)->format('d/m/Y H:i') }}</div>
+                        <div class="info-value">{{ \Carbon\Carbon::parse($compra->fecha_compra_cmp)->format('d/m/Y H:i') }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Registro en Sistema:</div>
@@ -383,24 +383,24 @@
                         @foreach ($compra->detalles as $detalle)
                             <tr>
                                 <td>{{ $detalle->producto_nombre }}</td>
-                                <td class="right">{{ number_format($detalle->cantidad, 2, ',', '.') }}</td>
+                                <td class="right">{{ number_format($detalle->cantidad_dcm, 2, ',', '.') }}</td>
                                 <td class="center">{{ $detalle->unidad_abreviatura }}</td>
-                                <td class="right">{{ number_format($detalle->precio_unitario, 2, ',', '.') }} Bs</td>
-                                <td class="right">{{ number_format($detalle->subtotal, 2, ',', '.') }} Bs</td>
+                                <td class="right">{{ number_format($detalle->precio_unitario_dcm, 2, ',', '.') }} Bs</td>
+                                <td class="right">{{ number_format($detalle->subtotal_dcm, 2, ',', '.') }} Bs</td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
 
-                @if ($compra->observaciones)
+                @if ($compra->observacion_cmp)
                     <div class="observaciones-section">
-                        <p><strong>Observaciones:</strong> {{ $compra->observaciones }}</p>
+                        <p><strong>Observaciones:</strong> {{ $compra->observacion_cmp }}</p>
                     </div>
                 @endif
 
                 <div class="total-section">
                     <span class="total-label">TOTAL DE LA COMPRA:</span>
-                    <span class="total-valor">{{ number_format($compra->total, 2, ',', '.') }} Bs</span>
+                    <span class="total-valor">{{ number_format($compra->total_cmp, 2, ',', '.') }} Bs</span>
                 </div>
             </div>
         @empty

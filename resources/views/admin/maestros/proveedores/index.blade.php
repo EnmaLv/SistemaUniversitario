@@ -59,6 +59,7 @@
                                 class="bg-gray-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-gray-800 text-[13px] font-black uppercase tracking-wider">
                                 <th class="px-6 py-4 text-center" style="width: 80px;">#</th>
                                 <th class="px-6 py-4 text-center">Empresa</th>
+                                <th class="px-6 py-4 text-center">RIF</th>
                                 <th class="px-6 py-4 text-center">Dirección</th>
                                 <th class="px-6 py-4 text-center">Nombre</th>
                                 <th class="px-6 py-4 text-center">Teléfono</th>
@@ -71,7 +72,7 @@
                         <tbody class="divide-y text-xs font-medium"
                             style="--tw-divide-opacity: 1; --tw-divide-color: var(--border-color);">
                             @forelse($proveedores as $proveedor)
-                                <x-table-row :id="$proveedor->id">
+                                <x-table-row :id="$proveedor->id_prv">
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
                                             class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
@@ -80,22 +81,25 @@
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $proveedor->empresa }}
+                                        {{ $proveedor->empresa_prv }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $proveedor->direccion ?: 'Sin dirección' }}
+                                        {{ $proveedor->rif_prv ?: 'Sin RIF' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $proveedor->nombre ?: 'Sin nombre' }}
+                                        {{ $proveedor->direccion_prv ?: 'Sin dirección' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $proveedor->telefono ?: 'Sin teléfono' }}
+                                        {{ $proveedor->nombre_contacto_prv ?: 'Sin nombre' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $proveedor->email ?: 'Sin correo' }}
+                                        {{ $proveedor->telefono_prv ?: 'Sin teléfono' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
+                                        {{ $proveedor->email_prv ?: 'Sin correo' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($proveedor->estado)
+                                        @if ($proveedor->status_id == 1)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-check-circle"></i> Activo
@@ -108,13 +112,13 @@
                                         @endif
                                     </td>
 
-                                    <x-table-actions :id="$proveedor->id"
+                                    <x-table-actions :id="$proveedor->id_prv"
                                         baseUrl="admin/maestros/proveedores"
-                                        :status="$proveedor->estado" :show="false" />
+                                        :status="$proveedor->status_id == 1" :show="false" />
                                 </x-table-row>
                             @empty
                                 <tr>
-                                    <td colspan="8"
+                                    <td colspan="9"
                                         class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
                                         No hay proveedores registrados
                                     </td>

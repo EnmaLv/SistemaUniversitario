@@ -204,7 +204,7 @@
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-black rounded-md border font-mono"
                                             style="border-color: var(--border-color); color: var(--text-main);">
                                             <i class="fas fa-barcode text-[10px] opacity-60"></i>
-                                            {{ $lote->codigo_lote }}
+                                            {{ $lote->codigo_lote_lot }}
                                         </span>
                                     </td>
 
@@ -213,22 +213,22 @@
                                             <span class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-500 flex items-center justify-center shrink-0">
                                                 <i class="fas fa-box text-xs"></i>
                                             </span>
-                                            <span class="font-bold">{{ $lote->producto->nombre ?? '—' }}</span>
+                                            <span class="font-bold">{{ $lote->producto->nombre_pdt ?? '—' }}</span>
                                         </div>
                                     </td>
 
                                     <td class="px-4 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $lote->proveedor->nombre ?? '—' }}
+                                        {{ $lote->proveedor->nombre_contacto_prv ?? '—' }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($lote->fecha_entrada)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($lote->fecha_entrada_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($lote->fecha_vencimiento)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($lote->fecha_vencimiento_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap">

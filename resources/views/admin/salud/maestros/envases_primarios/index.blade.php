@@ -77,7 +77,7 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($envases as $envase)
-                                <x-table-row :id="$envase->id">
+                                <x-table-row :id="$envase->id_enp">
                                     {{-- Numeración --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
@@ -89,12 +89,12 @@
                                     {{-- Nombre --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $envase->nombre }}
+                                        {{ $envase->nombre_enp }}
                                     </td>
 
                                     {{-- Estado --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($envase->estado)
+                                        @if ($envase->status_id == 1)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-check-circle"></i> Activo
@@ -109,14 +109,14 @@
 
                                     {{-- Componente de Acciones --}}
                                     <x-table-actions 
-                                        :id="$envase->id" 
+                                        :id="$envase->id_enp" 
                                         baseUrl="admin/salud/maestros/envases_primarios"
-                                        :status="$envase->estado" 
+                                        :status="$envase->status_id == 1" 
                                         :show="false" 
                                         :on-edit="'abrirModalEditarEnvasePrimario(' .
                                             json_encode($envase, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) .
                                             ', `' .
-                                            route('admin.salud.maestros.envases_primarios.update', $envase->id) .
+                                            route('admin.salud.maestros.envases_primarios.update', $envase->id_enp) .
                                             '`)'" 
                                     />
 

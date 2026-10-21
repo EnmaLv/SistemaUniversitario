@@ -317,13 +317,13 @@
                                                 <tr
                                                     class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                                                     <td class="px-5 py-4 text-sm " style="color: var(--text-main);">
-                                                        {{ optional($detalle->producto)->nombre ?? '—' }}
+                                                        {{ optional($detalle->producto)->nombre_pdt ?? '—' }}
                                                     </td>
                                                     <td class="px-5 py-4 text-sm font-mono font-medium"
                                                         style="color: var(--text-main);">
                                                         {{ $detalle->cantidad }}
                                                         <span
-                                                            class="text-gray-400 text-xs font-sans ">{{ optional($detalle->unidad)->nombre }}</span>
+                                                            class="text-gray-400 text-xs font-sans ">{{ optional($detalle->unidad)->nombre_unm }}</span>
                                                     </td>
                                                     <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
                                                         {{ $detalle->frecuencia }}
@@ -406,21 +406,21 @@
                                                             </td>
                                                             <td
                                                                 class="px-5 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">
-                                                                {{ optional($detalle->producto)->nombre ?? '—' }}
+                                                                {{ optional($detalle->producto)->nombre_pdt ?? '—' }}
                                                             </td>
                                                             <td class="px-5 py-4 text-sm text-center"
                                                                 style="color: var(--text-main);">
                                                                 <span
                                                                     class="font-bold">{{ $disp->cantidad }}</span>
                                                                 <span
-                                                                    class="text-gray-400 text-xs font-sans ml-0.5">{{ optional($detalle->unidad)->nombre }}</span>
+                                                                    class="text-gray-400 text-xs font-sans ml-0.5">{{ optional($detalle->unidad)->nombre_unm }}</span>
                                                             </td>
                                                             <td class="px-5 py-4 text-sm">
                                                                 <div class="flex flex-col gap-0.5">
                                                                     <span class="font-medium"
                                                                         style="color: var(--text-main);">
                                                                         Lote:
-                                                                        {{ optional($disp->lote)->numero_lote ?? (optional($disp->lote)->codigo_lote ?? '—') }}
+                                                                        {{ optional($disp->lote)->codigo_lote_lot ?? '—' }}
                                                                     </span>
                                                                 </div>
                                                             </td>

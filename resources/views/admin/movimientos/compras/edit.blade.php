@@ -33,12 +33,12 @@
                     <h1
                         class="text-2xl sm:text-3xl font-extrabold tracking-tight"
                         style="color: var(--text-main);">
-                        Requisición #{{ $compra->id }}
+                        Requisición #{{ $compra->id_cmp }}
                     </h1>
                     <p class="mt-0.5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         Gestiona los pasos de la requisición
                         <span class="mx-1">·</span>
-                        {{ \Carbon\Carbon::parse($compra->fecha)->format('d/m/Y') }}
+                        {{ \Carbon\Carbon::parse($compra->fecha_compra_cmp)->format('d/m/Y') }}
                     </p>
                 </div>
             </div>
@@ -53,11 +53,11 @@
                     <span
                         class="text-sm font-extrabold"
                         style="color: var(--text-main);">
-                        {{ $compra->estado }}
+                        {{ $compra->estado_compra_cmp }}
                     </span>
                 </div>
 
-                @if ($compra->estado == 'Pendiente')
+                @if ($compra->estado_compra_cmp == 'Pendiente')
 
                     <form
                         action="{{ route('admin.movimientos.compras.cancelar', $compra) }}"
@@ -77,7 +77,7 @@
                             Cancelar y volver
                         </button>
                     </form>
-                @elseif ($compra->estado == 'Enviado al proveedor')
+                @elseif ($compra->estado_compra_cmp == 'Enviado al proveedor')
                     <a
                         href="{{ url('admin/movimientos/compras') }}"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all hover:bg-gray-50 dark:hover:bg-white/5"
@@ -96,7 +96,7 @@
     <div class="pb-10">
         <div class="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6">
             @php
-                $pasoActual = match ($compra->estado) {
+                $pasoActual = match ($compra->estado_compra_cmp) {
                     'Pendiente' => 2,
                     'Enviado al proveedor' => 3,
                     default => 3,
@@ -132,12 +132,12 @@
                     </div>
                     <span
                         class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide
-                        {{ $compra->estado == 'Pendiente'
+                        {{ $compra->estado_compra_cmp == 'Pendiente'
                             ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400'
                             : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400' }}">
 
                         <i class="fas fa-circle text-[5px]"></i>
-                        {{ $compra->estado }}
+                        {{ $compra->estado_compra_cmp }}
                     </span>
                 </div>
 
@@ -163,10 +163,10 @@
                                     ">
                                     @foreach ($proveedores as $proveedor)
                                         <option
-                                            value="{{ $proveedor->id }}"
-                                            {{ old('proveedor_id', $compra->proveedor_id) == $proveedor->id ? 'selected' : '' }}>
+                                            value="{{ $proveedor->id_prv }}"
+                                            {{ old('proveedor_id', $compra->prv_id) == $proveedor->id_prv ? 'selected' : '' }}>
 
-                                            {{ $proveedor->nombre }}
+                                            {{ $proveedor->nombre_contacto_prv }}
 
                                         </option>
                                     @endforeach
@@ -194,7 +194,7 @@
                                         color: var(--text-main);">
                                     @foreach ($modulos as $modulo)
                                         <option value="{{ $modulo->id_mod }}"
-                                            {{ old('modulo_id', $compra->modulo_id) == $modulo->id_mod ? 'selected' : '' }}>
+                                            {{ old('modulo_id', $compra->mod_id) == $modulo->id_mod ? 'selected' : '' }}>
                                             {{ $modulo->nombre_mod }}
                                         </option>
                                     @endforeach
@@ -213,7 +213,7 @@
                                 <input
                                     type="text"
                                     readonly
-                                    value="{{ \Carbon\Carbon::parse($compra->fecha)->format('d/m/Y H:i') }}"
+                                    value="{{ \Carbon\Carbon::parse($compra->fecha_compra_cmp)->format('d/m/Y H:i') }}"
                                     class="w-full pl-10 pr-3.5 py-3 text-sm font-medium rounded-xl border opacity-70 cursor-not-allowed"
                                     style="
                                         background-color: rgba(0,0,0,0.02);
@@ -234,7 +234,7 @@
                                 <input
                                     type="text"
                                     readonly
-                                    value="{{ $compra->observaciones ?: 'Sin observaciones' }}"
+                                    value="{{ $compra->observacion_cmp ?: 'Sin observaciones' }}"
                                     class="w-full pl-10 pr-3.5 py-3 text-sm font-medium rounded-xl border opacity-70 cursor-not-allowed"
                                     style="
                                         background-color: rgba(0,0,0,0.02);
@@ -293,7 +293,7 @@
 
             </div>
 
-            @if ($compra->estado == 'Enviado al proveedor')
+            @if ($compra->estado_compra_cmp == 'Enviado al proveedor')
                 <div
                     class="rounded-2xl border shadow-sm overflow-hidden"
                     style="

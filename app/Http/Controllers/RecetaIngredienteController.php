@@ -50,7 +50,7 @@ class RecetaIngredienteController extends Controller
 
             // arrays
             'producto_id' => 'required|array|min:1',
-            'producto_id.*' => 'required|exists:productos,id',
+            'producto_id.*' => 'required|exists:producto,id_pdt',
 
             'cantidad_porcion' => 'nullable|array',
             'cantidad_porcion.*' => 'nullable|numeric',
@@ -59,7 +59,7 @@ class RecetaIngredienteController extends Controller
             'cantidad_gramos.*' => 'nullable|numeric',
 
             'unidad_id' => 'required|array',
-            'unidad_id.*' => 'required|exists:unidades,id',
+            'unidad_id.*' => 'required|exists:unidad_medida,id_unm',
         ]);
 
         DB::beginTransaction();
@@ -69,16 +69,16 @@ class RecetaIngredienteController extends Controller
                 $unidadId = $validated['unidad_id'][$index] ?? null;
 
                 $unidad = Unidad::find($unidadId);
-                $cantidadGramos = $cantidad * $unidad->factor_a_gramo;
+                $cantidadGramos = $cantidad * $unidad->factor_conversion_unm;
 
                 if (!$cantidad || !$unidadId) continue;
 
                 RecetaIngrediente::create([
                     'recetas_id' => $validated['recetas_id'],
-                    'producto_id' => $productoId,
+                    'pdt_id' => $productoId,
                     'cantidad_porcion' => $cantidad,
                     'cantidad_gramos' => $cantidadGramos,
-                    'unidad_id' => $unidadId,
+                    'unm_id' => $unidadId,
                 ]);
             }
 
@@ -110,11 +110,11 @@ class RecetaIngredienteController extends Controller
         $validated = $request->validate([
             'recetas_id' => 'required|exists:recetas,id',
             'producto_id' => 'nullable|array',
-            'producto_id.*' => 'required|exists:productos,id',
+            'producto_id.*' => 'required|exists:producto,id_pdt',
             'cantidad_porcion' => 'nullable|array',
             'cantidad_porcion.*' => 'required|numeric|min:0.0001',
             'unidad_id' => 'nullable|array',
-            'unidad_id.*' => 'required|exists:unidades,id',
+            'unidad_id.*' => 'required|exists:unidad_medida,id_unm',
         ]);
 
         if ((int)$validated['recetas_id'] !== (int)$recetaId) {
@@ -130,17 +130,17 @@ class RecetaIngredienteController extends Controller
                 $unidadId = $validated['unidad_id'][$index] ?? null;
 
                 $unidad = Unidad::find($unidadId);
-                $cantidadGramos = $cantidad * $unidad->factor_a_gramo;
+                $cantidadGramos = $cantidad * $unidad->factor_conversion_unm;
 
 
                 if (!$cantidad || !$unidadId) continue;
 
                 RecetaIngrediente::create([
                     'recetas_id' => $recetaId,
-                    'producto_id' => $productoId,
+                    'pdt_id' => $productoId,
                     'cantidad_porcion' => $cantidad,
                     'cantidad_gramos' => $cantidadGramos,
-                    'unidad_id' => $unidadId,
+                    'unm_id' => $unidadId,
                 ]);
             }
 

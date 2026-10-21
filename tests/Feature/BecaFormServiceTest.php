@@ -27,7 +27,7 @@ class BecaFormServiceTest extends TestCase
             'id_estatus' => $estatusId,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], 'id_perfil');
 
         $sucursalId = DB::table('sucursals')->insertGetId([
             'nombre' => 'Sucursal Test',
@@ -43,14 +43,14 @@ class BecaFormServiceTest extends TestCase
             'id_sucursal' => $sucursalId,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], 'id_sed');
 
         $tutorPerfilId = DB::table('perfil')->insertGetId([
             'nombre_perfil' => 'Tutor',
             'id_estatus' => $estatusId,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], 'id_perfil');
 
         $student = Persona::create([
             'nombres_per' => 'Estudiante',
@@ -91,7 +91,7 @@ class BecaFormServiceTest extends TestCase
             'slug' => 'tutor',
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], 'id_rol');
 
         $user = Usuario::create([
             'per_id' => $tutor->per_id,
@@ -134,7 +134,7 @@ class BecaFormServiceTest extends TestCase
             'id_estatus' => $estatusId,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], 'id_perfil');
 
         $sucursalId = DB::table('sucursals')->insertGetId([
             'nombre' => 'Sucursal Test',
@@ -150,7 +150,7 @@ class BecaFormServiceTest extends TestCase
             'id_sucursal' => $sucursalId,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], 'id_sed');
 
         $persona = Persona::create([
             'nombres_per' => 'Encargada',
@@ -174,7 +174,7 @@ class BecaFormServiceTest extends TestCase
             'slug' => 'encargada-de-becas',
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ], 'id_rol');
 
         $user = Usuario::create([
             'per_id' => $persona->id_per,

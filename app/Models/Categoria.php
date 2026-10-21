@@ -2,36 +2,43 @@
 
 namespace App\Models;
 
+use App\Traits\ConvierteAMayusculasNoEloquent;
+use App\Traits\RegistraAutoria;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB; 
-use App\Traits\ConvierteAMayusculasNoEloquent;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Categoria extends Model
 {
     use ConvierteAMayusculasNoEloquent;
     use HasFactory;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'categorias';
+    protected $table = 'categoria_producto';
+
+    protected $primaryKey = 'id_cap';
 
     protected $fillable = [
-        'nombre',
-        'descripcion',
-        'tipo_producto_id',
-        'activo',
+        'nombre_cap',
+        'descripcion_cap',
+        'tpr_id',
+        'status_id',
     ];
 
     protected static function booted(): void
     {
         static::addGlobalScope('ordenAlfabetico', function (Builder $builder) {
-            $builder->orderBy('nombre', 'asc');
+            $builder->orderBy('categoria_producto.nombre_cap', 'asc');
         });
     }
 
     public function productos()
     {
-        return $this->hasMany(Producto::class, 'categoria_id');
+        return $this->hasMany(Producto::class, 'cap_id', 'id_cap');
     }
 
     public static function listarCategorias($buscar = null, $activo = 1, $tipoProductoId = null)
@@ -39,18 +46,18 @@ class Categoria extends Model
         $query = self::query();
 
         if ($tipoProductoId !== null) {
-            $query->where('tipo_producto_id', $tipoProductoId);
+            $query->where('tpr_id', $tipoProductoId);
         }
 
         if ($buscar) {
-            $query->where('nombre', 'like', "%{$buscar}%");
+            $query->where('nombre_cap', 'like', "%{$buscar}%");
         }
 
         if ($activo !== null && $activo !== '') {
-            $query->where('activo', (int)$activo);
+            $query->where('status_id', (int) $activo === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO);
         }
 
-        return $query->orderBy('nombre', 'asc')
+        return $query->orderBy('nombre_cap', 'asc')
             ->paginate(10)
             ->withQueryString();
     }
@@ -61,20 +68,21 @@ class Categoria extends Model
 
         $data = $helper->convertirCamposAMayusculas($data, ['nombre', 'descripcion']);
 
-        return DB::table('categorias')->insertGetId([
-            'nombre'      => $data['nombre'],
-            'descripcion' => $data['descripcion'],
-            'tipo_producto_id' => $tipoProductoId,
-            'activo'      => true,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
+        return DB::table('categoria_producto')->insertGetId([
+            'nombre_cap'      => $data['nombre'],
+            'descripcion_cap' => $data['descripcion'] ?? null,
+            'tpr_id'          => $tipoProductoId,
+            'status_id'       => self::STATUS_ACTIVO,
+            'created_id'      => Auth::id(),
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ], 'id_cap');
     }
 
     public static function obtenerCategoria($id)
     {
-        return DB::table('categorias')
-            ->where('id', $id)
+        return DB::table('categoria_producto')
+            ->where('id_cap', $id)
             ->first();
     }
 
@@ -84,47 +92,51 @@ class Categoria extends Model
 
         $data = $helper->convertirCamposAMayusculas($data, ['nombre', 'descripcion']);
 
-        return DB::table('categorias')
-            ->where('id', $id)
+        return DB::table('categoria_producto')
+            ->where('id_cap', $id)
             ->update([
-                'nombre'      => $data['nombre'],
-                'descripcion' => $data['descripcion'],
-                'updated_at'  => now(),
+                'nombre_cap'      => $data['nombre'],
+                'descripcion_cap' => $data['descripcion'] ?? null,
+                'updated_id'      => Auth::id(),
+                'updated_at'      => now(),
             ]);
     }
 
 
     public static function eliminarCategoria($id)
     {
-        return DB::table('categorias')
-            ->where('id', $id)
+        return DB::table('categoria_producto')
+            ->where('id_cap', $id)
             ->update([
-                'activo' => 0,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_INACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 
     public static function activarCategoria($id)
     {
-        return DB::table('categorias')
-            ->where('id', $id)
+        return DB::table('categoria_producto')
+            ->where('id_cap', $id)
             ->update([
-                'activo' => 1,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_ACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 
     public static function obtenerCategoriaConProductos($id)
     {
-        $categoria = DB::table('categorias')
-            ->where('id', $id)
+        $categoria = DB::table('categoria_producto')
+            ->where('id_cap', $id)
             ->first();
 
         if ($categoria) {
-            $categoria->productos = DB::table('productos')
-                ->where('categoria_id', $id)
-                ->where('activo', 1)
-                ->select('id', 'codigo', 'nombre', 'precio_compra', 'estado')
+            $categoria->productos = DB::table('producto')
+                ->where('cap_id', $id)
+                ->where('status_id', self::STATUS_ACTIVO)
+                ->whereNull('deleted_at')
+                ->select('id_pdt', 'codigo_pdt', 'nombre_pdt', 'precio_compra_pdt', 'status_id')
                 ->get();
 
             $categoria->cantidad_productos = $categoria->productos->count();
@@ -135,29 +147,30 @@ class Categoria extends Model
 
     public static function tieneProductos($id)
     {
-        return DB::table('productos')
-            ->where('categoria_id', $id)
+        return DB::table('producto')
+            ->where('cap_id', $id)
             ->exists();
     }
 
     public static function contarProductos($id)
     {
-        return DB::table('productos')
-            ->where('categoria_id', $id)
+        return DB::table('producto')
+            ->where('cap_id', $id)
             ->count();
     }
 
     public static function obtenerCategoriasActivas()
     {
-        return DB::table('categorias')
-            ->where('activo', 1)
-            ->select('id', 'nombre')
-            ->orderBy('nombre', 'asc')
+        return DB::table('categoria_producto')
+            ->where('status_id', self::STATUS_ACTIVO)
+            ->whereNull('deleted_at')
+            ->select('id_cap', 'nombre_cap')
+            ->orderBy('nombre_cap', 'asc')
             ->get();
     }
 
     public function tipoProducto()
     {
-        return $this->belongsTo(TipoProducto::class, 'tipo_producto_id');
+        return $this->belongsTo(TipoProducto::class, 'tpr_id', 'id_tpr');
     }
 }

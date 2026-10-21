@@ -39,19 +39,19 @@ class ServicioInventario
         return DB::transaction(function () use ($loteId, $sedeId, $cantidad, $cantidadConvertida, $datos) {
             $lote = $this->bloquearLote($loteId);
             $existencia = $this->bloquearExistencia($loteId, $sedeId, false);
-            $disponible = (float) ($existencia->cantidad ?? 0);
+            $disponible = (float) ($existencia->cantidad_isl ?? 0);
 
             if (! $existencia || $disponible + self::TOLERANCIA < $cantidad) {
                 throw new StockInsuficienteException(sprintf(
                     'Stock insuficiente del lote %s en la sede: disponible %s, solicitado %s.',
-                    $lote->codigo_lote,
+                    $lote->codigo_lote_lot,
                     $this->formato($disponible),
                     $this->formato($cantidad)
                 ));
             }
 
             $convertida = $cantidadConvertida ?? $cantidad * $this->factor($lote, $existencia);
-            $convertida = min($convertida, (float) $existencia->cantidad_convertida);
+            $convertida = min($convertida, (float) $existencia->cantidad_convertida_isl);
 
             return $this->aplicar($lote, $existencia, -$cantidad, -$convertida, $datos['tipo'] ?? self::SALIDA, $datos);
         });
@@ -64,19 +64,19 @@ class ServicioInventario
         return DB::transaction(function () use ($loteId, $sedeId, $cantidadConvertida, $datos) {
             $lote = $this->bloquearLote($loteId);
             $existencia = $this->bloquearExistencia($loteId, $sedeId, false);
-            $disponible = (float) ($existencia->cantidad_convertida ?? 0);
+            $disponible = (float) ($existencia->cantidad_convertida_isl ?? 0);
 
             if (! $existencia || $disponible + self::TOLERANCIA < $cantidadConvertida) {
                 throw new StockInsuficienteException(sprintf(
                     'Stock insuficiente del lote %s en la sede: disponible %s, solicitado %s (unidad base).',
-                    $lote->codigo_lote,
+                    $lote->codigo_lote_lot,
                     $this->formato($disponible),
                     $this->formato($cantidadConvertida)
                 ));
             }
 
             $factor = $this->factor($lote, $existencia);
-            $cantidad = min((float) $existencia->cantidad, $factor > 0 ? $cantidadConvertida / $factor : $cantidadConvertida);
+            $cantidad = min((float) $existencia->cantidad_isl, $factor > 0 ? $cantidadConvertida / $factor : $cantidadConvertida);
 
             return $this->aplicar($lote, $existencia, -$cantidad, -$cantidadConvertida, $datos['tipo'] ?? self::SALIDA, $datos);
         });
@@ -96,8 +96,8 @@ class ServicioInventario
             return $this->aplicar(
                 $lote,
                 $existencia,
-                $nuevaCantidad - (float) $existencia->cantidad,
-                $convertida - (float) $existencia->cantidad_convertida,
+                $nuevaCantidad - (float) $existencia->cantidad_isl,
+                $convertida - (float) $existencia->cantidad_convertida_isl,
                 self::AJUSTE,
                 $datos
             );
@@ -117,7 +117,7 @@ class ServicioInventario
                 $loteId,
                 $sedeDestino,
                 $cantidad,
-                (float) $salida->cantidad_convertida,
+                (float) $salida->cantidad_convertida_moi,
                 array_merge($datos, ['tipo' => self::TRANSFERENCIA_ENTRADA])
             );
 
@@ -128,31 +128,31 @@ class ServicioInventario
     public function recalcular(?int $productoId = null, ?int $sedeId = null): int
     {
         return DB::transaction(function () use ($productoId, $sedeId) {
-            $borrar = DB::table('inventario_totals');
-            $productoId !== null && $borrar->where('producto_id', $productoId);
+            $borrar = DB::table('inventario_total');
+            $productoId !== null && $borrar->where('pdt_id', $productoId);
             $sedeId !== null && $borrar->where('sed_id', $sedeId);
             $borrar->delete();
 
-            $filas = DB::table('inventario_sede_lotes as existencia')
-                ->join('lotes', 'lotes.id', '=', 'existencia.lote_id')
-                ->when($productoId !== null, fn ($consulta) => $consulta->where('lotes.producto_id', $productoId))
+            $filas = DB::table('inventario_sede_lote as existencia')
+                ->join('lote', 'lote.id_lot', '=', 'existencia.lot_id')
+                ->when($productoId !== null, fn ($consulta) => $consulta->where('lote.pdt_id', $productoId))
                 ->when($sedeId !== null, fn ($consulta) => $consulta->where('existencia.sed_id', $sedeId))
-                ->groupBy('lotes.producto_id', 'existencia.sed_id')
-                ->selectRaw('lotes.producto_id, existencia.sed_id, SUM(existencia.cantidad) AS cantidad_total, SUM(existencia.cantidad_convertida) AS cantidad_convertida_total')
+                ->groupBy('lote.pdt_id', 'existencia.sed_id')
+                ->selectRaw('lote.pdt_id, existencia.sed_id, SUM(existencia.cantidad_isl) AS cantidad_total, SUM(existencia.cantidad_convertida_isl) AS cantidad_convertida_total')
                 ->get();
 
             $ahora = now();
             $registros = $filas->map(fn ($fila) => [
-                'producto_id'               => $fila->producto_id,
-                'sed_id'                   => $fila->sed_id,
-                'cantidad_total'            => round((float) $fila->cantidad_total, 2),
-                'cantidad_convertida_total' => round((float) $fila->cantidad_convertida_total, 2),
+                'pdt_id'                        => $fila->pdt_id,
+                'sed_id'                        => $fila->sed_id,
+                'cantidad_total_int'            => round((float) $fila->cantidad_total, 2),
+                'cantidad_convertida_total_int' => round((float) $fila->cantidad_convertida_total, 2),
                 'created_at'                => $ahora,
                 'updated_at'                => $ahora,
             ])->all();
 
             foreach (array_chunk($registros, 500) as $lote) {
-                DB::table('inventario_totals')->insert($lote);
+                DB::table('inventario_total')->insert($lote);
             }
 
             return count($registros);
@@ -161,84 +161,86 @@ class ServicioInventario
 
     public function existenciasDisponibles(int $productoId, int $sedeId)
     {
-        return DB::table('inventario_sede_lotes as existencia')
-            ->join('lotes', 'lotes.id', '=', 'existencia.lote_id')
-            ->where('lotes.producto_id', $productoId)
+        return DB::table('inventario_sede_lote as existencia')
+            ->join('lote', 'lote.id_lot', '=', 'existencia.lot_id')
+            ->where('lote.pdt_id', $productoId)
             ->where('existencia.sed_id', $sedeId)
-            ->where('lotes.estado', 1)
-            ->where('existencia.cantidad_convertida', '>', 0)
-            ->where(fn ($consulta) => $consulta->whereNull('lotes.fecha_vencimiento')->orWhereDate('lotes.fecha_vencimiento', '>=', now()->toDateString()))
-            ->orderByRaw('CASE WHEN lotes.fecha_vencimiento IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('lotes.fecha_vencimiento')
-            ->orderBy('lotes.id')
-            ->select('existencia.*', 'lotes.codigo_lote', 'lotes.fecha_vencimiento')
+            ->where('lote.status_id', 1)
+            ->whereNull('lote.deleted_at')
+            ->where('existencia.cantidad_convertida_isl', '>', 0)
+            ->where(fn ($consulta) => $consulta->whereNull('lote.fecha_vencimiento_lot')->orWhereDate('lote.fecha_vencimiento_lot', '>=', now()->toDateString()))
+            ->orderByRaw('CASE WHEN lote.fecha_vencimiento_lot IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('lote.fecha_vencimiento_lot')
+            ->orderBy('lote.id_lot')
+            ->select('existencia.*', 'lote.codigo_lote_lot', 'lote.fecha_vencimiento_lot')
             ->get();
     }
 
     private function aplicar(object $lote, object $existencia, float $deltaCantidad, float $deltaConvertida, string $tipo, array $datos): MovimientoInventario
     {
-        $anterior = (float) $existencia->cantidad;
+        $anterior = (float) $existencia->cantidad_isl;
         $final = round($anterior + $deltaCantidad, 2);
-        $convertidaFinal = round(max(0, (float) $existencia->cantidad_convertida + $deltaConvertida), 2);
+        $convertidaFinal = round(max(0, (float) $existencia->cantidad_convertida_isl + $deltaConvertida), 2);
 
-        DB::table('inventario_sede_lotes')->where('id', $existencia->id)->update([
-            'cantidad'            => max(0, $final),
-            'cantidad_convertida' => $convertidaFinal,
+        DB::table('inventario_sede_lote')->where('id_isl', $existencia->id_isl)->update([
+            'cantidad_isl'            => max(0, $final),
+            'cantidad_convertida_isl' => $convertidaFinal,
+            'updated_id'              => Auth::id(),
+            'updated_at'              => now(),
+        ]);
+
+        DB::table('lote')->where('id_lot', $lote->id_lot)->update([
+            'cantidad_actual_lot' => (float) DB::table('inventario_sede_lote')->where('lot_id', $lote->id_lot)->sum('cantidad_convertida_isl'),
             'updated_at'          => now(),
         ]);
 
-        DB::table('lotes')->where('id', $lote->id)->update([
-            'cantidad_actual' => (float) DB::table('inventario_sede_lotes')->where('lote_id', $lote->id)->sum('cantidad_convertida'),
-            'updated_at'      => now(),
-        ]);
-
-        $this->actualizarTotal((int) $lote->producto_id, (int) $existencia->sed_id);
+        $this->actualizarTotal((int) $lote->pdt_id, (int) $existencia->sed_id);
 
         return MovimientoInventario::todasLasSedes()->create([
-            'producto_id'         => $lote->producto_id,
-            'lote_id'             => $lote->id,
-            'sed_id'             => $existencia->sed_id,
-            'tipo_movimiento'     => $tipo,
-            'modulo_origen_id'    => $datos['modulo_origen_id'] ?? null,
-            'cantidad'            => round(abs($deltaCantidad), 2),
-            'cantidad_convertida' => round(abs($deltaConvertida), 2),
-            'cantidad_anterior'   => $anterior,
-            'cantidad_final'      => max(0, $final),
-            'referencia_type'     => $datos['referencia_type'] ?? null,
-            'referencia_id'       => $datos['referencia_id'] ?? null,
-            'unidad_id'           => $datos['unidad_id'] ?? $this->unidadDelProducto((int) $lote->producto_id),
-            'usuario_id'          => $datos['usuario_id'] ?? Auth::id(),
-            'fecha'               => now(),
-            'observaciones'       => $datos['observaciones'] ?? null,
+            'pdt_id'                  => $lote->pdt_id,
+            'lot_id'                  => $lote->id_lot,
+            'sed_id'                  => $existencia->sed_id,
+            'tipo_movimiento_moi'     => $tipo,
+            'mod_id'                  => $datos['mod_id'] ?? null,
+            'cantidad_moi'            => round(abs($deltaCantidad), 2),
+            'cantidad_convertida_moi' => round(abs($deltaConvertida), 2),
+            'cantidad_anterior_moi'   => $anterior,
+            'cantidad_final_moi'      => max(0, $final),
+            'referencia_type_moi'     => $datos['referencia_type_moi'] ?? null,
+            'referencia_id_moi'       => $datos['referencia_id_moi'] ?? null,
+            'unm_id'                  => $datos['unm_id'] ?? $this->unidadDelProducto((int) $lote->pdt_id),
+            'use_id'                  => $datos['use_id'] ?? Auth::id(),
+            'fecha_movimiento_moi'    => now(),
+            'observacion_moi'         => $datos['observacion_moi'] ?? null,
         ]);
     }
 
     private function actualizarTotal(int $productoId, int $sedeId): void
     {
-        $suma = DB::table('inventario_sede_lotes as existencia')
-            ->join('lotes', 'lotes.id', '=', 'existencia.lote_id')
-            ->where('lotes.producto_id', $productoId)
+        $suma = DB::table('inventario_sede_lote as existencia')
+            ->join('lote', 'lote.id_lot', '=', 'existencia.lot_id')
+            ->where('lote.pdt_id', $productoId)
             ->where('existencia.sed_id', $sedeId)
-            ->selectRaw('COALESCE(SUM(existencia.cantidad), 0) AS cantidad, COALESCE(SUM(existencia.cantidad_convertida), 0) AS convertida')
+            ->selectRaw('COALESCE(SUM(existencia.cantidad_isl), 0) AS cantidad, COALESCE(SUM(existencia.cantidad_convertida_isl), 0) AS convertida')
             ->first();
 
-        DB::table('inventario_totals')->upsert(
+        DB::table('inventario_total')->upsert(
             [[
-                'producto_id'               => $productoId,
-                'sed_id'                   => $sedeId,
-                'cantidad_total'            => round((float) $suma->cantidad, 2),
-                'cantidad_convertida_total' => round((float) $suma->convertida, 2),
-                'created_at'                => now(),
-                'updated_at'                => now(),
+                'pdt_id'                        => $productoId,
+                'sed_id'                        => $sedeId,
+                'cantidad_total_int'            => round((float) $suma->cantidad, 2),
+                'cantidad_convertida_total_int' => round((float) $suma->convertida, 2),
+                'created_at'                    => now(),
+                'updated_at'                    => now(),
             ]],
-            ['producto_id', 'sed_id'],
-            ['cantidad_total', 'cantidad_convertida_total', 'updated_at']
+            ['pdt_id', 'sed_id'],
+            ['cantidad_total_int', 'cantidad_convertida_total_int', 'updated_at']
         );
     }
 
     private function bloquearLote(int $loteId): object
     {
-        $lote = DB::table('lotes')->where('id', $loteId)->lockForUpdate()->first();
+        $lote = DB::table('lote')->where('id_lot', $loteId)->lockForUpdate()->first();
 
         if (! $lote) {
             throw new InvalidArgumentException("El lote {$loteId} no existe.");
@@ -249,8 +251,8 @@ class ServicioInventario
 
     private function bloquearExistencia(int $loteId, int $sedeId, bool $crear): ?object
     {
-        $existencia = DB::table('inventario_sede_lotes')
-            ->where('lote_id', $loteId)
+        $existencia = DB::table('inventario_sede_lote')
+            ->where('lot_id', $loteId)
             ->where('sed_id', $sedeId)
             ->lockForUpdate()
             ->first();
@@ -259,17 +261,18 @@ class ServicioInventario
             return $existencia;
         }
 
-        DB::table('inventario_sede_lotes')->insertOrIgnore([
-            'lote_id'             => $loteId,
-            'sed_id'             => $sedeId,
-            'cantidad'            => 0,
-            'cantidad_convertida' => 0,
-            'created_at'          => now(),
-            'updated_at'          => now(),
+        DB::table('inventario_sede_lote')->insertOrIgnore([
+            'lot_id'                  => $loteId,
+            'sed_id'                  => $sedeId,
+            'cantidad_isl'            => 0,
+            'cantidad_convertida_isl' => 0,
+            'created_id'              => Auth::id(),
+            'created_at'              => now(),
+            'updated_at'              => now(),
         ]);
 
-        return DB::table('inventario_sede_lotes')
-            ->where('lote_id', $loteId)
+        return DB::table('inventario_sede_lote')
+            ->where('lot_id', $loteId)
             ->where('sed_id', $sedeId)
             ->lockForUpdate()
             ->first();
@@ -277,18 +280,18 @@ class ServicioInventario
 
     private function factor(object $lote, ?object $existencia): float
     {
-        if ($existencia && (float) $existencia->cantidad > 0) {
-            return (float) $existencia->cantidad_convertida / (float) $existencia->cantidad;
+        if ($existencia && (float) $existencia->cantidad_isl > 0) {
+            return (float) $existencia->cantidad_convertida_isl / (float) $existencia->cantidad_isl;
         }
 
-        $producto = DB::table('productos')->where('id', $lote->producto_id)->first(['peso_contenido']);
+        $producto = DB::table('producto')->where('id_pdt', $lote->pdt_id)->first(['peso_contenido_pdt']);
 
-        return (float) ($producto->peso_contenido ?? 0) > 0 ? (float) $producto->peso_contenido : 1.0;
+        return (float) ($producto->peso_contenido_pdt ?? 0) > 0 ? (float) $producto->peso_contenido_pdt : 1.0;
     }
 
     private function unidadDelProducto(int $productoId): ?int
     {
-        return DB::table('productos')->where('id', $productoId)->value('unidad_id');
+        return DB::table('producto')->where('id_pdt', $productoId)->value('unm_id');
     }
 
     private function exigirPositiva(float $cantidad): void

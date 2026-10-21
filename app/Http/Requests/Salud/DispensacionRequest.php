@@ -66,7 +66,7 @@ class DispensacionRequest extends FormRequest
                     continue;
                 }
 
-                $nombre    = $detalle->producto->nombre ?? 'medicamento';
+                $nombre    = $detalle->producto->nombre_pdt ?? 'medicamento';
                 $cantidad  = (float) ($item['cantidad'] ?? 0);
                 $pendiente = (float) $detalle->cantidad_pendiente;
 

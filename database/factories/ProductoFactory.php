@@ -17,16 +17,16 @@ class ProductoFactory extends Factory
     public function definition(): array
     {
         return [
-            'categoria_id' => $this->faker->numberBetween(1, 10),
-            'codigo' => $this->faker->unique()->numerify('#####'),
-            'nombre' => $this->faker->word(),
-            'descripcion' => $this->faker->sentence(),
-            'imagen' => $this->faker->imageUrl(640, 480, 'products'),
-            'precio_compra' => $this->faker->randomFloat(2, 10, 100),
-            'stock_minimo' => $this->faker->numberBetween(1, 5),
-            'stock_maximo' => $this->faker->numberBetween(10, 20),
-            'unidad_id' => $this->faker->numberBetween(1, 4),
-            'estado' => $this->faker->boolean(80),
+            'cap_id' => $this->faker->numberBetween(1, 10),
+            'codigo_pdt' => $this->faker->unique()->numerify('#####'),
+            'nombre_pdt' => $this->faker->word(),
+            'descripcion_pdt' => $this->faker->sentence(),
+            'imagen_pdt' => $this->faker->imageUrl(640, 480, 'products'),
+            'precio_compra_pdt' => $this->faker->randomFloat(2, 10, 100),
+            'stock_minimo_pdt' => $this->faker->numberBetween(1, 5),
+            'stock_maximo_pdt' => $this->faker->numberBetween(10, 20),
+            'unm_id' => $this->faker->numberBetween(1, 4),
+            'status_id' => $this->faker->boolean(80) ? 1 : 2,
         ];
     }
 }

@@ -33,7 +33,7 @@ class CompraController extends Controller
     public function create()
     {
         $datos = (new Compra())->getDatosFormulario();
-        $datos['modulos'] = $datos['modulos']->whereIn('nombre', ['Comedor', 'Salud', 'Deporte']);
+        $datos['modulos'] = $datos['modulos']->whereIn('nombre_mod', ['Comedor', 'Salud', 'Deporte']);
 
         return view('admin.movimientos.compras.create', $datos);
     }
@@ -45,7 +45,7 @@ class CompraController extends Controller
         }, 'proveedor'])->findOrFail($id);
 
         $datos = $compra->getDatosFormulario();
-        $datos['modulos'] = $datos['modulos']->whereIn('nombre', ['Comedor', 'Salud', 'Deporte']);
+        $datos['modulos'] = $datos['modulos']->whereIn('nombre_mod', ['Comedor', 'Salud', 'Deporte']);
 
         return view('admin.movimientos.compras.edit', array_merge($datos, [
             'compra' => $compra
@@ -55,7 +55,7 @@ class CompraController extends Controller
     public function store(Request $request)
     {
         $id = Compra::crearCompra($request->validate([
-            'proveedor_id'  => 'required|exists:proveedors,id',
+            'proveedor_id'  => 'required|exists:proveedor,id_prv',
             'modulo_id'     => 'required|exists:modulo,id_mod',
             'fecha'         => 'required|date',
             'observaciones' => 'nullable|string'
@@ -85,15 +85,15 @@ class CompraController extends Controller
     public function finalizarCompra(Request $request, Compra $compra)
     {
         $lotesSinFecha = Lote::whereIn(
-            'id',
-            $compra->detalleCompras->pluck('lote_id')
+            'id_lot',
+            $compra->detalleCompras->pluck('lot_id')
         )
-            ->whereNull('fecha_vencimiento')
+            ->whereNull('fecha_vencimiento_lot')
             ->exists();
 
         if ($lotesSinFecha) {
             return back()->withErrors([
-                'fecha_vencimiento' => 'Debe registrar la fecha de vencimiento de todos los productos antes de finalizar la requisición.'
+                'fecha_vencimiento_lot' => 'Debe registrar la fecha de vencimiento de todos los productos antes de finalizar la requisición.'
             ]);
         }
 
@@ -108,12 +108,12 @@ class CompraController extends Controller
 
     public function cancelar(Compra $compra)
     {
-        if ($compra->estado === 'Finalizada') {
+        if ($compra->estado_compra_cmp === Compra::ESTADO_FINALIZADA) {
             return redirect()
                 ->route('admin.movimientos.compras.index')
                 ->with('error', 'No se puede cancelar una requisición finalizada.');
         }
-        Compra::eliminarCompra($compra->id);
+        Compra::eliminarCompra($compra->id_cmp);
 
         return redirect()
             ->route('admin.movimientos.compras.index')
@@ -122,8 +122,8 @@ class CompraController extends Controller
 
     public function enviarCorreo(Compra $compra)
     {
-        $proveedorEmail = $compra->proveedor->email;
-        $compra->estado = 'Enviado al proveedor';
+        $proveedorEmail = $compra->proveedor->email_prv;
+        $compra->estado_compra_cmp = 'Enviado al proveedor';
         $compra->save();
 
         Mail::to($proveedorEmail)->send(new CompraProveedorMail($compra));
@@ -142,19 +142,19 @@ class CompraController extends Controller
             return back()->with('error', 'No se encontraron datos para el reporte.');
         }
 
-        $comprasAgrupadas = $itemsPlano->groupBy('compra_id');
+        $comprasAgrupadas = $itemsPlano->groupBy('cmp_id');
         $compras = $comprasAgrupadas->map(function ($items, $compraId) {
 
             $primerItem = $items->first();
-            $totalCompra = $items->sum('subtotal');
+            $totalCompra = $items->sum('subtotal_dcm');
 
             return (object) [
-                'id'                => $compraId,
-                'fecha'             => $primerItem->fecha,
+                'id_cmp'            => $compraId,
+                'fecha_compra_cmp'  => $primerItem->fecha_compra_cmp,
                 'proveedor_empresa' => $primerItem->proveedor_empresa,
                 'created_at'        => $primerItem->created_at,
-                'total'             => $totalCompra,
-                'observaciones'     => null,
+                'total_cmp'         => $totalCompra,
+                'observacion_cmp'   => null,
                 'detalles'          => $items->all()
             ];
         })->values();

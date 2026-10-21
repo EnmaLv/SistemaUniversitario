@@ -22,7 +22,7 @@
                     <i
                         class="fas fa-box absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">
                     </i>
-                    <select @disabled($compra->estado == 'Enviado al proveedor') wire:model.live="productoId" id="nombre"
+                    <select @disabled($compra->estado_compra_cmp == 'Enviado al proveedor') wire:model.live="productoId" id="nombre"
                         class="w-full pl-10 pr-9 py-3 text-sm font-medium rounded-xl border appearance-none focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         style="
                             background-color: rgba(0,0,0,0.02);
@@ -33,9 +33,9 @@
                             Seleccione un producto
                         </option>
                         @foreach ($productos as $producto)
-                            <option value="{{ $producto->id }}"
-                                {{ old('productoId', request('productoId')) == $producto->id ? 'selected' : '' }}>
-                                {{ $producto->codigo }} - {{ $producto->nombre }}
+                            <option value="{{ $producto->id_pdt }}"
+                                {{ old('productoId', request('productoId')) == $producto->id_pdt ? 'selected' : '' }}>
+                                {{ $producto->codigo_pdt }} - {{ $producto->nombre_pdt }}
                             </option>
                         @endforeach
                     </select>
@@ -84,7 +84,7 @@
                     <i
                         class="fas fa-plus absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">
                     </i>
-                    <input @disabled($compra->estado == 'Enviado al proveedor') type="number" id="cantidad" wire:model="cantidad"
+                    <input @disabled($compra->estado_compra_cmp == 'Enviado al proveedor') type="number" id="cantidad" wire:model="cantidad"
                         name="cantidad" placeholder="Ej: 2 cajas" value="{{ old('cantidad', $compra->cantidad) }}"
                         min="1"
                         class="w-full pl-10 pr-3.5 py-3 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
@@ -110,7 +110,7 @@
                     <i
                         class="fas fa-dollar-sign absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">
                     </i>
-                    <input @disabled($compra->estado == 'Enviado al proveedor') type="number" wire:model="precioCompra" id="precioCompra"
+                    <input @disabled($compra->estado_compra_cmp == 'Enviado al proveedor') type="number" wire:model="precioCompra" id="precioCompra"
                         name="precio_compra" placeholder="Precio" step="0.01"
                         value="{{ old('precio_compra', $compra->precio_compra) }}" min="0"
                         class="w-full pl-10 pr-3.5 py-3 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
@@ -132,7 +132,7 @@
                 <label class="block titulos opacity-0 pointer-events-none">
                     Acción
                 </label>
-                @if ($compra->estado != 'Enviado al proveedor')
+                @if ($compra->estado_compra_cmp != 'Enviado al proveedor')
                     <button type="button" wire:click="agregarItems" wire:loading.attr="disabled"
                         class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-plus text-xs"></i>
@@ -234,7 +234,7 @@
                     <tbody class="divide-y" style="--tw-divide-opacity: 1;">
                         @foreach ($compra->detalleCompras as $detalle)
                             @php
-                                $esMedicina = (bool) ($detalle->producto->presentacion_id ?? false);
+                                $esMedicina = (bool) ($detalle->producto->enp_id ?? false);
                                 $unidadBase = $esMedicina;
                             @endphp
                             <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.02]"
@@ -247,11 +247,11 @@
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-bold truncate" style="color: var(--text-main);">
-                                                {{ $detalle->producto->nombre }}
+                                                {{ $detalle->producto->nombre_pdt }}
                                             </p>
-                                            @if ($detalle->producto->codigo ?? false)
+                                            @if ($detalle->producto->codigo_pdt ?? false)
                                                 <p class="text-[10px] text-gray-400 mt-0.5">
-                                                    {{ $detalle->producto->codigo }}
+                                                    {{ $detalle->producto->codigo_pdt }}
                                                 </p>
                                             @endif
                                         </div>
@@ -260,29 +260,29 @@
                                 <td class="px-4 py-3">
                                     <span
                                         class="inline-flex items-center px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-[10px] font-mono font-semibold text-gray-600 dark:text-gray-300">
-                                        {{ $detalle->lote->codigo_lote }}
+                                        {{ $detalle->lote->codigo_lote_lot }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-center text-xs font-semibold"
                                     style="color: var(--text-main);">
-                                    {{ round($detalle->cantidad) }}
+                                    {{ round($detalle->cantidad_dcm) }}
                                 </td>
                                 <td class="px-4 py-3 text-center text-xs font-semibold"
                                     style="color: var(--text-main);">
-                                    {{ number_format($detalle->cantidad_convertida, 0, ',', '.') }}
+                                    {{ number_format($detalle->cantidad_convertida_dcm, 0, ',', '.') }}
                                     <span class="text-[10px] font-normal text-gray-400 ml-0.5">{{ $unidadBase }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right text-xs font-semibold whitespace-nowrap"
                                     style="color: var(--text-main);">
-                                    {{ number_format($detalle->precio_unitario, 2, ',', '.') }} .BS
+                                    {{ number_format($detalle->precio_unitario_dcm, 2, ',', '.') }} .BS
                                 </td>
                                 <td class="px-4 py-3 text-right text-xs font-extrabold whitespace-nowrap"
                                     style="color: var(--text-main);">
-                                    {{ number_format($detalle->subtotal, 2, ',', '.') }} .BS
+                                    {{ number_format($detalle->subtotal_dcm, 2, ',', '.') }} .BS
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <button @disabled($compra->estado == 'Enviado al proveedor') type="button"
-                                        wire:click="eliminarItem({{ $detalle->id }})" wire:loading.attr="disabled"
+                                    <button @disabled($compra->estado_compra_cmp == 'Enviado al proveedor') type="button"
+                                        wire:click="eliminarItem({{ $detalle->id_dcm }})" wire:loading.attr="disabled"
                                         class="w-8 h-8 inline-flex items-center justify-center rounded-lg border text-rose-500 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                                         style="border-color: var(--border-color);">
                                         <i class="fas fa-trash text-[10px]"></i>
@@ -319,7 +319,7 @@
                 Total de la requisición
             </p>
             <p class="text-xl sm:text-2xl font-black mt-0.5" style="color: var(--text-main);">
-                {{ number_format($compra->total, 2, ',', '.') }} .BS
+                {{ number_format($compra->total_cmp, 2, ',', '.') }} .BS
             </p>
         </div>
 
@@ -328,7 +328,7 @@
                 <i class="fas fa-exclamation-circle"></i>
                 Agrega productos para continuar.
             </div>
-        @elseif ($compra->estado == 'Enviado al proveedor')
+        @elseif ($compra->estado_compra_cmp == 'Enviado al proveedor')
             <div class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                 <i class="fas fa-check-circle"></i>
                 El pedido ya fue enviado a compras.

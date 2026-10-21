@@ -83,7 +83,7 @@
 
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                     @forelse($compras as $compra)
-                        <x-table-row :id="$compra->id"
+                        <x-table-row :id="$compra->id_cmp"
                             class="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
                             <td class="px-6 py-4 text-center font-bold text-gray-500 whitespace-nowrap">
                                 {{ ($compras->currentPage() - 1) * $compras->perPage() + $loop->iteration }}
@@ -95,21 +95,21 @@
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                {{ $compra->fecha }}
+                                {{ $compra->fecha_compra_cmp }}
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap font-black"
                                 style="color: var(--text-main);">
-                                {{ number_format($compra->total, 2, ',', '.') }} Bs.
+                                {{ number_format($compra->total_cmp, 2, ',', '.') }} Bs.
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                @if ($compra->estado == 'Pendiente')
+                                @if ($compra->estado_compra_cmp == 'Pendiente')
                                     <span
                                         class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900">
                                         <i class="fas fa-clock text-[10px]"></i> Pendiente
                                     </span>
-                                @elseif ($compra->estado == 'Enviado al proveedor')
+                                @elseif ($compra->estado_compra_cmp == 'Enviado al proveedor')
                                     <span
                                         class="inline-flex items-center gap-1 px-3 py-1 text-[11px] font-black rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
                                         <i class="fas fa-hourglass-half text-[10px]"></i> En espera
@@ -122,8 +122,8 @@
                                 @endif
                             </td>
 
-                            <x-table-actions :id="$compra->id" baseUrl="admin/movimientos/compras" :edit="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor'])"
-                                :toggle="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor'])" :status="in_array($compra->estado, ['Pendiente', 'Enviado al proveedor']) ? 1 : null" class="text-center" />
+                            <x-table-actions :id="$compra->id_cmp" baseUrl="admin/movimientos/compras" :edit="in_array($compra->estado_compra_cmp, ['Pendiente', 'Enviado al proveedor'])"
+                                :toggle="in_array($compra->estado_compra_cmp, ['Pendiente', 'Enviado al proveedor'])" :status="in_array($compra->estado_compra_cmp, ['Pendiente', 'Enviado al proveedor']) ? 1 : null" class="text-center" />
                         </x-table-row>
                     @empty
                         <tr>

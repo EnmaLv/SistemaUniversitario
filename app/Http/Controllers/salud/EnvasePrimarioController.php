@@ -39,7 +39,7 @@ class EnvasePrimarioController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:envase_primarios,nombre'
+                'unique:envase_primario,nombre_enp'
             ],
         ], [
             'nombre.unique' => 'Ya existe un envase primario con este nombre',
@@ -92,12 +92,12 @@ class EnvasePrimarioController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('envase_primarios', 'nombre')->ignore($envase->id),
+                Rule::unique('envase_primario', 'nombre_enp')->ignore($envase->id_enp, 'id_enp'),
             ],
         ], [
             'nombre.unique' => 'Ya existe un envase primario con este nombre',
         ]);
-        EnvasePrimario::actualizar($envase->id, $validated);
+        EnvasePrimario::actualizar($envase->id_enp, $validated);
 
         return redirect()
             ->route('admin.salud.maestros.envases_primarios.index')->with('success', 'Envase primario actualizado exitosamente.');

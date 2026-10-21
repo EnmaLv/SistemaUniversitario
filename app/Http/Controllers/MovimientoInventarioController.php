@@ -11,14 +11,14 @@ class MovimientoInventarioController extends Controller
     public function index(Request $request)
     {
         $buscar = $request->input('buscar');
-        $tipo_movimiento = $request->input('tipo_movimiento');
+        $tipo_movimiento_moi = $request->input('tipo_movimiento_moi');
         $fecha_desde = $request->input('fecha_desde');
         $fecha_hasta = $request->input('fecha_hasta');
         $activo = $request->input('estado');
 
         $movimiento = MovimientoInventario::getData([
             'buscar'          => $buscar,
-            'tipo_movimiento' => $tipo_movimiento,
+            'tipo_movimiento_moi' => $tipo_movimiento_moi,
             'fecha_desde'     => $fecha_desde,
             'fecha_hasta'     => $fecha_hasta,
             'activo'          => $activo,
@@ -31,7 +31,7 @@ class MovimientoInventarioController extends Controller
     {
         $filtro = [
             'buscar'          => $request->input('buscar'),
-            'tipo_movimiento' => $request->input('tipo_movimiento'),
+            'tipo_movimiento_moi' => $request->input('tipo_movimiento_moi'),
             'fecha_desde'     => $request->input('fecha_desde'),
             'fecha_hasta'     => $request->input('fecha_hasta'),
             'activo'          => $request->input('estado'),

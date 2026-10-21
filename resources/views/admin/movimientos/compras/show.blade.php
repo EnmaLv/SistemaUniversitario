@@ -7,7 +7,7 @@
         <!-- Texto principal -->
         <div>
             <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
-                Requisición N.º {{ $compra->id }}
+                Requisición N.º {{ $compra->id_cmp }}
             </h1>
 
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.72;">
@@ -87,7 +87,7 @@
                                         </div>
                                         <input type="datetime-local"
                                             class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="fecha" name="fecha"
-                                            value="{{ old('fecha', $compra->fecha ? \Carbon\Carbon::parse($compra->fecha)->format('Y-m-d\TH:i') : '') }}" disabled>
+                                            value="{{ old('fecha', $compra->fecha_compra_cmp ? \Carbon\Carbon::parse($compra->fecha_compra_cmp)->format('Y-m-d\TH:i') : '') }}" disabled>
                                     </div>
                                     @error('fecha')
                                         <div class="alert text-danger p-0 m-0">
@@ -104,7 +104,7 @@
                                         </div>
                                         <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="observaciones"
                                             name="observaciones" placeholder="Ingrese observaciones"
-                                            value="{{ old('observaciones', $compra->observaciones ?? 'Sin observaciones') }}" readonly>
+                                            value="{{ old('observaciones', $compra->observacion_cmp ?? 'Sin observaciones') }}" readonly>
                                     </div>
                                     @error('observaciones')
                                         <div class="alert text-danger p-0 m-0">
@@ -120,7 +120,7 @@
                                                     class="fas fa-sticky-note"></i></span>
                                         </div>
                                         <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="estado" name="estado"
-                                            placeholder="Ingrese estado" value="{{ old('estado', $compra->estado) }}"
+                                            placeholder="Ingrese estado" value="{{ old('estado', $compra->estado_compra_cmp) }}"
                                             readonly>
                                     </div>
                                     @error('estado')
@@ -182,10 +182,10 @@
                                         @foreach ($detalles as $detalle)
                                             <tr>
                                                 <td>{{ $detalle->producto_nombre }}</td>
-                                                <td>{{ $detalle->codigo_lote }}</td>
-                                                <td>{{ $detalle->cantidad }} {{ $detalle->unidad_abreviatura }}</td>
-                                                <td>{{ number_format($detalle->precio_unitario, 2, ',', '.') }}.BS</td>
-                                                <td>{{ number_format($detalle->subtotal, 2, ',', '.') }}.BS</td>
+                                                <td>{{ $detalle->codigo_lote_lot }}</td>
+                                                <td>{{ $detalle->cantidad_dcm }} {{ $detalle->unidad_abreviatura }}</td>
+                                                <td>{{ number_format($detalle->precio_unitario_dcm, 2, ',', '.') }}.BS</td>
+                                                <td>{{ number_format($detalle->subtotal_dcm, 2, ',', '.') }}.BS</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -196,7 +196,7 @@
                                 <h4>No hay productos agregados a la compra.</h4>
                             @endif
                             <h3 align="right"><b>Total de la Compra:
-                                </b>{{ number_format($compra->total, 2, ',', '.') }}.BS</h3>
+                                </b>{{ number_format($compra->total_cmp, 2, ',', '.') }}.BS</h3>
 
                         </div>
                     </div>

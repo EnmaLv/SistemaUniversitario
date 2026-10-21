@@ -46,9 +46,9 @@
                                 <tr class="border-b" style="border-color:var(--border-color);">
                                     <td class="px-6 py-4 font-bold" style="color:var(--text-muted);">{{ $item->producto_codigo }}</td>
                                     <td class="px-6 py-4 font-bold" style="color:var(--text-main);">{{ $item->producto_nombre }}</td>
-                                    <td class="px-6 py-4" style="color:var(--text-main);">{{ $item->codigo_lote }}</td>
-                                    <td class="px-6 py-4" style="color:var(--text-main);">{{ $item->fecha_vencimiento ? \Carbon\Carbon::parse($item->fecha_vencimiento)->format('d/m/Y') : 'Sin vencimiento' }}</td>
-                                    <td class="px-6 py-4 text-right font-bold" style="color:var(--text-main);">{{ number_format((float) $item->cantidad, 2, ',', '.') }}</td>
+                                    <td class="px-6 py-4" style="color:var(--text-main);">{{ $item->codigo_lote_lot }}</td>
+                                    <td class="px-6 py-4" style="color:var(--text-main);">{{ $item->fecha_vencimiento_lot ? \Carbon\Carbon::parse($item->fecha_vencimiento_lot)->format('d/m/Y') : 'Sin vencimiento' }}</td>
+                                    <td class="px-6 py-4 text-right font-bold" style="color:var(--text-main);">{{ number_format((float) $item->cantidad_isl, 2, ',', '.') }}</td>
                                 </tr>
                             @empty
                                 <tr>

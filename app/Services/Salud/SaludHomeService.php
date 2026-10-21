@@ -137,7 +137,7 @@ class SaludHomeService
                     $resumen['total_dispensados'] += $disp;
 
                     // Producto top (por cantidad total dispensada)
-                    $prodNombre = $det->producto->nombre ?? 'Producto #' . $det->producto_id;
+                    $prodNombre = $det->producto->nombre_pdt ?? 'Producto #' . $det->pdt_id;
                     $resumen['productos_top'][$prodNombre] = ($resumen['productos_top'][$prodNombre] ?? 0) + $disp;
 
                     if ($disp < (float) $det->cantidad) $estaCompleta = false;

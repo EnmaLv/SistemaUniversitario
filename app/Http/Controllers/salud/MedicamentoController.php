@@ -24,9 +24,9 @@ class MedicamentoController extends Controller
 
         $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, 2);
 
-        $categorias = Categoria::select('id', 'nombre')
-            ->where('activo', 1)
-            ->where('tipo_producto_id', 2)
+        $categorias = Categoria::select('id_cap', 'nombre_cap')
+            ->where('status_id', Categoria::STATUS_ACTIVO)
+            ->where('tpr_id', 2)
             ->get();
 
         return view('admin.salud.maestros.medicamentos.index', compact('productos', 'categorias'));
@@ -36,9 +36,10 @@ class MedicamentoController extends Controller
     {
         $datos = Producto::getDatosFormulario(2);
 
-        $datos['envases'] = DB::table('envase_primarios')
-            ->select('id', 'nombre')
-            ->orderBy('nombre', 'asc')
+        $datos['envases'] = DB::table('envase_primario')
+            ->select('id_enp', 'nombre_enp')
+            ->whereNull('deleted_at')
+            ->orderBy('nombre_enp', 'asc')
             ->get();
 
         return view('admin.salud.maestros.medicamentos.create', $datos);
@@ -120,24 +121,24 @@ class MedicamentoController extends Controller
                     continue;
                 }
 
-                $precioUSD = $producto->precioProducto->precio_usd
-                    ?? $producto->precioProducto->costo_usd;
+                $precioUSD = $producto->precioProducto->precio_usd_ppr
+                    ?? $producto->precioProducto->costo_usd_ppr;
 
                 if (!$precioUSD || $precioUSD <= 0) {
                     continue;
                 }
 
-                $margen = $producto->precioProducto->margen ?? 0;
+                $margen = $producto->precioProducto->margen_ppr ?? 0;
 
                 $precioBs = round(
                     $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                     2
                 );
 
-                DB::table('productos')
-                    ->where('id', $producto->id)
+                DB::table('producto')
+                    ->where('id_pdt', $producto->id_pdt)
                     ->update([
-                        'precio_compra' => $precioBs,
+                        'precio_compra_pdt' => $precioBs,
                         'updated_at'    => now()
                     ]);
             }
@@ -183,9 +184,10 @@ class MedicamentoController extends Controller
 
         $datos = Producto::getDatosFormulario(2);
 
-        $datos['envases'] = DB::table('envase_primarios')
-            ->select('id', 'nombre')
-            ->orderBy('nombre', 'asc')
+        $datos['envases'] = DB::table('envase_primario')
+            ->select('id_enp', 'nombre_enp')
+            ->whereNull('deleted_at')
+            ->orderBy('nombre_enp', 'asc')
             ->get();
 
         return view('admin.salud.maestros.medicamentos.edit', array_merge($datos, [
@@ -258,7 +260,7 @@ class MedicamentoController extends Controller
         $query = Producto::with('precioProducto');
 
         if ($productoId) {
-            $query->where('id', $productoId);
+            $query->where('id_pdt', $productoId);
         }
 
         $productos = $query->get();
@@ -270,25 +272,25 @@ class MedicamentoController extends Controller
             }
 
             $precioUSD =
-                $producto->precioProducto->costo_usd ??
-                $producto->precioProducto->precio_usd ??
+                $producto->precioProducto->costo_usd_ppr ??
+                $producto->precioProducto->precio_usd_ppr ??
                 0;
 
             if ($precioUSD <= 0) {
                 continue;
             }
 
-            $margen = $producto->precioProducto->margen ?? 0;
+            $margen = $producto->precioProducto->margen_ppr ?? 0;
 
             $precioBs = round(
                 $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                 2
             );
     
-            DB::table('productos')
-                ->where('id', $producto->id)
+            DB::table('producto')
+                ->where('id_pdt', $producto->id_pdt)
                 ->update([
-                    'precio_compra' => $precioBs,
+                    'precio_compra_pdt' => $precioBs,
                     'updated_at'    => now()
                 ]);
         }

@@ -14,10 +14,10 @@ class RecetaIngrediente extends Model
 
     protected $fillable = [
         'recetas_id',
-        'producto_id',
+        'pdt_id',
         'cantidad_porcion',
         'cantidad_gramos',
-        'unidad_id',
+        'unm_id',
         'estado',
     ];
 
@@ -35,12 +35,12 @@ class RecetaIngrediente extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class);
+        return $this->belongsTo(Producto::class, 'pdt_id', 'id_pdt');
     }
 
     public function unidad()
     {
-        return $this->belongsTo(Unidad::class);
+        return $this->belongsTo(Unidad::class, 'unm_id', 'id_unm');
     }
 
     public static function eliminarIngredientes($id)

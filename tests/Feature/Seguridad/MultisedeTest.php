@@ -26,15 +26,15 @@ class MultisedeTest extends SeguridadTestCase
 
     private function crearCompra(int $sede): int
     {
-        $proveedor = DB::table('proveedors')->insertGetId([
-            'nombre'     => 'Proveedor ' . $sede,
-            'empresa'    => 'Empresa ' . $sede,
-            'telefono'   => '0424-0000000',
-            'email'      => 'proveedor' . random_int(1, 99999) . '@prueba.test',
-            'direccion'  => 'Dirección',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $proveedor = DB::table('proveedor')->insertGetId([
+            'nombre_contacto_prv' => 'Proveedor ' . $sede,
+            'empresa_prv'         => 'Empresa ' . $sede,
+            'telefono_prv'        => '0424-0000000',
+            'email_prv'           => 'proveedor' . random_int(1, 99999) . '@prueba.test',
+            'direccion_prv'       => 'Dirección',
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ], 'id_prv');
 
         return Compra::crearCompra([
             'proveedor_id' => $proveedor,
@@ -115,6 +115,6 @@ class MultisedeTest extends SeguridadTestCase
 
         $this->assertNotNull(Compra::obtenerCompra($compraA));
         $this->assertNull(Compra::obtenerCompra($compraB));
-        $this->assertSame([$compraA], collect(Compra::listarCompras()->items())->pluck('id')->intersect([$compraA, $compraB])->values()->all());
+        $this->assertSame([$compraA], collect(Compra::listarCompras()->items())->pluck('id_cmp')->intersect([$compraA, $compraB])->values()->all());
     }
 }

@@ -17,9 +17,9 @@ class UnidadFactory extends Factory
     public function definition(): array
     {
         return [
-            'nombre' => $this->faker->word(),
-            'abreviatura' => $this->faker->word(),
-            'factor_a_gramo' => $this->faker->randomFloat(6, 0.000001, 1000),
+            'nombre_unm' => $this->faker->word(),
+            'abreviatura_unm' => $this->faker->lexify('???'),
+            'factor_conversion_unm' => $this->faker->randomFloat(3, 0.001, 1000),
         ];
     }
 }

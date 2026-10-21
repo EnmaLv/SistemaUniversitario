@@ -78,7 +78,7 @@ class AuthService
             'telefono_sed'  => '0424-5556666',
             'created_at' => now(),
             'updated_at' => now()
-        ]);
+        ], 'id_sed');
     }
 
     private function ensurePerfil(string $nombre)
@@ -91,7 +91,7 @@ class AuthService
             'status_id'     => 1, 
             'created_at'    => now(), 
             'updated_at'    => now()
-        ]);
+        ], 'id_perfil');
         return (object)['id_perfil' => $id];
     }
 
