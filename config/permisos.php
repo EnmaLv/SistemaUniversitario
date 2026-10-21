@@ -58,6 +58,8 @@ return [
             'admin.becas.solicitudes.store',
             'admin.becas.solicitudes.renovar',
             'admin.becas.lapsos.avanzar',
+            'media.profile_photos',
+            'media.publicaciones',
         ],
     ],
 

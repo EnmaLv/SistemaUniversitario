@@ -40,6 +40,9 @@ return [
             'proveedores'       => 'Proveedores',
             'pnf'               => 'PNF',
             'persona'           => 'Personas',
+            'ubicaciones_estados'     => 'Estados',
+            'ubicaciones_municipios'  => 'Municipios',
+            'ubicaciones_localidades' => 'Localidades',
             'envases_primarios' => 'Envases primarios',
 
             // Operaciones
