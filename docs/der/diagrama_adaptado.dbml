@@ -1,0 +1,1902 @@
+// DER adaptado del Sistema de Bienestar Estudiantil (UPTP)
+// Generado desde el esquema real tras ejecutar las migraciones (2026-10-21).
+// Tipos expresados como en el DER del profesor (PostgreSQL): en MySQL timestamptz = timestamp y jsonb = json.
+
+Table archivos {
+  id bigint [primary key, increment]
+  info_estudiantes varchar(255) [not null]
+  ruta_archivo varchar(255)
+  nombre_original varchar(255)
+  resumen jsonb
+  usuario_id bigint
+  fecha date [not null]
+  estado varchar(255) [not null]
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table avance_sesion {
+  id_avs bigint [primary key, increment]
+  valor_avs smallint [not null, default: 0]
+  nombre_avs varchar(150) [not null]
+  descripcion_avs text
+  es_sistema_avs boolean [not null, default: false]
+  activo_avs boolean [not null, default: true]
+  psicologo_use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table beneficio_asignado {
+  id_bfa bigint [primary key, increment]
+  fecha_inicio_bfa date [not null]
+  fecha_fin_bfa date
+  estado_bfa varchar(30) [not null, default: 'activa']
+  motivo_revocacion_bfa text
+  sob_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table beneficio_estudiantil {
+  id_bes bigint [primary key, increment]
+  nombre_beneficio_bes varchar(255) [not null]
+  descripcion_bes text
+  slug_bes varchar(255) [not null]
+  cupones_disponibles_bes integer [not null, default: 0]
+  cupones_ocupados_bes integer [not null, default: 0]
+  tbe_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table bitacora_sistema {
+  id_bis bigint [primary key, increment]
+  modulo_bis varchar(100)
+  tipo_evento_bis varchar(100) [not null]
+  tabla_afectada_bis varchar(100)
+  nombre_usuario_bis varchar(255)
+  datos_anteriores_bis jsonb
+  datos_nuevos_bis jsonb
+  direccion_ip_bis varchar(45)
+  navegador_bis varchar(255)
+  sistema_operativo_bis varchar(100)
+  observacion_bis text
+  use_id bigint
+  registro_id_bis bigint
+  metodo_http_bis varchar(10)
+  ruta_bis varchar(191)
+  url_bis varchar(2048)
+  codigo_respuesta_bis smallint
+  nivel_bis varchar(20) [not null, default: 'info']
+  session_id_bis varchar(64)
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table campo_nota_evolucion {
+  id_cne bigint [primary key, increment]
+  titulo_cne varchar(255) [not null]
+  psicologo_use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table carga_combustible {
+  id_ccb bigint [primary key, increment]
+  fecha_ccb date [not null]
+  litros_ccb numeric(8,2) [not null]
+  precio_litro_ccb numeric(10,2) [not null]
+  total_ccb numeric(12,2) [not null]
+  km_al_cargar_ccb numeric(10,2) [not null]
+  observaciones_ccb text
+  vtr_id bigint [not null]
+  tcb_id bigint
+  vjt_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table categoria_producto {
+  id_cap bigint [primary key, increment]
+  nombre_cap varchar(100) [not null]
+  descripcion_cap text
+  tpr_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table chat_notificaciones_pendientes {
+  id bigint [primary key, increment]
+  sender_id bigint [not null]
+  receiver_id bigint [not null]
+  cantidad_mensajes integer [not null, default: 1]
+  programado_para timestamptz [not null]
+  estado enum('pendiente','enviada','cancelada','error') [not null, default: 'pendiente']
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table cita_nota_evolucion {
+  id_cno bigint [primary key, increment]
+  contenido_cno text
+  cps_id bigint [not null]
+  cne_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table cita_psicologica {
+  id_cps bigint [primary key, increment]
+  motivo_cps text
+  bloques_sugeridos_cps text
+  fecha_cps date [not null]
+  hora_cps time
+  confirmado_en_cps timestamptz
+  estado_cita_cps varchar(30) [not null, default: 'pendiente']
+  prioridad_texto_cps varchar(100) [not null, default: 'media']
+  notas_cps text
+  cancelado_por_cps varchar(50)
+  bloque_propuesto_cps varchar(255)
+  bloques_propuestos_cps text
+  propuesta_estado_cps varchar(255)
+  propuesta_bloque_seleccionado_cps text
+  motivo_rechazo_propuesta_cps text
+  paciente_use_id bigint [not null]
+  psicologo_use_id bigint [not null]
+  esa_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table compra {
+  id_cmp bigint [primary key, increment]
+  fecha_compra_cmp timestamptz [not null, default: `now()`]
+  total_cmp numeric(12,2) [not null, default: 0.00]
+  estado_compra_cmp varchar(20) [not null, default: 'Pendiente']
+  observacion_cmp text
+  prv_id bigint [not null]
+  sed_id bigint [not null]
+  use_id bigint
+  mod_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table condicion_estudiante {
+  id_cde bigint [primary key, increment]
+  nombre_condicion_cde varchar(255) [not null]
+  per_id bigint [not null]
+  laa_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table configuracion_sistema {
+  id_csi bigint [primary key, increment]
+  clave_csi varchar(255) [not null, unique]
+  valor_csi text [not null]
+  tipo_dato_csi varchar(255)
+  descripcion_csi varchar(255)
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table consulta_enfermedad {
+  id_cen bigint [primary key, increment]
+  cme_id bigint [not null]
+  efm_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table consulta_medica {
+  id_cme bigint [primary key, increment]
+  fecha_cme date
+  motivo_cme text [not null]
+  observaciones_cme text [not null]
+  diagnostico_cme text [not null]
+  paciente_per_id bigint [not null]
+  medico_per_id bigint [not null]
+  csr_id bigint [not null]
+  use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table consultorio {
+  id_csr bigint [primary key, increment]
+  nombre_csr varchar(150) [not null]
+  descripcion_csr text
+  sed_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table consumo_diario {
+  id_cnd bigint [primary key, increment]
+  rct_id bigint [not null]
+  sed_id bigint [not null]
+  fecha_consumo_cnd date [not null]
+  porciones_servidas_cnd integer [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table consumo_diario_detalle {
+  id_cdd bigint [primary key, increment]
+  cnd_id bigint [not null]
+  pdt_id bigint [not null]
+  cantidad_total_cdd numeric(14,2) [not null]
+  unm_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table conversations {
+  id bigint [primary key, increment]
+  user_one_id bigint [not null]
+  user_two_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+
+  indexes {
+    (user_one_id, user_two_id) [unique]
+  }
+}
+
+Table criterio_beneficio {
+  id_crb bigint [primary key, increment]
+  es_eliminatoria_crb boolean [not null, default: false]
+  operador_crb varchar(20)
+  valor_esperado_crb varchar(255)
+  peso_crb numeric(8,2) [not null, default: 0.00]
+  bes_id bigint [not null]
+  pgb_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (bes_id, pgb_id) [unique]
+  }
+}
+
+Table criterio_jornada_beneficio {
+  id_cjb bigint [primary key, increment]
+  es_eliminatoria_cjb boolean [not null, default: false]
+  operador_cjb varchar(20)
+  valor_esperado_cjb varchar(255)
+  peso_cjb numeric(8,2) [not null, default: 0.00]
+  jnb_id bigint [not null]
+  pgb_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (jnb_id, pgb_id) [unique]
+  }
+}
+
+Table departamento {
+  id_dep bigint [primary key, increment]
+  nombre_dep varchar(255) [not null]
+  descripcion_dep text
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table detalle_compra {
+  id_dcm bigint [primary key, increment]
+  cantidad_dcm numeric(14,2) [not null]
+  cantidad_convertida_dcm numeric(14,2) [not null]
+  precio_unitario_dcm numeric(10,2) [not null]
+  subtotal_dcm numeric(10,2) [not null]
+  cmp_id bigint [not null]
+  pdt_id bigint [not null]
+  lot_id bigint
+  unm_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table detalle_receta_medica {
+  id_drm bigint [primary key, increment]
+  cantidad_drm numeric(14,2) [not null]
+  cantidad_prescrita_drm numeric(10,2) [not null]
+  unidad_prescrita_drm varchar(100) [not null]
+  equivalencia_ml_drm numeric(10,2) [not null]
+  frecuencia_drm varchar(100) [not null]
+  fecha_inicio_drm date [not null]
+  fecha_fin_drm date [not null]
+  instrucciones_drm text
+  rme_id bigint [not null]
+  pdt_id bigint [not null]
+  unm_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table detalle_registro_comedor {
+  id_drc bigint [primary key, increment]
+  rct_id bigint [not null]
+  sed_id bigint [not null]
+  tipo_comida_drc varchar(20) [not null, default: 'desayuno']
+  cantidad_servida_drc bigint [not null]
+  fecha_drc date [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table direccion {
+  id_dir bigint [primary key, increment]
+  sector_dir varchar(255) [not null]
+  calle_dir varchar(255) [not null]
+  per_id bigint [not null]
+  par_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table dispensacion_medicamento {
+  id_dsm bigint [primary key, increment]
+  cantidad_dsm numeric(14,2) [not null]
+  fecha_dispensacion_dsm date [not null]
+  observaciones_dsm text
+  rme_id bigint [not null]
+  drm_id bigint [not null]
+  paciente_per_id bigint [not null]
+  pdt_id bigint [not null]
+  lot_id bigint
+  unm_id bigint [not null]
+  sed_id bigint [not null]
+  use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table documento_solicitud_beneficio {
+  id_dsb bigint [primary key, increment]
+  nombre_documento_dsb varchar(255)
+  ruta_archivo_dsb varchar(500)
+  tipo_archivo_dsb varchar(50)
+  sob_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table enfermedad {
+  id_efm bigint [primary key, increment]
+  codigo_efm varchar(50) [unique]
+  nombre_efm varchar(255) [not null]
+  categoria_efm varchar(20) [not null, default: 'fisica']
+  nivel_gravedad_efm smallint [not null, default: 0]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table envase_primario {
+  id_enp bigint [primary key, increment]
+  nombre_enp varchar(100) [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table estado {
+  id_esd bigint [primary key, increment]
+  nombre_esd varchar(255) [not null]
+  pai_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table estado_animo {
+  id_esa bigint [primary key, increment]
+  valor_esa smallint [not null]
+  nombre_esa varchar(100) [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table estado_animo_diario {
+  id_ead bigint [primary key, increment]
+  valor_ead integer [not null]
+  fecha_ead date [not null]
+  paciente_use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (paciente_use_id, fecha_ead) [unique]
+  }
+}
+
+Table grupo_horario_atencion {
+  id_gha bigint [primary key, increment]
+  nombre_gha varchar(100) [not null]
+  psicologo_use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table historia_clinica {
+  id_hcl bigint [primary key, increment]
+  paciente_use_id bigint [not null]
+  psicologo_use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (paciente_use_id, psicologo_use_id) [unique]
+  }
+}
+
+Table historia_enfermedad {
+  id_hie bigint [primary key, increment]
+  contexto_hie varchar(255)
+  hcl_id bigint [not null]
+  efm_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table historia_seccion_personalizada {
+  id_hsp bigint [primary key, increment]
+  titulo_hsp varchar(255) [not null]
+  descripcion_general_hsp varchar(255)
+  orden_hsp integer [not null, default: 0]
+  hcl_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table historia_segmento_personalizado {
+  id_hsm bigint [primary key, increment]
+  titulo_hsm varchar(255)
+  subtitulo_hsm varchar(255)
+  icono_hsm varchar(255)
+  contenido_hsm text
+  orden_hsm integer [not null, default: 0]
+  hsp_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table horario_consultorio {
+  id_hrc bigint [primary key, increment]
+  dia_hrc varchar(20) [not null]
+  hora_inicio_hrc time [not null]
+  hora_fin_hrc time [not null]
+  descripcion_hrc text
+  csr_id bigint [not null]
+  usr_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table horario_profesional {
+  id_hpr bigint [primary key, increment]
+  dia_hpr varchar(20) [not null]
+  hora_inicio_hpr time [not null]
+  hora_fin_hpr time [not null]
+  descripcion_hpr text
+  gha_id bigint
+  psicologo_use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table horario_ruta_transporte {
+  id_hrt bigint [primary key, increment]
+  hora_salida_hrt time [not null]
+  tipo_viaje_hrt varchar(30) [not null, default: 'entrada']
+  rtr_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table inventario_sede_lote {
+  id_isl bigint [primary key, increment]
+  cantidad_isl numeric(14,2) [not null, default: 0.00]
+  cantidad_convertida_isl numeric(14,2) [not null, default: 0.00]
+  sed_id bigint [not null]
+  lot_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (sed_id, lot_id) [unique]
+  }
+}
+
+Table inventario_total {
+  id_int bigint [primary key, increment]
+  cantidad_total_int numeric(14,2) [not null, default: 0.00]
+  cantidad_convertida_total_int numeric(14,2) [not null, default: 0.00]
+  pdt_id bigint [not null]
+  sed_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (pdt_id, sed_id) [unique]
+  }
+}
+
+Table jornada_beneficio {
+  id_jnb bigint [primary key, increment]
+  nombre_jornada_jnb varchar(255) [not null]
+  descripcion_jornada_jnb text
+  fecha_inicio_solicitud_jnb date [not null]
+  fecha_fin_solicitud_jnb date [not null]
+  cupos_maximos_jnb integer [not null, default: 0]
+  cupos_asignados_jnb integer [not null, default: 0]
+  bes_id bigint [not null]
+  laa_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table lapso_academico {
+  id_laa bigint [primary key, increment]
+  codigo_laa varchar(30) [not null, unique]
+  fecha_inicio_laa date [not null]
+  fecha_fin_laa date
+  es_actual_laa boolean [not null, default: false]
+  permite_solicitudes_laa boolean [not null, default: false]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table localidad {
+  id_loc bigint [primary key, increment]
+  nombre_loc varchar(255) [not null]
+  par_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table log_gps_transporte {
+  id_lgt bigint [primary key, increment]
+  local_id_lgt char(36) [unique]
+  lat_lgt numeric(11,7) [not null]
+  lng_lgt numeric(11,7) [not null]
+  velocidad_lgt numeric(6,2)
+  heading_lgt numeric(6,2)
+  registrado_en_lgt timestamptz
+  origen_lgt varchar(50) [not null, default: 'app_conductor']
+  vjt_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table lote {
+  id_lot bigint [primary key, increment]
+  codigo_lote_lot varchar(50)
+  fecha_entrada_lot date [not null]
+  fecha_vencimiento_lot date
+  cantidad_inicial_lot numeric(14,2) [not null, default: 0.00]
+  cantidad_actual_lot numeric(14,2) [not null, default: 0.00]
+  precio_compra_lot numeric(10,2)
+  pdt_id bigint [not null]
+  prv_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table mantenimiento_vehiculo {
+  id_mnv bigint [primary key, increment]
+  tipo_mnv varchar(20) [not null, default: 'preventivo']
+  titulo_mnv varchar(150) [not null]
+  descripcion_mnv text
+  costo_mnv numeric(10,2)
+  fecha_mnv date [not null]
+  km_al_servicio_mnv numeric(10,2)
+  proximo_km_mnv numeric(10,2)
+  proxima_fecha_mnv date
+  estado_mnv varchar(20) [not null, default: 'pendiente']
+  vtr_id bigint [not null]
+  use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table marca_vehiculo {
+  id_mav bigint [primary key, increment]
+  nombre_mav varchar(100) [not null]
+  descripcion_mav varchar(255)
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table messages {
+  id bigint [primary key, increment]
+  conversation_id bigint [not null]
+  sender_id bigint [not null]
+  body text [not null]
+  read_at timestamptz
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table modelo_vehiculo {
+  id_mov bigint [primary key, increment]
+  nombre_mov varchar(100) [not null]
+  descripcion_mov varchar(255)
+  mav_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table modulo {
+  id_mod bigint [primary key, increment]
+  key_mod varchar(255) [not null, unique]
+  nombre_mod varchar(255) [not null]
+  descripcion_mod text
+  icono_mod varchar(100)
+  orden_mod integer [not null, default: 0]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table movimiento_inventario {
+  id_moi bigint [primary key, increment]
+  tipo_movimiento_moi varchar(50) [not null]
+  cantidad_moi numeric(14,2) [not null]
+  cantidad_convertida_moi numeric(14,2) [not null]
+  cantidad_anterior_moi numeric(14,2)
+  cantidad_final_moi numeric(14,2)
+  referencia_id_moi bigint
+  referencia_type_moi varchar(50)
+  observacion_moi text
+  fecha_movimiento_moi timestamptz [not null, default: `now()`]
+  pdt_id bigint [not null]
+  lot_id bigint [not null]
+  sed_id bigint [not null]
+  unm_id bigint [not null]
+  mod_id bigint
+  use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table municipio {
+  id_mun bigint [primary key, increment]
+  nombre_mun varchar(255) [not null]
+  esd_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table notifications {
+  id char(36) [primary key]
+  type varchar(255) [not null]
+  notifiable_type varchar(255) [not null]
+  notifiable_id bigint [not null]
+  data text [not null]
+  read_at timestamptz
+  created_at timestamptz
+  updated_at timestamptz
+}
+
+Table opcion_pregunta_beneficio {
+  id_opb bigint [primary key, increment]
+  etiqueta_opb varchar(255) [not null]
+  valor_opb varchar(255) [not null]
+  orden_opb integer [not null, default: 0]
+  pgb_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table pais {
+  id_pai bigint [primary key, increment]
+  nombre_pai varchar(255) [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table parada_transporte {
+  id_ptr bigint [primary key, increment]
+  nombre_ptr varchar(100) [not null]
+  lat_ptr numeric(11,7) [not null]
+  lng_ptr numeric(11,7) [not null]
+  direccion_ptr varchar(255)
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table parroquia {
+  id_par bigint [primary key, increment]
+  nombre_par varchar(255) [not null]
+  mun_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table pasajero_viaje_transporte {
+  id_pvt bigint [primary key, increment]
+  escaneado_at_pvt timestamptz [not null]
+  vjt_id bigint [not null]
+  per_id bigint [not null]
+  ptr_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (vjt_id, per_id) [unique]
+  }
+}
+
+Table perfil {
+  id_perfil bigint [primary key, increment]
+  nombre_perfil varchar(255) [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table permiso {
+  id_pmi bigint [primary key, increment]
+  nombre_pmi varchar(191) [not null, unique]
+  etiqueta_pmi varchar(150) [not null]
+  descripcion_pmi text
+  accion_pmi varchar(30) [not null]
+  vis_id bigint [not null]
+  mod_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (vis_id, accion_pmi) [unique]
+  }
+}
+
+Table persona {
+  id_per bigint [primary key, increment]
+  cedula_per varchar(15) [not null, unique]
+  nacionalidad_per varchar(1) [not null, default: 'V']
+  nombres_per varchar(255) [not null]
+  segundo_nombre_per varchar(255)
+  apellidos_per varchar(255) [not null]
+  segundo_apellido_per varchar(255)
+  telefono_per varchar(255) [not null]
+  genero_per varchar(255) [not null]
+  fecha_nacimiento_per date
+  correo_per varchar(255) [not null]
+  semestre_per varchar(255)
+  id_perfil bigint [not null]
+  sed_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table persona_programa {
+  id_pep bigint [primary key, increment]
+  per_id bigint [not null]
+  prg_id bigint [not null]
+  fecha_inicio_pep date [not null]
+  fecha_fin_pep date
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table plantilla_historia_clinica {
+  id_phc bigint [primary key, increment]
+  titulo_phc varchar(255) [not null]
+  descripcion_phc text
+  secciones_phc jsonb [not null]
+  estado_phc smallint [not null, default: 2]
+  psicologo_use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table precio_producto {
+  id_ppr bigint [primary key, increment]
+  costo_usd_ppr numeric(10,2) [not null]
+  margen_ppr numeric(5,2) [not null, default: 0.00]
+  precio_usd_ppr numeric(10,2)
+  pdt_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table pregunta_beneficio {
+  id_pgb bigint [primary key, increment]
+  codigo_pgb varchar(100) [not null]
+  etiqueta_pgb varchar(255) [not null]
+  placeholder_pgb varchar(255)
+  ayuda_pgb text
+  tipo_campo_pgb varchar(50) [not null, default: 'text']
+  obligatoria_pgb boolean [not null, default: true]
+  valor_min_pgb numeric(15,2)
+  valor_max_pgb numeric(15,2)
+  min_length_pgb integer
+  max_length_pgb integer
+  regex_pgb varchar(255)
+  orden_pgb integer [not null, default: 0]
+  bes_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (bes_id, codigo_pgb) [unique]
+  }
+}
+
+Table prioridad_atencion {
+  id_pat bigint [primary key, increment]
+  nombre_pat varchar(100) [not null]
+  nivel_gravedad_pat integer [not null, default: 1]
+  psicologo_use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (nombre_pat, psicologo_use_id) [unique]
+  }
+}
+
+Table producto {
+  id_pdt bigint [primary key, increment]
+  codigo_pdt varchar(50) [not null, unique]
+  nombre_pdt varchar(150) [not null]
+  descripcion_pdt text
+  imagen_pdt varchar(255)
+  precio_compra_pdt numeric(10,2)
+  stock_minimo_pdt numeric(14,2) [not null, default: 0.00]
+  stock_maximo_pdt numeric(14,2) [not null, default: 0.00]
+  peso_contenido_pdt numeric(14,2) [default: 0.00]
+  unidades_presentacion_pdt numeric(14,3) [not null, default: 1.000]
+  presentacion_dispensacion_pdt varchar(100)
+  cap_id bigint [not null]
+  unm_id bigint [not null]
+  enp_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table programa {
+  id_prg bigint [primary key, increment]
+  codigo_prg varchar(30) [not null, unique]
+  nombre_prg varchar(255) [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table proveedor {
+  id_prv bigint [primary key, increment]
+  empresa_prv varchar(150)
+  rif_prv varchar(30)
+  nombre_contacto_prv varchar(150)
+  telefono_prv varchar(30) [not null]
+  email_prv varchar(150) [not null]
+  direccion_prv text
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table publicacion_reacciones {
+  id bigint [primary key, increment]
+  publicacion_id bigint [not null]
+  paciente_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+
+  indexes {
+    (publicacion_id, paciente_id) [unique]
+  }
+}
+
+Table publicaciones {
+  id bigint [primary key, increment]
+  psicologo_id bigint [not null]
+  titulo varchar(255) [not null]
+  contenido text [not null]
+  tipo varchar(255) [not null, default: 'texto']
+  color_fondo varchar(255)
+  media_path varchar(255)
+  alcance varchar(255) [not null, default: 'todos']
+  created_at timestamptz
+  updated_at timestamptz
+  estatus integer [not null, default: 1]
+}
+
+Table receta {
+  id_rct bigint [primary key, increment]
+  nombre_rct varchar(255) [not null]
+  descripcion_rct text
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table receta_ingrediente {
+  id_rci bigint [primary key, increment]
+  rct_id bigint [not null]
+  pdt_id bigint [not null]
+  cantidad_porcion_rci numeric(14,2) [not null]
+  cantidad_convertida_rci numeric(14,2) [not null]
+  unm_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table receta_medica {
+  id_rme bigint [primary key, increment]
+  fecha_emision_rme date
+  fecha_vigencia_rme date
+  descripcion_rme text
+  estado_rme smallint [not null, default: 1]
+  cme_id bigint [not null]
+  paciente_per_id bigint [not null]
+  medico_per_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table registro_comedor {
+  id_rgc bigint [primary key, increment]
+  per_id bigint [not null]
+  pep_id bigint [not null]
+  sed_id bigint [not null]
+  tipo_comida_rgc varchar(20) [not null, default: 'desayuno']
+  fecha_comedor_rgc date [not null]
+  hora_comedor_rgc time
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table respuesta_solicitud_beneficio {
+  id_rsb bigint [primary key, increment]
+  valor_rsb text
+  valor_json_rsb jsonb
+  cumple_criterio_rsb boolean
+  sob_id bigint [not null]
+  pgb_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (sob_id, pgb_id) [unique]
+  }
+}
+
+Table rol {
+  id_rol bigint [primary key, increment]
+  nombre_rol varchar(255) [not null, unique]
+  slug_rol varchar(255) [unique]
+  descripcion_rol text
+  dep_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table rol_modulo {
+  id_rmo bigint [primary key, increment]
+  rol_id bigint [not null]
+  mod_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (rol_id, mod_id) [unique]
+  }
+}
+
+Table rol_permiso {
+  id_rop bigint [primary key, increment]
+  rol_id bigint [not null]
+  pmi_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (rol_id, pmi_id) [unique]
+  }
+}
+
+Table ruta_parada_transporte {
+  id_rpt bigint [primary key, increment]
+  orden_rpt integer [not null]
+  rtr_id bigint [not null]
+  ptr_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table ruta_transporte {
+  id_rtr bigint [primary key, increment]
+  nombre_rtr varchar(150) [not null]
+  distancia_km_rtr numeric(10,2) [not null, default: 0.00]
+  descripcion_rtr text
+  sed_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table seccion_plantilla_historia {
+  id_sph bigint [primary key, increment]
+  titulo_sph varchar(255) [not null]
+  descripcion_general_sph varchar(255)
+  segmentos_sph jsonb
+  psicologo_use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (psicologo_use_id, titulo_sph) [unique]
+  }
+}
+
+Table sede {
+  id_sed bigint [primary key, increment]
+  nombre_sed varchar(100) [not null]
+  siglas_sed varchar(20)
+  codigo_ministerio_sed varchar(30)
+  direccion_sed varchar(255) [not null]
+  telefono_sed varchar(100)
+  correo_sed varchar(255)
+  uni_id bigint
+  loc_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table sobrante_comedor {
+  id_sbc bigint [primary key, increment]
+  sed_id bigint [not null]
+  fecha_sbc date [not null]
+  cantidad_sobrante_sbc integer [not null]
+  motivo_sbc text [not null]
+  accion_tomada_sbc text [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table solicitud_beneficio {
+  id_sob bigint [primary key, increment]
+  tipo_solicitud_sob varchar(20) [not null, default: 'nueva']
+  estado_solicitud_sob smallint [not null, default: 0]
+  comentario_verificador_sob text
+  fecha_verificacion_sob timestamptz
+  per_id bigint [not null]
+  bes_id bigint [not null]
+  jnb_id bigint [not null]
+  laa_id bigint [not null]
+  verificado_por_use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table status {
+  id_sta bigint [primary key, increment]
+  nombre_sta varchar(50) [not null]
+  descripcion_sta text
+  modulo_sta varchar(100)
+  created_at timestamptz
+  updated_at timestamptz
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table tasa_cambio {
+  id_tca bigint [primary key, increment]
+  nombre_tca varchar(255) [not null, default: 'Oficial']
+  fuente_tca varchar(255) [not null, default: 'BCV']
+  promedio_tca numeric(12,2) [not null]
+  variacion_tca varchar(10) [not null, default: 'igual']
+  fecha_vigencia_tca date [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table tipo_beneficio_estudiantil {
+  id_tbe bigint [primary key, increment]
+  nombre_tbe varchar(255) [not null]
+  descripcion_tbe text
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table tipo_combustible {
+  id_tcb bigint [primary key, increment]
+  nombre_tcb varchar(100) [not null]
+  descripcion_tcb varchar(255)
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table tipo_producto {
+  id_tpr bigint [primary key, increment]
+  nombre_tpr varchar(50) [not null, unique]
+  mod_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table unidad_medida {
+  id_unm bigint [primary key, increment]
+  nombre_unm varchar(50) [not null]
+  abreviatura_unm varchar(20) [not null]
+  factor_conversion_unm numeric(14,3) [not null, default: 1.000]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table universidad {
+  id_uni bigint [primary key, increment]
+  codigo_ministerio_uni varchar(30)
+  nombre_uni varchar(255) [not null]
+  siglas_uni varchar(20)
+  rif_uni varchar(20)
+  telefono_uni varchar(50)
+  correo_uni varchar(255)
+  sitio_web_uni varchar(255)
+  loc_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table user {
+  id_use bigint [primary key, increment]
+  per_id bigint [not null, unique]
+  id_perfil bigint [not null]
+  email_use varchar(255) [unique]
+  username_use varchar(100) [not null, unique]
+  password_use varchar(255) [not null]
+  master_key_use text
+  security_questions_use jsonb
+  intentos_fallidos_use smallint [not null, default: 0]
+  intentos_llave_fallidos_use smallint [not null, default: 0]
+  bloqueado_hasta_use timestamptz
+  bloqueos_temporales_use smallint [not null, default: 0]
+  ventana_bloqueos_desde_use timestamptz
+  bloqueado_use boolean [not null, default: false]
+  bloqueado_en_use timestamptz
+  motivo_bloqueo_use varchar(100)
+  ultimo_login_use timestamptz
+  ultimo_login_ip_use varchar(45)
+  remember_token_use varchar(100)
+  ultima_actividad_chat_use timestamptz
+  chat_activo_use_id bigint
+  infracciones_reset_at_use timestamptz
+  debe_cambiar_password_use boolean [not null, default: false]
+  password_cambiado_en_use timestamptz
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table usuario_modulo {
+  id_umo bigint [primary key, increment]
+  use_id bigint [not null]
+  mod_id bigint [not null]
+  asignado_por_use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (use_id, mod_id) [unique]
+  }
+}
+
+Table usuario_permiso {
+  id_usp bigint [primary key, increment]
+  use_id bigint [not null]
+  pmi_id bigint [not null]
+  tipo_usp varchar(10) [not null, default: 'grant']
+  fecha_inicio_usp date
+  fecha_fin_usp date
+  asignado_por_use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (use_id, pmi_id) [unique]
+  }
+}
+
+Table usuario_rol {
+  id_usr bigint [primary key, increment]
+  rol_id bigint [not null]
+  use_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+
+  indexes {
+    (rol_id, use_id) [unique]
+  }
+}
+
+Table vehiculo_transporte {
+  id_vtr bigint [primary key, increment]
+  placa_vtr varchar(20) [not null, unique]
+  anio_vtr integer [not null]
+  color_vtr varchar(50)
+  peso_vtr numeric(8,2) [not null, default: 0.00]
+  capacidad_pasajeros_vtr integer [not null, default: 0]
+  cantidad_cilindros_vtr integer [not null, default: 1]
+  capacidad_tanque_litros_vtr numeric(8,2) [not null, default: 0.00]
+  nivel_combustible_actual_vtr numeric(8,2) [not null, default: 0.00]
+  consumo_urbano_vtr numeric(6,3) [not null, default: 0.000]
+  consumo_carretera_vtr numeric(6,3) [not null, default: 0.000]
+  consumo_ralenti_vtr numeric(6,3) [not null, default: 0.000]
+  km_actual_vtr numeric(10,2) [not null, default: 0.00]
+  km_proximo_mantenimiento_vtr numeric(10,2) [not null, default: 0.00]
+  estado_operativo_vtr varchar(20) [not null, default: 'disponible']
+  mov_id bigint [not null]
+  tcb_id bigint [not null]
+  sed_id bigint [not null]
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table viaje_transporte {
+  id_vjt bigint [primary key, increment]
+  turno_vjt varchar(100)
+  firebase_id_vjt varchar(100)
+  fecha_inicio_vjt timestamptz
+  km_inicio_vjt numeric(10,2) [not null, default: 0.00]
+  km_fin_vjt numeric(10,2) [not null, default: 0.00]
+  distancia_km_vjt numeric(8,2) [not null, default: 0.00]
+  litros_gastados_vjt numeric(8,2) [not null, default: 0.00]
+  total_pasajeros_vjt integer [not null, default: 0]
+  hubo_desvio_vjt boolean [not null, default: false]
+  motivo_desvio_vjt varchar(255)
+  estado_viaje_vjt varchar(20) [not null, default: 'programado']
+  vtr_id bigint [not null]
+  rtr_id bigint [not null]
+  conductor_use_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Table vista {
+  id_vis bigint [primary key, increment]
+  key_vis varchar(150) [not null, unique]
+  nombre_vis varchar(255) [not null]
+  descripcion_vis text
+  ruta_vis varchar(255)
+  icono_vis varchar(100)
+  orden_vis integer [not null, default: 0]
+  mod_id bigint
+  created_at timestamptz
+  updated_at timestamptz
+  status_id bigint [not null, default: 1]
+  deleted_at timestamptz
+  created_id bigint
+  updated_id bigint
+}
+
+Ref: avance_sesion.psicologo_use_id > user.id_use
+Ref: avance_sesion.status_id > status.id_sta
+Ref: beneficio_asignado.sob_id > solicitud_beneficio.id_sob
+Ref: beneficio_asignado.status_id > status.id_sta
+Ref: beneficio_estudiantil.status_id > status.id_sta
+Ref: beneficio_estudiantil.tbe_id > tipo_beneficio_estudiantil.id_tbe
+Ref: bitacora_sistema.status_id > status.id_sta
+Ref: bitacora_sistema.use_id > user.id_use
+Ref: campo_nota_evolucion.psicologo_use_id > user.id_use
+Ref: campo_nota_evolucion.status_id > status.id_sta
+Ref: carga_combustible.status_id > status.id_sta
+Ref: carga_combustible.tcb_id > tipo_combustible.id_tcb
+Ref: carga_combustible.vjt_id > viaje_transporte.id_vjt
+Ref: carga_combustible.vtr_id > vehiculo_transporte.id_vtr
+Ref: categoria_producto.status_id > status.id_sta
+Ref: categoria_producto.tpr_id > tipo_producto.id_tpr
+Ref: cita_nota_evolucion.cne_id > campo_nota_evolucion.id_cne
+Ref: cita_nota_evolucion.cps_id > cita_psicologica.id_cps
+Ref: cita_nota_evolucion.status_id > status.id_sta
+Ref: cita_psicologica.esa_id > estado_animo.id_esa
+Ref: cita_psicologica.paciente_use_id > user.id_use
+Ref: cita_psicologica.psicologo_use_id > user.id_use
+Ref: cita_psicologica.status_id > status.id_sta
+Ref: compra.mod_id > modulo.id_mod
+Ref: compra.prv_id > proveedor.id_prv
+Ref: compra.sed_id > sede.id_sed
+Ref: compra.status_id > status.id_sta
+Ref: compra.use_id > user.id_use
+Ref: condicion_estudiante.laa_id > lapso_academico.id_laa
+Ref: condicion_estudiante.per_id > persona.id_per
+Ref: condicion_estudiante.status_id > status.id_sta
+Ref: configuracion_sistema.status_id > status.id_sta
+Ref: consulta_enfermedad.cme_id > consulta_medica.id_cme
+Ref: consulta_enfermedad.efm_id > enfermedad.id_efm
+Ref: consulta_enfermedad.status_id > status.id_sta
+Ref: consulta_medica.csr_id > consultorio.id_csr
+Ref: consulta_medica.medico_per_id > persona.id_per
+Ref: consulta_medica.paciente_per_id > persona.id_per
+Ref: consulta_medica.status_id > status.id_sta
+Ref: consulta_medica.use_id > user.id_use
+Ref: consultorio.sed_id > sede.id_sed
+Ref: consultorio.status_id > status.id_sta
+Ref: consumo_diario.rct_id > receta.id_rct
+Ref: consumo_diario.sed_id > sede.id_sed
+Ref: consumo_diario.status_id > status.id_sta
+Ref: consumo_diario_detalle.cnd_id > consumo_diario.id_cnd
+Ref: consumo_diario_detalle.pdt_id > producto.id_pdt
+Ref: consumo_diario_detalle.status_id > status.id_sta
+Ref: consumo_diario_detalle.unm_id > unidad_medida.id_unm
+Ref: conversations.user_one_id > user.id_use
+Ref: conversations.user_two_id > user.id_use
+Ref: criterio_beneficio.bes_id > beneficio_estudiantil.id_bes
+Ref: criterio_beneficio.pgb_id > pregunta_beneficio.id_pgb
+Ref: criterio_beneficio.status_id > status.id_sta
+Ref: criterio_jornada_beneficio.jnb_id > jornada_beneficio.id_jnb
+Ref: criterio_jornada_beneficio.pgb_id > pregunta_beneficio.id_pgb
+Ref: criterio_jornada_beneficio.status_id > status.id_sta
+Ref: departamento.status_id > status.id_sta
+Ref: detalle_compra.cmp_id > compra.id_cmp
+Ref: detalle_compra.lot_id > lote.id_lot
+Ref: detalle_compra.pdt_id > producto.id_pdt
+Ref: detalle_compra.status_id > status.id_sta
+Ref: detalle_compra.unm_id > unidad_medida.id_unm
+Ref: detalle_receta_medica.pdt_id > producto.id_pdt
+Ref: detalle_receta_medica.rme_id > receta_medica.id_rme
+Ref: detalle_receta_medica.status_id > status.id_sta
+Ref: detalle_receta_medica.unm_id > unidad_medida.id_unm
+Ref: detalle_registro_comedor.rct_id > receta.id_rct
+Ref: detalle_registro_comedor.sed_id > sede.id_sed
+Ref: detalle_registro_comedor.status_id > status.id_sta
+Ref: direccion.par_id > parroquia.id_par
+Ref: direccion.per_id > persona.id_per
+Ref: direccion.status_id > status.id_sta
+Ref: dispensacion_medicamento.drm_id > detalle_receta_medica.id_drm
+Ref: dispensacion_medicamento.lot_id > lote.id_lot
+Ref: dispensacion_medicamento.paciente_per_id > persona.id_per
+Ref: dispensacion_medicamento.pdt_id > producto.id_pdt
+Ref: dispensacion_medicamento.rme_id > receta_medica.id_rme
+Ref: dispensacion_medicamento.sed_id > sede.id_sed
+Ref: dispensacion_medicamento.status_id > status.id_sta
+Ref: dispensacion_medicamento.unm_id > unidad_medida.id_unm
+Ref: dispensacion_medicamento.use_id > user.id_use
+Ref: documento_solicitud_beneficio.sob_id > solicitud_beneficio.id_sob
+Ref: documento_solicitud_beneficio.status_id > status.id_sta
+Ref: enfermedad.status_id > status.id_sta
+Ref: envase_primario.status_id > status.id_sta
+Ref: estado.pai_id > pais.id_pai
+Ref: estado.status_id > status.id_sta
+Ref: estado_animo.status_id > status.id_sta
+Ref: estado_animo_diario.paciente_use_id > user.id_use
+Ref: estado_animo_diario.status_id > status.id_sta
+Ref: grupo_horario_atencion.psicologo_use_id > user.id_use
+Ref: grupo_horario_atencion.status_id > status.id_sta
+Ref: historia_clinica.paciente_use_id > user.id_use
+Ref: historia_clinica.psicologo_use_id > user.id_use
+Ref: historia_clinica.status_id > status.id_sta
+Ref: historia_enfermedad.efm_id > enfermedad.id_efm
+Ref: historia_enfermedad.hcl_id > historia_clinica.id_hcl
+Ref: historia_enfermedad.status_id > status.id_sta
+Ref: historia_seccion_personalizada.hcl_id > historia_clinica.id_hcl
+Ref: historia_seccion_personalizada.status_id > status.id_sta
+Ref: historia_segmento_personalizado.hsp_id > historia_seccion_personalizada.id_hsp
+Ref: historia_segmento_personalizado.status_id > status.id_sta
+Ref: horario_consultorio.csr_id > consultorio.id_csr
+Ref: horario_consultorio.status_id > status.id_sta
+Ref: horario_consultorio.usr_id > usuario_rol.id_usr
+Ref: horario_profesional.gha_id > grupo_horario_atencion.id_gha
+Ref: horario_profesional.psicologo_use_id > user.id_use
+Ref: horario_profesional.status_id > status.id_sta
+Ref: horario_ruta_transporte.rtr_id > ruta_transporte.id_rtr
+Ref: horario_ruta_transporte.status_id > status.id_sta
+Ref: inventario_sede_lote.lot_id > lote.id_lot
+Ref: inventario_sede_lote.sed_id > sede.id_sed
+Ref: inventario_sede_lote.status_id > status.id_sta
+Ref: inventario_total.pdt_id > producto.id_pdt
+Ref: inventario_total.sed_id > sede.id_sed
+Ref: inventario_total.status_id > status.id_sta
+Ref: jornada_beneficio.bes_id > beneficio_estudiantil.id_bes
+Ref: jornada_beneficio.laa_id > lapso_academico.id_laa
+Ref: jornada_beneficio.status_id > status.id_sta
+Ref: lapso_academico.status_id > status.id_sta
+Ref: localidad.par_id > parroquia.id_par
+Ref: localidad.status_id > status.id_sta
+Ref: log_gps_transporte.status_id > status.id_sta
+Ref: log_gps_transporte.vjt_id > viaje_transporte.id_vjt
+Ref: lote.pdt_id > producto.id_pdt
+Ref: lote.prv_id > proveedor.id_prv
+Ref: lote.status_id > status.id_sta
+Ref: mantenimiento_vehiculo.status_id > status.id_sta
+Ref: mantenimiento_vehiculo.use_id > user.id_use
+Ref: mantenimiento_vehiculo.vtr_id > vehiculo_transporte.id_vtr
+Ref: marca_vehiculo.status_id > status.id_sta
+Ref: messages.conversation_id > conversations.id
+Ref: messages.sender_id > user.id_use
+Ref: modelo_vehiculo.mav_id > marca_vehiculo.id_mav
+Ref: modelo_vehiculo.status_id > status.id_sta
+Ref: modulo.status_id > status.id_sta
+Ref: movimiento_inventario.lot_id > lote.id_lot
+Ref: movimiento_inventario.mod_id > modulo.id_mod
+Ref: movimiento_inventario.pdt_id > producto.id_pdt
+Ref: movimiento_inventario.sed_id > sede.id_sed
+Ref: movimiento_inventario.status_id > status.id_sta
+Ref: movimiento_inventario.unm_id > unidad_medida.id_unm
+Ref: movimiento_inventario.use_id > user.id_use
+Ref: municipio.esd_id > estado.id_esd
+Ref: municipio.status_id > status.id_sta
+Ref: opcion_pregunta_beneficio.pgb_id > pregunta_beneficio.id_pgb
+Ref: opcion_pregunta_beneficio.status_id > status.id_sta
+Ref: pais.status_id > status.id_sta
+Ref: parada_transporte.status_id > status.id_sta
+Ref: parroquia.mun_id > municipio.id_mun
+Ref: parroquia.status_id > status.id_sta
+Ref: pasajero_viaje_transporte.per_id > persona.id_per
+Ref: pasajero_viaje_transporte.ptr_id > parada_transporte.id_ptr
+Ref: pasajero_viaje_transporte.status_id > status.id_sta
+Ref: pasajero_viaje_transporte.vjt_id > viaje_transporte.id_vjt
+Ref: perfil.status_id > status.id_sta
+Ref: permiso.mod_id > modulo.id_mod
+Ref: permiso.status_id > status.id_sta
+Ref: permiso.vis_id > vista.id_vis
+Ref: persona.id_perfil > perfil.id_perfil
+Ref: persona.sed_id > sede.id_sed
+Ref: persona.status_id > status.id_sta
+Ref: persona_programa.per_id > persona.id_per
+Ref: persona_programa.prg_id > programa.id_prg
+Ref: persona_programa.status_id > status.id_sta
+Ref: plantilla_historia_clinica.psicologo_use_id > user.id_use
+Ref: plantilla_historia_clinica.status_id > status.id_sta
+Ref: precio_producto.pdt_id > producto.id_pdt
+Ref: precio_producto.status_id > status.id_sta
+Ref: pregunta_beneficio.bes_id > beneficio_estudiantil.id_bes
+Ref: pregunta_beneficio.status_id > status.id_sta
+Ref: prioridad_atencion.psicologo_use_id > user.id_use
+Ref: prioridad_atencion.status_id > status.id_sta
+Ref: producto.cap_id > categoria_producto.id_cap
+Ref: producto.enp_id > envase_primario.id_enp
+Ref: producto.status_id > status.id_sta
+Ref: producto.unm_id > unidad_medida.id_unm
+Ref: programa.status_id > status.id_sta
+Ref: proveedor.status_id > status.id_sta
+Ref: publicacion_reacciones.paciente_id > user.id_use
+Ref: publicacion_reacciones.publicacion_id > publicaciones.id
+Ref: publicaciones.psicologo_id > user.id_use
+Ref: receta.status_id > status.id_sta
+Ref: receta_ingrediente.pdt_id > producto.id_pdt
+Ref: receta_ingrediente.rct_id > receta.id_rct
+Ref: receta_ingrediente.status_id > status.id_sta
+Ref: receta_ingrediente.unm_id > unidad_medida.id_unm
+Ref: receta_medica.cme_id > consulta_medica.id_cme
+Ref: receta_medica.medico_per_id > persona.id_per
+Ref: receta_medica.paciente_per_id > persona.id_per
+Ref: receta_medica.status_id > status.id_sta
+Ref: registro_comedor.pep_id > persona_programa.id_pep
+Ref: registro_comedor.per_id > persona.id_per
+Ref: registro_comedor.sed_id > sede.id_sed
+Ref: registro_comedor.status_id > status.id_sta
+Ref: respuesta_solicitud_beneficio.pgb_id > pregunta_beneficio.id_pgb
+Ref: respuesta_solicitud_beneficio.sob_id > solicitud_beneficio.id_sob
+Ref: respuesta_solicitud_beneficio.status_id > status.id_sta
+Ref: rol.dep_id > departamento.id_dep
+Ref: rol.status_id > status.id_sta
+Ref: rol_modulo.mod_id > modulo.id_mod
+Ref: rol_modulo.rol_id > rol.id_rol
+Ref: rol_modulo.status_id > status.id_sta
+Ref: rol_permiso.pmi_id > permiso.id_pmi
+Ref: rol_permiso.rol_id > rol.id_rol
+Ref: rol_permiso.status_id > status.id_sta
+Ref: ruta_parada_transporte.ptr_id > parada_transporte.id_ptr
+Ref: ruta_parada_transporte.rtr_id > ruta_transporte.id_rtr
+Ref: ruta_parada_transporte.status_id > status.id_sta
+Ref: ruta_transporte.sed_id > sede.id_sed
+Ref: ruta_transporte.status_id > status.id_sta
+Ref: seccion_plantilla_historia.psicologo_use_id > user.id_use
+Ref: seccion_plantilla_historia.status_id > status.id_sta
+Ref: sede.loc_id > localidad.id_loc
+Ref: sede.status_id > status.id_sta
+Ref: sede.uni_id > universidad.id_uni
+Ref: sobrante_comedor.sed_id > sede.id_sed
+Ref: sobrante_comedor.status_id > status.id_sta
+Ref: solicitud_beneficio.bes_id > beneficio_estudiantil.id_bes
+Ref: solicitud_beneficio.jnb_id > jornada_beneficio.id_jnb
+Ref: solicitud_beneficio.laa_id > lapso_academico.id_laa
+Ref: solicitud_beneficio.per_id > persona.id_per
+Ref: solicitud_beneficio.status_id > status.id_sta
+Ref: solicitud_beneficio.verificado_por_use_id > user.id_use
+Ref: tasa_cambio.status_id > status.id_sta
+Ref: tipo_beneficio_estudiantil.status_id > status.id_sta
+Ref: tipo_combustible.status_id > status.id_sta
+Ref: tipo_producto.mod_id > modulo.id_mod
+Ref: tipo_producto.status_id > status.id_sta
+Ref: unidad_medida.status_id > status.id_sta
+Ref: universidad.loc_id > localidad.id_loc
+Ref: universidad.status_id > status.id_sta
+Ref: user.id_perfil > perfil.id_perfil
+Ref: user.per_id > persona.id_per
+Ref: user.status_id > status.id_sta
+Ref: usuario_modulo.asignado_por_use_id > user.id_use
+Ref: usuario_modulo.mod_id > modulo.id_mod
+Ref: usuario_modulo.status_id > status.id_sta
+Ref: usuario_modulo.use_id > user.id_use
+Ref: usuario_permiso.asignado_por_use_id > user.id_use
+Ref: usuario_permiso.pmi_id > permiso.id_pmi
+Ref: usuario_permiso.status_id > status.id_sta
+Ref: usuario_permiso.use_id > user.id_use
+Ref: usuario_rol.rol_id > rol.id_rol
+Ref: usuario_rol.status_id > status.id_sta
+Ref: usuario_rol.use_id > user.id_use
+Ref: vehiculo_transporte.mov_id > modelo_vehiculo.id_mov
+Ref: vehiculo_transporte.sed_id > sede.id_sed
+Ref: vehiculo_transporte.status_id > status.id_sta
+Ref: vehiculo_transporte.tcb_id > tipo_combustible.id_tcb
+Ref: viaje_transporte.conductor_use_id > user.id_use
+Ref: viaje_transporte.rtr_id > ruta_transporte.id_rtr
+Ref: viaje_transporte.status_id > status.id_sta
+Ref: viaje_transporte.vtr_id > vehiculo_transporte.id_vtr
+Ref: vista.mod_id > modulo.id_mod
+Ref: vista.status_id > status.id_sta
