@@ -22,7 +22,7 @@ class PasswordRecoveryController extends Controller
 
     public function postEmail(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate(['email' => 'required|string|max:255']);
 
         $claveIp = 'recuperacion-consulta:' . $request->ip();
         if (RateLimiter::tooManyAttempts($claveIp, (int) config('seguridad.max_consultas_recuperacion_ip', 10))) {
@@ -32,7 +32,7 @@ class PasswordRecoveryController extends Controller
 
         session()->forget(['recovery_user_id', 'recovery_verified_id', 'recovery_verified_at']);
 
-        $user = Usuario::where('username', $request->email)->first();
+        $user = Usuario::buscarPorIdentificador((string) $request->email);
         $questions = $user ? $this->preguntas($user) : [];
 
         if (!$user || empty($questions)) {

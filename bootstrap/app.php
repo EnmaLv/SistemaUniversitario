@@ -29,11 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
             CheckTasaActualizada::class,
             CerrarSesionPorInactividad::class,
             VerificarUsuarioBloqueado::class,
+            \App\Http\Middleware\ExigirCambioPassword::class,
             RegistrarActividad::class,
         ]);
 
         $middleware->api(append: [
             VerificarUsuarioBloqueado::class . ':sanctum',
+            \App\Http\Middleware\ExigirCambioPassword::class . ':sanctum',
         ]);
 
         $middleware->trustProxies(at: '*');

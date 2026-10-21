@@ -44,6 +44,8 @@ class Usuario extends Authenticatable
         'intentos_fallidos'      => 'integer',
         'intentos_llave_fallidos' => 'integer',
         'bloqueos_temporales'    => 'integer',
+        'debe_cambiar_password'  => 'boolean',
+        'password_cambiado_en'   => 'datetime',
     ];
 
     protected ?array $permisosEfectivosCache = null;
@@ -78,6 +80,48 @@ class Usuario extends Authenticatable
             fn ($rol) => in_array(mb_strtolower((string) $rol->slug), $roles, true)
                 || in_array(mb_strtolower((string) $rol->nombre), $roles, true)
         );
+    }
+
+    public static function buscarPorIdentificador(string $identificador): ?self
+    {
+        $identificador = trim($identificador);
+
+        if ($identificador === '') {
+            return null;
+        }
+
+        if (\App\Support\Cuentas\Cedula::esCorreo($identificador)) {
+            return self::whereRaw('LOWER(username) = ?', [mb_strtolower($identificador)])->first();
+        }
+
+        $cedula = \App\Support\Cuentas\Cedula::normalizar($identificador);
+
+        if ($cedula === null) {
+            return self::where('username', $identificador)->first();
+        }
+
+        $usuario = self::where('username', $cedula)->first();
+
+        if ($usuario) {
+            return $usuario;
+        }
+
+        $porPersona = self::whereHas('persona', fn ($consulta) => $consulta->where('cedula_persona', $cedula))
+            ->limit(2)
+            ->get();
+
+        return $porPersona->count() === 1 ? $porPersona->first() : null;
+    }
+
+    public static function claveIdentificador(string $identificador): string
+    {
+        $identificador = trim($identificador);
+
+        if (\App\Support\Cuentas\Cedula::esCorreo($identificador)) {
+            return mb_strtolower($identificador);
+        }
+
+        return \App\Support\Cuentas\Cedula::normalizar($identificador) ?? mb_strtolower($identificador);
     }
 
     public function permisosEfectivos(): array

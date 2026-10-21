@@ -212,7 +212,7 @@ class PersonaSeeder extends Seeder
             'segundo_nombre_persona' => null,
             'apellido_persona' => 'Pinero',
             'segundo_apellido_persona' => null,
-            'cedula_persona' => '31008661',
+            'cedula_persona' => '31008663',
             'telefono_persona' => 04241234567,
             'genero_persona' => 'Femenino',
             'edad_persona' => \Carbon\Carbon::parse(now()->toDateString())->age,

@@ -16,7 +16,7 @@ class ProteccionLogin
     public static function intentar(string $username, string $password, string $ip, string $canal = 'web'): array
     {
         $username = trim($username);
-        $usuario = Usuario::where('username', $username)->first();
+        $usuario = Usuario::buscarPorIdentificador($username);
 
         if (! $usuario) {
             return static::fallarInexistente($username, $password, $ip, $canal);
@@ -59,7 +59,7 @@ class ProteccionLogin
 
     public static function clave(string $username, string $ip): string
     {
-        return 'login:' . sha1(mb_strtolower(trim($username)) . '|' . $ip);
+        return 'login:' . sha1(Usuario::claveIdentificador($username) . '|' . $ip);
     }
 
     protected static function fallarInexistente(string $username, string $password, string $ip, string $canal): array

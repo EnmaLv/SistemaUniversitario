@@ -2,148 +2,37 @@
 
 namespace App\Livewire;
 
+use App\Jobs\GenerarCuentasComunidad;
+use App\Models\Archivo;
+use App\Support\Auditoria\Bitacora;
+use App\Support\Cuentas\CuentasComunidad;
+use App\Support\Cuentas\ImportadorPersonas;
+use App\Support\Seguridad\MensajeError;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\Archivo;
-use Carbon\Carbon;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use App\Models\Persona;
-use App\Models\PersonaPnf;
 
 class Archivos extends Component
 {
     use WithFileUploads;
 
+    public const SEGUNDOS_MAXIMOS = 600;
+
     public $archivo;
     public $archivoKey;
     public $buscar = '';
     public $procesando = false;
-    
+    public ?array $ultimoResumen = null;
 
     protected $rules = [
-        'archivo' => 'required|file|mimes:xlsx,xls,pdf,txt|max:10240',
+        'archivo' => 'required|file|mimes:xlsx,xls,csv,txt|max:10240',
     ];
 
     public function mount()
     {
         $this->archivoKey = rand();
-    }
-
-    private function getColumnMapping(array $headerRow): array
-    {
-        $map = [];
-
-        foreach ($headerRow as $colLetter => $title) {
-            if (!$title) continue;
-
-            // Convertir a ASCII seguro con Laravel (CÉDULA -> CEDULA, N° -> N DEG)
-            $slug = Str::ascii((string)$title);
-            $slug = strtolower(trim($slug));
-            $slug = preg_replace('/[^a-z0-9]/', '_', $slug);
-            $slug = preg_replace('/_+/', '_', trim($slug, '_'));
-
-            if (preg_match('/cedula|c_i|dni|identificacion/', $slug) && !isset($map['cedula'])) {
-                $map['cedula'] = $colLetter;
-            } elseif (preg_match('/segundo_nombre|nombre_2|nombre2/', $slug) && !isset($map['segundo_nombre'])) {
-                $map['segundo_nombre'] = $colLetter;
-            } elseif (preg_match('/nombre/', $slug) && !isset($map['nombre'])) {
-                $map['nombre'] = $colLetter;
-            } elseif (preg_match('/segundo_apellido|apellido_2|apellido2/', $slug) && !isset($map['segundo_apellido'])) {
-                $map['segundo_apellido'] = $colLetter;
-            } elseif (preg_match('/apellido/', $slug) && !isset($map['apellido'])) {
-                $map['apellido'] = $colLetter;
-            } elseif (preg_match('/telefono|celular|movil|tlf/', $slug) && !preg_match('/otro/', $slug) && !isset($map['telefono'])) {
-                $map['telefono'] = $colLetter;
-            } elseif (preg_match('/genero|sexo/', $slug) && !isset($map['genero'])) {
-                $map['genero'] = $colLetter;
-            } elseif (preg_match('/nacimiento|fecha_nac|fec_nac|a_nacimiento/', $slug) && !isset($map['fecha_nacimiento'])) {
-                $map['fecha_nacimiento'] = $colLetter;
-            } elseif (preg_match('/email|correo/', $slug) && !isset($map['email'])) {
-                $map['email'] = $colLetter;
-            } elseif (preg_match('/semestre|trayecto|nivel/', $slug) && !isset($map['semestre'])) {
-                $map['semestre'] = $colLetter;
-            } elseif (preg_match('/pnf|carrera|programa|especialidad|pfg/', $slug) && !isset($map['pnf'])) {
-                $map['pnf'] = $colLetter;
-            }
-        }
-
-        return $map;
-    }
-
-    private function normalizarPnf(string $pnfExcel): int
-    {
-        if (empty($pnfExcel)) return 1;
-
-        $pnfExcel = strtoupper(trim(Str::ascii($pnfExcel)));
-        $pnfExcel = preg_replace('/\s+/', ' ', $pnfExcel);
-
-        $pnfs = DB::table('pnf')
-            ->where('id_estatus', 1)
-            ->get(['id_pnf', 'nombre_pnf']);
-
-        $mejorCoincidencia = null;
-        $mejorSimilitud = 0;
-
-        foreach ($pnfs as $pnf) {
-            $nombreBD = strtoupper(Str::ascii($pnf->nombre_pnf));
-
-            similar_text($pnfExcel, $nombreBD, $porcentaje);
-
-            if ($porcentaje > $mejorSimilitud) {
-                $mejorSimilitud = $porcentaje;
-                $mejorCoincidencia = $pnf->id_pnf;
-            }
-
-            if ($porcentaje >= 90) {
-                return $pnf->id_pnf;
-            }
-        }
-
-        if ($mejorSimilitud >= 70) {
-            return $mejorCoincidencia;
-        }
-
-        return 1;
-    }
-
-    private function parseFechaNacimiento($fecha)
-    {
-        if ($fecha === null || $fecha === '' || trim((string)$fecha) === '') {
-            return null;
-        }
-
-        if (is_numeric($fecha)) {
-            try {
-                return Carbon::instance(
-                    \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fecha)
-                )->format('Y-m-d');
-            } catch (\Exception $e) {
-            }
-        }
-
-        $fechaLimpia = preg_replace('/[^\x20-\x7E]/u', '', (string)$fecha);
-        $fechaLimpia = preg_replace('/[^0-9\/\-]/', '', $fechaLimpia);
-        $fechaLimpia = str_replace(['-', '.', ','], '/', $fechaLimpia);
-
-        if (substr_count($fechaLimpia, '/') !== 2) {
-            return null;
-        }
-
-        $partes = explode('/', $fechaLimpia);
-        if (count($partes) !== 3) return null;
-
-        try {
-            $fechaCreada = Carbon::createFromFormat('d/m/Y', $fechaLimpia);
-            if ($fechaCreada && $fechaCreada->year > 1920 && $fechaCreada->year <= now()->year) {
-                return $fechaCreada->format('Y-m-d');
-            }
-        } catch (\Exception $e) {
-            return null;
-        }
-
-        return null;
     }
 
     public function save()
@@ -153,153 +42,76 @@ class Archivos extends Component
         $this->procesando = true;
         $this->dispatch('archivo-procesando');
 
-        DB::beginTransaction();
+        @set_time_limit(self::SEGUNDOS_MAXIMOS);
 
         try {
-            $ruta     = $this->archivo->store('importaciones', 'local');
-            $fullPath = \Illuminate\Support\Facades\Storage::disk('local')->path($ruta);
+            $usuario = Auth::user();
+            $extension = strtolower($this->archivo->getClientOriginalExtension() ?: 'xlsx');
+            $ruta = $this->archivo->storeAs('importaciones', Str::uuid() . '.' . $extension, 'local');
+            $idSede = (int) ($usuario->persona->id_sede ?? 1);
 
-            $spreadsheet = IOFactory::load($fullPath);
-            $rows = $spreadsheet->getActiveSheet()->toArray(null, true, false, true);
+            $resumen = (new ImportadorPersonas())->importar(Storage::disk('local')->path($ruta), $idSede);
+            $ids = $resumen['ids_persona'];
+            unset($resumen['ids_persona']);
 
-            if (empty($rows)) {
-                throw new \Exception('El archivo cargado está vacío.');
-            }
+            $lotes = array_chunk($ids, CuentasComunidad::TAMANO_LOTE);
+            $resumen['lotes_pendientes'] = count($lotes);
+            $resumen['cuentas'] = ['usuarios_creados' => 0, 'usuarios_existentes' => 0, 'roles_agregados' => 0, 'errores' => 0];
 
-            $headerRow = null;
-            foreach ($rows as $index => $row) {
-                $rowString = Str::ascii(implode(' ', array_values($row)));
-                if (preg_match('/cedula|c_i|dni|nombre|apellido/i', $rowString)) {
-                    $headerRow = $row;
-                    $rows = array_slice($rows, $index + 1);
-                    break;
-                }
-            }
-
-            if (!$headerRow) {
-                throw new \Exception('No se encontró la fila de encabezados en el archivo Excel.');
-            }
-
-            $map = $this->getColumnMapping($headerRow);
-
-            if (!isset($map['cedula'])) {
-                throw new \Exception('No se detectó la columna de "Cédula" en la tabla cargada.');
-            }
-
-            $getValue = function ($key, $row) use ($map) {
-                $col = $map[$key] ?? null;
-                return $col ? trim((string)($row[$col] ?? '')) : '';
-            };
-
-            $cedulasProcesadas = [];
-            $stats = [
-                'total'               => 0,
-                'insertados'          => 0,
-                'actualizados'        => 0,
-                'omitidos_fecha'      => 0,
-                'omitidos_cedula'     => 0,
-                'omitidos_duplicados' => 0,
-            ];
-
-            foreach ($rows as $row) {
-                $stats['total']++;
-
-                $cedulaRaw = $getValue('cedula', $row);
-                $cedula    = preg_replace('/\D/', '', $cedulaRaw);
-
-                if (!$cedula) {
-                    $stats['omitidos_cedula']++;
-                    continue;
-                }
-
-                if (in_array($cedula, $cedulasProcesadas)) {
-                    $stats['omitidos_duplicados']++;
-                    continue;
-                }
-
-                $cedulasProcesadas[] = $cedula;
-
-                $fechaNacimiento = $this->parseFechaNacimiento($getValue('fecha_nacimiento', $row));
-                $edad            = $fechaNacimiento ? Carbon::parse($fechaNacimiento)->age : null;
-
-                if (!$fechaNacimiento) {
-                    $stats['omitidos_fecha']++;
-                }
-
-                $sexoRaw = strtoupper($getValue('genero', $row));
-                $sexo = match ($sexoRaw) {
-                    'M', 'MASCULINO' => 'MASCULINO',
-                    'F', 'FEMENINO'  => 'FEMENINO',
-                    default          => 'NO DEFINIDO',
-                };
-
-                $telefono = preg_replace('/\D/', '', $getValue('telefono', $row));
-
-                $persona = Persona::updateOrCreate(
-                    ['cedula_persona' => $cedula],
-                    [
-                        'nombre_persona'           => $getValue('nombre', $row),
-                        'segundo_nombre_persona'   => $getValue('segundo_nombre', $row) ?: null,
-                        'apellido_persona'         => $getValue('apellido', $row),
-                        'segundo_apellido_persona' => $getValue('segundo_apellido', $row) ?: null,
-                        'telefono_persona'         => $telefono ?: null,
-                        'genero_persona'           => $sexo,
-                        'edad_persona'             => $edad,
-                        'fecha_nacimiento_persona' => $fechaNacimiento,
-                        'email_persona'            => $getValue('email', $row) ?: null,
-                        'semestre_persona'         => $getValue('semestre', $row) ?: null,
-                        'id_perfil'                => 2,
-                        'id_sede'                  => 1,
-                    ]
-                );
-
-                if ($persona->wasRecentlyCreated) {
-                    $stats['insertados']++;
-                } else {
-                    $stats['actualizados']++;
-                }
-
-                PersonaPnf::updateOrCreate(
-                    ['id_persona' => $persona->id_persona],
-                    [
-                        'id_pnf'       => $this->normalizarPnf($getValue('pnf', $row)),
-                        'fecha_inicio' => now()->toDateString(),
-                        'fecha_fin'    => now()->toDateString(),
-                    ]
-                );
-            }
-
-            Archivo::create([
+            $registro = Archivo::create([
                 'info_estudiantes' => 'Estudiantes UPTP - ' . now()->format('Y-m-d H:i:s'),
                 'ruta_archivo'     => $ruta,
                 'nombre_original'  => $this->archivo->getClientOriginalName(),
-                'resumen'          => $stats,
-                'usuario_id'       => auth()->id(),
+                'resumen'          => $resumen,
+                'usuario_id'       => $usuario->getKey(),
                 'fecha'            => now()->toDateString(),
-                'estado'           => 'Procesado',
+                'estado'           => $lotes === [] ? 'Procesado' : 'Generando cuentas',
             ]);
 
-            DB::commit();
+            Bitacora::registrar(
+                accion: 'importacion_personas',
+                modulo: 'administracion',
+                tablaAfectada: 'archivos',
+                registroId: $registro->id,
+                datosModificados: [
+                    'total_filas'           => $resumen['total_filas'],
+                    'personas_creadas'      => $resumen['personas_creadas'],
+                    'personas_actualizadas' => $resumen['personas_actualizadas'],
+                    'filas_con_error'       => $resumen['filas_con_error'],
+                ],
+                observacion: 'Importación de personas desde Excel',
+            );
+
+            foreach ($lotes as $lote) {
+                GenerarCuentasComunidad::dispatch($lote, $registro->id, $usuario->getKey());
+            }
+
+            $registro->refresh();
+            $this->ultimoResumen = $registro->resumen;
 
             $this->reset('archivo');
             $this->archivoKey = rand();
             $this->dispatch('archivo-limpiar');
 
+            $cuentas = $registro->resumen['cuentas'] ?? [];
+            $textoCuentas = $registro->estado === 'Procesado'
+                ? "{$cuentas['usuarios_creados']} usuarios creados"
+                : 'las cuentas de usuario se están generando en segundo plano';
+
             $this->dispatch(
                 'swal',
-                icon: 'success',
-                title: '¡Procesamiento exitoso!',
-                text: "Se procesaron {$stats['total']} filas · {$stats['insertados']} nuevos · {$stats['actualizados']} actualizados · {$stats['omitidos_cedula']} sin cédula."
+                icon: $resumen['filas_con_error'] > 0 ? 'warning' : 'success',
+                title: 'Importación terminada',
+                text: "{$resumen['total_filas']} filas · {$resumen['personas_creadas']} personas nuevas · {$resumen['personas_actualizadas']} actualizadas · {$resumen['filas_con_error']} con error · {$textoCuentas}."
             );
         } catch (\Throwable $e) {
-            DB::rollBack();
             report($e);
 
             $this->dispatch(
                 'swal',
                 icon: 'error',
                 title: 'Error al procesar',
-                text: \App\Support\Seguridad\MensajeError::de($e)
+                text: MensajeError::de($e)
             );
         } finally {
             $this->procesando = false;
@@ -309,10 +121,13 @@ class Archivos extends Component
 
     public function render()
     {
+        $archivos = Archivo::latest()
+            ->where('info_estudiantes', 'like', "%{$this->buscar}%")
+            ->get();
+
         return view('livewire.archivos', [
-            'archivos' => Archivo::latest()
-                ->where('info_estudiantes', 'like', "%{$this->buscar}%")
-                ->get(),
+            'archivos'      => $archivos,
+            'hayPendientes' => $archivos->contains('estado', 'Generando cuentas'),
         ]);
     }
 }

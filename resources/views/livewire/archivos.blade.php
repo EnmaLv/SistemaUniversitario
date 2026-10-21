@@ -300,8 +300,51 @@
             </div>
         </div>
 
+        @if ($ultimoResumen)
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="rounded-2xl border shadow-sm p-5 sm:p-6">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider mb-4" style="color: var(--text-main);">
+                    <i class="fas fa-clipboard-check mr-2 text-red-800"></i>Resumen de la última importación
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+                    @foreach ([
+                        'Filas leídas' => $ultimoResumen['total_filas'] ?? 0,
+                        'Personas nuevas' => $ultimoResumen['personas_creadas'] ?? 0,
+                        'Personas actualizadas' => $ultimoResumen['personas_actualizadas'] ?? 0,
+                        'Usuarios creados' => $ultimoResumen['cuentas']['usuarios_creados'] ?? 0,
+                        'Filas con error' => $ultimoResumen['filas_con_error'] ?? 0,
+                    ] as $etiqueta => $valor)
+                        <div class="rounded-xl border p-3" style="border-color: var(--border-color);">
+                            <p class="text-2xl font-black" style="color: var(--text-main);">{{ $valor }}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted);">{{ $etiqueta }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                @if (! empty($ultimoResumen['errores']))
+                    <div class="mt-4 max-h-60 overflow-y-auto rounded-xl border" style="border-color: var(--border-color);">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr style="color: var(--text-muted);">
+                                    <th class="px-4 py-2 w-24">Fila</th>
+                                    <th class="px-4 py-2">Motivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($ultimoResumen['errores'] as $error)
+                                    <tr class="border-t" style="border-color: var(--border-color); color: var(--text-main);">
+                                        <td class="px-4 py-2 font-bold">{{ $error['fila'] }}</td>
+                                        <td class="px-4 py-2">{{ $error['motivo'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-            class="rounded-2xl border shadow-sm overflow-hidden">
+            class="rounded-2xl border shadow-sm overflow-hidden" @if ($hayPendientes) wire:poll.10s @endif>
 
             <div class="p-5 sm:p-6 border-b" style="border-color: var(--border-color);">
                 <div class="flex flex-col lg:flex-row lg:items-center gap-4">
@@ -362,9 +405,17 @@
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
-                                        <i class="fas fa-check-circle"></i>
+                                        <i class="fas {{ $archivo->estado === 'Procesado' ? 'fa-check-circle' : 'fa-spinner fa-spin' }}"></i>
                                         {{ $archivo->estado }}
                                     </span>
+                                    @if ($archivo->resumen)
+                                        <p class="mt-1 text-[10px]" style="color: var(--text-muted);">
+                                            {{ $archivo->resumen['personas_creadas'] ?? 0 }} nuevas ·
+                                            {{ $archivo->resumen['personas_actualizadas'] ?? 0 }} actualizadas ·
+                                            {{ $archivo->resumen['filas_con_error'] ?? 0 }} con error ·
+                                            {{ $archivo->resumen['cuentas']['usuarios_creados'] ?? 0 }} usuarios
+                                        </p>
+                                    @endif
                                 </td>
 
                                 <x-table-actions :id="$archivo->id" baseUrl="admin/configuracion/archivos"

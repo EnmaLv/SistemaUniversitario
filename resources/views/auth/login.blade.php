@@ -425,7 +425,7 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group">
-                        <input class="input" type="email" name="email" placeholder="Correo electrónico" required
+                        <input class="input" type="text" name="email" placeholder="Cédula o correo electrónico" autocomplete="username" required
                             autofocus>
                     </div>
 

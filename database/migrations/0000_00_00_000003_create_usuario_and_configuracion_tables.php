@@ -24,6 +24,8 @@ return new class extends Migration
             $table->timestamp('ultima_actividad_chat')->nullable();
             $table->unsignedBigInteger('chat_activo_user_id')->nullable();
             $table->timestamp('infracciones_reset_at')->nullable();
+            $table->boolean('debe_cambiar_password')->default(false);
+            $table->timestamp('password_cambiado_en')->nullable();
             $table->timestamps();
         });
 

@@ -281,6 +281,8 @@ class RegistroPersona extends Component
                     'updated_at' => now(),
                 ]);
 
+                \App\Support\Cuentas\CuentasComunidad::asegurarCuenta($persona);
+
                 $this->dispatch(
                     'alert',
                     type: 'success',
@@ -302,6 +304,11 @@ class RegistroPersona extends Component
             $finish = Persona::crearPersona($data);
 
             if ($finish) {
+                $nueva = Persona::where('cedula_persona', $data['cedula'])->first();
+                if ($nueva) {
+                    \App\Support\Cuentas\CuentasComunidad::asegurarCuenta($nueva);
+                }
+
                 redirect()->route('admin.configuracion.persona.index')->with('success', 'Estudiante creado exitosamente.');
             } else {
                 $this->dispatch(

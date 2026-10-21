@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('segundo_nombre_persona')->nullable();
             $table->string('apellido_persona');
             $table->string('segundo_apellido_persona')->nullable();
-            $table->string('cedula_persona');
+            $table->string('cedula_persona')->unique();
             $table->string('telefono_persona');
             $table->string('genero_persona');
             $table->integer('edad_persona')->nullable();
