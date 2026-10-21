@@ -20,6 +20,7 @@ services:
     image: mysql:8.0
     container_name: mysqlbienestraestudiantil
     restart: always
+    command: --log-bin-trust-function-creators=1
     ports:
       - "3307:3306"
     environment:
