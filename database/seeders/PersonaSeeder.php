@@ -45,8 +45,6 @@ class PersonaSeeder extends Seeder
                     'answer' => bcrypt('example'),
                 ],
             ]),
-
-            'extra_permissions' => null,
         ]);
 
         DB::table('rol_usuario')->insert([
@@ -78,7 +76,6 @@ class PersonaSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'master_key' => bcrypt('masterkey123'),
             'security_questions' => null,
-            'extra_permissions' => null,
         ]);
 
         DB::table('rol_usuario')->insert([
@@ -109,7 +106,6 @@ class PersonaSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'master_key' => bcrypt('masterkey123'),
             'security_questions' => null,
-            'extra_permissions' => null,
         ]);
 
         DB::table('rol_usuario')->insert([
@@ -141,7 +137,6 @@ class PersonaSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'master_key' => bcrypt('masterkey123'),
             'security_questions' => null,
-            'extra_permissions' => null,
         ]);
 
         DB::table('rol_usuario')->insert([
@@ -173,7 +168,6 @@ class PersonaSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'master_key' => bcrypt('masterkey123'),
             'security_questions' => null,
-            'extra_permissions' => null,
         ]);
 
         DB::table('rol_usuario')->insert([
@@ -205,7 +199,6 @@ class PersonaSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'master_key' => bcrypt('masterkey123'),
             'security_questions' => null,
-            'extra_permissions' => null,
         ]);
 
         DB::table('rol_usuario')->insert([
@@ -237,7 +230,6 @@ class PersonaSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'master_key' => bcrypt('masterkey123'),
             'security_questions' => null,
-            'extra_permissions' => null,
         ]);
 
         DB::table('rol_usuario')->insert([
@@ -269,7 +261,6 @@ class PersonaSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'master_key' => bcrypt('masterkey123'),
             'security_questions' => null,
-            'extra_permissions' => null,
         ]);
 
         // Se le asigna Paciente (7) y Becario (9)

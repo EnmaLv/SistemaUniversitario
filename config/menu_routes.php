@@ -36,16 +36,19 @@ return [
     'permisos'               => ['admin.configuracion.permisos.*'],
     'archivos'               => ['admin.configuracion.archivos.*'],
 
-    /* ═══════════════════ COMEDOR ═══════════════════ */
-    'comedor'                 => ['home'],
-    'comedor_productos'       => ['admin.maestros.productos.*'],
-    'comedor_recetas'         => ['admin.maestros.recetas.*', 'admin.maestros.receta_ingredientes.*'],
-    'comedor_lotes'           => ['admin.movimientos.lotes.*'],
-    'comedor_compras'         => ['admin.movimientos.compras.*'],
-    'comedor_registro_diario' => ['admin.movimientos.registro_diario.*'],
+        /* ═══════════════════ COMEDOR ═══════════════════ */
+    'comedor'                 => ['home', 'admin.comedor.estadisticas'],
+    'comedor_recetas'         => ['admin.maestros.recetas.*'],
+    'comedor_ingredientes'    => ['admin.maestros.receta_ingredientes.*'],
     'comedor_registro_comida' => ['admin.movimientos.registro_comida.*'],
+    'comedor_registro_diario' => ['admin.movimientos.registro_diario.*'],
+    'comedor_categorias'      => ['admin.maestros.categorias.*'],
+    'comedor_productos'       => ['admin.maestros.productos.*'],
+    'comedor_lotes'           => ['admin.movimientos.lotes.*'],
     'comedor_stock'           => ['admin.movimientos.sedes_lotes', 'admin.movimientos.sedes_lotes.show'],
-
+    'comedor_compras'         => ['admin.movimientos.compras.*'],
+    'comedor_movimientos'     => ['admin.movimientos.historial_movimientos.*'],
+    
     /* ═══════════════════ SALUD ═══════════════════ */
     'categorias_medicamentos' => ['admin.salud.maestros.categorias.*'],
     'medicamentos'            => ['admin.salud.maestros.medicamentos.*'],

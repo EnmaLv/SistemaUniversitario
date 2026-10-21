@@ -1,4 +1,9 @@
 <x-app-layout>
+    @php
+        $puedeGestionar = auth()->user()->puedeRuta('admin.maestros.recetas.edit')
+            || auth()->user()->puedeRuta('admin.maestros.recetas.activar')
+            || auth()->user()->puedeRuta('admin.maestros.recetas.destroy');
+    @endphp
     <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @include('components.alert')
@@ -14,11 +19,13 @@
                     </p>
                 </div>
 
+                @canRoute('admin.maestros.recetas.create')
                 <a href="{{ route('admin.maestros.recetas.create') }}"
                     class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
                     <i class="fas fa-plus text-xs"></i>
                     <span>Nueva Receta</span>
                 </a>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -82,11 +89,17 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <x-table-actions
-                                        :id="$receta->id"
-                                        baseUrl="admin/maestros/recetas"
-                                        :status="$receta->estado"
-                                        :show="false" />
+                                    @if ($puedeGestionar)
+                                        <x-table-actions
+                                            :id="$receta->id"
+                                            baseUrl="admin/maestros/recetas"
+                                            :status="$receta->estado"
+                                            :show="false" />
+                                    @else
+                                        <td class="px-6 py-4 text-center text-gray-300 dark:text-gray-600" title="Solo lectura">
+                                            <i class="fas fa-lock text-xs"></i>
+                                        </td>
+                                    @endif
                                 </x-table-row>
                             @empty
                                 <tr>

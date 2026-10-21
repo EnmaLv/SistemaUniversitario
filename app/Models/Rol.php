@@ -18,11 +18,6 @@ class Rol extends Model
         'nombre',
         'descripcion',
         'slug',
-        'menu_permissions',
-    ];
-
-    protected $casts = [
-        'menu_permissions' => 'array',
     ];
 
     public function usuarios()
@@ -33,6 +28,20 @@ class Rol extends Model
     public function modulos()
     {
         return $this->belongsToMany(\App\Models\Modulo::class, 'rol_modulo', 'rol_id', 'modulo_id');
+    }
+
+    public function permisos()
+    {
+        return $this->belongsToMany(Permiso::class, 'rol_permiso', 'rol_id', 'permiso_id')->withTimestamps();
+    }
+
+    public function esSuperAdmin(): bool
+    {
+        $rolesSuperadmin = config('permisos.roles_superadmin', []);
+        $superAdmins = array_map('mb_strtolower', is_array($rolesSuperadmin) ? $rolesSuperadmin : []);
+
+        return in_array(mb_strtolower($this->nombre ?? ''), $superAdmins, true)
+            || in_array(mb_strtolower($this->slug ?? ''), $superAdmins, true);
     }
 
     public static function tieneUsuarios($id)

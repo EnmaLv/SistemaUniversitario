@@ -4,7 +4,6 @@
 
             @include('components.alert')
 
-            {{-- Encabezado --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
@@ -22,12 +21,11 @@
                 </a>
             </div>
 
-            {{-- Formulario compartido --}}
             @include('admin.configuracion.roles._form', [
                 'action'      => route('admin.configuracion.roles.update', $rol->id_rol),
                 'metodo'      => 'PUT',
                 'rutaVolver'  => route('admin.configuracion.roles.index'),
-                'menu'        => $menu,
+                'grupos'      => $grupos,
                 'modulos'     => $modulos,
                 'rol'         => $rol,
                 'isProtected' => $isProtected ?? false,

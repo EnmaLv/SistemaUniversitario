@@ -1,7 +1,3 @@
-@php
-    $grupos = $grupos ?? config('menu_permissions', []);
-@endphp
-
 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
     class="rounded-2xl border shadow-sm p-6 sm:p-8">
 
@@ -11,7 +7,6 @@
             @method($metodo)
         @endif
 
-        {{-- ═══════════════════ CABECERA USUARIO ═══════════════════ --}}
         <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl border"
             style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
 
@@ -24,7 +19,7 @@
                     {{ $usuario->nombre_completo ?? 'Sin nombre' }}
                 </h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                    <span class="font-mono"></span>{{ $usuario->username }}
+                    {{ $usuario->username }}
                     @if ($usuario->roles->isNotEmpty())
                         ·
                         @foreach ($usuario->roles as $r)
@@ -38,21 +33,27 @@
             </div>
         </div>
 
-        {{-- ═══════════════════ SECCIÓN 1: MÓDULOS ESPECIALES ═══════════════════ --}}
+        @if ($esSuperAdmin)
+            <div class="mb-8 p-4 rounded-xl border border-sky-200 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-950/30 flex items-start gap-3">
+                <i class="fas fa-info-circle text-sky-600 dark:text-sky-400 mt-0.5"></i>
+                <div class="text-sm text-sky-800 dark:text-sky-300">
+                    Este usuario tiene un rol con <strong>acceso total</strong>. Las excepciones que guardes aquí no lo limitan mientras conserve ese rol.
+                </div>
+            </div>
+        @endif
+
         <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
-                        <i class="fas fa-cubes text-sm"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-extrabold" style="color: var(--text-main);">
-                            Módulos especiales
-                        </h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Los módulos <span class="font-bold text-emerald-600 dark:text-emerald-400">heredados del rol</span> están bloqueados y no se pueden desmarcar.
-                        </p>
-                    </div>
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
+                    <i class="fas fa-cubes text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold" style="color: var(--text-main);">
+                        Módulos especiales
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Los módulos <span class="font-bold text-emerald-600 dark:text-emerald-400">heredados del rol</span> están bloqueados. Marca otros para que el usuario pueda entrar a ellos.
+                    </p>
                 </div>
             </div>
 
@@ -81,8 +82,8 @@
                                 <input type="checkbox" name="modulos[]" value="{{ $modulo->id }}"
                                     id="{{ $id }}"
                                     class="modulo-check w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-red-600 focus:ring-2 focus:ring-red-500/30 cursor-pointer"
-                                    {{ $checked ? 'checked' : '' }}
-                                    {{ $fromRole ? 'disabled data-from-role="1"' : '' }}>
+                                    @checked($checked)
+                                    @disabled($fromRole)>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-bold truncate" style="color: var(--text-main);">
                                         {{ $modulo->nombre }}
@@ -107,123 +108,78 @@
             @enderror
         </div>
 
-        {{-- ═══════════════════ SECCIÓN 2: PERMISOS DE MENÚ ═══════════════════ --}}
         <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
-                        <i class="fas fa-list-check text-sm"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-extrabold" style="color: var(--text-main);">
-                            Permisos de menú por módulo
-                        </h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Los cambios aquí <span class="font-bold">sobrescriben</span> el rol base. Marcar un permiso que el rol no tiene = <span class="font-bold text-blue-600 dark:text-blue-400">Extra</span>. Desmarcar uno del rol = <span class="font-bold text-red-600 dark:text-red-400">Bloqueado</span>.
-                        </p>
-                    </div>
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
+                    <i class="fas fa-calendar-alt text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold" style="color: var(--text-main);">
+                        Vigencia de las excepciones
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Opcional. Se aplica a todos los permisos extra y bloqueados de este usuario. Vacío = permanente.
+                    </p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                @forelse ($grupos as $grupoKey => $grupo)
-                    @php
-                        $grupoLabel = $grupo['label'] ?? ucfirst($grupoKey);
-                        $grupoIcon  = $grupo['icon']  ?? 'fas fa-folder';
-                        $grupoDesc  = $grupo['description'] ?? null;
-                        $grupoItems = $grupo['items'] ?? [];
-                    @endphp
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+                <div>
+                    <label for="fecha_inicio" class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Desde</label>
+                    <input type="date" id="fecha_inicio" name="fecha_inicio"
+                        value="{{ old('fecha_inicio', $vigencia['fecha_inicio'] ?? '') }}"
+                        class="w-full rounded-xl border px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                        style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-main);">
+                    @error('fecha_inicio')
+                        <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <label for="fecha_fin" class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Hasta</label>
+                    <input type="date" id="fecha_fin" name="fecha_fin"
+                        value="{{ old('fecha_fin', $vigencia['fecha_fin'] ?? '') }}"
+                        class="w-full rounded-xl border px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                        style="background-color: var(--input-bg); border-color: var(--input-border); color: var(--text-main);">
+                    @error('fecha_fin')
+                        <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+        </div>
 
-                    <div class="rounded-xl border p-4 flex flex-col"
-                        style="background-color: var(--bg-card); border-color: var(--border-color);">
-
-                        {{-- Cabecera del grupo --}}
-                        <div class="flex items-center gap-2.5 mb-3 pb-2 border-b"
-                            style="border-color: var(--border-color);">
-                            <div class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center flex-shrink-0">
-                                <i class="{{ $grupoIcon }} text-xs"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-[11px] font-black uppercase tracking-wider"
-                                    style="color: var(--text-main);">
-                                    {{ $grupoLabel }}
-                                </p>
-                                @if ($grupoDesc)
-                                    <p class="text-[10px] text-gray-400 leading-tight mt-0.5">
-                                        {{ $grupoDesc }}
-                                    </p>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Items --}}
-                        <div class="flex flex-col gap-0.5">
-                            @forelse ($grupoItems as $key => $label)
-                                @php
-                                    $fromRole  = in_array($key, $rolePerms);
-                                    $isDenied  = in_array($key, $deny);
-                                    $isAllowed = in_array($key, $allow);
-
-                                    if ($fromRole) {
-                                        $checked = !$isDenied;
-                                        $badge   = $isDenied
-                                            ? ['text' => 'Bloqueado', 'color' => 'text-red-600 dark:text-red-400',     'icon' => 'fas fa-lock']
-                                            : ['text' => 'Heredado', 'color' => 'text-emerald-600 dark:text-emerald-400', 'icon' => 'fas fa-id-badge'];
-                                    } else {
-                                        $checked = $isAllowed;
-                                        $badge   = $isAllowed
-                                            ? ['text' => 'Extra',   'color' => 'text-blue-600 dark:text-blue-400',    'icon' => 'fas fa-plus']
-                                            : null;
-                                    }
-                                    $id = 'perm_' . md5($key);
-                                @endphp
-
-                                <label for="{{ $id }}"
-                                    class="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-colors group
-                                        {{ $fromRole
-                                            ? 'hover:bg-emerald-50 dark:hover:bg-emerald-950/20'
-                                            : 'hover:bg-red-50 dark:hover:bg-red-950/20' }}">
-                                    <input type="checkbox"
-                                        class="perm-check w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-red-600 focus:ring-2 focus:ring-red-500/30 cursor-pointer"
-                                        id="{{ $id }}"
-                                        value="{{ $key }}"
-                                        data-role="{{ $fromRole ? '1' : '0' }}"
-                                        {{ $checked ? 'checked' : '' }}>
-                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors flex-1">
-                                        {{ $label }}
-                                    </span>
-                                    @if ($badge)
-                                        <span class="inline-flex items-center gap-1 rounded text-[9px] font-black uppercase tracking-wider shrink-0 {{ $badge['color'] }}"
-                                            title="{{ $badge['text'] }}">
-                                            <i class="{{ $badge['icon'] }} text-[8px]"></i>
-                                            <span class="hidden sm:inline">{{ $badge['text'] }}</span>
-                                        </span>
-                                    @endif
-                                </label>
-                            @empty
-                                <p class="text-[11px] text-gray-400 py-2 px-2 italic">
-                                    Sin permisos en este grupo.
-                                </p>
-                            @endforelse
-                        </div>
-                    </div>
-                @empty
-                    <div class="col-span-full py-12 text-center text-sm text-gray-400">
-                        <i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i>
-                        No hay permisos definidos en <code class="font-mono">config/menu_permissions.php</code>.
-                    </div>
-                @endforelse
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
+                    <i class="fas fa-list-check text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold" style="color: var(--text-main);">
+                        Permisos por vista y acción
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Los cambios aquí <span class="font-bold">sobrescriben</span> al rol. Marcar algo que el rol no tiene = <span class="font-bold text-blue-600 dark:text-blue-400">Extra</span>. Desmarcar algo del rol = <span class="font-bold text-red-600 dark:text-red-400">Bloqueado</span>.
+                    </p>
+                </div>
             </div>
 
-            @error('allow')
+            @include('admin.configuracion.partials.matriz-permisos', [
+                'grupos'  => $grupos,
+                'modo'    => 'usuario',
+                'deRol'   => $deRol,
+                'grants'  => $grants,
+                'revokes' => $revokes,
+            ])
+
+            <div id="permisosOcultos"></div>
+
+            @error('grant')
                 <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
             @enderror
-            @error('deny')
+            @error('revoke')
                 <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
             @enderror
         </div>
 
-        {{-- ═══════════════════ ACCIONES ═══════════════════ --}}
         <div class="pt-6 border-t flex items-center justify-end gap-3"
             style="border-color: var(--border-color);">
 
@@ -248,86 +204,63 @@
         'use strict';
 
         const form = document.getElementById('permisosForm');
-        if (!form) return;
+        const contenedor = document.getElementById('permisosOcultos');
+        if (!form || !contenedor) return;
 
-        /* ─────── Marcar/desmarcar todos los módulos (excepto los del rol) ─────── */
-        const btnModules = document.getElementById('selectAllModules');
-        if (btnModules) {
-            btnModules.addEventListener('click', () => {
-                const checks = document.querySelectorAll('.modulo-check:not(:disabled)');
-                if (!checks.length) return;
-                const allChecked = Array.from(checks).every(c => c.checked);
-                checks.forEach(c => c.checked = !allChecked);
-                btnModules.querySelector('span').textContent = allChecked ? 'Seleccionar todos' : 'Desmarcar todos';
-            });
+        function escapar(texto) {
+            const div = document.createElement('div');
+            div.textContent = texto;
+            return div.innerHTML;
         }
 
-        /* ─────── Marcar/desmarcar todos los permisos ─────── */
-        const btnPerms = document.getElementById('selectAllPermissions');
-        if (btnPerms) {
-            btnPerms.addEventListener('click', () => {
-                const checks = document.querySelectorAll('.perm-check');
-                if (!checks.length) return;
-                const allChecked = Array.from(checks).every(c => c.checked);
-                checks.forEach(c => c.checked = !allChecked);
-                btnPerms.querySelector('span').textContent = allChecked ? 'Seleccionar todos' : 'Desmarcar todos';
-            });
+        function agregarOculto(nombre, valor) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = nombre;
+            input.value = valor;
+            contenedor.appendChild(input);
         }
 
-        /* ─────── Al enviar: convertir el estado de cada checkbox en allow[] / deny[] ─────── */
+        function lista(titulo, clase, elementos) {
+            if (!elementos.length) return '';
+            const items = elementos.slice(0, 15).map(t => '<li>' + escapar(t) + '</li>').join('');
+            const resto = elementos.length > 15 ? '<li>… y ' + (elementos.length - 15) + ' más</li>' : '';
+            return '<p class="font-bold ' + clase + '">' + titulo + ' (' + elementos.length + ')</p>'
+                + '<ul style="list-style:disc;padding-left:1.25rem;margin-bottom:.75rem;">' + items + resto + '</ul>';
+        }
+
         form.addEventListener('submit', function (e) {
             e.preventDefault();
+            contenedor.innerHTML = '';
 
-            // Limpiamos cualquier name previo y lo recalculamos
-            document.querySelectorAll('.perm-check').forEach(i => i.removeAttribute('name'));
+            const extra = [];
+            const bloqueado = [];
 
-            const allow = [];
-            const deny  = [];
-
-            document.querySelectorAll('.perm-check').forEach(i => {
-                const val    = i.value;
-                const isRole = i.dataset.role === '1';
-
-                if (isRole) {
-                    // Rol + desmarcado → deny[]
-                    if (!i.checked) {
-                        deny.push(val);
-                        i.name = 'deny[]';
-                    }
-                    // Rol + marcado → no enviamos nada (queda heredado tal cual)
-                } else {
-                    // No rol + marcado → allow[]
-                    if (i.checked) {
-                        allow.push(val);
-                        i.name = 'allow[]';
-                    }
-                    // No rol + desmarcado → no enviamos nada
+            document.querySelectorAll('#matrizPermisos .perm-cell').forEach(celda => {
+                const deRol = celda.dataset.role === '1';
+                if (deRol && !celda.checked) {
+                    agregarOculto('revoke[]', celda.value);
+                    bloqueado.push(celda.dataset.etiqueta);
+                } else if (!deRol && celda.checked) {
+                    agregarOculto('grant[]', celda.value);
+                    extra.push(celda.dataset.etiqueta);
                 }
             });
 
-            // Sin cambios → enviar directo
-            if (allow.length === 0 && deny.length === 0) {
+            if (!extra.length && !bloqueado.length) {
                 form.submit();
                 return;
             }
 
-            // Confirmación con resumen
-            let html = '<div class="text-left small">';
-            if (allow.length) {
-                html += '<strong class="text-blue-600">Permisos adicionales (allow):</strong><ul class="mb-3" style="list-style:disc;padding-left:1.25rem;">'
-                      + allow.map(a => '<li>' + a + '</li>').join('')
-                      + '</ul>';
-            }
-            if (deny.length) {
-                html += '<strong class="text-red-600">Restricciones sobre el rol (deny):</strong><ul style="list-style:disc;padding-left:1.25rem;">'
-                      + deny.map(a => '<li>' + a + '</li>').join('')
-                      + '</ul>';
-            }
-            html += '</div>';
+            const html = '<div style="text-align:left;font-size:.85rem;">'
+                + lista('Permisos extra', 'text-blue-600', extra)
+                + lista('Permisos bloqueados', 'text-red-600', bloqueado)
+                + '</div>';
 
             if (typeof Swal === 'undefined') {
-                // fallback si por alguna razón no está Swal
-                if (confirm('¿Aplicar cambios de permisos?')) form.submit();
+                if (confirm('Se guardarán ' + extra.length + ' permisos extra y ' + bloqueado.length + ' bloqueados. ¿Continuar?')) {
+                    form.submit();
+                }
                 return;
             }
 
@@ -339,7 +272,7 @@
                 confirmButtonColor: '#991b1b',
                 confirmButtonText: 'Aplicar',
                 cancelButtonText: 'Revisar',
-            }).then((result) => {
+            }).then(result => {
                 if (result.isConfirmed) form.submit();
             });
         });

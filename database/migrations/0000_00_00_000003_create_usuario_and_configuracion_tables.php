@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('password');
             $table->text('master_key')->nullable();
             $table->json('security_questions')->nullable();
-            $table->json('extra_permissions')->nullable();
             $table->timestamp('ultima_actividad_chat')->nullable();
             $table->unsignedBigInteger('chat_activo_user_id')->nullable();
             $table->timestamp('infracciones_reset_at')->nullable();

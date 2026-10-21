@@ -1,5 +1,4 @@
 @php
-    /* ──────────────── Datos base ──────────────── */
     $isEdicion    = isset($rol) && $rol !== null;
     $isProtected  = $isProtected ?? false;
     $isAdminRole  = $isEdicion && (strtolower($rol->nombre ?? '') === 'administrador');
@@ -8,14 +7,12 @@
     $nombreValue      = old('nombre', $rol->nombre ?? '');
     $descripcionValue = old('descripcion', $rol->descripcion ?? '');
 
-    $permisosValue = old('menu_permissions', $rol->menu_permissions ?? []);
+    $permisosValue = old('permisos', $isEdicion ? $rol->permisos->pluck('id')->all() : []);
     if (!is_array($permisosValue)) $permisosValue = [];
 
     $modulosValue = old('modulos', $isEdicion ? $rol->modulos->pluck('id')->toArray() : []);
     if (!is_array($modulosValue)) $modulosValue = [];
 
-    /* Grupos de permisos desde el config */
-    $grupos = $menu ?? config('menu_permissions', []);
 @endphp
 
 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -27,7 +24,6 @@
             @method($metodo)
         @endif
 
-        {{-- ═══════════════════ SECCIÓN 1: Datos básicos ═══════════════════ --}}
         <div class="mb-8">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
@@ -44,7 +40,6 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {{-- Nombre --}}
                 <div>
                     <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                         Nombre del rol <span class="text-red-500">*</span>
@@ -66,7 +61,6 @@
                     @enderror
                 </div>
 
-                {{-- Descripción --}}
                 <div>
                     <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                         Descripción corta
@@ -90,7 +84,6 @@
             </div>
         </div>
 
-        {{-- ═══════════════════ SECCIÓN 2: Módulos del sistema ═══════════════════ --}}
         <div class="mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
                 <div class="flex items-center gap-3">
@@ -102,7 +95,7 @@
                             Acceso a módulos del sistema
                         </h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Selecciona los módulos a los que este rol puede ingresar.
+                            Con un solo módulo el usuario entra directo a él; con dos o más verá el selector de módulos al iniciar sesión.
                         </p>
                     </div>
                 </div>
@@ -161,97 +154,37 @@
             @enderror
         </div>
 
-        {{-- ═══════════════════ SECCIÓN 3: Permisos de menú (por módulo del sistema) ═══════════════════ --}}
         <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
-                        <i class="fas fa-list-check text-sm"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-base font-extrabold" style="color: var(--text-main);">
-                            Permisos de menú por módulo
-                        </h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Marca las secciones que este rol podrá ver en el menú lateral.
-                        </p>
-                    </div>
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center">
+                    <i class="fas fa-list-check text-sm"></i>
                 </div>
-
-                @if (!$isDisabled)
-                    <button type="button" id="selectAllPermissions"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold hover:border-red-400 hover:text-red-600 transition-all"
-                        style="border-color: var(--border-color); color: var(--text-main);">
-                        <i class="fas fa-check-double text-[10px]"></i>
-                        <span>Seleccionar todos</span>
-                    </button>
-                @endif
+                <div>
+                    <h3 class="text-base font-extrabold" style="color: var(--text-main);">
+                        Permisos por vista y acción
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <span class="font-bold">Ver</span> muestra la vista en el menú. Las demás acciones habilitan los botones y rutas de crear, editar, eliminar, activar y exportar dentro de esa vista.
+                    </p>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 {{ $isDisabled ? 'opacity-70' : '' }}">
-                @foreach ($grupos as $grupoKey => $grupo)
-                    @php
-                        $grupoLabel = $grupo['label'] ?? ucfirst($grupoKey);
-                        $grupoIcon  = $grupo['icon'] ?? 'fas fa-folder';
-                        $grupoDesc  = $grupo['description'] ?? null;
-                        $grupoItems = $grupo['items'] ?? [];
-                    @endphp
+            @include('admin.configuracion.partials.matriz-permisos', [
+                'grupos'        => $grupos,
+                'modo'          => 'rol',
+                'seleccionados' => $permisosValue,
+                'todoMarcado'   => $isAdminRole,
+                'deshabilitado' => $isDisabled,
+            ])
 
-                    <div class="rounded-xl border p-4 flex flex-col"
-                        style="background-color: var(--bg-card); border-color: var(--border-color);">
-
-                        {{-- Cabecera del grupo --}}
-                        <div class="flex items-center gap-2.5 mb-3 pb-2 border-b"
-                            style="border-color: var(--border-color);">
-                            <div class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center flex-shrink-0">
-                                <i class="{{ $grupoIcon }} text-xs"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-[11px] font-black uppercase tracking-wider"
-                                    style="color: var(--text-main);">
-                                    {{ $grupoLabel }}
-                                </p>
-                                @if ($grupoDesc)
-                                    <p class="text-[10px] text-gray-400 leading-tight mt-0.5">
-                                        {{ $grupoDesc }}
-                                    </p>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Items del grupo --}}
-                        <div class="flex flex-col gap-0.5">
-                            @foreach ($grupoItems as $key => $label)
-                                @php
-                                    $checked  = in_array($key, $permisosValue) || $isAdminRole;
-                                    $disabled = $isDisabled ? 'disabled' : '';
-                                    $id       = 'perm_' . md5($key);
-                                    $opacity  = $isDisabled
-                                        ? 'opacity-60 cursor-not-allowed'
-                                        : 'hover:bg-red-50 dark:hover:bg-red-950/20';
-                                @endphp
-                                <label for="{{ $id }}"
-                                    class="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-colors group {{ $opacity }}">
-                                    <input type="checkbox" name="menu_permissions[]" value="{{ $key }}"
-                                        id="{{ $id }}"
-                                        class="perm-check w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-red-600 focus:ring-2 focus:ring-red-500/30 cursor-pointer"
-                                        {{ $checked ? 'checked' : '' }} {{ $disabled }}>
-                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">
-                                        {{ $label }}
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-
-            @error('menu_permissions')
+            @error('permisos')
+                <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+            @enderror
+            @error('permisos.*')
                 <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
             @enderror
         </div>
 
-        {{-- ═══════════════════ Alertas informativas ═══════════════════ --}}
         @if ($isAdminRole)
             <div class="mb-6 p-4 rounded-xl border border-sky-200 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-950/30 flex items-start gap-3">
                 <i class="fas fa-info-circle text-sky-600 dark:text-sky-400 mt-0.5"></i>
@@ -271,7 +204,6 @@
             </div>
         @endif
 
-        {{-- ═══════════════════ Acciones ═══════════════════ --}}
         <div class="pt-6 border-t flex items-center justify-end gap-3"
             style="border-color: var(--border-color);">
 
@@ -317,11 +249,6 @@
         }
 
         toggleGroup('selectAllModules', '.modulo-check', {
-            select:   'Seleccionar todos',
-            deselect: 'Desmarcar todos',
-        });
-
-        toggleGroup('selectAllPermissions', '.perm-check', {
             select:   'Seleccionar todos',
             deselect: 'Desmarcar todos',
         });

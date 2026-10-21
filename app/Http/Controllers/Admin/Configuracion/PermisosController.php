@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Admin\Configuracion;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Modulo;
 use App\Models\Usuario;
+use App\Support\Permisos\CatalogoPermisos;
+use App\Support\Permisos\VersionPermisos;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PermisosController extends Controller
 {
@@ -19,6 +23,7 @@ class PermisosController extends Controller
         $search = $request->input('q');
 
         $usuarios = Usuario::with(['persona', 'perfil', 'roles'])
+            ->withCount('permisosDirectos')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -38,84 +43,121 @@ class PermisosController extends Controller
     public function edit($id)
     {
         $usuario = Usuario::with(['persona', 'perfil', 'roles'])->findOrFail($id);
-        $auth = auth()->user();
 
-        if ($auth && $auth->id_usuario == $usuario->id_usuario
-            && $auth->roles->contains('nombre', 'Administrador')) {
+        if ($this->esAutoEdicionDeAdmin($usuario)) {
             return redirect()
                 ->route('admin.configuracion.permisos.index')
                 ->withErrors(['permisos' => 'No puedes editar tus propios permisos. Pide a otro Administrador que lo haga.']);
         }
 
-        /* ─── Módulos del sistema ─── */
-        $modulos = \App\Models\Modulo::where('activo', true)->orderBy('nombre')->get();
+        $roleIds = $usuario->roles->pluck('id_rol')->all();
 
-        /* ─── Extra permissions guardados ─── */
-        $extra = is_string($usuario->extra_permissions)
-            ? json_decode($usuario->extra_permissions, true)
-            : ($usuario->extra_permissions ?? []);
+        $modulos      = Modulo::where('activo', true)->orderBy('nombre')->get();
+        $roleModules  = DB::table('rol_modulo')->whereIn('rol_id', $roleIds)->pluck('modulo_id')->unique()->values()->all();
+        $modulosExtra = DB::table('usuario_modulo')->where('usuario_id', $usuario->id_usuario)->pluck('modulo_id')->all();
 
-        $allow        = array_values($extra['allow']   ?? []);
-        $deny         = array_values($extra['deny']    ?? []);
-        $modulosExtra = array_values(array_map('intval', $extra['modulos'] ?? []));
+        $grupos  = CatalogoPermisos::agrupado();
+        $deRol   = DB::table('rol_permiso')->whereIn('rol_id', $roleIds)->pluck('permiso_id')->unique()->values()->all();
 
-        /* ─── Permisos / módulos que vienen del rol ─── */
-        $rolePerms   = [];
-        $roleModules = [];
-        foreach ($usuario->roles as $r) {
-            $perms = $r->menu_permissions ?? [];
-            if (is_array($perms)) $rolePerms = array_merge($rolePerms, $perms);
+        $directos = DB::table('usuario_permiso')->where('usuario_id', $usuario->id_usuario)->get();
+        $grants   = $directos->where('tipo', 'grant')->pluck('permiso_id')->all();
+        $revokes  = $directos->where('tipo', 'revoke')->pluck('permiso_id')->all();
 
-            $mods = $r->modulos ? $r->modulos->pluck('id')->toArray() : [];
-            $roleModules = array_merge($roleModules, $mods);
-        }
-        $rolePerms   = array_values(array_unique($rolePerms));
-        $roleModules = array_values(array_unique($roleModules));
+        $vigencia = [
+            'fecha_inicio' => $directos->pluck('fecha_inicio')->filter()->first(),
+            'fecha_fin'    => $directos->pluck('fecha_fin')->filter()->first(),
+        ];
 
-        /* ─── Grupos de permisos (mismo config que usa el form de roles) ─── */
-        $grupos = config('menu_permissions', []);
+        $esSuperAdmin = $usuario->esSuperAdmin();
 
         return view('admin.configuracion.permisos.edit', compact(
             'usuario',
             'grupos',
-            'allow',
-            'deny',
-            'rolePerms',
+            'deRol',
+            'grants',
+            'revokes',
+            'vigencia',
             'modulos',
             'roleModules',
-            'modulosExtra'
+            'modulosExtra',
+            'esSuperAdmin'
         ));
     }
 
     public function update(Request $request, $id)
     {
         $usuario = Usuario::with('roles')->findOrFail($id);
-        $auth = auth()->user();
 
-        if ($auth && $auth->id_usuario == $usuario->id_usuario
-            && $auth->roles->contains('nombre', 'Administrador')) {
+        if ($this->esAutoEdicionDeAdmin($usuario)) {
             return back()->withErrors(['permisos' => 'No puedes modificar tus propios permisos. Pide a otro Administrador que lo haga.']);
         }
 
         $data = $request->validate([
-            'allow'   => 'nullable|array',
-            'deny'    => 'nullable|array',
-            'modulos' => 'nullable|array',
+            'grant'        => 'nullable|array',
+            'grant.*'      => 'integer|exists:permiso,id',
+            'revoke'       => 'nullable|array',
+            'revoke.*'     => 'integer|exists:permiso,id',
+            'modulos'      => 'nullable|array',
+            'modulos.*'    => 'integer|exists:modulos,id',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin'    => 'nullable|date|after_or_equal:fecha_inicio',
+        ], [
+            'fecha_fin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
         ]);
 
-        $allow        = array_values(array_unique($data['allow']   ?? []));
-        $deny         = array_values(array_unique($data['deny']    ?? []));
-        $modulosExtra = array_values(array_unique(array_map('intval', $data['modulos'] ?? [])));
+        $revoke  = array_values(array_unique(array_map('intval', $data['revoke'] ?? [])));
+        $grant   = array_values(array_diff(array_unique(array_map('intval', $data['grant'] ?? [])), $revoke));
+        $modulos = array_values(array_unique(array_map('intval', $data['modulos'] ?? [])));
 
-        $usuario->extra_permissions = json_encode([
-            'allow'   => $allow,
-            'deny'    => $deny,
-            'modulos' => $modulosExtra,
-        ]);
-        $usuario->save();
+        $asignadoPor = auth()->id();
+        $ahora       = now();
+        $base        = [
+            'usuario_id'   => $usuario->id_usuario,
+            'fecha_inicio' => $data['fecha_inicio'] ?? null,
+            'fecha_fin'    => $data['fecha_fin'] ?? null,
+            'asignado_por' => $asignadoPor,
+            'created_at'   => $ahora,
+            'updated_at'   => $ahora,
+        ];
+
+        DB::transaction(function () use ($usuario, $grant, $revoke, $modulos, $base, $asignadoPor, $ahora) {
+            DB::table('usuario_permiso')->where('usuario_id', $usuario->id_usuario)->delete();
+
+            $filas = array_merge(
+                array_map(fn ($permisoId) => $base + ['permiso_id' => $permisoId, 'tipo' => 'grant'], $grant),
+                array_map(fn ($permisoId) => $base + ['permiso_id' => $permisoId, 'tipo' => 'revoke'], $revoke)
+            );
+
+            if ($filas) {
+                DB::table('usuario_permiso')->insert($filas);
+            }
+
+            DB::table('usuario_modulo')->where('usuario_id', $usuario->id_usuario)->delete();
+
+            if ($modulos) {
+                DB::table('usuario_modulo')->insert(array_map(fn ($moduloId) => [
+                    'usuario_id'   => $usuario->id_usuario,
+                    'modulo_id'    => $moduloId,
+                    'asignado_por' => $asignadoPor,
+                    'created_at'   => $ahora,
+                    'updated_at'   => $ahora,
+                ], $modulos));
+            }
+        });
+
+        VersionPermisos::invalidar();
 
         return redirect()
             ->route('admin.configuracion.permisos.index')
             ->with('success', 'Permisos y módulos especiales actualizados con éxito.');
+    }
+
+    private function esAutoEdicionDeAdmin(Usuario $usuario): bool
+    {
+        $auth = auth()->user();
+
+        return $auth
+            && $auth->id_usuario == $usuario->id_usuario
+            && $auth->esSuperAdmin();
     }
 }

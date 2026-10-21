@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Admin\Configuracion;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use App\Models\Rol;
-use App\Models\Usuario;
 use App\Models\Modulo;
+use App\Models\Permiso;
+use App\Models\Rol;
+use App\Support\Permisos\CatalogoPermisos;
+use App\Support\Permisos\VersionPermisos;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class RolesController extends Controller
 {
+    private const PROTEGIDOS = ['empleado', 'obrero', 'administrador'];
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -19,9 +24,12 @@ class RolesController extends Controller
 
     public function index(Request $request)
     {
-        $query = Rol::query();
+        $query = Rol::query()->withCount('permisos');
         if ($search = $request->get('q')) {
-            $query->where('nombre', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('nombre', 'like', "%{$search}%")
+                    ->orWhere('descripcion', 'like', "%{$search}%");
+            });
         }
         $roles = $query->orderBy('id_rol', 'desc')->paginate(10)->withQueryString();
         return view('admin.configuracion.roles.index', compact('roles'));
@@ -29,125 +37,68 @@ class RolesController extends Controller
 
     public function create()
     {
-        $menu    = config('menu_permissions', []);
-        $modulos = Modulo::where('activo', 1)->get();
+        $modulos = Modulo::where('activo', 1)->orderBy('nombre')->get();
+        $grupos  = CatalogoPermisos::agrupado();
 
-        return view('admin.configuracion.roles.create', compact('menu', 'modulos'));
+        return view('admin.configuracion.roles.create', compact('modulos', 'grupos'));
     }
 
     public function store(Request $request)
     {
         $request->merge(['slug' => Str::slug($request->input('nombre', ''))]);
 
-        $data = $request->validate([
-            'nombre' => 'required|string|unique:rol,nombre',
-            'slug' => 'required|string|unique:rol,slug',
-            'descripcion' => 'nullable|string',
-            'menu_permissions' => 'nullable|array',
-            'modulos' => 'nullable|array',
-            'modulos.*' => 'integer'
-        ], [
-            'nombre.required' => 'El nombre del rol es requerido',
-            'nombre.unique' => 'Este nombre de rol ya existe',
-        ]);
+        $data = $request->validate($this->reglas(), $this->mensajes());
 
-        $data['menu_permissions'] = array_values($data['menu_permissions'] ?? []);
-        $modulosSeleccionados = $data['modulos'] ?? [];
+        DB::transaction(function () use ($data) {
+            $rol = Rol::create([
+                'nombre'      => $data['nombre'],
+                'slug'        => $data['slug'],
+                'descripcion' => $data['descripcion'] ?? null,
+            ]);
 
-        if (count($modulosSeleccionados) > 1) {
-            if (!in_array('admin/modulos/seleccionar', $data['menu_permissions'])) {
-                $data['menu_permissions'][] = 'admin/modulos/seleccionar';
-            }
-        } else {
-            $data['menu_permissions'] = array_values(array_diff($data['menu_permissions'], ['admin/modulos/seleccionar']));
-        }
+            $rol->modulos()->sync($data['modulos'] ?? []);
+            $rol->permisos()->sync($data['permisos'] ?? []);
+        });
 
-        $rol = Rol::create([
-            'nombre' => $data['nombre'],
-            'slug' => $data['slug'],
-            'descripcion' => $data['descripcion'],
-            'menu_permissions' => $data['menu_permissions']
-        ]);
-
-        $rol->modulos()->sync($modulosSeleccionados);
+        VersionPermisos::invalidar();
 
         return redirect()->route('admin.configuracion.roles.index')->with('success', 'Rol creado Exitosamente');
     }
 
     public function edit($id)
     {
-        $rol     = Rol::findOrFail($id);
-        $menu    = config('menu_permissions', []);
-        $modulos = Modulo::where('activo', 1)->get();
+        $rol         = Rol::with(['modulos', 'permisos'])->findOrFail($id);
+        $modulos     = Modulo::where('activo', 1)->orderBy('nombre')->get();
+        $grupos      = CatalogoPermisos::agrupado();
+        $isProtected = $this->esProtegido($rol);
 
-        $protected = ['Empleado', 'Obrero', 'Administrador'];
-        $isProtected = in_array(strtolower($rol->nombre ?? ''), array_map('strtolower', $protected));
-
-        return view('admin.configuracion.roles.edit', compact('rol', 'menu', 'modulos', 'isProtected'));
+        return view('admin.configuracion.roles.edit', compact('rol', 'modulos', 'grupos', 'isProtected'));
     }
 
     public function update(Request $request, $id)
     {
         $rol = Rol::findOrFail($id);
-        $protected = ['Empleado', 'Obrero', 'Administrador'];
-        if (in_array(strtolower($rol->nombre ?? ''), array_map('strtolower', $protected))) {
+
+        if ($this->esProtegido($rol)) {
             return back()->withErrors(['roles' => 'El rol ' . $rol->nombre . ' está protegido y no puede editarse.']);
         }
 
         $request->merge(['slug' => Str::slug($request->input('nombre', ''))]);
 
-        $data = $request->validate([
-            'nombre' => 'required|string|unique:rol,nombre,' . $rol->id_rol . ',id_rol',
-            'slug' => 'required|string|unique:rol,slug,' . $rol->id_rol . ',id_rol',
-            'descripcion' => 'nullable|string',
-            'menu_permissions' => 'nullable|array',
-            'modulos' => 'nullable|array',
-            'modulos.*' => 'integer'
-        ], [
-            'nombre.required' => 'El nombre del rol es requerido',
-            'nombre.unique' => 'Este nombre de rol ya existe',
-        ]);
+        $data = $request->validate($this->reglas($rol->id_rol), $this->mensajes());
 
-        if (($rol->nombre ?? '') === 'Administrador') {
-            // El rol admin obtiene TODOS los permisos declarados en el config
-            $all = [];
-            foreach (config('menu_permissions', []) as $group) {
-                foreach (array_keys($group['items'] ?? []) as $key) {
-                    $all[] = $key;
-                }
-            }
-            $data['menu_permissions'] = array_values(array_unique($all));
-        } else {
-            $data['menu_permissions'] = array_values($data['menu_permissions'] ?? []);
-            $modulosSeleccionados = $data['modulos'] ?? [];
+        DB::transaction(function () use ($rol, $data) {
+            $rol->update([
+                'nombre'      => $data['nombre'],
+                'slug'        => $data['slug'],
+                'descripcion' => $data['descripcion'] ?? null,
+            ]);
 
-            if (count($modulosSeleccionados) > 1) {
-                if (!in_array('admin/modulos/seleccionar', $data['menu_permissions'])) {
-                    $data['menu_permissions'][] = 'admin/modulos/seleccionar';
-                }
-            } else {
-                $data['menu_permissions'] = array_values(
-                    array_diff($data['menu_permissions'], ['admin/modulos/seleccionar'])
-                );
-            }
-        }
+            $rol->modulos()->sync($data['modulos'] ?? []);
+            $rol->permisos()->sync($rol->esSuperAdmin() ? Permiso::pluck('id')->all() : ($data['permisos'] ?? []));
+        });
 
-        $rol->update([
-            'nombre'           => $data['nombre'],
-            'slug'             => $data['slug'],
-            'descripcion'      => $data['descripcion'],
-            'menu_permissions' => $data['menu_permissions'],
-        ]);
-
-        $rol->modulos()->sync($request->input('modulos', []));
-
-        if (
-            auth()->user()
-            && method_exists(auth()->user(), 'roles')
-            && auth()->user()->roles->contains('id_rol', $rol->id_rol)
-        ) {
-            session()->forget(['modulos_permitidos', 'menu_permissions_user', 'es_admin']);
-        }
+        VersionPermisos::invalidar();
 
         return redirect()
             ->route('admin.configuracion.roles.index')
@@ -158,8 +109,7 @@ class RolesController extends Controller
     {
         $rol = Rol::findOrFail($id);
 
-        $protected = ['Empleado', 'Obrero', 'Administrador'];
-        if (in_array(strtolower($rol->nombre ?? ''), array_map('strtolower', $protected))) {
+        if ($this->esProtegido($rol)) {
             return redirect()
                 ->route('admin.configuracion.roles.index')
                 ->withErrors(['delete' => 'El rol ' . $rol->nombre . ' está protegido y no puede eliminarse.']);
@@ -174,10 +124,46 @@ class RolesController extends Controller
                 ->with('icono', 'error');
         }
 
-        $rol->delete();
+        DB::transaction(function () use ($rol) {
+            $rol->permisos()->detach();
+            $rol->modulos()->detach();
+            $rol->delete();
+        });
+
+        VersionPermisos::invalidar();
 
         return redirect()
             ->route('admin.configuracion.roles.index')
             ->with('success', 'Rol eliminado exitosamente.');
+    }
+
+    private function esProtegido(Rol $rol): bool
+    {
+        return in_array(mb_strtolower($rol->nombre ?? ''), self::PROTEGIDOS, true);
+    }
+
+    private function reglas(?int $idRol = null): array
+    {
+        $unicoNombre = 'unique:rol,nombre' . ($idRol ? ",{$idRol},id_rol" : '');
+        $unicoSlug   = 'unique:rol,slug' . ($idRol ? ",{$idRol},id_rol" : '');
+
+        return [
+            'nombre'      => "required|string|max:255|{$unicoNombre}",
+            'slug'        => "required|string|{$unicoSlug}",
+            'descripcion' => 'nullable|string',
+            'modulos'     => 'nullable|array',
+            'modulos.*'   => 'integer|exists:modulos,id',
+            'permisos'    => 'nullable|array',
+            'permisos.*'  => 'integer|exists:permiso,id',
+        ];
+    }
+
+    private function mensajes(): array
+    {
+        return [
+            'nombre.required' => 'El nombre del rol es requerido',
+            'nombre.unique'   => 'Este nombre de rol ya existe',
+            'slug.unique'     => 'Ya existe un rol con un nombre equivalente',
+        ];
     }
 }

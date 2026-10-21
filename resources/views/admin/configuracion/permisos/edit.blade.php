@@ -4,7 +4,6 @@
 
             @include('components.alert')
 
-            {{-- Encabezado --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
@@ -23,18 +22,19 @@
                 </a>
             </div>
 
-            {{-- Formulario compartido --}}
             @include('admin.configuracion.permisos._form', [
                 'action'       => route('admin.configuracion.permisos.update', $usuario->id_usuario),
                 'metodo'       => 'PUT',
                 'usuario'      => $usuario,
                 'grupos'       => $grupos,
-                'allow'        => $allow,
-                'deny'         => $deny,
-                'rolePerms'    => $rolePerms,
+                'deRol'        => $deRol,
+                'grants'       => $grants,
+                'revokes'      => $revokes,
+                'vigencia'     => $vigencia,
                 'modulos'      => $modulos,
                 'roleModules'  => $roleModules,
                 'modulosExtra' => $modulosExtra,
+                'esSuperAdmin' => $esSuperAdmin,
             ])
 
         </div>

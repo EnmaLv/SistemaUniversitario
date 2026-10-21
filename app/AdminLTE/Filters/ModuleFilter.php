@@ -2,6 +2,8 @@
 
 namespace App\AdminLTE\Filters;
 
+use App\Models\Usuario;
+use App\Support\Permisos\VersionPermisos;
 use JeroenNoten\LaravelAdminLte\Menu\Filters\FilterInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -9,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
 
 class ModuleFilter implements FilterInterface
 {
-    private const SESSION_VERSION = 2;
+    private const SESSION_VERSION = 3;
 
     public function transform($item)
     {
@@ -60,6 +62,7 @@ class ModuleFilter implements FilterInterface
             'modulo_activo',
             'permisos_usuario_id',
             'permisos_version',
+            'permisos_global',
         ]);
 
         $this->inicializarSesion($userId);
@@ -86,9 +89,21 @@ class ModuleFilter implements FilterInterface
             || is_null(session('menu_permissions_user'))
             || $cambioUsuario
             || (int) session('permisos_version') !== self::SESSION_VERSION
+            || (int) session('permisos_global') !== VersionPermisos::actual()
         ) {
-            session()->forget('modulo_activo');
+            $moduloPrevio = $cambioUsuario ? null : session('modulo_activo');
+
             $this->inicializarSesion($userId);
+
+            $permitidos = session('modulos_permitidos', []);
+
+            if ($moduloPrevio && in_array($moduloPrevio, $permitidos, true)) {
+                session(['modulo_activo' => $moduloPrevio]);
+            } elseif (count($permitidos) === 1) {
+                session(['modulo_activo' => $permitidos[0]]);
+            } else {
+                session()->forget('modulo_activo');
+            }
         }
     }
 
@@ -98,51 +113,21 @@ class ModuleFilter implements FilterInterface
             ? 'modulos'
             : (Schema::hasTable('modulo') ? 'modulo' : null);
 
-        if (! $modulesTable) {
-            session([
-                'modulos_permitidos'    => [],
-                'menu_permissions_user' => [],
-                'es_admin'              => false,
-                'permisos_usuario_id'   => $userId,
-                'permisos_version'      => self::SESSION_VERSION,
-            ]);
+        $usuario = Usuario::find($userId);
+
+        if (! $modulesTable || ! $usuario) {
+            $this->guardarSesion($userId, [], [], false);
             return;
         }
 
-        $roles = DB::table('rol_usuario')
+        $esAdmin = $usuario->esSuperAdmin();
+
+        $roleIds = DB::table('rol_usuario')
             ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
             ->where('rol_usuario.id_usuario', $userId)
             ->whereNull('rol.deleted_at')
-            ->get();
-
-        if ($roles->isEmpty()) {
-            session([
-                'modulos_permitidos'    => [],
-                'menu_permissions_user' => [],
-                'es_admin'              => false,
-                'permisos_usuario_id'   => $userId,
-                'permisos_version'      => self::SESSION_VERSION,
-            ]);
-            return;
-        }
-
-        $roleIds = $roles->pluck('id_rol')->toArray();
-
-        $esAdmin = $roles->contains(function ($rol) {
-            $nombreLower = strtolower($rol->nombre);
-            $slugLower   = strtolower($rol->slug ?? '');
-            return in_array($nombreLower, ['administrador', 'secretaria de bienestar']) ||
-                in_array($slugLower, ['administrador', 'secretaria-de-bienestar']);
-        });
-
-        $menuPermissions = [];
-        foreach ($roles as $rol) {
-            $perms = json_decode($rol->menu_permissions, true) ?? [];
-            if (is_array($perms)) {
-                $menuPermissions = array_merge($menuPermissions, $perms);
-            }
-        }
-        $menuPermissions = array_values(array_unique($menuPermissions));
+            ->pluck('rol.id_rol')
+            ->all();
 
         if ($esAdmin) {
             $permitidos = DB::table($modulesTable)
@@ -150,21 +135,37 @@ class ModuleFilter implements FilterInterface
                 ->pluck('key')
                 ->toArray();
         } else {
-            $permitidos = DB::table('rol_modulo')
+            $deRol = empty($roleIds) ? [] : DB::table('rol_modulo')
                 ->join($modulesTable, $modulesTable . '.id', '=', 'rol_modulo.modulo_id')
                 ->whereIn('rol_modulo.rol_id', $roleIds)
                 ->where($modulesTable . '.activo', 1)
-                ->distinct()
                 ->pluck($modulesTable . '.key')
                 ->toArray();
+
+            $extra = Schema::hasTable('usuario_modulo')
+                ? DB::table('usuario_modulo')
+                    ->join($modulesTable, $modulesTable . '.id', '=', 'usuario_modulo.modulo_id')
+                    ->where('usuario_modulo.usuario_id', $userId)
+                    ->where($modulesTable . '.activo', 1)
+                    ->pluck($modulesTable . '.key')
+                    ->toArray()
+                : [];
+
+            $permitidos = array_values(array_unique(array_merge($deRol, $extra)));
         }
 
+        $this->guardarSesion($userId, $permitidos, $usuario->vistasVisibles(), $esAdmin);
+    }
+
+    private function guardarSesion($userId, array $permitidos, array $vistas, bool $esAdmin): void
+    {
         session([
             'modulos_permitidos'    => $permitidos,
-            'menu_permissions_user' => $menuPermissions,
+            'menu_permissions_user' => $vistas,
             'es_admin'              => $esAdmin,
             'permisos_usuario_id'   => $userId,
             'permisos_version'      => self::SESSION_VERSION,
+            'permisos_global'       => VersionPermisos::actual(),
         ]);
     }
 }

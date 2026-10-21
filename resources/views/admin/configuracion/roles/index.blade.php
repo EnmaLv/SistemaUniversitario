@@ -44,6 +44,7 @@
                         <th class="px-6 py-4 text-center">#</th>
                         <th class="px-6 py-4">Nombre del rol</th>
                         <th class="px-6 py-4">Descripción</th>
+                        <th class="px-6 py-4 text-center">Permisos</th>
                         <th class="px-6 py-4 text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -62,6 +63,12 @@
                             <td class="px-6 py-4">
                                 <span style="color:var(--text-muted);" title="{{ $rol->descripcion }}">
                                     {{ \Illuminate\Support\Str::limit($rol->descripcion, 80) ?? 'Sin descripción' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold" style="border-color:var(--border-color);color:var(--text-main);">
+                                    <i class="fas fa-key text-[10px]" style="color:var(--color-primary);"></i>
+                                    {{ $rol->permisos_count }}
                                 </span>
                             </td>
                             @php
@@ -90,7 +97,7 @@
                             @endif
                         </x-table-row>
                     @empty
-                        <tr><td colspan="4" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
+                        <tr><td colspan="5" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
                                 <div>
                                     <i class="fas fa-shield-alt fa-3x mb-3" style="opacity: 0.1"></i>
                                     <p>No se encontraron roles registrados.</p>

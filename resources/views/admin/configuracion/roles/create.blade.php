@@ -4,7 +4,6 @@
 
             @include('components.alert')
 
-            {{-- Encabezado --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
@@ -22,15 +21,14 @@
                 </a>
             </div>
 
-            {{-- Formulario compartido --}}
             @include('admin.configuracion.roles._form', [
-                'action'     => route('admin.configuracion.roles.store'),
-                'metodo'     => 'POST',
-                'rutaVolver' => route('admin.configuracion.roles.index'),
-                'menu'       => $menu,
-                'modulos'    => $modulos,
-                'rol'        => null,
-                'isProtected'=> false,
+                'action'      => route('admin.configuracion.roles.store'),
+                'metodo'      => 'POST',
+                'rutaVolver'  => route('admin.configuracion.roles.index'),
+                'grupos'      => $grupos,
+                'modulos'     => $modulos,
+                'rol'         => null,
+                'isProtected' => false,
             ])
 
         </div>

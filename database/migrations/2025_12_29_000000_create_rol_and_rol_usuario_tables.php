@@ -13,7 +13,6 @@ return new class extends Migration
             $table->string('nombre')->unique();
             $table->string('slug')->nullable()->unique();
             $table->text('descripcion')->nullable();
-            $table->json('menu_permissions')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

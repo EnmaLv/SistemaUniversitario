@@ -9,34 +9,19 @@ class DefaultRolesSeeder extends Seeder
 {
     public function run()
     {
-        // Administrador: tiene acceso completo (verificado por nombre de rol en filtros)
         Rol::updateOrCreate(
             ['nombre' => 'Administrador'],
-            [
-                'descripcion' => 'Rol por defecto Administrador',
-                'menu_permissions' => [],
-            ]
+            ['descripcion' => 'Rol por defecto Administrador']
         );
 
         Rol::updateOrCreate(
             ['nombre' => 'Secretaria De Bienestar'],
-            [
-                'descripcion' => 'Rol por defecto Secretaria De Bienestar',
-                'menu_permissions' => [],
-            ]
+            ['descripcion' => 'Rol por defecto Secretaria De Bienestar']
         );
 
-        // Obrero: permisos limitados para registro de comida
         Rol::updateOrCreate(
             ['nombre' => 'Obrero'],
-            [
-                'descripcion' => 'Rol por defecto Obrero',
-                'menu_permissions' => [
-                    'registro_comida',
-                    'registro_diario',
-                    'persona',
-                ],
-            ]
+            ['descripcion' => 'Rol por defecto Obrero']
         );
     }
 }

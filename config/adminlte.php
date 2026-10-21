@@ -807,7 +807,6 @@ return [
     */
 
     'filters' => [
-        App\Menu\Filters\PermissionFilter::class,
         App\AdminLTE\Filters\ModuleFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,

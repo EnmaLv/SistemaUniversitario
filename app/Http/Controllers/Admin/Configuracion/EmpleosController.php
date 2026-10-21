@@ -181,6 +181,8 @@ class EmpleosController extends Controller
             $usuario->roles()->sync($newRoleIds);
         }
 
+        \App\Support\Permisos\VersionPermisos::invalidar();
+
         $usuario->save();
 
         return redirect()->route('admin.configuracion.empleados.index')->with('success', 'Empleado actualizado exitosamente.');

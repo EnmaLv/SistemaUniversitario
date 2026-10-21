@@ -45,9 +45,11 @@ class DatabaseSeeder extends Seeder
             MarcaSeeder::class,
             TipoCombustibleSeeder::class,
             ModeloSeeder::class,
+            
             VehiculoSeeder::class,
             BusParadaSeeder::class,
         ]);
         \App\Models\Proveedor::factory(1)->create();
+        $this->call(PermisosSeeder::class);
     }
 }

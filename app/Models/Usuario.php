@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Rol;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use App\Support\Permisos\MapaRutas;
+use App\Support\Permisos\ResolutorAccion;
 
 class Usuario extends Authenticatable
 {
@@ -26,7 +30,6 @@ class Usuario extends Authenticatable
         'password',
         'master_key',
         'security_questions',
-        'extra_permissions',
         'ultima_actividad_chat',
         'chat_activo_user_id',
         'infracciones_reset_at',
@@ -36,48 +39,147 @@ class Usuario extends Authenticatable
 
     protected $casts = [
         'security_questions' => 'array',
-        'extra_permissions' => 'array',
     ];
+
+    protected ?array $permisosEfectivosCache = null;
+
+    protected ?bool $esSuperAdminCache = null;
 
     public function canAccessMenu($keys): bool
     {
-        $keysToCheck = is_array($keys) ? $keys : [$keys];
-        foreach ($this->roles ?? [] as $r) {
-            $nombreRol = is_object($r) ? ($r->nombre ?? '') : ($r['nombre'] ?? '');
-            if (in_array(mb_strtolower($nombreRol), ['administrador', 'secretaria de bienestar'])) {
-                return true;
-            }
+        return $this->puedeAlguna(is_array($keys) ? $keys : [$keys], 'ver');
+    }
+
+    public function esSuperAdmin(): bool
+    {
+        if ($this->esSuperAdminCache !== null) {
+            return $this->esSuperAdminCache;
         }
 
-        $extra = is_array($this->extra_permissions)
-            ? $this->extra_permissions
-            : (is_string($this->extra_permissions) ? json_decode($this->extra_permissions, true) : []);
+        return $this->esSuperAdminCache = $this->roles->contains(fn ($rol) => $rol->esSuperAdmin());
+    }
 
-        $userDeny = $extra['deny'] ?? [];
-        $userAllow = $extra['allow'] ?? [];
+    public function permisosEfectivos(): array
+    {
+        if ($this->permisosEfectivosCache !== null) {
+            return $this->permisosEfectivosCache;
+        }
 
-        $rolePermissions = collect($this->roles)
-            ->pluck('menu_permissions')
-            ->flatten()
-            ->filter()
-            ->unique()
+        $hoy = now()->toDateString();
+
+        $deRol = DB::table('rol_usuario')
+            ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
+            ->join('rol_permiso', 'rol_permiso.rol_id', '=', 'rol.id_rol')
+            ->join('permiso', 'permiso.id', '=', 'rol_permiso.permiso_id')
+            ->join('vista', 'vista.id', '=', 'permiso.vista_id')
+            ->where('rol_usuario.id_usuario', $this->id_usuario)
+            ->whereNull('rol.deleted_at')
+            ->where('permiso.activo', true)
+            ->where('vista.activo', true)
+            ->pluck('permiso.key')
             ->all();
 
-        foreach ($keysToCheck as $key) {
-            if (in_array($key, $userDeny)) {
-                continue;
-            }
+        $directos = DB::table('usuario_permiso')
+            ->join('permiso', 'permiso.id', '=', 'usuario_permiso.permiso_id')
+            ->join('vista', 'vista.id', '=', 'permiso.vista_id')
+            ->where('usuario_permiso.usuario_id', $this->id_usuario)
+            ->where('permiso.activo', true)
+            ->where('vista.activo', true)
+            ->where(fn ($q) => $q->whereNull('usuario_permiso.fecha_inicio')->orWhere('usuario_permiso.fecha_inicio', '<=', $hoy))
+            ->where(fn ($q) => $q->whereNull('usuario_permiso.fecha_fin')->orWhere('usuario_permiso.fecha_fin', '>=', $hoy))
+            ->get(['permiso.key', 'usuario_permiso.tipo']);
 
-            if (in_array($key, $userAllow)) {
-                return true;
-            }
+        $efectivos = array_fill_keys($deRol, true);
 
-            if (in_array($key, $rolePermissions)) {
+        foreach ($directos->where('tipo', 'grant') as $directo) {
+            $efectivos[$directo->key] = true;
+        }
+
+        foreach ($directos->where('tipo', 'revoke') as $directo) {
+            unset($efectivos[$directo->key]);
+        }
+
+        return $this->permisosEfectivosCache = $efectivos;
+    }
+
+    public function puede(string $vista, string $accion = 'ver'): bool
+    {
+        return $this->puedeAlguna([$vista], $accion);
+    }
+
+    public function puedeAlguna(array $vistas, string $accion = 'ver'): bool
+    {
+        if ($this->esSuperAdmin()) {
+            return true;
+        }
+
+        $efectivos = $this->permisosEfectivos();
+
+        foreach ($vistas as $vista) {
+            if (isset($efectivos["{$vista}.{$accion}"])) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    public function puedeRuta(string $nombreRuta): bool
+    {
+        if ($this->esSuperAdmin()) {
+            return true;
+        }
+
+        $ruta = Route::getRoutes()->getByName($nombreRuta);
+        if (! $ruta) {
+            return false;
+        }
+
+        if (MapaRutas::esLibre($nombreRuta, $ruta->uri())) {
+            return true;
+        }
+
+        $vistas = MapaRutas::vistasDeRuta($nombreRuta, $ruta->uri());
+        if (empty($vistas)) {
+            return false;
+        }
+
+        $metodo = collect($ruta->methods())->first(fn ($m) => $m !== 'HEAD') ?? 'GET';
+
+        return $this->puedeAlguna($vistas, ResolutorAccion::desdeRuta($nombreRuta, $metodo));
+    }
+
+    public function vistasVisibles(): array
+    {
+        if ($this->esSuperAdmin()) {
+            return DB::table('vista')->where('activo', true)->pluck('key')->all();
+        }
+
+        return collect(array_keys($this->permisosEfectivos()))
+            ->filter(fn ($clave) => Str::afterLast($clave, '.') === 'ver')
+            ->map(fn ($clave) => Str::beforeLast($clave, '.'))
+            ->values()
+            ->all();
+    }
+
+    public function olvidarPermisos(): void
+    {
+        $this->permisosEfectivosCache = null;
+        $this->esSuperAdminCache = null;
+    }
+
+    public function permisosDirectos()
+    {
+        return $this->belongsToMany(Permiso::class, 'usuario_permiso', 'usuario_id', 'permiso_id')
+            ->withPivot(['tipo', 'fecha_inicio', 'fecha_fin', 'asignado_por'])
+            ->withTimestamps();
+    }
+
+    public function modulosExtra()
+    {
+        return $this->belongsToMany(Modulo::class, 'usuario_modulo', 'usuario_id', 'modulo_id')
+            ->withPivot('asignado_por')
+            ->withTimestamps();
     }
 
 

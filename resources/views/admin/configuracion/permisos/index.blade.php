@@ -68,11 +68,16 @@
                                 <span class="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400" style="border-color:var(--border-color);">
                                     <i class="fas fa-briefcase "></i> {{ $rolNombre }}
                                 </span>
+                                @if ($usuario->permisos_directos_count > 0)
+                                    <span class="ml-1 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30" style="border-color:rgba(59,130,246,0.3);">
+                                        <i class="fas fa-sliders-h"></i> {{ $usuario->permisos_directos_count }} excepciones
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-center">
                                 @php
                                     $auth = auth()->user();
-                                    $isSelfAdmin = $auth && $auth->id_usuario == $usuario->id_usuario && $auth->roles->contains('nombre', 'Administrador');
+                                    $isSelfAdmin = $auth && $auth->id_usuario == $usuario->id_usuario && $auth->esSuperAdmin();
                                 @endphp
                                 
                                 @if(!$isSelfAdmin)

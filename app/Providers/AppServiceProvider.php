@@ -65,6 +65,14 @@ class AppServiceProvider extends ServiceProvider
             return auth()->check() && auth()->user()->canAccessMenu($keys);
         });
 
+        Blade::if('canAction', function ($vistas, string $accion = 'ver') {
+            return auth()->check() && auth()->user()->puedeAlguna((array) $vistas, $accion);
+        });
+
+        Blade::if('canRoute', function (string $nombreRuta) {
+            return auth()->check() && auth()->user()->puedeRuta($nombreRuta);
+        });
+
         Blade::if('canModule', function ($moduleKey) {
             if (!auth()->check()) {
                 return false;
