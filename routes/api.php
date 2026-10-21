@@ -29,7 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('marcas/{marca}',       [BusMarcaApiController::class, 'show'])->middleware('permiso.api:bus_marcas');
         Route::put('marcas/{marca}',       [BusMarcaApiController::class, 'update'])->middleware('permiso.api:bus_marcas');
         Route::patch('marcas/{marca}/toggle', [BusMarcaApiController::class, 'toggle'])->middleware('permiso.api:bus_marcas');
-        Route::delete('marcas/{marca}',       [BusMarcaApiController::class, 'destroy'])->middleware('permiso.api:bus_marcas');
 
         Route::get('modelos',               [BusModeloApiController::class, 'index'])->middleware('permiso.api:bus_modelos');
         Route::post('modelos',               [BusModeloApiController::class, 'store'])->middleware('permiso.api:bus_modelos');

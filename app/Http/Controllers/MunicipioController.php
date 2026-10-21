@@ -50,6 +50,8 @@ class MunicipioController extends Controller
                 'success' => true,
                 'existe' => $existe
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             \Log::error('Error en verificarExistencia: ' . $e->getMessage());
             return response()->json([

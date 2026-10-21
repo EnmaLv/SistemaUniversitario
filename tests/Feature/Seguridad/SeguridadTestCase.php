@@ -45,7 +45,7 @@ abstract class SeguridadTestCase extends TestCase
         $archivoHuella = storage_path('framework/testing/esquema_' . DB::connection()->getDatabaseName() . '.hash');
 
         if (! is_file($archivoHuella) || trim((string) file_get_contents($archivoHuella)) !== $huella) {
-            Artisan::call('migrate:fresh', ['--force' => true]);
+            Artisan::call('migrate:fresh', ['--force' => true, '--seed' => true]);
             file_put_contents($archivoHuella, $huella);
         } else {
             Artisan::call('migrate', ['--force' => true]);
@@ -81,7 +81,10 @@ abstract class SeguridadTestCase extends TestCase
 
     protected static function huellaMigraciones(): string
     {
-        $archivos = collect(\Illuminate\Support\Facades\File::allFiles(database_path('migrations')))
+        $archivos = collect(array_merge(
+            \Illuminate\Support\Facades\File::allFiles(database_path('migrations')),
+            \Illuminate\Support\Facades\File::allFiles(database_path('seeders'))
+        ))
             ->filter(fn ($archivo) => $archivo->getExtension() === 'php')
             ->sortBy(fn ($archivo) => $archivo->getRelativePathname())
             ->map(fn ($archivo) => $archivo->getRelativePathname() . ':' . md5_file($archivo->getPathname()))

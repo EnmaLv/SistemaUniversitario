@@ -84,16 +84,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/maestros/categorias', [CategoriaController::class, 'index'])->name('admin.maestros.categorias.index');
 
         //Crear una nueva categoría
-        Route::get('/maestros/categorias/create', [CategoriaController::class, 'create'])->name('admin.maestros.categorias.create');
 
         //Almacenar una nueva categoría
         Route::post('/maestros/categorias/store', [CategoriaController::class, 'store'])->name('admin.maestros.categorias.store');
 
         //Mostrar una categoría específica
-        Route::get('/maestros/categorias/{categoria}', [CategoriaController::class, 'show'])->name('admin.maestros.categorias.show');
 
         //Editar una categoría específica
-        Route::get('/maestros/categorias/{categoria}/edit', [CategoriaController::class, 'edit'])->name('admin.maestros.categorias.edit');
 
         //Actualizar una categoría específica
         Route::put('/maestros/categorias/{categoria}', [CategoriaController::class, 'update'])->name('admin.maestros.categorias.update');
@@ -176,17 +173,11 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/movimientos/lotes', [LoteController::class, 'index'])->name('admin.movimientos.lotes.index');
 
-        Route::get('/movimientos/lotes/create', [LoteController::class, 'create'])->name('admin.movimientos.lotes.create');
 
-        Route::post('/movimientos/lotes/store', [LoteController::class, 'store'])->name('admin.movimientos.lotes.store');
 
-        Route::get('/movimientos/lotes/{id}', [LoteController::class, 'show'])->name('admin.movimientos.lotes.show');
 
-        Route::get('/movimientos/lotes/{id}/edit', [LoteController::class, 'edit'])->name('admin.movimientos.lotes.edit');
 
-        Route::put('/movimientos/lotes/{id}', [LoteController::class, 'update'])->name('admin.movimientos.lotes.update');
 
-        Route::delete('/movimientos/lotes/{id}', [LoteController::class, 'destroy'])->name('admin.movimientos.lotes.destroy');
 
         Route::post('/movimientos/lotes/mermar-vencidos', [LoteController::class, 'mermarVencidos'])->name('admin.movimientos.lotes.mermar');
 
@@ -231,7 +222,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::delete('/maestros/receta_ingredientes/{id}', [RecetaIngredienteController::class, 'destroy'])->name('admin.maestros.receta_ingredientes.destroy');
 
-        Route::put('/maestros/receta_ingredientes/{id}/activar', [RecetaIngredienteController::class, 'activar'])->name('admin.maestros.receta_ingredientes.activar');
 
         /* Historial de Movimientos */
 
@@ -453,8 +443,6 @@ Route::middleware('auth')->prefix('seguridad/sesion')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('security-questions', [App\Http\Controllers\Auth\RegisterController::class, 'showSecurityQuestionsForm'])->name('security.questions');
-    Route::post('security-questions', [App\Http\Controllers\Auth\RegisterController::class, 'saveSecurityQuestions'])->name('security.questions.save');
 });
 
 Route::get('admin/master-key', [AdminMasterKeyController::class, 'showForm'])->name('admin.master_key.form');

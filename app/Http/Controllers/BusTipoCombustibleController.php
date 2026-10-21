@@ -13,10 +13,6 @@ class BusTipoCombustibleController extends Controller
         return view('admin.transporte.maestros.bus_tipo_combustibles.index', compact('tipos'));
     }
 
-    public function create()
-    {
-        return view('admin.transporte.maestros.bus_tipo_combustibles.create');
-    }
 
     public function store(Request $request)
     {

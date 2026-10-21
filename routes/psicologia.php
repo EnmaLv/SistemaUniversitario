@@ -79,11 +79,7 @@ Route::middleware('rol.psicologo')->group(function () {
     Route::patch('/psicologia/maestros/grupos_horarios/{id}/activate', [GrupoHorarioController::class, 'activate'])->name('admin.psicologia.maestros.grupos_horarios.activate');
     Route::patch('/psicologia/maestros/grupos_horarios/{id}/deactivate', [GrupoHorarioController::class, 'deactivate'])->name('admin.psicologia.maestros.grupos_horarios.deactivate');
     Route::get('/psicologia/maestros/plantillas_globales', [PlantillaGlobalController::class, 'index'])->name('admin.psicologia.maestros.plantillas_globales.index');
-    Route::get('/psicologia/maestros/plantillas_globales/create', [PlantillaGlobalController::class, 'create'])->name('admin.psicologia.maestros.plantillas_globales.create');
-    Route::post('/psicologia/maestros/plantillas_globales/store', [PlantillaGlobalController::class, 'store'])->name('admin.psicologia.maestros.plantillas_globales.store');
-    Route::get('/psicologia/maestros/plantillas_globales/{avance}/edit', [PlantillaGlobalController::class, 'edit'])->name('admin.psicologia.maestros.plantillas_globales.edit');
     Route::put('/psicologia/maestros/plantillas_globales/{avance}', [PlantillaGlobalController::class, 'update'])->name('admin.psicologia.maestros.plantillas_globales.update');
-    Route::delete('/psicologia/maestros/plantillas_globales/{avance}', [PlantillaGlobalController::class, 'destroy'])->name('admin.psicologia.maestros.plantillas_globales.destroy');
     Route::post('/psicologia/maestros/plantillas_globales/aplicar', [PlantillaGlobalController::class, 'apply'])->name('admin.psicologia.maestros.plantillas_globales.apply');
     Route::get('/psicologia/maestros/plantillas', [PlantillaSeccionController::class, 'index'])->name('admin.psicologia.maestros.plantillas.index');
     Route::get('/psicologia/maestros/plantillas/create', [PlantillaSeccionController::class, 'create'])->name('admin.psicologia.maestros.plantillas.create');
@@ -100,8 +96,6 @@ Route::middleware('rol.psicologo')->group(function () {
     Route::get('/psicologia/maestros/prioridades', [PrioridadController::class, 'index'])->name('admin.psicologia.maestros.prioridades.index');
     Route::get('/psicologia/maestros/prioridades/create', [PrioridadController::class, 'create'])->name('admin.psicologia.maestros.prioridades.create');
     Route::post('/psicologia/maestros/prioridades/store', [PrioridadController::class, 'store'])->name('admin.psicologia.maestros.prioridades.store');
-    Route::get('/psicologia/maestros/prioridades/{prioridad}/edit', [PrioridadController::class, 'edit'])->name('admin.psicologia.maestros.prioridades.edit');
-    Route::put('/psicologia/maestros/prioridades/{prioridad}', [PrioridadController::class, 'update'])->name('admin.psicologia.maestros.prioridades.update');
     Route::delete('/psicologia/maestros/prioridades/{prioridad}', [PrioridadController::class, 'destroy'])->name('admin.psicologia.maestros.prioridades.destroy');
     Route::get('/psicologia/maestros/citas/{cita}/constancia-pdf', [CitaController::class, 'descargarConstanciaPdf'])->name('admin.psicologia.maestros.citas.constancia.pdf');
     Route::delete('/psicologia/maestros/citas/{cita}', [CitaController::class, 'destroy'])->name('admin.psicologia.maestros.citas.destroy');

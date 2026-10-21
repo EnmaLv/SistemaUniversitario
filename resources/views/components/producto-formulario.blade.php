@@ -55,7 +55,7 @@
                             <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400">
                                 Categoría
                             </label>
-                            <a href="{{ route('admin.maestros.categorias.create', ['from' => url()->current()]) }}"
+                            <a href="{{ route('admin.maestros.categorias.index') }}"
                                 class="text-[10px] font-bold transition-colors {{ $esMedicamento ? 'text-sky-600 hover:text-sky-700' : 'text-rose-700 hover:text-rose-800' }}">
                                 + Nueva
                             </a>

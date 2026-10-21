@@ -38,7 +38,7 @@
                         </select>
                         <div class="rd-search-inline">
                             <input type="text" name="buscar" value="{{ request('buscar') }}"
-                                class="rd-search-input" placeholder="Buscar tÃ­tulo o placa..." />
+                                class="rd-search-input" placeholder="Buscar título o placa..." />
                             <button class="rd-icon-btn" type="submit"><i class="fas fa-search"></i></button>
                         </div>
                     </form>
@@ -49,8 +49,8 @@
                 <thead>
                     <tr>
                         <th style="width:60px">#</th>
-                        <th class="text-center">VehÃ­culo</th>
-                        <th class="text-center">TÃ­tulo</th>
+                        <th class="text-center">Vehículo</th>
+                        <th class="text-center">Título</th>
                         <th class="text-center">Tipo</th>
                         <th class="text-center">Fecha</th>
                         <th class="text-center">Costo</th>
@@ -115,13 +115,13 @@
 function confirmEliminar(event, button) {
     event.preventDefault();
     Swal.fire({
-        title: 'Â¿EstÃ¡s seguro?',
-        text: 'Â¿Desea eliminar este mantenimiento? Esta acciÃ³n no se puede deshacer.',
+        title: '¿Estás seguro?',
+        text: '¿Desea eliminar este mantenimiento? Esta acción no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'SÃ­, eliminar',
+        confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) button.closest('form').submit();
@@ -129,5 +129,4 @@ function confirmEliminar(event, button) {
 }
 </script>
 @endpush
-</x-app-layout>
 </x-app-layout>
