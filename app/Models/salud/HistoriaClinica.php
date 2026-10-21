@@ -165,7 +165,7 @@ class HistoriaClinica extends Model
 
         if (!empty($search)) {
             $query->leftJoin('historia_enfermedad', 'historia_clinicas.id', '=', 'historia_enfermedad.historia_clinica_id')
-                  ->leftJoin('enfermedades', 'historia_enfermedad.enfermedad_id', '=', 'enfermedades.id')
+                  ->leftJoin('enfermedad', 'historia_enfermedad.efm_id', '=', 'enfermedad.id_efm')
                   ->where(function ($q) use ($search) {
                       $q->where('persona.nombres_per', 'like', "%{$search}%")
                         ->orWhere('persona.apellidos_per', 'like', "%{$search}%")
@@ -237,7 +237,7 @@ class HistoriaClinica extends Model
 
         if (!empty($filters['enfermedad_id'])) {
             $query->leftJoin('historia_enfermedad as he_filter', 'historia_clinicas.id', '=', 'he_filter.historia_clinica_id')
-                  ->where('he_filter.enfermedad_id', $filters['enfermedad_id'])
+                  ->where('he_filter.efm_id', $filters['enfermedad_id'])
                   ->where('he_filter.status', 1);
         }
 
@@ -343,14 +343,14 @@ class HistoriaClinica extends Model
 
                         $existe = DB::table('historia_enfermedad')
                             ->where('historia_clinica_id', $historiaId)
-                            ->where('enfermedad_id', $enfermedadId)
+                            ->where('efm_id', $enfermedadId)
                             ->whereIn('contexto', $segmentosSeccion)
                             ->first();
                     }
                 } else {
                     $existe = DB::table('historia_enfermedad')
                         ->where('historia_clinica_id', $historiaId)
-                        ->where('enfermedad_id', $enfermedadId)
+                        ->where('efm_id', $enfermedadId)
                         ->where('contexto', $contexto)
                         ->first();
                 }
@@ -358,16 +358,16 @@ class HistoriaClinica extends Model
                 if (!$existe) {
                     $id = DB::table('historia_enfermedad')->insertGetId([
                         'historia_clinica_id' => $historiaId,
-                        'enfermedad_id' => $enfermedadId,
+                        'efm_id' => $enfermedadId,
                         'contexto' => $contexto,
                         'created_at' => now(),
-                    ]);
+                    ], 'id');
                     
-                    $enfermedad = DB::table('enfermedades')->where('id', $enfermedadId)->first();
+                    $enfermedad = DB::table('enfermedad')->where('id_efm', $enfermedadId)->first();
                     return [
                         'success' => true,
                         'link_id' => $id,
-                        'nombre' => $enfermedad ? $enfermedad->nombre : '',
+                        'nombre' => $enfermedad ? $enfermedad->nombre_efm : '',
                         'contexto' => $contexto
                     ];
                 }
@@ -398,10 +398,11 @@ class HistoriaClinica extends Model
     public static function obtenerEnfermedadesVinculadas($historiaId)
     {
         return DB::table('historia_enfermedad')
-            ->join('enfermedades', 'historia_enfermedad.enfermedad_id', '=', 'enfermedades.id')
+            ->join('enfermedad', 'historia_enfermedad.efm_id', '=', 'enfermedad.id_efm')
             ->where('historia_enfermedad.historia_clinica_id', $historiaId)
             ->where('historia_enfermedad.status', 1)
-            ->select('enfermedades.*', 'historia_enfermedad.id as link_id', 'historia_enfermedad.contexto')
+            ->whereNull('enfermedad.deleted_at')
+            ->select('enfermedad.*', 'historia_enfermedad.id as link_id', 'historia_enfermedad.contexto')
             ->get()
             ->groupBy('contexto');
     }

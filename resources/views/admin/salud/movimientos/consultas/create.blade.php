@@ -17,8 +17,8 @@
         // ── Fecha ───────────────────────────────────────────────
         $fechaValue = old('fecha');
         if (!$fechaValue) {
-            $fechaValue = $consulta->fecha
-                ? \Carbon\Carbon::parse($consulta->fecha)->format('Y-m-d')
+            $fechaValue = $consulta->fecha_cme
+                ? \Carbon\Carbon::parse($consulta->fecha_cme)->format('Y-m-d')
                 : now()->format('Y-m-d');
         }
         $fechaCarbon = \Carbon\Carbon::parse($fechaValue);
@@ -30,7 +30,10 @@
             if (old('enfermedades')) {
                 $oldIds = (array) old('enfermedades');
                 $lista = $enfermedades ?? ($todasEnfermedades ?? collect());
-                $enfermedadesSeleccionadas = collect($lista)->whereIn('id', $oldIds)->values();
+                $enfermedadesSeleccionadas = collect($lista)
+                    ->whereIn('id_efm', $oldIds)
+                    ->map(fn($enf) => ['id' => $enf->id_efm, 'nombre' => $enf->nombre_efm, 'codigo' => $enf->codigo_efm ?? ''])
+                    ->values();
 
                 if ($enfermedadesSeleccionadas->isEmpty()) {
                     $enfermedadesSeleccionadas = collect($oldIds)->map(
@@ -43,9 +46,9 @@
             } elseif ($consulta->enfermedades) {
                 $enfermedadesSeleccionadas = $consulta->enfermedades->map(
                     fn($enf) => [
-                        'id' => $enf->id,
-                        'nombre' => $enf->nombre ?? ($enf->nombre_enfermedad ?? 'Sin nombre'),
-                        'codigo' => $enf->codigo ?? ($enf->codigo_cie ?? ''),
+                        'id' => $enf->id_efm,
+                        'nombre' => $enf->nombre_efm ?? 'Sin nombre',
+                        'codigo' => $enf->codigo_efm ?? '',
                     ],
                 );
             }
@@ -53,11 +56,11 @@
 
         // ── Configuración para Alpine ───────────────────────────
         $configForm = [
-            'pacienteId' => (string) old('per_id', $consulta->per_id ?? ''),
+            'pacienteId' => (string) old('per_id', $consulta->paciente_per_id ?? ''),
             'pacienteNombre' => (string) $pacienteNombreInicial,
-            'medicoId' => (string) old('medico_id', $consulta->medico_id ?? ''),
-            'motivo' => (string) old('motivo', $consulta->motivo ?? ''),
-            'diagnostico' => (string) old('diagnostico', $consulta->diagnostico ?? ''),
+            'medicoId' => (string) old('medico_id', $consulta->medico_per_id ?? ''),
+            'motivo' => (string) old('motivo', $consulta->motivo_cme ?? ''),
+            'diagnostico' => (string) old('diagnostico', $consulta->diagnostico_cme ?? ''),
             'enfermedades' => collect($enfermedadesSeleccionadas)->values(),
             'medicos' => collect($medicos)
                 ->map(
@@ -257,7 +260,7 @@
                                     <option value="" disabled>Selecciona un médico</option>
                                     @foreach ($medicos as $medico)
                                         <option value="{{ $medico->per_id }}"
-                                            {{ old('medico_id', $consulta->medico_id ?? null) == $medico->per_id ? 'selected' : '' }}>
+                                            {{ old('medico_id', $consulta->medico_per_id ?? null) == $medico->per_id ? 'selected' : '' }}>
                                             {{ $medico->nombre_completo }} ({{ $medico->nombre_rol }})
                                         </option>
                                     @endforeach
@@ -307,7 +310,7 @@
                                     </label>
                                     <textarea id="observaciones" name="observaciones" rows="2" maxlength="2000"
                                         placeholder="Ej.: alérgico a la penicilina, hipertenso"
-                                        class="cx-input @error('observaciones') is-invalid @enderror">{{ old('observaciones', $consulta->observaciones ?? '') }}</textarea>
+                                        class="cx-input @error('observaciones') is-invalid @enderror">{{ old('observaciones', $consulta->observaciones_cme ?? '') }}</textarea>
                                     <p class="cx-hint">Alergias o datos que el farmaceuta deba conocer.</p>
                                     @error('observaciones')
                                         <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"

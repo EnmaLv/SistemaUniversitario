@@ -186,7 +186,7 @@
                                                 class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1">Enfermedad
                                                 (Buscar)</label>
                                             <div x-data="{
-                                                query: '{{ $enfermedadSeleccionada ? $enfermedadSeleccionada->nombre : '' }}',
+                                                query: '{{ $enfermedadSeleccionada ? $enfermedadSeleccionada->nombre_efm : '' }}',
                                                 enfermedad_id: '{{ request('enfermedad_id') }}',
                                                 results: [],
                                                 loading: false,
@@ -200,8 +200,8 @@
                                                             this.isOpen = true; });
                                                 },
                                                 select(item) {
-                                                    this.query = item.nombre;
-                                                    this.enfermedad_id = item.id;
+                                                    this.query = item.nombre_efm;
+                                                    this.enfermedad_id = item.id_efm;
                                                     this.isOpen = false;
                                                 },
                                                 clear() {
@@ -235,15 +235,15 @@
                                                             <div class="p-2 text-xs text-slate-400 text-center">
                                                                 Buscando...</div>
                                                         </template>
-                                                        <template x-for="item in results" :key="item.id">
+                                                        <template x-for="item in results" :key="item.id_efm">
                                                             <button type="button" @click="select(item)"
                                                                 class="w-full text-left p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors group flex items-center gap-2">
                                                                 <div class="w-1.5 h-1.5 rounded-full"
-                                                                    :class="item.categoria === 'mental' ? 'bg-indigo-400' :
+                                                                    :class="item.categoria_efm === 'mental' ? 'bg-indigo-400' :
                                                                         'bg-indigo-400'">
                                                                 </div>
                                                                 <div class="text-xs font-bold text-slate-700 dark:text-gray-300 group-hover:text-indigo-600"
-                                                                    x-text="item.nombre"></div>
+                                                                    x-text="item.nombre_efm"></div>
                                                             </button>
                                                         </template>
                                                         <template x-if="results.length === 0 && !loading">

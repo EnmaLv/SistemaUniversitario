@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Horario de Consultorio - {{ $consultorio->nombre }}</title>
+    <title>Horario de Consultorio - {{ $consultorio->nombre_csr }}</title>
     <style>
         body {
             font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -178,7 +178,7 @@
     <main>
         <div class="header-title">
             <h1>PROGRAMACIÓN DE HORARIOS DE CONSULTORIO</h1>
-            <p>{{ mb_strtoupper($consultorio->nombre) }}</p>
+            <p>{{ mb_strtoupper($consultorio->nombre_csr) }}</p>
         </div>
 
         <table>
@@ -236,7 +236,7 @@
         <main>
             <div class="header-title">
                 <h1>DETALLE DE PERSONAL Y ASIGNACIONES</h1>
-                <p>{{ mb_strtoupper($consultorio->nombre) }}</p>
+                <p>{{ mb_strtoupper($consultorio->nombre_csr) }}</p>
             </div>
 
             <table class="table-detalle">
@@ -264,9 +264,9 @@
                             <td>
                                 @foreach ($horariosPersona as $h)
                                     @php
-                                        $diaLabel = ucfirst($dias[strtolower(trim($h->dia))] ?? $h->dia);
-                                        $inicioStr = \Carbon\Carbon::parse($h->hora_inicio)->format('g:i A');
-                                        $finStr = \Carbon\Carbon::parse($h->hora_fin)->format('g:i A');
+                                        $diaLabel = ucfirst($dias[strtolower(trim($h->dia_hrc))] ?? $h->dia_hrc);
+                                        $inicioStr = \Carbon\Carbon::parse($h->hora_inicio_hrc)->format('g:i A');
+                                        $finStr = \Carbon\Carbon::parse($h->hora_fin_hrc)->format('g:i A');
                                     @endphp
                                     <div class="tag-horario">
                                         <strong>{{ $diaLabel }}:</strong> {{ $inicioStr }} - {{ $finStr }}

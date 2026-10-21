@@ -2,28 +2,30 @@
 
 namespace App\Models\salud;
 
-use App\Traits\PerteneceASedePorRelacion;
 use App\Models\Persona;
 use App\Models\Usuario;
+use App\Traits\PerteneceASedePorRelacion;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class Consulta extends Model
 {
     use PerteneceASedePorRelacion;
+    use RegistraAutoria;
+    use SoftDeletes;
 
     protected $relacionSede = 'consultorio';
 
-    protected $table = 'consultas';
+    protected $table = 'consulta_medica';
 
-    /* ──────────────────────────────────────────────────────────────
-     |  Constantes
-     ────────────────────────────────────────────────────────────── */
+    protected $primaryKey = 'id_cme';
 
     /** Estados de la receta asociada */
     public const RECETA_ABIERTA = 1;
@@ -84,58 +86,51 @@ class Consulta extends Model
     ];
 
     protected $fillable = [
-        'per_id',
-        'medico_id',
-        'consultorio_id',
-        'enfermedad_id',
-        'fecha',
-        'motivo',
-        'observaciones',
-        'diagnostico',
-        'creado_por',
+        'paciente_per_id',
+        'medico_per_id',
+        'csr_id',
+        'fecha_cme',
+        'motivo_cme',
+        'observaciones_cme',
+        'diagnostico_cme',
+        'use_id',
+        'status_id',
     ];
 
     protected $casts = [
-        'fecha' => 'date',
+        'fecha_cme' => 'date',
     ];
-
-    /* ──────────────────────────────────────────────────────────────
-     |  Relaciones
-     ────────────────────────────────────────────────────────────── */
 
     public function paciente(): BelongsTo
     {
-        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
+        return $this->belongsTo(Persona::class, 'paciente_per_id', 'id_per');
     }
 
     public function medico(): BelongsTo
     {
-        return $this->belongsTo(Persona::class, 'medico_id', 'id_per');
+        return $this->belongsTo(Persona::class, 'medico_per_id', 'id_per');
     }
 
     public function consultorio(): BelongsTo
     {
-        return $this->belongsTo(Consultorio::class, 'consultorio_id');
+        return $this->belongsTo(Consultorio::class, 'csr_id', 'id_csr');
     }
 
     public function enfermedades(): BelongsToMany
     {
-        return $this->belongsToMany(Enfermedad::class, 'consulta_enfermedad');
+        return $this->belongsToMany(Enfermedad::class, 'consulta_enfermedad', 'cme_id', 'efm_id', 'id_cme', 'id_efm')
+            ->withTimestamps();
     }
 
     public function creadoPor(): BelongsTo
     {
-        return $this->belongsTo(Usuario::class, 'creado_por', 'id_use');
+        return $this->belongsTo(Usuario::class, 'use_id', 'id_use');
     }
 
     public function receta(): HasOne
     {
-        return $this->hasOne(RecetasMedica::class, 'consulta_id');
+        return $this->hasOne(RecetasMedica::class, 'cme_id', 'id_cme');
     }
-
-    /* ──────────────────────────────────────────────────────────────
-     |  Accessors / reglas de negocio
-     ────────────────────────────────────────────────────────────── */
 
     public function getPasoActualAttribute(): string
     {
@@ -147,7 +142,7 @@ class Consulta extends Model
             return 'receta';
         }
 
-        return (int) $this->receta->estado === self::RECETA_CERRADA ? 'completa' : 'dispensacion';
+        return (int) $this->receta->estado_rme === self::RECETA_CERRADA ? 'completa' : 'dispensacion';
     }
 
     /**
@@ -159,7 +154,7 @@ class Consulta extends Model
             return false;
         }
 
-        return Dispensacion::where('receta_medica_id', $this->receta->id)->exists();
+        return Dispensacion::where('rme_id', $this->receta->id_rme)->exists();
     }
 
     /**
@@ -175,10 +170,7 @@ class Consulta extends Model
      */
     public function pacienteIdParaReceta(): ?int
     {
-        return $this->per_id
-            ?? $this->persona_id
-            ?? $this->paciente_id
-            ?? $this->paciente?->id;
+        return $this->paciente_per_id ?? $this->paciente?->id_per;
     }
 
     /**
@@ -186,19 +178,14 @@ class Consulta extends Model
      */
     public function medicoIdParaReceta(?int $usuarioFallback = null): ?int
     {
-        return $this->medico_id
-            ?? $this->doctor_id
-            ?? $this->medico?->id
+        return $this->medico_per_id
+            ?? $this->medico?->id_per
             ?? $usuarioFallback;
     }
 
-    /* ──────────────────────────────────────────────────────────────
-     |  Persistencia
-     ────────────────────────────────────────────────────────────── */
-
     public static function crear(array $data, int $creadoPor): self
     {
-        return self::create(array_merge($data, ['creado_por' => $creadoPor]));
+        return self::create(array_merge($data, ['use_id' => $creadoPor]));
     }
 
     /**
@@ -232,14 +219,10 @@ class Consulta extends Model
     public function sincronizarReceta(): void
     {
         $this->receta?->update([
-            'per_id' => $this->per_id,
-            'medico_id'  => $this->medico_id,
+            'paciente_per_id' => $this->paciente_per_id,
+            'medico_per_id'   => $this->medico_per_id,
         ]);
     }
-
-    /* ──────────────────────────────────────────────────────────────
-     |  Listado
-     ────────────────────────────────────────────────────────────── */
 
     public static function listar(
         ?string $buscar = null,
@@ -254,15 +237,11 @@ class Consulta extends Model
             ->delMedico($medicoId)
             ->enRangoFechas($rangoFechas)
             ->conEstadoFlujo($estado)
-            ->latest('fecha')
-            ->latest('id')
+            ->latest('consulta_medica.fecha_cme')
+            ->latest('consulta_medica.id_cme')
             ->paginate(10)
             ->withQueryString();
     }
-
-    /* ──────────────────────────────────────────────────────────────
-     |  Scopes
-     ────────────────────────────────────────────────────────────── */
 
     public function scopeBuscarPaciente(Builder $query, ?string $buscar): Builder
     {
@@ -289,8 +268,8 @@ class Consulta extends Model
         $fechas = explode(' to ', $rangoFechas);
 
         return count($fechas) === 2
-            ? $query->whereBetween('fecha', [$fechas[0], $fechas[1]])
-            : $query->whereDate('fecha', $fechas[0]);
+            ? $query->whereBetween('consulta_medica.fecha_cme', [$fechas[0], $fechas[1]])
+            : $query->whereDate('consulta_medica.fecha_cme', $fechas[0]);
     }
 
     /**
@@ -301,11 +280,11 @@ class Consulta extends Model
         return match ($estado) {
             self::FILTRO_PENDIENTE => $query->where(function ($sub) {
                 $sub->doesntHave('receta')
-                    ->orWhereHas('receta', fn($r) => $r->where('estado', self::RECETA_ABIERTA));
+                    ->orWhereHas('receta', fn($r) => $r->where('receta_medica.estado_rme', self::RECETA_ABIERTA));
             }),
             self::FILTRO_COMPLETADO => $query->whereHas(
                 'receta',
-                fn($r) => $r->where('estado', self::RECETA_CERRADA)
+                fn($r) => $r->where('receta_medica.estado_rme', self::RECETA_CERRADA)
             ),
             default => $query,
         };
@@ -314,7 +293,7 @@ class Consulta extends Model
     public function scopeDelPeriodo($query, ?string $inicio, ?string $fin)
     {
         if ($inicio && $fin) {
-            $query->whereBetween('fecha', [$inicio, $fin]);
+            $query->whereBetween('consulta_medica.fecha_cme', [$inicio, $fin]);
         }
         return $query;
     }
@@ -322,7 +301,7 @@ class Consulta extends Model
     public function scopeDelMedico($query, ?int $medicoId)
     {
         if ($medicoId) {
-            $query->where('medico_id', $medicoId);
+            $query->where('consulta_medica.medico_per_id', $medicoId);
         }
         return $query;
     }
@@ -330,7 +309,7 @@ class Consulta extends Model
     public function scopeDelConsultorio($query, ?int $consultorioId)
     {
         if ($consultorioId) {
-            $query->where('consultorio_id', $consultorioId);
+            $query->where('consulta_medica.csr_id', $consultorioId);
         }
         return $query;
     }
@@ -338,7 +317,7 @@ class Consulta extends Model
     public function scopeConEnfermedades($query, array $enfermedadIds)
     {
         if (!empty($enfermedadIds)) {
-            $query->whereHas('enfermedades', fn($q) => $q->whereIn('enfermedades.id', $enfermedadIds));
+            $query->whereHas('enfermedades', fn($q) => $q->whereIn('enfermedad.id_efm', $enfermedadIds));
         }
         return $query;
     }
@@ -349,12 +328,12 @@ class Consulta extends Model
             return $query;
         }
 
-        // Sub-consulta reutilizable: "detalle con cantidad pendiente"
         $detalleConPendiente = function ($d) {
             $d->whereRaw(
-                '(SELECT COALESCE(SUM(cantidad),0) FROM dispensacions
-                  WHERE detalle_receta_medica_id = detalle_recetas_medicas.id)
-                 < detalle_recetas_medicas.cantidad'
+                '(SELECT COALESCE(SUM(dispensacion_medicamento.cantidad_dsm), 0) FROM dispensacion_medicamento
+                  WHERE dispensacion_medicamento.drm_id = detalle_receta_medica.id_drm
+                    AND dispensacion_medicamento.deleted_at IS NULL)
+                 < detalle_receta_medica.cantidad_prescrita_drm'
             );
         };
 

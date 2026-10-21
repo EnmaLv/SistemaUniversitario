@@ -38,11 +38,11 @@
                         </h1>
                         <p
                             class="mt-0.5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2 flex-wrap">
-                            <span class="font-bold" style="color: var(--text-main);">Consulta #{{ $consulta->id }}</span>
+                            <span class="font-bold" style="color: var(--text-main);">Consulta #{{ $consulta->id_cme }}</span>
                             <span class="text-gray-300 dark:text-gray-700">·</span>
                             <span>{{ $pacienteNombre }}</span>
                             <span class="text-gray-300 dark:text-gray-700">·</span>
-                            <span>{{ optional($consulta->fecha)->translatedFormat('d \d\e F, Y') }}</span>
+                            <span>{{ optional($consulta->fecha_cme)->translatedFormat('d \d\e F, Y') }}</span>
                         </p>
                     </div>
                 </div>
@@ -163,7 +163,7 @@
                                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Consultorio
                                     </p>
                                     <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                        {{ optional($consulta->consultorio)->nombre ?? '—' }}
+                                        {{ optional($consulta->consultorio)->nombre_csr ?? '—' }}
                                     </p>
                                 </div>
                             </div>
@@ -181,7 +181,7 @@
                                     @if ($consulta->enfermedades->isNotEmpty())
                                         <div class="flex flex-wrap gap-1.5">
                                             @foreach ($consulta->enfermedades as $enfermedad)
-                                                {{ $enfermedad->nombre }}
+                                                {{ $enfermedad->nombre_efm }}
                                                 @if ($consulta->enfermedades->count() > 1)
                                                     <span> · </span>
                                                 @endif
@@ -207,7 +207,7 @@
                                 <div class="p-5 rounded-2xl border shadow-inner"
                                     style="background-color: rgba(0,0,0,0.015); border-color: var(--border-color);">
                                     <p class="text-sm leading-relaxed" style="color: var(--text-main);">
-                                        {{ $consulta->motivo }}
+                                        {{ $consulta->motivo_cme }}
                                     </p>
                                 </div>
                             </div>
@@ -219,9 +219,9 @@
                                 </h4>
                                 <div class="p-5 rounded-2xl border shadow-inner"
                                     style="background-color: rgba(0,0,0,0.015); border-color: var(--border-color);">
-                                    <p class="text-sm leading-relaxed {{ $consulta->observaciones ? '' : 'italic text-gray-400' }}"
-                                        style="{{ $consulta->observaciones ? 'color: var(--text-main);' : '' }}">
-                                        {{ $consulta->observaciones ?: 'No se registraron observaciones adicionales durante la atención.' }}
+                                    <p class="text-sm leading-relaxed {{ $consulta->observaciones_cme ? '' : 'italic text-gray-400' }}"
+                                        style="{{ $consulta->observaciones_cme ? 'color: var(--text-main);' : '' }}">
+                                        {{ $consulta->observaciones_cme ?: 'No se registraron observaciones adicionales durante la atención.' }}
                                     </p>
                                 </div>
                             </div>
@@ -239,7 +239,7 @@
                                 style="background-color: rgba(16, 185, 129, 0.03); border-color: var(--border-color);">
                                 <p class="text-sm md:text-base font-medium leading-relaxed"
                                     style="color: var(--text-main);">
-                                    {{ $consulta->diagnostico }}
+                                    {{ $consulta->diagnostico_cme }}
                                 </p>
                             </div>
                         </div>
@@ -270,7 +270,7 @@
                                         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Vigencia
                                             hasta</p>
                                         <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                            {{ optional($consulta->receta->vigencia)->format('d/m/Y') }}
+                                            {{ optional($consulta->receta->fecha_vigencia_rme)->format('d/m/Y') }}
                                         </p>
                                     </div>
                                 </div>
@@ -286,7 +286,7 @@
                                             Indicaciones Generales</p>
                                         <p class="text-sm font-medium leading-relaxed"
                                             style="color: var(--text-main);">
-                                            {{ $consulta->receta->descripcion ?: 'No se registraron indicaciones adicionales.' }}
+                                            {{ $consulta->receta->descripcion_rme ?: 'No se registraron indicaciones adicionales.' }}
                                         </p>
                                     </div>
                                 </div>
@@ -321,19 +321,19 @@
                                                     </td>
                                                     <td class="px-5 py-4 text-sm font-mono font-medium"
                                                         style="color: var(--text-main);">
-                                                        {{ $detalle->cantidad }}
+                                                        {{ $detalle->cantidad_prescrita_drm }}
                                                         <span
                                                             class="text-gray-400 text-xs font-sans ">{{ optional($detalle->unidad)->nombre_unm }}</span>
                                                     </td>
                                                     <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
-                                                        {{ $detalle->frecuencia }}
+                                                        {{ $detalle->frecuencia_drm }}
                                                     </td>
                                                     <td
                                                         class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                                        {{ \Carbon\Carbon::parse($detalle->fecha_inicio)->format('d/m/y') }}
+                                                        {{ \Carbon\Carbon::parse($detalle->fecha_inicio_drm)->format('d/m/y') }}
                                                         <i
                                                             class="fas fa-arrow-right-long mx-1.5 text-gray-300 dark:text-gray-600 text-xs"></i>
-                                                        {{ \Carbon\Carbon::parse($detalle->fecha_fin)->format('d/m/y') }}
+                                                        {{ \Carbon\Carbon::parse($detalle->fecha_fin_drm)->format('d/m/y') }}
                                                     </td>
                                                     <td class="px-5 py-4 text-center">
                                                         @if ($detalle->cantidad_pendiente <= 0)
@@ -402,7 +402,7 @@
                                                             class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                                                             <td class="px-5 py-4 text-sm "
                                                                 style="color: var(--text-main);">
-                                                                {{ optional($disp->fecha)->format('d/m/Y') }}
+                                                                {{ optional($disp->fecha_dispensacion_dsm)->format('d/m/Y') }}
                                                             </td>
                                                             <td
                                                                 class="px-5 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">
@@ -411,7 +411,7 @@
                                                             <td class="px-5 py-4 text-sm text-center"
                                                                 style="color: var(--text-main);">
                                                                 <span
-                                                                    class="font-bold">{{ $disp->cantidad }}</span>
+                                                                    class="font-bold">{{ $disp->cantidad_dsm }}</span>
                                                                 <span
                                                                     class="text-gray-400 text-xs font-sans ml-0.5">{{ optional($detalle->unidad)->nombre_unm }}</span>
                                                             </td>

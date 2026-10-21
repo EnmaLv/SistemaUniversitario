@@ -8,42 +8,49 @@ use App\Models\Producto;
 use App\Models\Sede;
 use App\Models\Unidad;
 use App\Models\Usuario;
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\PerteneceASede;
+use App\Traits\RegistraAutoria;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Dispensacion extends Model
 {
     use PerteneceASede;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'dispensacions';
+    protected $table = 'dispensacion_medicamento';
+
+    protected $primaryKey = 'id_dsm';
 
     protected $fillable = [
-        'receta_medica_id',
-        'detalle_receta_medica_id',
+        'rme_id',
+        'drm_id',
         'pdt_id',
-        'per_id',
+        'paciente_per_id',
         'lot_id',
-        'cantidad',
+        'cantidad_dsm',
         'unm_id',
         'sed_id',
-        'usuario_id',
-        'fecha',
-        'observaciones',
+        'use_id',
+        'fecha_dispensacion_dsm',
+        'observaciones_dsm',
+        'status_id',
     ];
 
     protected $casts = [
-        'cantidad' => 'decimal:2',
-        'fecha'    => 'date',
+        'cantidad_dsm'           => 'decimal:2',
+        'fecha_dispensacion_dsm' => 'date',
     ];
 
     public function receta()
     {
-        return $this->belongsTo(RecetasMedica::class, 'receta_medica_id');
+        return $this->belongsTo(RecetasMedica::class, 'rme_id', 'id_rme');
     }
 
     public function detalle()
     {
-        return $this->belongsTo(DetalleRecetasMedica::class, 'detalle_receta_medica_id');
+        return $this->belongsTo(DetalleRecetasMedica::class, 'drm_id', 'id_drm');
     }
 
     public function producto()
@@ -53,7 +60,7 @@ class Dispensacion extends Model
 
     public function paciente()
     {
-        return $this->belongsTo(Persona::class, 'per_id', 'id_per');
+        return $this->belongsTo(Persona::class, 'paciente_per_id', 'id_per');
     }
 
     public function lote()
@@ -73,6 +80,6 @@ class Dispensacion extends Model
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'usuario_id', 'id_use');
+        return $this->belongsTo(Usuario::class, 'use_id', 'id_use');
     }
 }

@@ -1073,23 +1073,23 @@
                 <tbody>
                     @foreach ($consultas as $c)
                         <tr>
-                            <td>{{ \Carbon\Carbon::parse($c->fecha)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($c->fecha_cme)->format('d/m/Y') }}</td>
                             <td class="strong">
                                 {{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—' }}
                             </td>
                             <td>{{ $c->paciente->cedula_per ?? '—' }}</td>
                             <td>{{ trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: '—' }}
                             </td>
-                            <td>{{ $c->consultorio->nombre ?? '—' }}</td>
+                            <td>{{ $c->consultorio->nombre_csr ?? '—' }}</td>
                             <td>
                                 @foreach ($c->enfermedades as $enf)
-                                    <div>{{ $enf->nombre }}</div>
+                                    <div>{{ $enf->nombre_efm }}</div>
                                 @endforeach
                             </td>
                             <td>
                                 @if ($c->receta)
-                                    <span class="estado {{ $c->receta->estado == 2 ? '' : 'incompleto' }}">
-                                        {{ $c->receta->estado == 2 ? 'Completada' : 'En proceso' }}
+                                    <span class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
+                                        {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso' }}
                                     </span>
                                 @else
                                     <span class="estado sin">Sin receta</span>
@@ -1123,16 +1123,16 @@
                     @foreach ($consultas as $c)
                         @if ($c->receta)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($c->receta->fecha)->format('d/m/Y') }}</td>
-                                <td class="strong">#{{ str_pad($c->receta->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ \Carbon\Carbon::parse($c->receta->fecha_emision_rme)->format('d/m/Y') }}</td>
+                                <td class="strong">#{{ str_pad($c->receta->id_rme, 5, '0', STR_PAD_LEFT) }}</td>
                                 <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                 </td>
                                 <td>{{ trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) }}
                                 </td>
                                 <td class="center">{{ $c->receta->detalles->count() }}</td>
                                 <td>
-                                    <span class="estado {{ $c->receta->estado == 2 ? '' : 'incompleto' }}">
-                                        {{ $c->receta->estado == 2 ? 'Completada' : 'En proceso' }}
+                                    <span class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
+                                        {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso' }}
                                     </span>
                                 </td>
                             </tr>
@@ -1168,11 +1168,11 @@
                                 @foreach ($det->dispensaciones as $disp)
                                     @php $totalItems++; @endphp
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($disp->fecha)->format('d/m/Y') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($disp->fecha_dispensacion_dsm)->format('d/m/Y') }}</td>
                                         <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                         </td>
                                         <td>{{ $det->producto->nombre_pdt ?? '—' }}</td>
-                                        <td class="center">{{ number_format($disp->cantidad, 2) }}</td>
+                                        <td class="center">{{ number_format($disp->cantidad_dsm, 2) }}</td>
                                         <td>{{ $disp->lote->codigo_lote_lot ?? '—' }}</td>
                                         <td>{{ trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—' }}
                                         </td>

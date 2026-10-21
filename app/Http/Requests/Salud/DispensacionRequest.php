@@ -49,7 +49,7 @@ class DispensacionRequest extends FormRequest
                 return;
             }
 
-            $detalles = $receta->detalles()->with('producto')->get()->keyBy('id');
+            $detalles = $receta->detalles()->with('producto')->get()->keyBy('id_drm');
 
             foreach ($this->input('items', []) as $detalleId => $item) {
                 $detalle = $detalles->get((int) $detalleId);

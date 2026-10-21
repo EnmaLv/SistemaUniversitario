@@ -95,15 +95,15 @@ class MultisedeTest extends SeguridadTestCase
     public function test_los_registros_nuevos_toman_la_sede_activa_y_las_consultas_se_filtran(): void
     {
         $usuarioA = $this->crearUsuario('Obrero', sedeId: $this->sedeA());
-        Consultorio::create(['nombre' => 'CONSULTORIO B', 'sed_id' => $this->sedeB(), 'activo' => 1]);
+        Consultorio::create(['nombre_csr' => 'CONSULTORIO B', 'sed_id' => $this->sedeB(), 'status_id' => 1]);
 
         $this->actingAs($usuarioA);
 
-        $nuevo = Consultorio::create(['nombre' => 'CONSULTORIO A', 'activo' => 1]);
+        $nuevo = Consultorio::create(['nombre_csr' => 'CONSULTORIO A', 'status_id' => 1]);
 
         $this->assertSame($this->sedeA(), (int) $nuevo->sed_id);
-        $this->assertSame(['CONSULTORIO A'], Consultorio::pluck('nombre')->all());
-        $this->assertSame(2, Consultorio::todasLasSedes()->whereIn('nombre', ['CONSULTORIO A', 'CONSULTORIO B'])->count());
+        $this->assertSame(['CONSULTORIO A'], Consultorio::pluck('nombre_csr')->all());
+        $this->assertSame(2, Consultorio::todasLasSedes()->whereIn('nombre_csr', ['CONSULTORIO A', 'CONSULTORIO B'])->count());
     }
 
     public function test_un_usuario_de_la_sede_a_no_abre_compras_de_la_sede_b(): void

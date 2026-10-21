@@ -19,13 +19,13 @@ class ConsultaRequest extends FormRequest
         return [
             'per_id'     => ['required', 'integer', 'exists:persona,id_per'],
             'medico_id'      => ['required', 'integer', 'different:per_id', 'exists:persona,id_per'],
-            'consultorio_id' => ['required', 'integer', 'exists:consultorios,id'],
+            'consultorio_id' => ['required', 'integer', 'exists:consultorio,id_csr'],
             'fecha'          => ['required', 'date', 'before_or_equal:today'],
             'motivo'         => ['required', 'string', 'min:3', 'max:1000'],
             'diagnostico'    => ['required', 'string', 'min:3', 'max:2000'],
             'observaciones'  => ['nullable', 'string', 'max:2000'],
             'enfermedades'   => ['required', 'array', 'min:1', 'max:20'],
-            'enfermedades.*' => ['required', 'integer', 'distinct', 'exists:enfermedades,id'],
+            'enfermedades.*' => ['required', 'integer', 'distinct', 'exists:enfermedad,id_efm'],
         ];
     }
 
@@ -60,10 +60,17 @@ class ConsultaRequest extends FormRequest
      */
     public function datosConsulta(): array
     {
-        $datos = collect($this->validated())->except('enfermedades')->all();
-        $datos['observaciones'] = $datos['observaciones'] ?? '';
+        $datos = $this->validated();
 
-        return $datos;
+        return [
+            'paciente_per_id'   => $datos['per_id'],
+            'medico_per_id'     => $datos['medico_id'],
+            'csr_id'            => $datos['consultorio_id'],
+            'fecha_cme'         => $datos['fecha'],
+            'motivo_cme'        => $datos['motivo'],
+            'diagnostico_cme'   => $datos['diagnostico'],
+            'observaciones_cme' => $datos['observaciones'] ?? '',
+        ];
     }
 
     public function enfermedadesIds(): array

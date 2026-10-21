@@ -147,9 +147,9 @@
                                         class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                         <option value="">Todos los consultorios</option>
                                         @foreach ($consultorios as $consultorio)
-                                            <option value="{{ $consultorio->id }}"
-                                                @if (request('consultorio_id') == $consultorio->id) selected @endif>
-                                                {{ $consultorio->nombre }}
+                                            <option value="{{ $consultorio->id_csr }}"
+                                                @if (request('consultorio_id') == $consultorio->id_csr) selected @endif>
+                                                {{ $consultorio->nombre_csr }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -216,10 +216,10 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                                 @forelse ($consultas as $data)
-                                    <x-table-row :id="$data->id">
+                                    <x-table-row :id="$data->id_cme">
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ optional($data->fecha)->format('d/m/Y') }}
+                                            {{ optional($data->fecha_cme)->format('d/m/Y') }}
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                             style="color: var(--text-main);">
@@ -231,7 +231,7 @@
                                         </td>
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ optional($data->consultorio)->nombre ?? '—' }}
+                                            {{ optional($data->consultorio)->nombre_csr ?? '—' }}
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap">
                                             @php $paso = $data->paso_actual; @endphp
@@ -253,7 +253,7 @@
                                             @endif
                                         </td>
 
-                                        <x-table-actions :id="$data->id" :base-url="route('admin.salud.movimientos.consultas.index')" :show="!in_array($paso, ['receta', 'dispensacion'])"
+                                        <x-table-actions :id="$data->id_cme" :base-url="route('admin.salud.movimientos.consultas.index')" :show="!in_array($paso, ['receta', 'dispensacion'])"
                                             :edit="false" :toggle="false" :pending-url="in_array($paso, ['receta', 'dispensacion'])
                                                 ? route('admin.salud.movimientos.consultas.dispensacion', $data)
                                                 : null" :pdf-url="!in_array($paso, ['receta', 'dispensacion'])

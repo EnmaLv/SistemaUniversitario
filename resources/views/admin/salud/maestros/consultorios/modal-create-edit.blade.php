@@ -188,10 +188,10 @@
         if (sedeSelect) sedeSelect.value = data.sed_id || '1';
 
         const nombreInput = document.getElementById(id + 'Nombre');
-        if (nombreInput) nombreInput.value = data.nombre || '';
+        if (nombreInput) nombreInput.value = data.nombre_csr || '';
 
         const descTextarea = document.getElementById(id + 'Descripcion');
-        if (descTextarea) descTextarea.value = data.descripcion || '';
+        if (descTextarea) descTextarea.value = data.descripcion_csr || '';
 
         openModalConsultorio(id);
     }

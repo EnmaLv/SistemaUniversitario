@@ -30,8 +30,8 @@ class ConsultorioController extends Controller
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('consultorios', 'nombre')->where(function ($query) use ($request) {
-                    return $query->where('sed_id', $request->input('sed_id'));
+                Rule::unique('consultorio', 'nombre_csr')->where(function ($query) use ($request) {
+                    return $query->where('sed_id', $request->input('sed_id'))->whereNull('deleted_at');
                 }),
             ],
             'descripcion' => 'nullable|string|max:255',
@@ -56,9 +56,10 @@ class ConsultorioController extends Controller
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('consultorios', 'nombre')
+                Rule::unique('consultorio', 'nombre_csr')
                     ->where('sed_id', $request->input('sed_id'))
-                    ->ignore($id),
+                    ->whereNull('deleted_at')
+                    ->ignore($id, 'id_csr'),
             ],
             'descripcion' => 'nullable|string|max:255',
         ], [

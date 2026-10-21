@@ -34,7 +34,7 @@
             @include('components.alert')
 
             <form action="{{ route('admin.salud.movimientos.consultas.receta.store', $consulta) }}" method="POST"
-                class="rd-prevent-double-submit" x-data="recetadorForm(@js($estadoInicial), @js($tieneDatosReales), {{ $consulta->id }}, @js($productosJs), @js($unidadesJs))" @submit="limpiarBorrador()">
+                class="rd-prevent-double-submit" x-data="recetadorForm(@js($estadoInicial), @js($tieneDatosReales), {{ $consulta->id_cme }}, @js($productosJs), @js($unidadesJs))" @submit="limpiarBorrador()">
                 @csrf
                 <input type="hidden" name="fecha" :value="fecha">
 

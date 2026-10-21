@@ -72,7 +72,7 @@ class EstadisticasExportService
 
     private function nombreConsultorio($consultorioId): ?string
     {
-        return $consultorioId ? Consultorio::find($consultorioId)?->nombre : null;
+        return $consultorioId ? Consultorio::find($consultorioId)?->nombre_csr : null;
     }
 
     private function nombreMedico($medicoId): ?string
@@ -93,7 +93,7 @@ class EstadisticasExportService
         $ids = array_filter(array_map('intval', (array) $ids));
 
         return $ids
-            ? Enfermedad::whereIn('id', $ids)->pluck('nombre')->toArray()
+            ? Enfermedad::whereIn('id_efm', $ids)->pluck('nombre_efm')->toArray()
             : [];
     }
 }

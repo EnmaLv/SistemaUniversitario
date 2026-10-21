@@ -18,10 +18,6 @@ class RecetaService
 {
     public const TIPO_PRODUCTO_SALUD = 2;
 
-    /* ──────────────────────────────────────────────────────────────
-     |  Catálogos del formulario
-     ────────────────────────────────────────────────────────────── */
-
     public function productosSaludQuery(): Builder
     {
         return Producto::where('status_id', Producto::STATUS_ACTIVO)
@@ -44,9 +40,9 @@ class RecetaService
     public function estadoInicialFormulario(?RecetasMedica $receta): array
     {
         return [
-            'fecha'       => old('fecha', optional($receta?->fecha)->format('Y-m-d') ?? now()->format('Y-m-d')),
-            'vigencia'    => old('vigencia', optional($receta?->vigencia)->format('Y-m-d') ?? ''),
-            'descripcion' => old('descripcion', $receta?->descripcion ?? ''),
+            'fecha'       => old('fecha', optional($receta?->fecha_emision_rme)->format('Y-m-d') ?? now()->format('Y-m-d')),
+            'vigencia'    => old('vigencia', optional($receta?->fecha_vigencia_rme)->format('Y-m-d') ?? ''),
+            'descripcion' => old('descripcion', $receta?->descripcion_rme ?? ''),
             'detalles'    => old('detalles', $receta ? $this->detallesParaFormulario($receta) : []),
         ];
     }
@@ -56,12 +52,12 @@ class RecetaService
         return $receta->detalles->map(fn($det) => [
             'producto_id'     => $det->pdt_id,
             'producto_nombre' => optional($det->producto)->nombre_pdt ?? '',
-            'cantidad'        => $det->cantidad,
+            'cantidad'        => $det->cantidad_prescrita_drm,
             'unidad_id'       => $det->unm_id,
-            'frecuencia'      => $det->frecuencia,
-            'fecha_inicio'    => $this->formatearFecha($det->fecha_inicio),
-            'fecha_fin'       => $this->formatearFecha($det->fecha_fin),
-            'observaciones'   => $det->observaciones ?? '',
+            'frecuencia'      => $det->frecuencia_drm,
+            'fecha_inicio'    => $this->formatearFecha($det->fecha_inicio_drm),
+            'fecha_fin'       => $this->formatearFecha($det->fecha_fin_drm),
+            'observaciones'   => $det->instrucciones_drm ?? '',
         ])->toArray();
     }
 
@@ -69,10 +65,6 @@ class RecetaService
     {
         return $fecha ? Carbon::parse($fecha)->format('Y-m-d') : '';
     }
-
-    /* ──────────────────────────────────────────────────────────────
-     |  Persistencia
-     ────────────────────────────────────────────────────────────── */
 
     /**
      * Crea o actualiza la cabecera de la receta y reemplaza sus detalles.
@@ -94,14 +86,14 @@ class RecetaService
     private function guardarCabecera(Consulta $consulta, array $datos, ?int $usuarioId): RecetasMedica
     {
         return $consulta->receta()->updateOrCreate(
-            ['consulta_id' => $consulta->id],
+            ['cme_id' => $consulta->id_cme],
             [
-                'per_id'  => $consulta->pacienteIdParaReceta(),
-                'medico_id'   => $consulta->medicoIdParaReceta($usuarioId),
-                'fecha'       => $datos['fecha'],
-                'vigencia'    => $datos['vigencia'] ?? null,
-                'descripcion' => $datos['descripcion'] ?? null,
-                'estado'      => Consulta::RECETA_ABIERTA,
+                'paciente_per_id'    => $consulta->pacienteIdParaReceta(),
+                'medico_per_id'      => $consulta->medicoIdParaReceta($usuarioId),
+                'fecha_emision_rme'  => $datos['fecha'],
+                'fecha_vigencia_rme' => $datos['vigencia'] ?? null,
+                'descripcion_rme'    => $datos['descripcion'] ?? null,
+                'estado_rme'         => Consulta::RECETA_ABIERTA,
             ]
         );
     }
@@ -128,16 +120,16 @@ class RecetaService
             $unidad = $unidades->get((int) $item['unidad_id']);
 
             $receta->detalles()->create([
-                'pdt_id'             => $item['producto_id'],
-                'unm_id'             => $item['unidad_id'],
-                'cantidad'           => 0,
-                'cantidad_prescrita' => $item['cantidad'],
-                'unidad_prescrita'   => $unidad->nombre_unm ?? 'Unidad',
-                'equivalencia_ml'    => $item['equivalencia_ml'] ?? 0,
-                'frecuencia'         => $item['frecuencia'],
-                'fecha_inicio'       => $item['fecha_inicio'] ?? $datos['fecha'],
-                'fecha_fin'          => $item['fecha_fin'] ?? $datos['vigencia'] ?? $datos['fecha'],
-                'observaciones'      => $item['observaciones'] ?? null,
+                'pdt_id'                 => $item['producto_id'],
+                'unm_id'                 => $item['unidad_id'],
+                'cantidad_drm'           => 0,
+                'cantidad_prescrita_drm' => $item['cantidad'],
+                'unidad_prescrita_drm'   => $unidad->nombre_unm ?? 'Unidad',
+                'equivalencia_ml_drm'    => $item['equivalencia_ml_drm'] ?? 0,
+                'frecuencia_drm'         => $item['frecuencia'],
+                'fecha_inicio_drm'       => $item['fecha_inicio'] ?? $datos['fecha'],
+                'fecha_fin_drm'          => $item['fecha_fin'] ?? $datos['vigencia'] ?? $datos['fecha'],
+                'instrucciones_drm'      => $item['observaciones'] ?? null,
             ]);
         }
     }

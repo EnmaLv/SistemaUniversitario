@@ -297,7 +297,7 @@
                         <strong>Trastornos o Condiciones Presentes:</strong>
                         <div class="disease-list">
                             @foreach($enfermedadesSeg as $enf)
-                                <span class="disease-tag">{{ $enf->nombre }}</span>
+                                <span class="disease-tag">{{ $enf->nombre_efm }}</span>
                             @endforeach
                         </div>
                     </div>

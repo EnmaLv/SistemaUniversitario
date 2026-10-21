@@ -35,10 +35,6 @@ class ConsultaController extends Controller
         private readonly DispensacionService $dispensaciones,
     ) {}
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Listado
-     ══════════════════════════════════════════════════════════════ */
-
     public function index(ListarConsultasRequest $request)
     {
         $consultas = Consulta::listar(
@@ -55,10 +51,6 @@ class ConsultaController extends Controller
             'medicos'      => HorarioConsultorio::usuariosElegibles(),
         ]);
     }
-
-    /* ══════════════════════════════════════════════════════════════
-     |  Paso 1: Consulta
-     ══════════════════════════════════════════════════════════════ */
 
     public function create(?Consulta $consulta = null)
     {
@@ -107,10 +99,6 @@ class ConsultaController extends Controller
             ->with('success', 'Consulta actualizada correctamente. Continúe con la recetación.');
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Paso 2: Receta
-     ══════════════════════════════════════════════════════════════ */
-
     public function recetacion(Consulta $consulta)
     {
         $consulta->load(Consulta::CARGA_RECETACION);
@@ -140,10 +128,6 @@ class ConsultaController extends Controller
             ->route(self::RUTA . '.dispensacion', $consulta)
             ->with('success', 'Receta guardada correctamente. Proceda con la dispensación.');
     }
-
-    /* ══════════════════════════════════════════════════════════════
-     |  Paso 3: Dispensación
-     ══════════════════════════════════════════════════════════════ */
 
     public function dispensacion(Consulta $consulta)
     {
@@ -189,10 +173,6 @@ class ConsultaController extends Controller
             ->with('success', $this->dispensaciones->mensajeResultado($resultado));
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Histórico y PDF
-     ══════════════════════════════════════════════════════════════ */
-
     public function show(Consulta $consulta)
     {
         $consulta->load(Consulta::CARGA_HISTORICO);
@@ -214,17 +194,13 @@ class ConsultaController extends Controller
         $nombreArchivo = sprintf(
             'recipe-%s-%s.pdf',
             $consulta->paciente->cedula_per ?? 'sin-cedula',
-            $consulta->fecha->format('Y-m-d')
+            optional($consulta->fecha_cme)->format('Y-m-d') ?? 'sin-fecha'
         );
 
         return Pdf::loadView(self::VISTA . '.recipe', compact('consulta'))
             ->setPaper('a5', 'portrait')
             ->stream($nombreArchivo);
     }
-
-    /* ══════════════════════════════════════════════════════════════
-     |  AJAX
-     ══════════════════════════════════════════════════════════════ */
 
     public function buscarEnfermedades(BusquedaRequest $request)
     {
@@ -235,12 +211,17 @@ class ConsultaController extends Controller
         $q = $request->termino();
 
         return response()->json(
-            Enfermedad::where('categoria', Enfermedad::TIPO_FISICA)
-                ->where('activo', 1)
-                ->where('nombre', 'like', "%{$q}%")
-                ->orderBy('nombre')
+            Enfermedad::where('categoria_efm', Enfermedad::TIPO_FISICA)
+                ->where('status_id', 1)
+                ->where('nombre_efm', 'like', "%{$q}%")
+                ->orderBy('nombre_efm')
                 ->limit(15)
-                ->get(['id', 'nombre', 'codigo'])
+                ->get(['id_efm', 'nombre_efm', 'codigo_efm'])
+                ->map(fn($enfermedad) => [
+                    'id'     => $enfermedad->id_efm,
+                    'nombre' => $enfermedad->nombre_efm,
+                    'codigo' => $enfermedad->codigo_efm,
+                ])
         );
     }
 
@@ -269,10 +250,6 @@ class ConsultaController extends Controller
         return response()->json($personas);
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Estadísticas
-     ══════════════════════════════════════════════════════════════ */
-
     public function estadisticas(
         EstadisticasRequest $request,
         SaludHomeService $service,
@@ -293,13 +270,9 @@ class ConsultaController extends Controller
         };
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Helpers
-     ══════════════════════════════════════════════════════════════ */
-
     private function consultoriosActivos()
     {
-        return Consultorio::where('activo', true)->orderBy('nombre')->get();
+        return Consultorio::where('status_id', 1)->orderBy('nombre_csr')->get();
     }
 
     private function sedeActual(): int

@@ -4,37 +4,45 @@ namespace App\Models\salud;
 
 use App\Models\Producto;
 use App\Models\Unidad;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DetalleRecetasMedica extends Model
 {
-    protected $table = 'detalle_recetas_medicas';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'detalle_receta_medica';
+
+    protected $primaryKey = 'id_drm';
 
     protected $fillable = [
-        'receta_id',
+        'rme_id',
         'pdt_id',
         'unm_id',
-        'cantidad',              // total dispensado acumulado
-        'cantidad_prescrita',    // cantidad recetada (fija)
-        'unidad_prescrita',      // texto: nombre de la unidad
-        'equivalencia_ml',       // equivalente en ml (0 si no aplica)
-        'frecuencia',
-        'fecha_inicio',
-        'fecha_fin',
-        'observaciones',
+        'cantidad_drm',
+        'cantidad_prescrita_drm',
+        'unidad_prescrita_drm',
+        'equivalencia_ml_drm',
+        'frecuencia_drm',
+        'fecha_inicio_drm',
+        'fecha_fin_drm',
+        'instrucciones_drm',
+        'status_id',
     ];
 
     protected $casts = [
-        'cantidad'           => 'decimal:2',
-        'cantidad_prescrita' => 'decimal:2',
-        'equivalencia_ml'    => 'decimal:2',
-        'fecha_inicio'       => 'date',
-        'fecha_fin'          => 'date',
+        'cantidad_drm'           => 'decimal:2',
+        'cantidad_prescrita_drm' => 'decimal:2',
+        'equivalencia_ml_drm'    => 'decimal:2',
+        'fecha_inicio_drm'       => 'date',
+        'fecha_fin_drm'          => 'date',
     ];
 
     public function receta()
     {
-        return $this->belongsTo(RecetasMedica::class, 'receta_id');
+        return $this->belongsTo(RecetasMedica::class, 'rme_id', 'id_rme');
     }
 
     public function producto()
@@ -49,26 +57,20 @@ class DetalleRecetasMedica extends Model
 
     public function dispensaciones()
     {
-        return $this->hasMany(Dispensacion::class, 'detalle_receta_medica_id');
+        return $this->hasMany(Dispensacion::class, 'drm_id', 'id_drm');
     }
 
-    /**
-     * Cantidad total dispensada (usa la relación cargada si está disponible).
-     */
     public function getCantidadDispensadaAttribute(): float
     {
         if ($this->relationLoaded('dispensaciones')) {
-            return (float) $this->dispensaciones->sum('cantidad');
+            return (float) $this->dispensaciones->sum('cantidad_dsm');
         }
-        return (float) $this->dispensaciones()->sum('cantidad');
+        return (float) $this->dispensaciones()->sum('cantidad_dsm');
     }
 
-    /**
-     * Pendiente = prescrita - total dispensado.
-     */
     public function getCantidadPendienteAttribute(): float
     {
-        return max(0, round((float) $this->cantidad_prescrita - $this->cantidad_dispensada, 2));
+        return max(0, round((float) $this->cantidad_prescrita_drm - $this->cantidad_dispensada, 2));
     }
 
     public function getEstaCompletoAttribute(): bool

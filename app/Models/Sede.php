@@ -51,7 +51,7 @@ class Sede extends Model
 
     public function consultorios()
     {
-        return $this->hasMany(Consultorio::class, 'sed_id');
+        return $this->hasMany(Consultorio::class, 'sed_id', 'id_sed');
     }
 
     public static function listarSedes($buscar = null, $activo = null)

@@ -23,7 +23,7 @@ class EstadisticasRequest extends FormRequest
             'format'           => ['nullable', 'in:' . implode(',', self::FORMATOS)],
             'report_type'      => ['nullable', 'string', 'max:50', 'regex:/^[a-z0-9_\-]+$/i'],
             'periodo'          => ['nullable', 'string', 'max:30'],
-            'consultorio_id'   => ['nullable', 'integer', 'exists:consultorios,id'],
+            'consultorio_id'   => ['nullable', 'integer', 'exists:consultorio,id_csr'],
             'medico_id'        => ['nullable', 'integer', 'exists:persona,id_per'],
             'enfermedad_ids'   => ['nullable', 'array', 'max:50'],
             'enfermedad_ids.*' => ['integer', 'min:1'],

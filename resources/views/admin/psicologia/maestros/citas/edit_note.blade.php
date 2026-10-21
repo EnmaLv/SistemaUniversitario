@@ -210,7 +210,7 @@
                                                 class="p-3 text-[10px] text-gray-400 text-center font-bold uppercase tracking-widest animate-pulse">
                                                 Buscando...</div>
                                         </template>
-                                        <template x-for="res in results" :key="res.id">
+                                        <template x-for="res in results" :key="res.id_efm">
                                             <button type="button"
                                                 @click="addDiagnostico(res); open = false; search = ''"
                                                 class="w-full text-left px-4 py-2.5 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-xl border-b border-gray-50 dark:border-gray-700/50 last:border-none transition-colors group">
@@ -220,10 +220,10 @@
                                                     </div>
                                                     <span
                                                         class="text-[10px] font-bold text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
-                                                        x-text="res.nombre"></span>
+                                                        x-text="res.nombre_efm"></span>
                                                     <span
                                                         class="text-[9px] font-mono text-gray-400 dark:text-gray-500 ml-auto"
-                                                        x-text="res.codigo"></span>
+                                                        x-text="res.codigo_efm"></span>
                                                 </div>
                                             </button>
                                         </template>
@@ -702,8 +702,12 @@
                 },
 
                 addDiagnostico(item) {
-                    if (!this.data.diagnosticos.some(d => d.id === item.id)) {
-                        this.data.diagnosticos.push(item);
+                    if (!this.data.diagnosticos.some(d => d.id === item.id_efm)) {
+                        this.data.diagnosticos.push({
+                            id: item.id_efm,
+                            codigo: item.codigo_efm,
+                            nombre: item.nombre_efm
+                        });
                         this.hasUnsavedChanges = JSON.stringify(this.data) !== initialSnapshot;
                     }
                 },

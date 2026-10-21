@@ -49,9 +49,9 @@
                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                         class="w-full px-3 py-2.5 text-sm font-semibold border-none focus:ring-0 focus:outline-none transition-all cursor-pointer">
                         @forelse ($consultorios as $consultorio)
-                            <option value="{{ $consultorio->id }}"
-                                {{ $consultorioId === $consultorio->id ? 'selected' : '' }}>
-                                {{ $consultorio->nombre }}
+                            <option value="{{ $consultorio->id_csr }}"
+                                {{ $consultorioId === $consultorio->id_csr ? 'selected' : '' }}>
+                                {{ $consultorio->nombre_csr }}
                             </option>
                         @empty
                             <option value="">No hay consultorios registrados</option>
@@ -161,8 +161,8 @@
                                         @php
                                             $diaRegistros = $horarios->get($diaKey) ?? collect();
                                             $registrosEnBloque = collect($diaRegistros)->filter(function ($item) use ($bloque) {
-                                                $inicioItem = \Carbon\Carbon::parse($item->hora_inicio)->format('H:i:s');
-                                                $finItem = \Carbon\Carbon::parse($item->hora_fin)->format('H:i:s');
+                                                $inicioItem = \Carbon\Carbon::parse($item->hora_inicio_hrc)->format('H:i:s');
+                                                $finItem = \Carbon\Carbon::parse($item->hora_fin_hrc)->format('H:i:s');
                                                 $inicioBloque = \Carbon\Carbon::parse($bloque['inicio'])->format('H:i:s');
                                                 $finBloque = \Carbon\Carbon::parse($bloque['fin'])->format('H:i:s');
                                                 return $inicioItem === $inicioBloque && $finItem === $finBloque;
@@ -193,8 +193,8 @@
                                                                 </div> 
                                                             </div>
 
-                                                            <form id="form-delete-{{ $registro->id }}"
-                                                                action="{{ route('admin.salud.movimientos.horarios.destroy', $registro->id) }}"
+                                                            <form id="form-delete-{{ $registro->id_hrc }}"
+                                                                action="{{ route('admin.salud.movimientos.horarios.destroy', $registro->id_hrc) }}"
                                                                 method="POST">
                                                                 @csrf
                                                                 @method('DELETE')

@@ -5,6 +5,7 @@ namespace App\Exports\Salud;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\SimpleType\Jc;
+use App\Models\salud\Consulta;
 use Carbon\Carbon;
 
 class SaludEstadisticasWordExport
@@ -134,25 +135,25 @@ class SaludEstadisticasWordExport
 
             foreach ($consultas as $c) {
                 $estado = $c->receta
-                    ? ($c->receta->estado == 2 ? 'Completada' : 'En proceso')
+                    ? ((int) $c->receta->estado_rme === Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso')
                     : 'Sin receta';
 
                 $table->addRow();
-                $table->addCell()->addText('#' . $c->id, $cellFontStyle);
+                $table->addCell()->addText('#' . $c->id_cme, $cellFontStyle);
                 $table->addCell()->addText(
                     trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—',
                     $cellFontStyle
                 );
                 $table->addCell()->addText($c->paciente->cedula_per ?? '—', $cellFontStyle);
                 $table->addCell()->addText(
-                    $c->fecha ? Carbon::parse($c->fecha)->format('d/m/Y') : '—',
+                    $c->fecha_cme ? Carbon::parse($c->fecha_cme)->format('d/m/Y') : '—',
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
                     trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: '—',
                     $cellFontStyle
                 );
-                $table->addCell()->addText($c->consultorio->nombre ?? '—', $cellFontStyle);
+                $table->addCell()->addText($c->consultorio->nombre_csr ?? '—', $cellFontStyle);
                 $table->addCell()->addText($estado, $cellFontStyle);
             }
 
@@ -183,9 +184,9 @@ class SaludEstadisticasWordExport
                 if (!$c->receta) continue;
 
                 $table->addRow();
-                $table->addCell()->addText('#' . str_pad($c->receta->id, 5, '0', STR_PAD_LEFT), $cellFontStyle);
+                $table->addCell()->addText('#' . str_pad($c->receta->id_rme, 5, '0', STR_PAD_LEFT), $cellFontStyle);
                 $table->addCell()->addText(
-                    $c->receta->fecha ? Carbon::parse($c->receta->fecha)->format('d/m/Y') : '—',
+                    $c->receta->fecha_emision_rme ? Carbon::parse($c->receta->fecha_emision_rme)->format('d/m/Y') : '—',
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
@@ -197,7 +198,7 @@ class SaludEstadisticasWordExport
                     $cellFontStyle
                 );
                 $table->addCell()->addText((string) $c->receta->detalles->count(), $cellFontStyle);
-                $table->addCell()->addText($c->receta->estado == 2 ? 'Completada' : 'En proceso', $cellFontStyle);
+                $table->addCell()->addText((int) $c->receta->estado_rme === Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso', $cellFontStyle);
             }
 
             $section->addTextBreak(2);
@@ -231,7 +232,7 @@ class SaludEstadisticasWordExport
                         $totalItems++;
                         $table->addRow();
                         $table->addCell()->addText(
-                            $disp->fecha ? Carbon::parse($disp->fecha)->format('d/m/Y') : '—',
+                            $disp->fecha_dispensacion_dsm ? Carbon::parse($disp->fecha_dispensacion_dsm)->format('d/m/Y') : '—',
                             $cellFontStyle
                         );
                         $table->addCell()->addText(
@@ -239,7 +240,7 @@ class SaludEstadisticasWordExport
                             $cellFontStyle
                         );
                         $table->addCell()->addText($det->producto->nombre_pdt ?? '—', $cellFontStyle);
-                        $table->addCell()->addText(number_format($disp->cantidad, 2), $cellFontStyle);
+                        $table->addCell()->addText(number_format($disp->cantidad_dsm, 2), $cellFontStyle);
                         $table->addCell()->addText($disp->lote->codigo_lote_lot ?? '—', $cellFontStyle);
                         $table->addCell()->addText(
                             trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—',

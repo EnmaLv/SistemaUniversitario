@@ -6,7 +6,7 @@
         $paciente = $consulta->paciente;
         $pacienteNombre = trim(($paciente->nombres_per ?? '') . ' ' . ($paciente->apellidos_per ?? ''));
         $medicoNombre = trim(($consulta->medico->nombres_per ?? '') . ' ' . ($consulta->medico->apellidos_per ?? ''));
-        $recetaVencida = $receta->vigencia && \Carbon\Carbon::parse($receta->vigencia)->endOfDay()->isPast();
+        $recetaVencida = $receta->fecha_vigencia_rme && \Carbon\Carbon::parse($receta->fecha_vigencia_rme)->endOfDay()->isPast();
 
         $dispensacionesExistentes = $receta->detalles->flatMap->dispensaciones;
         $detallesPendientes = $receta->detalles->filter(fn($d) => $d->cantidad_pendiente > 0);
@@ -69,7 +69,7 @@
 
                             @foreach ($detallesPendientes as $detalle)
                                 @php
-                                    $lotesDisponibles = $lotesPorDetalle[$detalle->id] ?? collect();
+                                    $lotesDisponibles = $lotesPorDetalle[$detalle->id_drm] ?? collect();
                                     $lotesJs = $lotesDisponibles->map(function ($l) {
                                         $vence = $l->fecha_vencimiento_lot ? \Carbon\Carbon::parse($l->fecha_vencimiento_lot) : null;
                                         return [
@@ -84,12 +84,12 @@
                                     $pendiente = (float) $detalle->cantidad_pendiente;
                                     $unidadNombre = optional($detalle->unidad)->nombre_unm ?? '';
                                     $unidadCorta = optional($detalle->unidad)->abreviatura_unm ?? $unidadNombre;
-                                    $prescrita = $detalle->cantidad_prescrita ?? null;
+                                    $prescrita = $detalle->cantidad_prescrita_drm ?? null;
                                     // Tras un error de validación se respeta lo que el usuario había marcado
-                                    $oldDispensar = old("items.{$detalle->id}.dispensar");
-                                    $oldCantidad = old("items.{$detalle->id}.cantidad");
+                                    $oldDispensar = old("items.{$detalle->id_drm}.dispensar");
+                                    $oldCantidad = old("items.{$detalle->id_drm}.cantidad");
                                     $configDetalle = [
-                                        'id' => $detalle->id,
+                                        'id' => $detalle->id_drm,
                                         'nombre' => optional($detalle->producto)->nombre_pdt ?? '—',
                                         'unidad' => $unidadCorta,
                                         'dispensar' => !$sinStock && ($oldDispensar === null || filter_var($oldDispensar, FILTER_VALIDATE_BOOLEAN)),
@@ -103,12 +103,12 @@
                                 <article x-data="registrar(crearDetalle(@js($configDetalle)))"
                                     class="cx-card transition-opacity"
                                     :class="{ 'opacity-60': !dispensar }"
-                                    @error("items.{$detalle->id}.cantidad") style="border-color:#e11d48" @enderror>
+                                    @error("items.{$detalle->id_drm}.cantidad") style="border-color:#e11d48" @enderror>
 
                                     {{-- ── Cabecera seleccionable ── --}}
                                     <label class="flex items-start gap-4 p-5 {{ $sinStock ? 'cursor-not-allowed' : 'cursor-pointer' }}">
-                                        <input type="hidden" name="items[{{ $detalle->id }}][dispensar]" value="0">
-                                        <input type="checkbox" name="items[{{ $detalle->id }}][dispensar]" value="1"
+                                        <input type="hidden" name="items[{{ $detalle->id_drm }}][dispensar]" value="0">
+                                        <input type="checkbox" name="items[{{ $detalle->id_drm }}][dispensar]" value="1"
                                             x-model="dispensar" {{ $sinStock ? 'disabled' : '' }}
                                             class="mt-0.5 w-5 h-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 disabled:opacity-40 shrink-0">
 
@@ -125,9 +125,9 @@
                                             </span>
 
                                             <span class="block text-sm cx-muted mt-1">
-                                                {{ $detalle->frecuencia }}
-                                                @if ($detalle->observaciones)
-                                                    <span class="cx-faint">—</span> {{ $detalle->observaciones }}
+                                                {{ $detalle->frecuencia_drm }}
+                                                @if ($detalle->instrucciones_drm)
+                                                    <span class="cx-faint">—</span> {{ $detalle->instrucciones_drm }}
                                                 @endif
                                             </span>
 
@@ -153,12 +153,12 @@
 
                                                 {{-- Cantidad --}}
                                                 <div>
-                                                    <label for="cantidad_{{ $detalle->id }}" class="cx-label">Cantidad a entregar</label>
+                                                    <label for="cantidad_{{ $detalle->id_drm }}" class="cx-label">Cantidad a entregar</label>
                                                     <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500/30 focus-within:border-sky-600"
                                                         style="border-color: var(--border-color);"
                                                         :style="excede ? 'border-color:#e11d48' : ''">
-                                                        <input type="number" id="cantidad_{{ $detalle->id }}"
-                                                            name="items[{{ $detalle->id }}][cantidad]"
+                                                        <input type="number" id="cantidad_{{ $detalle->id_drm }}"
+                                                            name="items[{{ $detalle->id_drm }}][cantidad]"
                                                             x-model.number="cantidad" :disabled="!dispensar"
                                                             min="0.01" :max="maxCantidad" step="0.01" inputmode="decimal"
                                                             class="w-full min-w-0 px-3.5 py-2.5 text-base font-bold tabular-nums bg-transparent border-0 focus:ring-0 cx-text">
@@ -179,7 +179,7 @@
                                                         <i class="fas fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
                                                         Indica una cantidad mayor a 0.
                                                     </p>
-                                                    @error("items.{$detalle->id}.cantidad")
+                                                    @error("items.{$detalle->id_drm}.cantidad")
                                                         <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5" aria-hidden="true"></i>{{ $message }}</p>
                                                     @enderror
                                                 </div>
@@ -232,13 +232,13 @@
                                                     </div>
 
                                                     <div>
-                                                        <label for="obs_{{ $detalle->id }}" class="cx-label">
+                                                        <label for="obs_{{ $detalle->id_drm }}" class="cx-label">
                                                             Observación<span class="cx-opt">(opcional)</span>
                                                         </label>
-                                                        <input type="text" id="obs_{{ $detalle->id }}" maxlength="255"
-                                                            name="items[{{ $detalle->id }}][observaciones]"
+                                                        <input type="text" id="obs_{{ $detalle->id_drm }}" maxlength="255"
+                                                            name="items[{{ $detalle->id_drm }}][observaciones]"
                                                             :disabled="!dispensar" placeholder="Ej.: se entrega una caja de dos"
-                                                            value="{{ old("items.{$detalle->id}.observaciones") }}"
+                                                            value="{{ old("items.{$detalle->id_drm}.observaciones") }}"
                                                             class="cx-input">
                                                     </div>
                                                 </div>
@@ -271,13 +271,13 @@
                                                     {{ optional($detalle->producto)->nombre_pdt ?? '—' }}
                                                 </p>
                                                 <p class="text-xs cx-muted mt-0.5">
-                                                    {{ optional($disp->fecha)->format('d/m/Y') }},
+                                                    {{ optional($disp->fecha_dispensacion_dsm)->format('d/m/Y') }},
                                                     lote {{ optional($disp->lote)->codigo_lote_lot ?? '—' }},
                                                     entregó {{ optional(optional($disp->usuario)->persona)->nombres_per ?? '—' }}
                                                 </p>
                                             </div>
                                             <span class="text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400 shrink-0">
-                                                {{ $fmt($disp->cantidad) }}
+                                                {{ $fmt($disp->cantidad_dsm) }}
                                                 <span class="text-xs font-medium cx-muted">{{ optional($detalle->unidad)->abreviatura_unm ?? optional($detalle->unidad)->nombre_unm }}</span>
                                             </span>
                                         </li>
@@ -308,8 +308,8 @@
                             </div>
                             <div x-data="{ abierto: false }">
                                 <dt>Diagnóstico</dt>
-                                <dd class="!font-medium" :class="abierto ? '' : 'line-clamp-3'">{{ $consulta->diagnostico }}</dd>
-                                @if (mb_strlen($consulta->diagnostico ?? '') > 140)
+                                <dd class="!font-medium" :class="abierto ? '' : 'line-clamp-3'">{{ $consulta->diagnostico_cme }}</dd>
+                                @if (mb_strlen($consulta->diagnostico_cme ?? '') > 140)
                                     <button type="button" class="cx-link mt-1 !text-xs" @click="abierto = !abierto"
                                         x-text="abierto ? 'Ver menos' : 'Ver completo'"></button>
                                 @endif
@@ -322,21 +322,21 @@
                         <dl class="cx-ficha mt-3 grid grid-cols-2 gap-3">
                             <div>
                                 <dt>Emitida</dt>
-                                <dd>{{ optional($receta->fecha)->format('d/m/Y') ?? '—' }}</dd>
+                                <dd>{{ optional($receta->fecha_emision_rme)->format('d/m/Y') ?? '—' }}</dd>
                             </div>
                             <div>
                                 <dt>Válida hasta</dt>
                                 <dd class="{{ $recetaVencida ? '!text-rose-600' : '' }}">
-                                    {{ optional($receta->vigencia)->format('d/m/Y') ?? 'Sin límite' }}
+                                    {{ optional($receta->fecha_vigencia_rme)->format('d/m/Y') ?? 'Sin límite' }}
                                     @if ($recetaVencida)
                                         <span class="block text-xs font-semibold">Vencida</span>
                                     @endif
                                 </dd>
                             </div>
-                            @if ($receta->descripcion)
+                            @if ($receta->descripcion_rme)
                                 <div class="col-span-2">
                                     <dt>Indicaciones generales</dt>
-                                    <dd class="!font-medium">{{ $receta->descripcion }}</dd>
+                                    <dd class="!font-medium">{{ $receta->descripcion_rme }}</dd>
                                 </div>
                             @endif
                         </dl>

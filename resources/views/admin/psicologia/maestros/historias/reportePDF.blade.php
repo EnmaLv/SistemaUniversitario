@@ -250,7 +250,7 @@
                     <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e7eb;">
                         <strong>Trastornos o Condiciones Presentes:</strong><br>
                         @foreach($enfermedadesSeg as $enf)
-                            <span class="disease-tag">{{ $enf->nombre }}</span>
+                            <span class="disease-tag">{{ $enf->nombre_efm }}</span>
                         @endforeach
                     </div>
                 @endif

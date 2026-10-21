@@ -5,6 +5,7 @@ namespace App\Services\Salud;
 use App\Models\salud\Consulta;
 use App\Models\salud\Consultorio;
 use App\Models\salud\HorarioConsultorio;
+use App\Models\salud\RecetasMedica;
 use Carbon\Carbon;
 
 class SaludHomeService
@@ -26,7 +27,7 @@ class SaludHomeService
             'medicoId'     => $filtros['medico_id'] ?? null,
             'consultas'    => $consultas,
             'resumen'      => $resumen,
-            'consultorios' => Consultorio::where('activo', true)->orderBy('nombre')->get(),
+            'consultorios' => Consultorio::where('status_id', 1)->orderBy('nombre_csr')->get(),
             'medicos'      => HorarioConsultorio::usuariosElegibles(),
         ];
     }
@@ -52,7 +53,7 @@ class SaludHomeService
             ->conEnfermedades($f['enfermedad_ids'] ?? [])
             ->conEstadoReceta($f['estado_receta'] ?? null)
             ->conPacienteFiltros($f['perfil_academico'] ?? null, $f['pnf'] ?? null)
-            ->latest('fecha')
+            ->latest('consulta_medica.fecha_cme')
             ->get();
     }
 
@@ -100,13 +101,13 @@ class SaludHomeService
 
         foreach ($consultas as $c) {
             // Semana
-            if ($c->fecha) {
-                $semanaKey = Carbon::parse($c->fecha)->format('W-Y');
+            if ($c->fecha_cme) {
+                $semanaKey = Carbon::parse($c->fecha_cme)->format('W-Y');
                 $citasSemanales[$semanaKey] = ($citasSemanales[$semanaKey] ?? 0) + 1;
             }
 
             // Hora (usa created_at como aproximación)
-            $horaRef = $c->fecha ? Carbon::parse($c->fecha) : null;
+            $horaRef = $c->fecha_cme ? Carbon::parse($c->fecha_cme) : null;
             if ($horaRef) {
                 $bloque = $horaRef->format('h:00 A');
                 $horasBloques[$bloque] = ($horasBloques[$bloque] ?? 0) + 1;
@@ -114,7 +115,7 @@ class SaludHomeService
 
             // Enfermedades
             foreach ($c->enfermedades as $enf) {
-                $nombre = $enf->nombre ?? 'Sin nombre';
+                $nombre = $enf->nombre_efm ?? 'Sin nombre';
                 $resumen['enfermedades'][$nombre] = ($resumen['enfermedades'][$nombre] ?? 0) + 1;
             }
 
@@ -123,7 +124,7 @@ class SaludHomeService
             $resumen['medicos'][$nombreMedico] = ($resumen['medicos'][$nombreMedico] ?? 0) + 1;
 
             // Consultorio
-            $nombreCons = $c->consultorio->nombre ?? 'Sin consultorio';
+            $nombreCons = $c->consultorio->nombre_csr ?? 'Sin consultorio';
             $resumen['consultorios'][$nombreCons] = ($resumen['consultorios'][$nombreCons] ?? 0) + 1;
 
             // Receta y dispensaciones
@@ -133,17 +134,17 @@ class SaludHomeService
 
                 $estaCompleta = true;
                 foreach ($c->receta->detalles as $det) {
-                    $disp = (float) $det->dispensaciones->sum('cantidad');
+                    $disp = (float) $det->dispensaciones->sum('cantidad_dsm');
                     $resumen['total_dispensados'] += $disp;
 
                     // Producto top (por cantidad total dispensada)
                     $prodNombre = $det->producto->nombre_pdt ?? 'Producto #' . $det->pdt_id;
                     $resumen['productos_top'][$prodNombre] = ($resumen['productos_top'][$prodNombre] ?? 0) + $disp;
 
-                    if ($disp < (float) $det->cantidad) $estaCompleta = false;
+                    if ($disp < (float) $det->cantidad_prescrita_drm) $estaCompleta = false;
                 }
 
-                if ($c->receta->estado == 0) {
+                if ((int) $c->receta->status_id === RecetasMedica::STATUS_INACTIVO) {
                     $resumen['estado_recetas']['Anulada']++;
                 } elseif ($estaCompleta && count($c->receta->detalles) > 0) {
                     $resumen['estado_recetas']['Completa']++;
@@ -157,8 +158,8 @@ class SaludHomeService
 
             // Datos únicos del paciente
             $paciente = $c->paciente;
-            if ($paciente && !isset($pacientes[$paciente->per_id])) {
-                $pacientes[$paciente->per_id] = true;
+            if ($paciente && !isset($pacientes[$paciente->id_per])) {
+                $pacientes[$paciente->id_per] = true;
                 $resumen['total_pacientes']++;
 
                 // Género

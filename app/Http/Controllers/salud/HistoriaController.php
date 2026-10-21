@@ -211,7 +211,7 @@ class HistoriaController extends Controller
     {
         $request->validate([
             'historia_clinica_id' => 'required|exists:historia_clinicas,id',
-            'enfermedad_id' => 'required|exists:enfermedades,id',
+            'enfermedad_id' => 'required|exists:enfermedad,id_efm',
             'contexto' => 'required|string',
         ]);
 

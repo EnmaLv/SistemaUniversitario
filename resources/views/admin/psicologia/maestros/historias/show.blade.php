@@ -12,7 +12,7 @@
 
         window._historiaConfig = {
             vinculados: @js($enfermedadesVinculadas->mapWithKeys(fn($items, $key) => [
-                $key => $items->map(fn($v) => ['link_id' => $v->link_id, 'nombre' => $v->nombre]),
+                $key => $items->map(fn($v) => ['link_id' => $v->link_id, 'nombre' => $v->nombre_efm]),
             ])),
             seccionesTitulos: @js($seccionesPersonalizadas->pluck('titulo')->values()->toArray()),
         };
@@ -558,7 +558,7 @@
                                                             class="relative">
                                                             <input type="text" x-model="query"
                                                                 @input.debounce.300ms="search()"
-                                                                @keydown.enter.prevent="if(results.length > 0) vincular(results[0].id, 'seg_{{ $segmento->id }}')"
+                                                                @keydown.enter.prevent="if(results.length > 0) vincular(results[0].id_efm, 'seg_{{ $segmento->id }}')"
                                                                 placeholder="Buscar..."
                                                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                                                 class="w-40 border rounded-xl py-1.5 px-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm placeholder-gray-400 dark:placeholder-gray-500">
@@ -573,18 +573,18 @@
                                                                             Buscando...</div>
                                                                     </template>
                                                                     <template x-for="item in results"
-                                                                        :key="item.id">
+                                                                        :key="item.id_efm">
                                                                         <button type="button"
                                                                             class="w-full text-left p-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition-colors group"
-                                                                            @click="vincular(item.id, 'seg_{{ $segmento->id }}')">
+                                                                            @click="vincular(item.id_efm, 'seg_{{ $segmento->id }}')">
                                                                             <div class="flex items-center gap-2">
                                                                                 <div class="w-1.5 h-1.5 rounded-full"
-                                                                                    :class="item.categoria === 'mental' ?
+                                                                                    :class="item.categoria_efm === 'mental' ?
                                                                                         'bg-indigo-400' :
                                                                                         'bg-indigo-400'">
                                                                                 </div>
                                                                                 <div class="text-[10px] font-bold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
-                                                                                    x-text="item.nombre"></div>
+                                                                                    x-text="item.nombre_efm"></div>
                                                                             </div>
                                                                         </button>
                                                                     </template>
