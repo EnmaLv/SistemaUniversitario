@@ -14,14 +14,14 @@ class BecaBeneficioRequest extends FormRequest
 
     public function rules(): array
     {
-        $beneficioId = $this->route('beneficio')?->id;
+        $beneficioId = $this->route('beneficio')?->id_bes;
 
         return [
             'nombre_beneficio' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('be_beneficios', 'nombre_beneficio')->ignore($beneficioId),
+                Rule::unique('beneficio_estudiantil', 'nombre_beneficio_bes')->ignore($beneficioId, 'id_bes')->whereNull('deleted_at'),
             ],
             'descripcion' => ['nullable', 'string'],
             'status'      => ['required', 'boolean'],

@@ -70,9 +70,9 @@ class HomeController extends Controller
         $visibleModules = $this->construirModulosVisibles($roleName);
 
         $hoy             = Carbon::now();
-        $jornadasActivas = JornadaBeca::where('activa', 1)
-            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
-            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+        $jornadasActivas = JornadaBeca::where('status_id', 1)
+            ->whereDate('fecha_inicio_solicitud_jnb', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud_jnb', '>=', $hoy)
             ->with(['beneficio', 'lapso'])
             ->get();
 
@@ -93,6 +93,8 @@ class HomeController extends Controller
             'transporteData'  => $transporteData,
             'comedorData'     => $comedorData,
             'becasData'       => $becasData,
+            'jornadasActivas'    => $jornadasActivas,
+            'jornadasRenovables' => $jornadasRenovables,
             'psicologiaAdminData' => $psicologiaAdminData,
             'administracionData' => $administracionData,
         ], $psicologiaData));
@@ -337,13 +339,13 @@ class HomeController extends Controller
         }
 
         foreach ($jornadasActivas as $jornada) {
-            $aprobadoAnterior = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
-                ->where('estado', 1)
-                ->where('id_lapso', '!=', $jornada->lapsos_id)
+            $aprobadoAnterior = SolicitudBeca::where('bes_id', $jornada->bes_id)
+                ->where('estado_solicitud_sob', 1)
+                ->where('laa_id', '!=', $jornada->laa_id)
                 ->where('per_id', $user->per_id)
                 ->exists();
 
-            $postuladoActual = SolicitudBeca::where('jornada_id', $jornada->id)
+            $postuladoActual = SolicitudBeca::where('jnb_id', $jornada->id_jnb)
                 ->where('per_id', $user->per_id)
                 ->exists();
 

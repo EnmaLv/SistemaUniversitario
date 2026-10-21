@@ -88,9 +88,9 @@
                                 class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                 <option value="">Todos los beneficios</option>
                                 @foreach ($beneficios as $ben)
-                                    <option value="{{ $ben->id }}"
-                                        @if (request('beneficio') == $ben->id) selected @endif>
-                                        {{ $ben->nombre_beneficio }}
+                                    <option value="{{ $ben->id_bes }}"
+                                        @if (request('beneficio') == $ben->id_bes) selected @endif>
+                                        {{ $ben->nombre_beneficio_bes }}
                                     </option>
                                 @endforeach
                             </select>
@@ -155,27 +155,27 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($preguntas as $pregunta)
-                                <x-table-row :id="$pregunta->id">
+                                <x-table-row :id="$pregunta->id_pgb">
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
                                             class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
-                                            {{ $pregunta->codigo }}
+                                            {{ $pregunta->codigo_pgb }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $pregunta->etiqueta }}
+                                        {{ $pregunta->etiqueta_pgb }}
                                     </td>
                                     <td
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $tipos[$pregunta->tipo] ?? $pregunta->tipo }}
+                                        {{ $tipos[$pregunta->tipo_campo_pgb] ?? $pregunta->tipo_campo_pgb }}
                                     </td>
                                     <td
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $pregunta->beca->nombre_beneficio ?? '—' }}
+                                        {{ $pregunta->beca->nombre_beneficio_bes ?? '—' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($pregunta->obligatoria)
+                                        @if ($pregunta->obligatoria_pgb)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900">
                                                 <i class="fas fa-asterisk text-[8px]"></i> Sí
@@ -188,8 +188,8 @@
                                         @endif
                                     </td>
 
-                                    <x-table-actions :id="$pregunta->id" baseUrl="admin/becas/preguntas"
-                                        :status="$pregunta->activo" />
+                                    <x-table-actions :id="$pregunta->id_pgb" baseUrl="admin/becas/preguntas"
+                                        :status="$pregunta->estaActivo()" />
                                 </x-table-row>
                             @empty
                                 <tr>

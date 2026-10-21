@@ -28,7 +28,7 @@ class JornadaBecaController extends Controller
 
     public function create()
     {
-        $beneficios = Beneficio::where('status', 1)->get();
+        $beneficios = Beneficio::activos()->get();
         $lapsos     = Lapso::all();
 
         $criteriosPorBeneficio = $this->mapaCriteriosPorBeneficio();
@@ -40,15 +40,15 @@ class JornadaBecaController extends Controller
     {
         return BeneficioCriterio::with('pregunta')
             ->get()
-            ->groupBy('id_be_beneficio')
+            ->groupBy('bes_id')
             ->map(fn ($items) => $items->map(fn ($c) => [
-                'id_pregunta'     => $c->id_pregunta,
-                'pregunta'        => $c->pregunta?->etiqueta,
-                'codigo'          => $c->pregunta?->codigo,
-                'operador'        => $c->operador,
-                'valor_esperado'  => $c->valor_esperado,
-                'es_eliminatoria' => (bool) $c->es_eliminatoria,
-                'peso'            => $c->peso,
+                'id_pregunta'     => $c->pgb_id,
+                'pregunta'        => $c->pregunta?->etiqueta_pgb,
+                'codigo'          => $c->pregunta?->codigo_pgb,
+                'operador'        => $c->operador_crb,
+                'valor_esperado'  => $c->valor_esperado_crb,
+                'es_eliminatoria' => (bool) $c->es_eliminatoria_crb,
+                'peso'            => $c->peso_crb,
             ])->values()->all())
             ->toArray();
     }
@@ -70,19 +70,19 @@ class JornadaBecaController extends Controller
     public function edit(int $id)
     {
         $jornada    = JornadaBeca::with('criterios.pregunta')->findOrFail($id);
-        $beneficios = Beneficio::where('status', 1)->get();
+        $beneficios = Beneficio::activos()->get();
         $lapsos     = Lapso::all();
 
         $criteriosPorBeneficio = $this->mapaCriteriosPorBeneficio();
 
         $criteriosActuales = $jornada->criterios->map(fn ($c) => [
-            'id_pregunta'     => $c->id_pregunta,
-            'pregunta'        => $c->pregunta?->etiqueta,
-            'codigo'          => $c->pregunta?->codigo,
-            'operador'        => $c->operador,
-            'valor_esperado'  => $c->valor_esperado,
-            'es_eliminatoria' => (bool) $c->es_eliminatoria,
-            'peso'            => $c->peso,
+            'id_pregunta'     => $c->pgb_id,
+            'pregunta'        => $c->pregunta?->etiqueta_pgb,
+            'codigo'          => $c->pregunta?->codigo_pgb,
+            'operador'        => $c->operador_cjb,
+            'valor_esperado'  => $c->valor_esperado_cjb,
+            'es_eliminatoria' => (bool) $c->es_eliminatoria_cjb,
+            'peso'            => $c->peso_cjb,
         ])->values()->all();
 
         return view('admin.becas.jornada.edit',

@@ -2,9 +2,9 @@
 namespace App\Services\becas;
 
 use App\Models\Becas\JornadaBeca;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 use App\Models\Becas\Lapso;
 use App\Models\Becas\Beneficio;
 use App\Models\Becas\JornadaCriterio;
@@ -19,12 +19,11 @@ class JornadaBecasServices
         $hoy = now()->toDateString();
 
         $this->desactivarJornadasExpiradas();
-        
 
         return Cache::remember(self::CACHE_KEY_ACTIVA, now()->addHours(12), function () use ($hoy) {
-            return JornadaBeca::where('activa', 1)
-                ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
-                ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+            return JornadaBeca::activos()
+                ->whereDate('fecha_inicio_solicitud_jnb', '<=', $hoy)
+                ->whereDate('fecha_fin_solicitud_jnb', '>=', $hoy)
                 ->get();
         });
     }
@@ -34,17 +33,17 @@ class JornadaBecasServices
         DB::beginTransaction();
         try {
             $criterios = $validated['criterios'] ?? [];
-            unset($validated['criterios']);
 
-            $validated['nombre_jornada'] = $this->normalizarNombreConLapso(
-                $validated['nombre_jornada'],
-                $validated['lapsos_id']
+            $datos = $this->datosJornada($validated);
+            $datos['nombre_jornada_jnb'] = $this->normalizarNombreConLapso(
+                $datos['nombre_jornada_jnb'],
+                $datos['laa_id']
             );
-            $validated['cupos_asignados'] = 0;
+            $datos['cupos_asignados_jnb'] = 0;
 
-            $this->validarCuposDisponibles($validated['beneficio_id'], $validated['cupos_maximos']);
+            $this->validarCuposDisponibles($datos['bes_id'], $datos['cupos_maximos_jnb']);
 
-            $jornada = JornadaBeca::create($validated);
+            $jornada = JornadaBeca::create($datos);
 
             $this->guardarCriterios($jornada, $criterios);
 
@@ -58,45 +57,45 @@ class JornadaBecasServices
         }
     }
 
-    public function actualizarJornada(int $id, array $datos): JornadaBeca
+    public function actualizarJornada(int $id, array $validated): JornadaBeca
     {
-        return DB::transaction(function () use ($id, $datos) {
+        return DB::transaction(function () use ($id, $validated) {
             $jornada = JornadaBeca::findOrFail($id);
 
-            $criterios = $datos['criterios'] ?? null;
-            unset($datos['criterios']);
+            $criterios = $validated['criterios'] ?? null;
+            $datos = $this->datosJornada($validated);
 
-            if ($jornada->fecha_fin_solicitud && $jornada->fecha_fin_solicitud->isPast()) {
+            if ($jornada->fecha_fin_solicitud_jnb && $jornada->fecha_fin_solicitud_jnb->isPast()) {
                 throw new Exception('No se puede actualizar una jornada que ya ha expirado.');
             }
 
-            $jornadaIniciada = $jornada->fecha_inicio_solicitud && $jornada->fecha_inicio_solicitud->isPast();
+            $jornadaIniciada = $jornada->fecha_inicio_solicitud_jnb && $jornada->fecha_inicio_solicitud_jnb->isPast();
 
             if ($jornadaIniciada) {
-                $inicioOriginal = $jornada->fecha_inicio_solicitud->format('Y-m-d');
-                $nuevoInicio    = isset($datos['fecha_inicio_solicitud'])
-                    ? date('Y-m-d', strtotime($datos['fecha_inicio_solicitud']))
+                $inicioOriginal = $jornada->fecha_inicio_solicitud_jnb->format('Y-m-d');
+                $nuevoInicio    = !empty($datos['fecha_inicio_solicitud_jnb'])
+                    ? date('Y-m-d', strtotime($datos['fecha_inicio_solicitud_jnb']))
                     : '';
 
-                if ($jornada->beneficio_id != $datos['beneficio_id']
-                    || $jornada->lapsos_id != $datos['lapsos_id']
+                if ($jornada->bes_id != $datos['bes_id']
+                    || $jornada->laa_id != $datos['laa_id']
                     || $inicioOriginal !== $nuevoInicio
-                    || $jornada->activa != ($datos['activa'] ?? 0)) {
+                    || (int) $jornada->status_id !== $datos['status_id']) {
                     throw new Exception('No se pueden modificar campos críticos en una jornada que ya ha iniciado.');
                 }
             }
 
-            $this->validarCuposDisponibles($datos['beneficio_id'], $datos['cupos_maximos']);
+            $this->validarCuposDisponibles($datos['bes_id'], $datos['cupos_maximos_jnb']);
 
-            $datos['nombre_jornada'] = $this->normalizarNombreConLapso(
-                $datos['nombre_jornada'],
-                $datos['lapsos_id']
+            $datos['nombre_jornada_jnb'] = $this->normalizarNombreConLapso(
+                $datos['nombre_jornada_jnb'],
+                $datos['laa_id']
             );
 
             $jornada->update($datos);
 
             if ($criterios !== null && !$jornadaIniciada) {
-                $jornada->criterios()->delete();
+                $jornada->criterios()->forceDelete();
                 $this->guardarCriterios($jornada, $criterios);
             }
 
@@ -106,6 +105,20 @@ class JornadaBecasServices
         });
     }
 
+    private function datosJornada(array $validated): array
+    {
+        return [
+            'nombre_jornada_jnb'         => $validated['nombre_jornada'],
+            'descripcion_jornada_jnb'    => $validated['descripcion_jornada'] ?? null,
+            'bes_id'                     => (int) $validated['beneficio_id'],
+            'laa_id'                     => (int) $validated['lapsos_id'],
+            'fecha_inicio_solicitud_jnb' => $validated['fecha_inicio_solicitud'],
+            'fecha_fin_solicitud_jnb'    => $validated['fecha_fin_solicitud'],
+            'cupos_maximos_jnb'          => (int) $validated['cupos_maximos'],
+            'status_id'                  => !empty($validated['activa']) ? JornadaBeca::STATUS_ACTIVO : JornadaBeca::STATUS_INACTIVO,
+        ];
+    }
+
     private function guardarCriterios(JornadaBeca $jornada, array $criterios): void
     {
         if (empty($criterios)) return;
@@ -113,14 +126,16 @@ class JornadaBecasServices
         $rows = collect($criterios)
             ->filter(fn ($c) => !empty($c['id_pregunta']))
             ->map(fn ($c) => [
-                'id_jornada'      => $jornada->id,
-                'id_pregunta'     => $c['id_pregunta'],
-                'operador'        => $c['operador'] ?? null,
-                'valor_esperado'  => $c['valor_esperado'] ?? null,
-                'es_eliminatoria' => !empty($c['es_eliminatoria']),
-                'peso'            => $c['peso'] ?? 0,
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'jnb_id'              => $jornada->id_jnb,
+                'pgb_id'              => $c['id_pregunta'],
+                'operador_cjb'        => $c['operador'] ?? null,
+                'valor_esperado_cjb'  => $c['valor_esperado'] ?? null,
+                'es_eliminatoria_cjb' => !empty($c['es_eliminatoria']),
+                'peso_cjb'            => $c['peso'] ?? 0,
+                'status_id'           => JornadaCriterio::STATUS_ACTIVO,
+                'created_id'          => Auth::id(),
+                'created_at'          => now(),
+                'updated_at'          => now(),
             ])
             ->values()
             ->all();
@@ -133,7 +148,7 @@ class JornadaBecasServices
     public function desactivarJornada(int $id): JornadaBeca
     {
         $jornada = JornadaBeca::findOrFail($id);
-        $jornada->update(['activa' => 0]);
+        $jornada->update(['status_id' => JornadaBeca::STATUS_INACTIVO]);
 
         $this->limpiarCacheJornada();
 
@@ -143,7 +158,7 @@ class JornadaBecasServices
     public function activarJornada(int $id): JornadaBeca
     {
         $jornada = JornadaBeca::findOrFail($id);
-        $jornada->update(['activa' => 1]);
+        $jornada->update(['status_id' => JornadaBeca::STATUS_ACTIVO]);
 
         $this->limpiarCacheJornada();
 
@@ -159,15 +174,15 @@ class JornadaBecasServices
         $activa    = request('activa', 1);
 
         $jornadas = JornadaBeca::with(['beneficio', 'lapso'])
-            ->when($buscar, fn ($q) => $q->where('nombre_jornada', 'like', "%{$buscar}%"))
-            ->when($beneficio, fn ($q) => $q->where('beneficio_id', $beneficio))
-            ->where('activa', $activa)
-            ->orderByDesc('id')
+            ->when($buscar, fn ($q) => $q->where('nombre_jornada_jnb', 'like', "%{$buscar}%"))
+            ->when($beneficio, fn ($q) => $q->where('bes_id', $beneficio))
+            ->where('status_id', (int) $activa === 1 ? JornadaBeca::STATUS_ACTIVO : JornadaBeca::STATUS_INACTIVO)
+            ->orderByDesc('id_jnb')
             ->paginate(10)
             ->withQueryString();
 
-        $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
-        $lapsoActual = Lapso::where('es_actual', 1)->first();
+        $beneficios = Beneficio::orderBy('nombre_beneficio_bes')->get();
+        $lapsoActual = Lapso::where('es_actual_laa', true)->first();
 
         return view('admin.becas.jornada.index', compact('jornadas', 'beneficios', 'lapsoActual'));
     }
@@ -180,14 +195,14 @@ class JornadaBecasServices
     private function validarCuposDisponibles(int $beneficioId, int $cuposMaximos): void
     {
         $beneficio = Beneficio::findOrFail($beneficioId);
-        if ($beneficio->cupones_disponibles < $cuposMaximos) {
+        if ($beneficio->cupones_disponibles_bes < $cuposMaximos) {
             throw new Exception('El número de cupos máximos excede los cupos disponibles del beneficio.');
         }
     }
 
     private function normalizarNombreConLapso(string $nombreJornada, int $lapsoId): string
     {
-        $lapsoElegido = Lapso::findOrFail($lapsoId)->codigo;
+        $lapsoElegido = Lapso::findOrFail($lapsoId)->codigo_laa;
         if (!str_contains($nombreJornada, $lapsoElegido)) {
             $nombreJornada .= ' ' . $lapsoElegido;
         }
@@ -198,11 +213,11 @@ class JornadaBecasServices
     {
         $hoy = now()->toDateString();
 
-        $jornadasExpiradas = JornadaBeca::where('activa', 1)
-            ->whereDate('fecha_fin_solicitud', '<', $hoy);
-        
+        $jornadasExpiradas = JornadaBeca::activos()
+            ->whereDate('fecha_fin_solicitud_jnb', '<', $hoy);
+
         if ($jornadasExpiradas->exists()) {
-            $jornadasExpiradas->update(['activa' => 0]);
+            $jornadasExpiradas->update(['status_id' => JornadaBeca::STATUS_INACTIVO]);
             $this->limpiarCacheJornada();
         }
     }

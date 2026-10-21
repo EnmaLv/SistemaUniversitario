@@ -119,7 +119,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($beneficios as $b)
-                <option value="{{ $b->id }}">{{ $b->nombre_beneficio }}</option>
+                <option value="{{ $b->id_bes }}">{{ $b->nombre_beneficio_bes }}</option>
             @endforeach
         </select>
     </div>
@@ -130,7 +130,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todas</option>
             @foreach ($jornadas as $j)
-                <option value="{{ $j->id }}">{{ $j->nombre_jornada }}</option>
+                <option value="{{ $j->id_jnb }}">{{ $j->nombre_jornada_jnb }}</option>
             @endforeach
         </select>
     </div>
@@ -162,7 +162,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($lapsos as $l)
-                <option value="{{ $l->id }}">{{ $l->codigo }}</option>
+                <option value="{{ $l->id_laa }}">{{ $l->codigo_laa }}</option>
             @endforeach
         </select>
     </div>

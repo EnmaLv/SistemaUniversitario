@@ -57,10 +57,10 @@
             <div class="z-10 pt-2 grid grid-cols-1 gap-3">
                 @if(isset($jornadasRenovables) && $jornadasRenovables->count() > 0)
                     @foreach($jornadasRenovables as $jornadaRenovable)
-                        <button type="button" @click.prevent="$dispatch('open-renovacion', { jornadaId: {{ $jornadaRenovable->id }}, nombreBeneficio: '{{ $jornadaRenovable->beneficio->nombre_beneficio ?? '' }}' })"
+                        <button type="button" @click.prevent="$dispatch('open-renovacion', { jornadaId: {{ $jornadaRenovable->id_jnb }}, nombreBeneficio: '{{ $jornadaRenovable->beneficio->nombre_beneficio_bes ?? '' }}' })"
                             class="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-2xl shadow-md hover:shadow-lg active:scale-95 transition-all text-sm mb-2">
                             <i class="fas fa-bolt text-amber-200"></i>
-                            <span>Renovar Beca: {{ $jornadaRenovable->beneficio->nombre_beneficio ?? 'N/A' }}</span>
+                            <span>Renovar Beca: {{ $jornadaRenovable->beneficio->nombre_beneficio_bes ?? 'N/A' }}</span>
                         </button>
                     @endforeach
                 @endif
@@ -98,7 +98,7 @@
                                         <div class="flex items-center justify-between w-full">
                                             <div class="flex items-center gap-3">
                                                 @php
-                                                    $estadoConfig = match ((int) $solicitud->estado) {
+                                                    $estadoConfig = match ((int) $solicitud->estado_solicitud_sob) {
                                                         0 => ['icon' => 'fa-clock', 'text' => 'Pendiente', 'icon_bg' => 'bg-amber-100 dark:bg-amber-900/30', 'icon_text' => 'text-amber-600 dark:text-amber-400', 'badge_bg' => 'bg-amber-50 dark:bg-amber-950', 'badge_border' => 'border-amber-200 dark:border-amber-800', 'badge_text' => 'text-amber-700 dark:text-amber-400'],
                                                         1 => ['icon' => 'fa-check-circle', 'text' => 'Aprobada', 'icon_bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'icon_text' => 'text-emerald-600 dark:text-emerald-400', 'badge_bg' => 'bg-emerald-50 dark:bg-emerald-950', 'badge_border' => 'border-emerald-200 dark:border-emerald-800', 'badge_text' => 'text-emerald-700 dark:text-emerald-400'],
                                                         2 => ['icon' => 'fa-times-circle', 'text' => 'Rechazada', 'icon_bg' => 'bg-rose-100 dark:bg-rose-900/30', 'icon_text' => 'text-rose-600 dark:text-rose-400', 'badge_bg' => 'bg-rose-50 dark:bg-rose-950', 'badge_border' => 'border-rose-200 dark:border-rose-800', 'badge_text' => 'text-rose-700 dark:text-rose-400'],
@@ -111,9 +111,9 @@
                                                 </div>
                                                 <div class="text-left">
                                                     <p class="text-xs font-bold text-gray-800 dark:text-gray-200">Beca:
-                                                        {{ $solicitud->jornada->beneficio->nombre_beneficio ?? 'N/A' }}</p>
+                                                        {{ $solicitud->jornada->beneficio->nombre_beneficio_bes ?? 'N/A' }}</p>
                                                     <p class="text-[10px] text-gray-500 font-medium">Jornada:
-                                                        {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}</p>
+                                                        {{ $solicitud->jornada->nombre_jornada_jnb ?? 'N/A' }}</p>
                                                 </div>
                                             </div>
                                             <div class="text-right">
@@ -125,10 +125,10 @@
                                                     {{ $solicitud->created_at->format('d/m/Y') }}</p>
                                             </div>
                                         </div>
-                                        @if($solicitud->estado == 2 && $solicitud->comentario_verificador)
+                                        @if($solicitud->estado_solicitud_sob == 2 && $solicitud->comentario_verificador_sob)
                                             <div class="mt-3 text-[10px] text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/50">
                                                 <span class="font-bold uppercase tracking-wider block mb-0.5"><i class="fas fa-info-circle mr-1"></i>Motivo del rechazo:</span>
-                                                {{ $solicitud->comentario_verificador }}
+                                                {{ $solicitud->comentario_verificador_sob }}
                                             </div>
                                         @endif
                                     </div>
@@ -161,7 +161,7 @@
 
             <!-- Card: Beneficios Activos -->
             @php
-                $beneficiosActivos = isset($misSolicitudesBecas) ? $misSolicitudesBecas->unique('id_beneficio')->where('estado', 1) : collect();
+                $beneficiosActivos = isset($misSolicitudesBecas) ? $misSolicitudesBecas->where('estado_solicitud_sob', 1)->unique('bes_id') : collect();
             @endphp
             <div class="rounded-3xl border shadow-sm p-5 flex flex-col justify-between transition-all"
                 style="background-color: var(--bg-card); border-color: var(--border-color);">
@@ -187,7 +187,7 @@
                                             </div>
                                             <div class="text-left">
                                                 <p class="text-xs font-bold text-gray-800 dark:text-gray-200">
-                                                    {{ $beneficioActivo->jornada->beneficio->nombre_beneficio ?? 'Beneficio Activo' }}
+                                                    {{ $beneficioActivo->jornada->beneficio->nombre_beneficio_bes ?? 'Beneficio Activo' }}
                                                 </p>
                                                 <p class="text-[10px] text-gray-500 font-medium">
                                                     Aprobado el {{ $beneficioActivo->updated_at->format('d/m/Y') }}
@@ -241,15 +241,15 @@
                                 <div class="p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-black/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-indigo-200 dark:hover:border-indigo-800/50 transition-colors">
                                     <div>
                                         <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">
-                                            {{ $jornada->nombre_jornada }}
+                                            {{ $jornada->nombre_jornada_jnb }}
                                         </h4>
                                         <p class="text-xs text-gray-500 mt-1">
-                                            Beneficio: <span class="font-medium text-gray-700 dark:text-gray-300">{{ $jornada->beneficio->nombre_beneficio ?? 'N/A' }}</span>
+                                            Beneficio: <span class="font-medium text-gray-700 dark:text-gray-300">{{ $jornada->beneficio->nombre_beneficio_bes ?? 'N/A' }}</span>
                                         </p>
                                     </div>
                                     <div class="flex flex-col sm:items-end gap-2 shrink-0">
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50">
-                                            <i class="fas fa-calendar-check"></i> Hasta {{ \Carbon\Carbon::parse($jornada->fecha_fin_solicitud)->format('d/m/Y') }}
+                                            <i class="fas fa-calendar-check"></i> Hasta {{ \Carbon\Carbon::parse($jornada->fecha_fin_solicitud_jnb)->format('d/m/Y') }}
                                         </span>
                                         @canMenu('solicitar')
                                         <a href="{{ route('admin.becas.solicitar') }}" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 underline underline-offset-2">Solicitar ahora</a>
@@ -316,7 +316,7 @@
                             <div class="flex items-center justify-between w-full">
                                 <div class="flex items-center gap-3">
                                     @php
-                                        $estadoConfig = match((int)$solicitud->estado) {
+                                        $estadoConfig = match((int)$solicitud->estado_solicitud_sob) {
                                             0 => ['icon' => 'fa-clock', 'text' => 'Pendiente', 'icon_bg' => 'bg-amber-100 dark:bg-amber-900/30', 'icon_text' => 'text-amber-600 dark:text-amber-400', 'badge_bg' => 'bg-amber-50 dark:bg-amber-950', 'badge_border' => 'border-amber-200 dark:border-amber-800', 'badge_text' => 'text-amber-700 dark:text-amber-400'],
                                             1 => ['icon' => 'fa-check-circle', 'text' => 'Aprobada', 'icon_bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'icon_text' => 'text-emerald-600 dark:text-emerald-400', 'badge_bg' => 'bg-emerald-50 dark:bg-emerald-950', 'badge_border' => 'border-emerald-200 dark:border-emerald-800', 'badge_text' => 'text-emerald-700 dark:text-emerald-400'],
                                             2 => ['icon' => 'fa-times-circle', 'text' => 'Rechazada', 'icon_bg' => 'bg-rose-100 dark:bg-rose-900/30', 'icon_text' => 'text-rose-600 dark:text-rose-400', 'badge_bg' => 'bg-rose-50 dark:bg-rose-950', 'badge_border' => 'border-rose-200 dark:border-rose-800', 'badge_text' => 'text-rose-700 dark:text-rose-400'],
@@ -327,8 +327,8 @@
                                         <i class="fas {{ $estadoConfig['icon'] }}"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $solicitud->jornada->beneficio->nombre_beneficio ?? 'N/A' }}</p>
-                                        <p class="text-[10px] text-gray-500 font-medium">Jornada: {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}</p>
+                                        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $solicitud->jornada->beneficio->nombre_beneficio_bes ?? 'N/A' }}</p>
+                                        <p class="text-[10px] text-gray-500 font-medium">Jornada: {{ $solicitud->jornada->nombre_jornada_jnb ?? 'N/A' }}</p>
                                     </div>
                                 </div>
                                 <div class="text-right flex flex-col items-end gap-1">
@@ -338,10 +338,10 @@
                                     <p class="text-[9px] text-gray-400 font-medium">{{ $solicitud->created_at->format('d/m/Y - h:i A') }}</p>
                                 </div>
                             </div>
-                            @if($solicitud->estado == 2 && $solicitud->comentario_verificador)
+                            @if($solicitud->estado_solicitud_sob == 2 && $solicitud->comentario_verificador_sob)
                                 <div class="mt-3 text-[10px] text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/50">
                                     <span class="font-bold uppercase tracking-wider block mb-0.5"><i class="fas fa-info-circle mr-1"></i>Motivo del rechazo:</span>
-                                    {{ $solicitud->comentario_verificador }}
+                                    {{ $solicitud->comentario_verificador_sob }}
                                 </div>
                             @endif
                         </div>

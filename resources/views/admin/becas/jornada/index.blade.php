@@ -36,8 +36,8 @@
                             <i class="fas fa-calendar-check"></i>
                         </div>
                         <div>
-                            <h3 class="text-sky-800 dark:text-sky-400 font-bold text-sm">Lapso Académico Actual: {{ $lapsoActual->codigo }}</h3>
-                            <p class="text-sky-700 dark:text-sky-500 text-xs font-medium">Del {{ $lapsoActual->fecha_inicio->format('d/m/Y') }} al {{ $lapsoActual->fecha_fin->format('d/m/Y') }}</p>
+                            <h3 class="text-sky-800 dark:text-sky-400 font-bold text-sm">Lapso Académico Actual: {{ $lapsoActual->codigo_laa }}</h3>
+                            <p class="text-sky-700 dark:text-sky-500 text-xs font-medium">Del {{ $lapsoActual->fecha_inicio_laa?->format('d/m/Y') }} al {{ $lapsoActual->fecha_fin_laa?->format('d/m/Y') ?? '—' }}</p>
                         </div>
                     </div>
                 </div>
@@ -102,9 +102,9 @@
                                 class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                 <option value="">Todos los beneficios</option>
                                 @foreach ($beneficios as $ben)
-                                    <option value="{{ $ben->id }}"
-                                        @if (request('beneficio') == $ben->id) selected @endif>
-                                        {{ $ben->nombre_beneficio }}
+                                    <option value="{{ $ben->id_bes }}"
+                                        @if (request('beneficio') == $ben->id_bes) selected @endif>
+                                        {{ $ben->nombre_beneficio_bes }}
                                     </option>
                                 @endforeach
                             </select>
@@ -144,46 +144,46 @@
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($jornadas as $jornada)
                                 @php
-                                    $expirada = $jornada->fecha_fin_solicitud && $jornada->fecha_fin_solicitud->isPast();
-                                    $iniciada = $jornada->fecha_inicio_solicitud && $jornada->fecha_inicio_solicitud->isPast();
+                                    $expirada = $jornada->fecha_fin_solicitud_jnb && $jornada->fecha_fin_solicitud_jnb->isPast();
+                                    $iniciada = $jornada->fecha_inicio_solicitud_jnb && $jornada->fecha_inicio_solicitud_jnb->isPast();
                                 @endphp
 
-                                <x-table-row :id="$jornada->id">
+                                <x-table-row :id="$jornada->id_jnb">
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400 font-bold">
                                         {{ ($jornadas->currentPage() - 1) * $jornadas->perPage() + $loop->iteration }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $jornada->nombre_jornada }}
+                                        {{ $jornada->nombre_jornada_jnb }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $jornada->beneficio->nombre_beneficio ?? '—' }}
+                                        {{ $jornada->beneficio->nombre_beneficio_bes ?? '—' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <div class="flex flex-col items-center gap-0.5">
                                             <span class="text-[11px] font-mono">
-                                                {{ $jornada->fecha_inicio_solicitud?->format('d/m/Y') ?? '—' }}
+                                                {{ $jornada->fecha_inicio_solicitud_jnb?->format('d/m/Y') ?? '—' }}
                                                 <span class="text-gray-400">→</span>
-                                                {{ $jornada->fecha_fin_solicitud?->format('d/m/Y') ?? '—' }}
+                                                {{ $jornada->fecha_fin_solicitud_jnb?->format('d/m/Y') ?? '—' }}
                                             </span>
                                             <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800">
-                                                {{ $jornada->lapso->codigo ?? '—' }}
+                                                {{ $jornada->lapso->codigo_laa ?? '—' }}
                                             </span>
                                         </div>
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-black rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900 font-mono">
-                                            {{ $jornada->cupos_asignados }}
-                                            <span class="text-sky-900 dark:text-sky-200">/ {{ $jornada->cupos_maximos }}</span>
+                                            {{ $jornada->cupos_asignados_jnb }}
+                                            <span class="text-sky-900 dark:text-sky-200">/ {{ $jornada->cupos_maximos_jnb }}</span>
                                         </span>
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($jornada->activa)
+                                        @if ($jornada->estaActivo())
                                             <span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-circle text-[6px]"></i> Activa
                                             </span>
@@ -198,8 +198,8 @@
                                         @endif
                                     </td>
 
-                                    <x-table-actions :id="$jornada->id" baseUrl="admin/becas/jornada"
-                                        :status="1" />
+                                    <x-table-actions :id="$jornada->id_jnb" baseUrl="admin/becas/jornada"
+                                        :status="$jornada->estaActivo()" />
                                 </x-table-row>
                             @empty
                                 <tr>
@@ -302,7 +302,7 @@
                 
                 <div class="mb-5 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/50">
                     <p class="text-sm text-amber-800 dark:text-amber-400 font-medium">
-                        <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Atención:</strong> Esta acción archivará el lapso actual ({{ isset($lapsoActual) ? $lapsoActual->codigo : 'N/A' }}) y activará el nuevo lapso en todo el módulo de becas. <strong>No se puede deshacer.</strong>
+                        <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Atención:</strong> Esta acción archivará el lapso actual ({{ isset($lapsoActual) ? $lapsoActual->codigo_laa : 'N/A' }}) y activará el nuevo lapso en todo el módulo de becas. <strong>No se puede deshacer.</strong>
                     </p>
                 </div>
 

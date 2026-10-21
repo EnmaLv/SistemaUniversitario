@@ -67,21 +67,21 @@
                         <span
                             class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Beneficio</span>
                         <span class="font-bold text-red-700 dark:text-red-400">
-                            {{ $solicitud->beneficio->nombre_beneficio ?? 'N/A' }}
+                            {{ $solicitud->beneficio->nombre_beneficio_bes ?? 'N/A' }}
                         </span>
                     </div>
                     <div>
                         <span
                             class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Jornada</span>
                         <span class="font-semibold" style="color: var(--text-main);">
-                            {{ $solicitud->jornada->nombre_jornada ?? 'N/A' }}
+                            {{ $solicitud->jornada->nombre_jornada_jnb ?? 'N/A' }}
                         </span>
                     </div>
                     <div>
                         <span
                             class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Lapso</span>
                         <span class="font-semibold font-mono" style="color: var(--text-main);">
-                            {{ $solicitud->lapso->codigo ?? 'N/A' }}
+                            {{ $solicitud->lapso->codigo_laa ?? 'N/A' }}
                         </span>
                     </div>
                     <div>
@@ -89,10 +89,10 @@
                             solicitud</span>
                         <span
                             class="inline-flex items-center px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-widest
-                            {{ $solicitud->tipo_solicitud === 'nueva'
+                            {{ $solicitud->tipo_solicitud_sob === 'nueva'
     ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900'
     : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900' }}">
-                            {{ ucfirst($solicitud->tipo_solicitud) }}
+                            {{ ucfirst($solicitud->tipo_solicitud_sob) }}
                         </span>
                     </div>
                     <div>
@@ -106,7 +106,7 @@
                         <div>
                             <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Archivo
                                 adjunto</span>
-                            <a href="{{ route('admin.becas.solicitudes.descargar_documento', $solicitud->id) }}" target="_blank"
+                            <a href="{{ route('admin.becas.solicitudes.descargar_documento', $solicitud->id_sob) }}" target="_blank"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900 transition-colors text-[11px] font-black uppercase tracking-wider">
                                 <i class="fas fa-file-pdf"></i> Ver Notas
                             </a>
@@ -134,9 +134,9 @@
 
                 @php
                     $respuestasOrdenadas = $solicitud->respuestas
-                        ->sortBy(fn($r) => $r->pregunta?->orden ?? 0)
+                        ->sortBy(fn($r) => $r->pregunta?->orden_pgb ?? 0)
                         ->values();
-                    $eliminatoriasFallidas = $respuestasOrdenadas->where('cumple_criterio', false)->count();
+                    $eliminatoriasFallidas = $respuestasOrdenadas->where('cumple_criterio_rsb', false)->count();
                 @endphp
 
                 @if ($eliminatoriasFallidas > 0)
@@ -155,7 +155,7 @@
                     @forelse ($respuestasOrdenadas as $resp)
                         @php
                             $pregunta = $resp->pregunta;
-                            $esEliminatoria = $pregunta && $pregunta->criterios->contains(fn($c) => $c->es_eliminatoria);
+                            $esEliminatoria = $pregunta && $pregunta->criterios->contains(fn($c) => $c->es_eliminatoria_cjb);
                         @endphp
 
                         <div class="py-4 border-b last:border-0 flex flex-col sm:flex-row sm:items-start gap-3"
@@ -164,47 +164,47 @@
                             <div class="flex-1 min-w-0">
                                 <div class="flex flex-wrap items-center gap-2 mb-1">
                                     <span class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $pregunta->etiqueta ?? 'Pregunta eliminada' }}
+                                        {{ $pregunta->etiqueta_pgb ?? 'Pregunta eliminada' }}
                                     </span>
-                                    @if ($pregunta && $pregunta->codigo)
+                                    @if ($pregunta && $pregunta->codigo_pgb)
                                         <span
                                             class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800 font-mono">
-                                            {{ $pregunta->codigo }}
+                                            {{ $pregunta->codigo_pgb }}
                                         </span>
                                     @endif
                                 </div>
 
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    @if ($pregunta && $pregunta->tipo === 'checkbox' && !empty($resp->valor_json))
+                                    @if ($pregunta && $pregunta->tipo_campo_pgb === 'checkbox' && !empty($resp->valor_json_rsb))
                                         <div class="flex flex-wrap gap-1.5 mt-1">
-                                            @foreach ($resp->valor_json as $v)
+                                            @foreach ($resp->valor_json_rsb as $v)
                                                 @php
-                                                    $opt = $pregunta->opciones->firstWhere('valor', $v);
+                                                    $opt = $pregunta->opciones->firstWhere('valor_opb', $v);
                                                 @endphp
                                                 <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md
                                                                 bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400
                                                                 border border-sky-200 dark:border-sky-900">
-                                                    {{ $opt->etiqueta ?? $v }}
+                                                    {{ $opt->etiqueta_opb ?? $v }}
                                                 </span>
                                             @endforeach
                                         </div>
-                                    @elseif ($pregunta && in_array($pregunta->tipo, ['select', 'radio', 'boolean']))
+                                    @elseif ($pregunta && in_array($pregunta->tipo_campo_pgb, ['select', 'radio', 'boolean']))
                                         @php
-                                            $opt = $pregunta->opciones->firstWhere('valor', $resp->valor);
-                                            $texto = $opt->etiqueta ?? $resp->valor;
-                                            if ($pregunta->tipo === 'boolean') {
-                                                $texto = $resp->valor == '1' ? 'Sí' : ($resp->valor == '0' ? 'No' : $resp->valor);
+                                            $opt = $pregunta->opciones->firstWhere('valor_opb', $resp->valor_rsb);
+                                            $texto = $opt->etiqueta_opb ?? $resp->valor_rsb;
+                                            if ($pregunta->tipo_campo_pgb === 'boolean') {
+                                                $texto = $resp->valor_rsb == '1' ? 'Sí' : ($resp->valor_rsb == '0' ? 'No' : $resp->valor_rsb);
                                             }
                                         @endphp
                                         <span class="font-medium">{{ $texto ?: '—' }}</span>
                                     @else
-                                        <span class="font-medium whitespace-pre-line">{{ $resp->valor ?: '—' }}</span>
+                                        <span class="font-medium whitespace-pre-line">{{ $resp->valor_rsb ?: '—' }}</span>
                                     @endif
                                 </div>
                             </div>
 
-                            @if ($resp->cumple_criterio !== null)
-                                @if ($resp->cumple_criterio)
+                            @if ($resp->cumple_criterio_rsb !== null)
+                                @if ($resp->cumple_criterio_rsb)
                                     <span class="inline-flex items-center gap-1 self-start px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg
                                                     bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400
                                                     border border-emerald-200 dark:border-emerald-900">
@@ -243,8 +243,8 @@
                 </div>
 
                 <div class="p-6">
-                    @if ($solicitud->estado === 0)
-                        <form action="{{ route('admin.becas.solicitudes.verificar', $solicitud->id) }}" method="POST"
+                    @if ($solicitud->estado_solicitud_sob === 0)
+                        <form action="{{ route('admin.becas.solicitudes.verificar', $solicitud->id_sob) }}" method="POST"
                             id="form-verificar">
                             @csrf
                             @method('PUT')
@@ -323,18 +323,18 @@
                                     {{ $solicitud->verificador->persona->apellidos_per ?? '' }}
                                 </span>
                                 <span class="block text-[10px] text-gray-400 font-mono mt-0.5">
-                                    {{ $solicitud->verificador->username ?? 'N/A' }}
+                                    {{ $solicitud->verificador->username_use ?? 'N/A' }}
                                 </span>
                             </div>
                             <div>
                                 <span class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Fecha
                                     de verificación</span>
                                 <span class="font-semibold" style="color: var(--text-main);">
-                                    {{ $solicitud->fecha_verificacion?->format('d/m/Y g:i A') ?? 'N/A' }}
+                                    {{ $solicitud->fecha_verificacion_sob?->format('d/m/Y g:i A') ?? 'N/A' }}
                                 </span>
                             </div>
 
-                            @if ($solicitud->estado === 2 && $solicitud->comentario_verificador)
+                            @if ($solicitud->estado_solicitud_sob === 2 && $solicitud->comentario_verificador_sob)
                                 <div class="sm:col-span-2 md:col-span-3">
                                     <span
                                         class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Motivo
@@ -342,12 +342,12 @@
                                     <div class="rounded-xl border px-4 py-3 text-sm font-medium
                                                 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300
                                                 border-rose-200 dark:border-rose-900">
-                                        {{ $solicitud->comentario_verificador }}
+                                        {{ $solicitud->comentario_verificador_sob }}
                                     </div>
                                 </div>
                             @endif
 
-                            @if ($solicitud->estado === 1)
+                            @if ($solicitud->estado_solicitud_sob === 1)
                                 <div class="mt-6 flex justify-end border-t pt-4" style="border-color: var(--border-color);">
                                     <button type="button" onclick="document.getElementById('modalRevocar').classList.replace('hidden', 'flex')"
                                         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/40 text-sm font-bold shadow-sm transition-all">
@@ -363,7 +363,7 @@
         </div>
     </div>
 
-    @if ($solicitud->estado === 1)
+    @if ($solicitud->estado_solicitud_sob === 1)
         <div id="modalRevocar" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
             <div class="w-full max-w-lg rounded-2xl border shadow-2xl"
                 style="background-color: var(--bg-card); border-color: var(--border-color);">
@@ -376,7 +376,7 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <form action="{{ route('admin.becas.solicitudes.verificar', $solicitud->id) }}" method="POST" class="p-5">
+                <form action="{{ route('admin.becas.solicitudes.verificar', $solicitud->id_sob) }}" method="POST" class="p-5">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="estado" value="2">

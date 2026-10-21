@@ -144,9 +144,9 @@
                                         Seleccione la jornada...
                                     </option>
                                     @foreach ($jornadas as $j)
-                                        <option value="{{ $j->id }}" data-beneficio-id="{{ $j->beneficio_id }}"
-                                            data-lapso-id="{{ $j->lapsos_id }}" @selected(old('jornada_id') == $j->id)>
-                                            {{ $j->nombre_jornada }}
+                                        <option value="{{ $j->id_jnb }}" data-beneficio-id="{{ $j->bes_id }}"
+                                            data-lapso-id="{{ $j->laa_id }}" @selected(old('jornada_id') == $j->id_jnb)>
+                                            {{ $j->nombre_jornada_jnb }}
                                         </option>
                                     @endforeach
                                 </select>

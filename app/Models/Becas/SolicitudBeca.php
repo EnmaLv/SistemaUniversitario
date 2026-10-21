@@ -2,47 +2,52 @@
 
 namespace App\Models\Becas;
 
-use App\Traits\PerteneceASedePorRelacion;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Persona;
-use App\Models\Becas\Beneficio;
-use App\Models\Becas\JornadaBeca;
-use App\Models\Becas\Lapso;
 use App\Models\Usuario;
+use App\Traits\PerteneceASedePorRelacion;
+use App\Traits\RegistraAutoria;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SolicitudBeca extends Model
 {
     use PerteneceASedePorRelacion;
+    use RegistraAutoria;
+    use SoftDeletes;
 
     protected $relacionSede = 'persona';
 
-    protected $table = 'be_solicitud_becas';
+    protected $table = 'solicitud_beneficio';
+
+    protected $primaryKey = 'id_sob';
 
     protected $fillable = [
         'per_id',
-        'id_beneficio',
-        'jornada_id',
-        'tipo_solicitud',
-        'estado',
-        'id_lapso',
-        'comentario_verificador',
-        'verificado_por',
-        'fecha_verificacion',
+        'bes_id',
+        'jnb_id',
+        'tipo_solicitud_sob',
+        'estado_solicitud_sob',
+        'laa_id',
+        'comentario_verificador_sob',
+        'verificado_por_use_id',
+        'fecha_verificacion_sob',
+        'status_id',
     ];
 
     protected $casts = [
-        'estado'              => 'integer',
-        'fecha_verificacion'  => 'datetime',
+        'estado_solicitud_sob'   => 'integer',
+        'fecha_verificacion_sob' => 'datetime',
+        'status_id'              => 'integer',
     ];
 
     public function respuestas()
     {
-        return $this->hasMany(SolicitudRespuesta::class, 'id_solicitud');
+        return $this->hasMany(SolicitudRespuesta::class, 'sob_id', 'id_sob');
     }
 
     public function getEstadoTextoAttribute(): string
     {
-        return match ($this->estado) {
+        return match ($this->estado_solicitud_sob) {
             0 => 'Pendiente',
             1 => 'Aprobado',
             2 => 'Rechazado',
@@ -52,7 +57,7 @@ class SolicitudBeca extends Model
 
     public function getEstadoBadgeAttribute(): string
     {
-        return match ($this->estado) {
+        return match ($this->estado_solicitud_sob) {
             0 => 'bg-yellow-50 text-yellow-700 border-yellow-200/50 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-900/30',
             1 => 'bg-green-50 text-green-700 border-green-200/50 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900/30',
             2 => 'bg-red-50 text-red-700 border-red-200/50 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30',
@@ -67,26 +72,31 @@ class SolicitudBeca extends Model
 
     public function beneficio()
     {
-        return $this->belongsTo(Beneficio::class, 'id_beneficio', 'id');
+        return $this->belongsTo(Beneficio::class, 'bes_id', 'id_bes');
     }
 
     public function jornada()
     {
-        return $this->belongsTo(JornadaBeca::class, 'jornada_id', 'id');
+        return $this->belongsTo(JornadaBeca::class, 'jnb_id', 'id_jnb');
     }
 
     public function lapso()
     {
-        return $this->belongsTo(Lapso::class, 'id_lapso', 'id');
+        return $this->belongsTo(Lapso::class, 'laa_id', 'id_laa');
     }
 
     public function verificador()
     {
-        return $this->belongsTo(Usuario::class, 'verificado_por', 'id_use');
+        return $this->belongsTo(Usuario::class, 'verificado_por_use_id', 'id_use');
     }
 
     public function documento()
     {
-        return $this->hasOne(SolicitudDocumento::class, 'id_solicitud');
+        return $this->hasOne(SolicitudDocumento::class, 'sob_id', 'id_sob');
+    }
+
+    public function asignacion()
+    {
+        return $this->hasOne(BecaAsignada::class, 'sob_id', 'id_sob');
     }
 }

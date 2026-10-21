@@ -105,28 +105,28 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($beneficios as $beneficio)
-                                <x-table-row :id="$beneficio->id">
+                                <x-table-row :id="$beneficio->id_bes">
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400 font-bold">
                                         {{ ($beneficios->currentPage() - 1) * $beneficios->perPage() + $loop->iteration }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $beneficio->nombre_beneficio }}
+                                        {{ $beneficio->nombre_beneficio_bes }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400 max-w-xs truncate">
-                                        {{ $beneficio->descripcion ?: '—' }}
+                                        {{ $beneficio->descripcion_bes ?: '—' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800 font-mono">
-                                            {{ $beneficio->slug }}
+                                            {{ $beneficio->slug_bes }}
                                         </span>
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($beneficio->status)
+                                        @if ($beneficio->estaActivo())
                                             <span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-check-circle text-[8px]"></i> Activo
                                             </span>
@@ -137,7 +137,7 @@
                                         @endif
                                     </td>
 
-                                    <x-table-actions :id="$beneficio->id" baseUrl="admin/becas/beneficios"
+                                    <x-table-actions :id="$beneficio->id_bes" baseUrl="admin/becas/beneficios"
                                         :status="1" :show="false"/>
                                 </x-table-row>
                             @empty

@@ -23,15 +23,15 @@ class GuardarJornadaRequest extends FormRequest
         return [
             'nombre_jornada' => 'required|string|max:255',
             'descripcion_jornada' => 'nullable|string',
-            'beneficio_id' => 'required|exists:be_beneficios,id',
-            'lapsos_id' => 'required|exists:be_lapsos,id',
+            'beneficio_id' => 'required|exists:beneficio_estudiantil,id_bes',
+            'lapsos_id' => 'required|exists:lapso_academico,id_laa',
             'fecha_inicio_solicitud' => 'required|date',
             'fecha_fin_solicitud' => 'required|date|after_or_equal:fecha_inicio_solicitud',
             'cupos_maximos' => 'required|integer|min:1',
             'activa' => 'required|boolean',
 
             'criterios'                  => 'nullable|array',
-            'criterios.*.id_pregunta'    => 'required|exists:be_beca_preguntas,id',
+            'criterios.*.id_pregunta'    => 'required|exists:pregunta_beneficio,id_pgb',
             'criterios.*.operador'       => 'nullable|in:=,!=,>,>=,<,<=,in,not_in,between',
             'criterios.*.valor_esperado' => 'nullable|string|max:255',
             'criterios.*.es_eliminatoria'=> 'nullable|boolean',

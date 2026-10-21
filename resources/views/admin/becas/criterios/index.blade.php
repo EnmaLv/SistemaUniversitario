@@ -73,9 +73,9 @@
                                 class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                 <option value="">Todos los beneficios</option>
                                 @foreach ($beneficios as $ben)
-                                    <option value="{{ $ben->id }}"
-                                        @if (request('beneficio') == $ben->id) selected @endif>
-                                        {{ $ben->nombre_beneficio }}
+                                    <option value="{{ $ben->id_bes }}"
+                                        @if (request('beneficio') == $ben->id_bes) selected @endif>
+                                        {{ $ben->nombre_beneficio_bes }}
                                     </option>
                                 @endforeach
                             </select>
@@ -136,28 +136,28 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($criterios as $criterio)
-                                <x-table-row :id="$criterio->id">
+                                <x-table-row :id="$criterio->id_crb">
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $criterio->beneficio->nombre_beneficio ?? '—' }}
+                                        {{ $criterio->beneficio->nombre_beneficio_bes ?? '—' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <div class="flex flex-col items-center gap-1">
                                             <span class="font-bold" style="color: var(--text-main);">
-                                                {{ $criterio->pregunta->etiqueta ?? '—' }}
+                                                {{ $criterio->pregunta->etiqueta_pgb ?? '—' }}
                                             </span>
                                             <span
                                                 class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800">
-                                                {{ $criterio->pregunta->codigo ?? '' }}
+                                                {{ $criterio->pregunta->codigo_pgb ?? '' }}
                                             </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($criterio->operador)
+                                        @if ($criterio->operador_crb)
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-black rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900 font-mono">
-                                                {{ $criterio->operador }}
-                                                <span class="text-sky-900 dark:text-sky-200">{{ $criterio->valor_esperado }}</span>
+                                                {{ $criterio->operador_crb }}
+                                                <span class="text-sky-900 dark:text-sky-200">{{ $criterio->valor_esperado_crb }}</span>
                                             </span>
                                         @else
                                             <span
@@ -167,7 +167,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($criterio->es_eliminatoria)
+                                        @if ($criterio->es_eliminatoria_crb)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900">
                                                 <i class="fas fa-shield-alt text-[8px]"></i> Eliminatorio
@@ -180,10 +180,10 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono">
-                                        {{ rtrim(rtrim(number_format($criterio->peso, 2, '.', ''), '0'), '.') ?: '0' }}
+                                        {{ rtrim(rtrim(number_format($criterio->peso_crb, 2, '.', ''), '0'), '.') ?: '0' }}
                                     </td>
 
-                                    <x-table-actions :id="$criterio->id" baseUrl="admin/becas/criterios"
+                                    <x-table-actions :id="$criterio->id_crb" baseUrl="admin/becas/criterios"
                                         :status="1" />
                                 </x-table-row>
                             @empty

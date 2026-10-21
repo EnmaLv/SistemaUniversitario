@@ -18,14 +18,14 @@ class GuardarSolicitudRequest extends FormRequest
     {
         return [
             'per_id'      => 'required|exists:persona,id_per',
-            'jornada_id'      => 'required|exists:be_jornadas_becas,id',
-            'id_beneficio'    => 'required|exists:be_beneficios,id',
-            'id_lapso'        => 'required|exists:be_lapsos,id',
+            'jornada_id'      => 'required|exists:jornada_beneficio,id_jnb',
+            'id_beneficio'    => 'required|exists:beneficio_estudiantil,id_bes',
+            'id_lapso'        => 'required|exists:lapso_academico,id_laa',
             'tipo_solicitud'  => 'required|in:nueva,renovacion',
             'archivo_notas'   => 'required|file|mimes:pdf|max:2048',
 
             'respuestas'                  => 'required|array',
-            'respuestas.*.id_pregunta'    => 'required|exists:be_beca_preguntas,id',
+            'respuestas.*.id_pregunta'    => 'required|exists:pregunta_beneficio,id_pgb',
             'respuestas.*.valor'          => 'nullable',
             'respuestas.*.valor_json'     => 'nullable|array',
         ];
@@ -43,50 +43,50 @@ class GuardarSolicitudRequest extends FormRequest
             $respuestas = collect($this->input('respuestas', []))
                 ->keyBy('id_pregunta');
 
-            $preguntas = BecaPregunta::where('id_be_beneficio', $jornada->beneficio_id)
-                ->where('activo', true)
+            $preguntas = BecaPregunta::where('bes_id', $jornada->bes_id)
+                ->where('status_id', 1)
                 ->get();
 
             foreach ($preguntas as $p) {
-                $r = $respuestas[$p->id] ?? null;
+                $r = $respuestas[$p->id_pgb] ?? null;
                 $valor = $r['valor'] ?? null;
                 $valorJson = $r['valor_json'] ?? null;
 
                 $tieneValor = $valor !== null && $valor !== ''
                     || (!empty($valorJson));
 
-                if ($p->obligatoria && !$tieneValor) {
+                if ($p->obligatoria_pgb && !$tieneValor) {
                     $validator->errors()->add(
-                        "respuestas.{$p->id}",
-                        "La pregunta «{$p->etiqueta}» es obligatoria."
+                        "respuestas.{$p->id_pgb}",
+                        "La pregunta «{$p->etiqueta_pgb}» es obligatoria."
                     );
                     continue;
                 }
 
                 if (!$tieneValor) continue;
 
-                if (in_array($p->tipo, ['number', 'decimal']) && $valor !== null && $valor !== '') {
+                if (in_array($p->tipo_campo_pgb, ['number', 'decimal']) && $valor !== null && $valor !== '') {
                     if (!is_numeric($valor)) {
-                        $validator->errors()->add("respuestas.{$p->id}", "«{$p->etiqueta}» debe ser numérico.");
+                        $validator->errors()->add("respuestas.{$p->id_pgb}", "«{$p->etiqueta_pgb}» debe ser numérico.");
                         continue;
                     }
-                    if ($p->valor_min !== null && $valor < $p->valor_min) {
-                        $validator->errors()->add("respuestas.{$p->id}", "«{$p->etiqueta}» debe ser mayor o igual a {$p->valor_min}.");
+                    if ($p->valor_min_pgb !== null && $valor < $p->valor_min_pgb) {
+                        $validator->errors()->add("respuestas.{$p->id_pgb}", "«{$p->etiqueta_pgb}» debe ser mayor o igual a {$p->valor_min_pgb}.");
                     }
-                    if ($p->valor_max !== null && $valor > $p->valor_max) {
-                        $validator->errors()->add("respuestas.{$p->id}", "«{$p->etiqueta}» debe ser menor o igual a {$p->valor_max}.");
+                    if ($p->valor_max_pgb !== null && $valor > $p->valor_max_pgb) {
+                        $validator->errors()->add("respuestas.{$p->id_pgb}", "«{$p->etiqueta_pgb}» debe ser menor o igual a {$p->valor_max_pgb}.");
                     }
                 }
 
-                if (in_array($p->tipo, ['text', 'textarea', 'email']) && $valor !== null) {
-                    if ($p->min_length && mb_strlen($valor) < $p->min_length) {
-                        $validator->errors()->add("respuestas.{$p->id}", "«{$p->etiqueta}» debe tener al menos {$p->min_length} caracteres.");
+                if (in_array($p->tipo_campo_pgb, ['text', 'textarea', 'email']) && $valor !== null) {
+                    if ($p->min_length_pgb && mb_strlen($valor) < $p->min_length_pgb) {
+                        $validator->errors()->add("respuestas.{$p->id_pgb}", "«{$p->etiqueta_pgb}» debe tener al menos {$p->min_length_pgb} caracteres.");
                     }
-                    if ($p->max_length && mb_strlen($valor) > $p->max_length) {
-                        $validator->errors()->add("respuestas.{$p->id}", "«{$p->etiqueta}» no debe superar {$p->max_length} caracteres.");
+                    if ($p->max_length_pgb && mb_strlen($valor) > $p->max_length_pgb) {
+                        $validator->errors()->add("respuestas.{$p->id_pgb}", "«{$p->etiqueta_pgb}» no debe superar {$p->max_length_pgb} caracteres.");
                     }
-                    if ($p->regex && !preg_match($p->regex, $valor)) {
-                        $validator->errors()->add("respuestas.{$p->id}", "«{$p->etiqueta}» no tiene el formato esperado.");
+                    if ($p->regex_pgb && !preg_match($p->regex_pgb, $valor)) {
+                        $validator->errors()->add("respuestas.{$p->id_pgb}", "«{$p->etiqueta_pgb}» no tiene el formato esperado.");
                     }
                 }
             }

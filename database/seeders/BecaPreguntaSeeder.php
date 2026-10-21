@@ -11,16 +11,15 @@ class BecaPreguntaSeeder extends Seeder
 {
     public function run(): void
     {
-        $comedor = Beneficio::where('slug', 'beca-comedor')->first();
+        $comedor = Beneficio::where('slug_bes', 'beca-comedor')->first();
 
         if (!$comedor) {
             return;
         }
 
-        $idBeneficio = $comedor->id;
+        $idBeneficio = $comedor->id_bes;
 
         $preguntas = [
-            // ───────── Paso 1: Datos Básicos ─────────
             [
                 'codigo' => 'registro_patria',
                 'etiqueta' => '¿Registrado en Sistema Patria?',
@@ -30,7 +29,6 @@ class BecaPreguntaSeeder extends Seeder
                 'orden' => 0,
             ],
 
-            // ───────── Paso 2: Vivienda y Transporte ─────────
             [
                 'codigo' => 'gasto_pasaje',
                 'etiqueta' => 'Gasto Mensual Estimado en Pasaje',
@@ -117,7 +115,6 @@ class BecaPreguntaSeeder extends Seeder
                 'orden' => 8,
             ],
 
-            // ───────── Paso 3: Datos Socioeconómicos ─────────
             [
                 'codigo' => 'vivienda_tipo',
                 'etiqueta' => 'Tipo de Vivienda',
@@ -147,7 +144,6 @@ class BecaPreguntaSeeder extends Seeder
                 ],
             ],
 
-            // ───────── Distribución de ambientes (números enteros ≥ 0) ─────────
             ['codigo' => 'ambiente_dormitorios', 'etiqueta' => 'Número de Dormitorios', 'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 11, 'ayuda' => 'Solo números enteros. Ej: 3'],
             ['codigo' => 'ambiente_cocina',      'etiqueta' => 'Número de Cocinas',     'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 12, 'ayuda' => 'Solo números enteros. Ej: 1'],
             ['codigo' => 'ambiente_comedor',     'etiqueta' => 'Número de Comedores',   'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 13, 'ayuda' => 'Solo números enteros. Ej: 1'],
@@ -157,7 +153,6 @@ class BecaPreguntaSeeder extends Seeder
             ['codigo' => 'ambiente_garaje',      'etiqueta' => 'Número de Garajes',     'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 17, 'ayuda' => 'Solo números enteros. Ej: 1'],
             ['codigo' => 'ambiente_lavadero',    'etiqueta' => 'Número de Lavaderos',   'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 18, 'ayuda' => 'Solo números enteros. Ej: 1'],
 
-            // ───────── Equipamiento (números enteros ≥ 0) ─────────
             ['codigo' => 'equipo_nevera',              'etiqueta' => 'Cantidad de Neveras',              'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 19, 'ayuda' => 'Solo números enteros. Ej: 1'],
             ['codigo' => 'equipo_tv',                  'etiqueta' => 'Cantidad de TVs',                  'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 20, 'ayuda' => 'Solo números enteros. Ej: 2'],
             ['codigo' => 'equipo_cocina',              'etiqueta' => 'Cantidad de Cocinas (Aparato)',    'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 21, 'ayuda' => 'Solo números enteros. Ej: 1'],
@@ -169,7 +164,6 @@ class BecaPreguntaSeeder extends Seeder
             ['codigo' => 'equipo_lavadora',            'etiqueta' => 'Cantidad de Lavadoras',            'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 27, 'ayuda' => 'Solo números enteros. Ej: 1'],
             ['codigo' => 'equipo_aire_acondicionado',  'etiqueta' => 'Cantidad de Aires Acondicionados', 'tipo' => 'number', 'regex' => '/^\d+$/', 'valor_min' => 0, 'valor_max' => 50, 'obligatoria' => true, 'orden' => 28, 'ayuda' => 'Solo números enteros. Ej: 2'],
 
-            // ───────── Servicios Básicos ─────────
             [
                 'codigo' => 'servicios_basicos',
                 'etiqueta' => 'Servicios Públicos / Conectividad disponibles',
@@ -188,7 +182,6 @@ class BecaPreguntaSeeder extends Seeder
                 ],
             ],
 
-            // ───────── Carga Familiar ─────────
             [
                 'codigo' => 'carga_familiar',
                 'etiqueta' => 'Carga Familiar del Estudiante',
@@ -202,31 +195,52 @@ class BecaPreguntaSeeder extends Seeder
             ],
         ];
 
+        $columnas = [
+            'codigo'      => 'codigo_pgb',
+            'etiqueta'    => 'etiqueta_pgb',
+            'placeholder' => 'placeholder_pgb',
+            'ayuda'       => 'ayuda_pgb',
+            'tipo'        => 'tipo_campo_pgb',
+            'obligatoria' => 'obligatoria_pgb',
+            'valor_min'   => 'valor_min_pgb',
+            'valor_max'   => 'valor_max_pgb',
+            'min_length'  => 'min_length_pgb',
+            'max_length'  => 'max_length_pgb',
+            'regex'       => 'regex_pgb',
+            'orden'       => 'orden_pgb',
+        ];
+
         foreach ($preguntas as $data) {
             $opciones = $data['opciones'] ?? [];
             unset($data['opciones']);
 
-            $data['id_be_beneficio'] = $idBeneficio;
-            $data['activo'] = true;
+            $fila = [
+                'bes_id'    => $idBeneficio,
+                'status_id' => BecaPregunta::STATUS_ACTIVO,
+            ];
+
+            foreach ($data as $clave => $valor) {
+                $fila[$columnas[$clave]] = $valor;
+            }
 
             $pregunta = BecaPregunta::updateOrCreate(
                 [
-                    'id_be_beneficio' => $idBeneficio,
-                    'codigo' => $data['codigo'],
+                    'bes_id'     => $idBeneficio,
+                    'codigo_pgb' => $fila['codigo_pgb'],
                 ],
-                $data
+                $fila
             );
 
             if (!empty($opciones)) {
-                BecaPreguntaOpciones::where('id_pregunta', $pregunta->id)->delete();
+                BecaPreguntaOpciones::withTrashed()->where('pgb_id', $pregunta->id_pgb)->forceDelete();
 
                 foreach ($opciones as $i => $opcion) {
                     BecaPreguntaOpciones::create([
-                        'id_pregunta' => $pregunta->id,
-                        'etiqueta' => $opcion['etiqueta'],
-                        'valor' => $opcion['valor'],
-                        'orden' => $i + 1,
-                        'activo' => true,
+                        'pgb_id'       => $pregunta->id_pgb,
+                        'etiqueta_opb' => $opcion['etiqueta'],
+                        'valor_opb'    => $opcion['valor'],
+                        'orden_opb'    => $i + 1,
+                        'status_id'    => BecaPreguntaOpciones::STATUS_ACTIVO,
                     ]);
                 }
             }

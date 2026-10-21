@@ -2,30 +2,41 @@
 
 namespace App\Models\Becas;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Becas\Beneficio;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BeneficioCriterio extends Model
 {
-    protected $table = 'be_beneficio_criterios';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'criterio_beneficio';
+
+    protected $primaryKey = 'id_crb';
 
     protected $fillable = [
-        'id_be_beneficio',
-        'id_pregunta',
-        'es_eliminatoria',
-        'operador',
-        'valor_esperado',
-        'peso',
+        'bes_id',
+        'pgb_id',
+        'es_eliminatoria_crb',
+        'operador_crb',
+        'valor_esperado_crb',
+        'peso_crb',
+        'status_id',
+    ];
+
+    protected $casts = [
+        'es_eliminatoria_crb' => 'boolean',
+        'status_id'           => 'integer',
     ];
 
     public function pregunta()
     {
-        return $this->belongsTo(BecaPregunta::class, 'id_pregunta');
+        return $this->belongsTo(BecaPregunta::class, 'pgb_id', 'id_pgb');
     }
 
     public function beneficio()
     {
-        return $this->belongsTo(Beneficio::class, 'id_be_beneficio');
+        return $this->belongsTo(Beneficio::class, 'bes_id', 'id_bes');
     }
-
 }

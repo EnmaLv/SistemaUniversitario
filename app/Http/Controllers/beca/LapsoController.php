@@ -5,13 +5,14 @@ namespace App\Http\Controllers\beca;
 use App\Http\Controllers\Controller;
 use App\Models\Becas\Lapso;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LapsoController extends Controller
 {
     public function avanzar(Request $request)
     {
         $request->validate([
-            'codigo' => 'required|string|max:20|unique:be_lapsos,codigo',
+            'codigo' => 'required|string|max:20|unique:lapso_academico,codigo_laa',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ], [
@@ -22,17 +23,17 @@ class LapsoController extends Controller
             'fecha_fin.after_or_equal' => 'La fecha de finalización debe ser igual o posterior a la fecha de inicio.',
         ]);
 
-        // Desactivar el lapso actual
-        Lapso::where('es_actual', 1)->update(['es_actual' => 0]);
+        DB::transaction(function () use ($request) {
+            Lapso::where('es_actual_laa', true)->update(['es_actual_laa' => false]);
 
-        // Crear el nuevo lapso y establecerlo como actual
-        Lapso::create([
-            'codigo' => trim($request->codigo),
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin' => $request->fecha_fin,
-            'es_actual' => 1,
-            'permite_solicitudes' => 1, // Por defecto permitir solicitudes en el nuevo lapso
-        ]);
+            Lapso::create([
+                'codigo_laa'              => trim($request->codigo),
+                'fecha_inicio_laa'        => $request->fecha_inicio,
+                'fecha_fin_laa'           => $request->fecha_fin,
+                'es_actual_laa'           => true,
+                'permite_solicitudes_laa' => true,
+            ]);
+        });
 
         return redirect()->back()->with('success', 'El lapso académico ha sido avanzado exitosamente. Ahora el sistema opera bajo el lapso ' . $request->codigo . '.');
     }

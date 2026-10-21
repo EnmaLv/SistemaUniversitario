@@ -24,13 +24,13 @@ class MigrarArchivosPrivados extends Command
 
         $resumen = ['documentos_movidos' => 0, 'rutas_actualizadas' => 0, 'excel_movidos' => 0, 'faltantes' => 0];
 
-        foreach (SolicitudDocumento::query()->whereNotNull('ruta_archivo')->cursor() as $documento) {
-            $ruta = $this->normalizar($documento->ruta_archivo);
+        foreach (SolicitudDocumento::query()->whereNotNull('ruta_archivo_dsb')->cursor() as $documento) {
+            $ruta = $this->normalizar($documento->ruta_archivo_dsb);
 
-            if ($ruta !== $documento->ruta_archivo) {
+            if ($ruta !== $documento->ruta_archivo_dsb) {
                 $resumen['rutas_actualizadas']++;
                 if (! $simular) {
-                    $documento->forceFill(['ruta_archivo' => $ruta])->save();
+                    $documento->forceFill(['ruta_archivo_dsb' => $ruta])->save();
                 }
             }
 
@@ -40,7 +40,7 @@ class MigrarArchivosPrivados extends Command
 
             if (! $publico->exists($ruta)) {
                 $resumen['faltantes']++;
-                $this->warn("No se encontró el archivo de la solicitud {$documento->id_solicitud}: {$ruta}");
+                $this->warn("No se encontró el archivo de la solicitud {$documento->sob_id}: {$ruta}");
                 continue;
             }
 
@@ -70,7 +70,7 @@ class MigrarArchivosPrivados extends Command
 
         $this->table(['Concepto', 'Cantidad'], [
             ['Documentos de becas movidos', $resumen['documentos_movidos']],
-            ['Rutas normalizadas en solicitud_documento', $resumen['rutas_actualizadas']],
+            ['Rutas normalizadas en documento_solicitud_beneficio', $resumen['rutas_actualizadas']],
             ['Excel importados movidos a importaciones/legado', $resumen['excel_movidos']],
             ['Documentos sin archivo físico', $resumen['faltantes']],
             ['Otros archivos públicos para revisar', $otros->count()],

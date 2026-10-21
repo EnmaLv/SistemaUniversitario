@@ -16,11 +16,11 @@ class BecaBeneficioService
         return Beneficio::query()
             ->when($filters['buscar'] ?? null, function ($query, $buscar) {
                 $query->where(function ($query) use ($buscar) {
-                    $query->where('nombre_beneficio', 'like', "%{$buscar}%")
-                        ->orWhere('descripcion', 'like', "%{$buscar}%");
+                    $query->where('nombre_beneficio_bes', 'like', "%{$buscar}%")
+                        ->orWhere('descripcion_bes', 'like', "%{$buscar}%");
                 });
             })
-            ->where('status', $activo === '1')
+            ->where('status_id', $activo === '1' ? Beneficio::STATUS_ACTIVO : Beneficio::STATUS_INACTIVO)
             ->latest()
             ->paginate(10)
             ->appends($filters);
@@ -28,7 +28,10 @@ class BecaBeneficioService
 
     public function crear(array $data): Beneficio
     {
-        return Beneficio::create($this->datosBeneficio($data));
+        return Beneficio::create($this->datosBeneficio($data) + [
+            'cupones_disponibles_bes' => 0,
+            'cupones_ocupados_bes'    => 0,
+        ]);
     }
 
     public function actualizar(Beneficio $beneficio, array $data): Beneficio
@@ -40,27 +43,7 @@ class BecaBeneficioService
 
     public function cambiarEstado(Beneficio $beneficio): Beneficio
     {
-        $beneficio->update(['status' => !$beneficio->status]);
-
-        return $beneficio->fresh();
-    }
-
-    public function sincronizar(Beneficio $beca, array $beneficios): void
-    {
-        $sync = [];
-
-        foreach ($beneficios as $beneficio) {
-            if (empty($beneficio['id'])) {
-                continue;
-            }
-
-            $sync[$beneficio['id']] = [
-                'observacion' => $beneficio['observacion'] ?? null,
-                'activo' => isset($beneficio['activo']),
-            ];
-        }
-
-        $beca->beneficios()->sync($sync);
+        return $beneficio->alternarStatus();
     }
 
     private function datosBeneficio(array $data): array
@@ -68,12 +51,10 @@ class BecaBeneficioService
         $nombre = $data['nombre_beneficio'];
 
         return [
-            'nombre_beneficio' => $nombre,
-            'descripcion' => $data['descripcion'] ?? null,
-            'slug' => Str::slug($nombre),
-            'cupones_disponibles' => 0,
-            'cupones_ocupados' => 0,
-            'status' => $data['status'] ?? false,
+            'nombre_beneficio_bes' => $nombre,
+            'descripcion_bes'      => $data['descripcion'] ?? null,
+            'slug_bes'             => Str::slug($nombre),
+            'status_id'            => !empty($data['status']) ? Beneficio::STATUS_ACTIVO : Beneficio::STATUS_INACTIVO,
         ];
     }
 }
