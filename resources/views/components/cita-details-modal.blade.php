@@ -86,7 +86,7 @@
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="citaPrioridadRadios">
                             @foreach($prioridadesDisponibles as $prioridad)
                                 @php
-                                    $nombreLower = strtolower($prioridad->nombre);
+                                    $nombreLower = strtolower($prioridad->nombre_pat);
                                     $colorSeleccionado = match($nombreLower) {
                                         'crítica' => 'text-rose-600 dark:text-rose-400 border-rose-500 bg-rose-50 dark:bg-rose-950/40',
                                         'alta' => 'text-amber-600 dark:text-amber-400 border-amber-500 bg-amber-50 dark:bg-amber-950/40',
@@ -100,10 +100,10 @@
                                     has-[:checked]:{{ $colorSeleccionado }}" 
                                     style="background-color: var(--bg-card); border-color: var(--border-color);">
                                     
-                                    <input type="radio" name="prioridad" value="{{ $prioridad->nombre }}" class="prioridad-radio hidden">
+                                    <input type="radio" name="prioridad" value="{{ $prioridad->nombre_pat }}" class="prioridad-radio hidden">
                                     
                                     <span class="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider group-has-[:checked]:text-inherit">
-                                        {{ $prioridad->nombre }}
+                                        {{ $prioridad->nombre_pat }}
                                     </span>
                                 </label>
                             @endforeach

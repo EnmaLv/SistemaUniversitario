@@ -2,7 +2,7 @@
     <div class="pt-8 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @include('components.alert')
-            <div x-data="{ search: '', items: {{ json_encode($plantillas->pluck('titulo')->map(function($t) { return strtolower($t); })) }} }">
+            <div x-data="{ search: '', items: {{ json_encode($plantillas->pluck('titulo_sph')->map(function($t) { return strtolower($t); })) }} }">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
@@ -34,7 +34,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse($plantillas as $plantilla)
-                        <div x-show="search === '' || '{{ strtolower($plantilla->titulo) }}'.includes(search.toLowerCase())"
+                        <div x-show="search === '' || '{{ strtolower($plantilla->titulo_sph) }}'.includes(search.toLowerCase())"
                             style="background-color: var(--bg-card); border-color: var(--border-color);"
                             class="rounded-2xl p-6 border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full relative group">
                             
@@ -44,13 +44,13 @@
                                 </div>
                                 <div>
                                     <h3 class="text-base font-extrabold tracking-tight leading-snug" style="color: var(--text-main);">
-                                        {{ $plantilla->titulo }}
+                                        {{ $plantilla->titulo_sph }}
                                     </h3>
                                 </div>
                             </div>
 
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400 flex-grow mb-6 leading-relaxed line-clamp-3">
-                                {{ $plantilla->descripcion_general ?? 'Sin descripción adicional.' }}
+                                {{ $plantilla->descripcion_general_sph ?? 'Sin descripción adicional.' }}
                             </p>
 
                             <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800/80 mt-auto">
@@ -66,12 +66,12 @@
 
                                 <div class="flex items-center gap-2">
                                     @if(!$plantilla->esta_en_uso)
-                                        <a href="{{ route('admin.psicologia.maestros.plantillas.edit', $plantilla->id) }}"
+                                        <a href="{{ route('admin.psicologia.maestros.plantillas.edit', $plantilla->id_sph) }}"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-{{ $themeColor ?? 'indigo' }}-50 dark:bg-{{ $themeColor ?? 'indigo' }}-950/50 text-{{ $themeColor ?? 'indigo' }}-600 dark:text-{{ $themeColor ?? 'indigo' }}-400 hover:bg-{{ $themeColor ?? 'indigo' }}-600 hover:text-white transition-all text-xs"
                                             title="Editar Plantilla">
                                             <i class="fas fa-pen"></i>
                                         </a>
-                                        <form action="{{ route('admin.psicologia.maestros.plantillas.destroy', $plantilla->id) }}" method="POST" class="inline-block"
+                                        <form action="{{ route('admin.psicologia.maestros.plantillas.destroy', $plantilla->id_sph) }}" method="POST" class="inline-block"
                                               onsubmit="event.preventDefault(); window.AppModal.confirm('Confirmar eliminación', '¿Estás seguro de eliminar esta plantilla?').then(c => { if(c) this.submit(); });">
                                             @csrf
                                             @method('DELETE')

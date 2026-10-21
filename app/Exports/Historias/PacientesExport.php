@@ -39,15 +39,17 @@ class PacientesExport implements FromCollection, WithHeadings, WithMapping, With
     public function map($historia): array
     {
         $paciente = $historia['paciente'] ?? null;
+        $persona = $paciente?->persona;
+        $fechaNacimiento = $persona?->fecha_nacimiento_per;
         return [
-            $paciente->nombres ?? '',
-            $paciente->apellidos ?? '',
-            $paciente->cedula ?? '',
-            $paciente->pnf ?? 'No asignado',
-            $paciente->fecha_nacimiento ? \Carbon\Carbon::parse($paciente->fecha_nacimiento)->age : 'N/A',
-            $paciente->fecha_nacimiento ? \Carbon\Carbon::parse($paciente->fecha_nacimiento)->format('d/m/Y') : 'N/A',
-            $paciente->telefono ?? 'N/A',
-            $paciente->email ?? '',
+            $persona->nombres_per ?? '',
+            $persona->apellidos_per ?? '',
+            $persona->cedula_per ?? '',
+            $persona?->personaPnf->first()?->pnf?->nombre_prg ?? 'No asignado',
+            $fechaNacimiento ? \Carbon\Carbon::parse($fechaNacimiento)->age : 'N/A',
+            $fechaNacimiento ? \Carbon\Carbon::parse($fechaNacimiento)->format('d/m/Y') : 'N/A',
+            $persona->telefono_per ?? 'N/A',
+            $persona->correo_per ?? '',
             $historia['citas_realizadas'] ?? 0,
         ];
     }

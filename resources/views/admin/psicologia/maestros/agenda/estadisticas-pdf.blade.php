@@ -196,7 +196,7 @@
                     Reporte Completo de Estadísticas
                 @endif
             </div>
-            <div class="subtitle">Psicólogo: {{ $psicologo->nombres ?? $psicologo->name ?? '' }} {{ $psicologo->apellidos ?? '' }}</div>
+            <div class="subtitle">Psicólogo: {{ $psicologo->nombre_completo ?? '' }}</div>
         </div>
         <div class="filters-container">
             <div class="filter-item">
@@ -250,17 +250,17 @@
                         $fechaSolicitada = $cita->created_at_carbon ? $cita->created_at_carbon->format('d/m/Y') : 'N/A';
                         $horaSolicitada = $cita->created_at_carbon ? $cita->created_at_carbon->format('h:i A') : 'N/A';
                         
-                        $fechaProgramada = ($cita->fecha_carbon && !in_array($cita->estado, ['pendiente', 'rechazada'])) ? $cita->fecha_carbon->format('d/m/Y') : 'N/A';
-                        $horaProgramada = ($cita->hora && !in_array($cita->estado, ['pendiente', 'rechazada'])) ? \Carbon\Carbon::parse($cita->hora)->format('h:i A') : 'N/A';
+                        $fechaProgramada = ($cita->fecha_carbon && !in_array($cita->estado_cita_cps, ['pendiente', 'rechazada'])) ? $cita->fecha_carbon->format('d/m/Y') : 'N/A';
+                        $horaProgramada = ($cita->hora_cps && !in_array($cita->estado_cita_cps, ['pendiente', 'rechazada'])) ? \Carbon\Carbon::parse($cita->hora_cps)->format('h:i A') : 'N/A';
                     @endphp
                     <tr>
-                        <td>#{{ $cita->id }}</td>
+                        <td>#{{ $cita->id_cps }}</td>
                         <td>{{ $cita->paciente_nombre }}</td>
                         <td>{{ $fechaSolicitada }}</td>
                         <td>{{ $horaSolicitada }}</td>
                         <td>{{ $fechaProgramada }}</td>
                         <td>{{ $horaProgramada }}</td>
-                        <td>{{ ucfirst(str_replace('_', ' ', $cita->estado)) }}</td>
+                        <td>{{ ucfirst(str_replace('_', ' ', $cita->estado_cita_cps)) }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -274,9 +274,9 @@
         @php
             $totales = [];
             foreach($citas as $cita) {
-                $estado = $cita->estado;
+                $estado = $cita->estado_cita_cps;
                 if ($estado === 'cancelada') {
-                    $estado = $cita->cancelado_por === 'psicologo' ? 'cancelada_por_psicólogo' : 'cancelada_por_paciente';
+                    $estado = $cita->cancelado_por_cps === 'psicologo' ? 'cancelada_por_psicólogo' : 'cancelada_por_paciente';
                 }
                 if(!isset($totales[$estado])) {
                     $totales[$estado] = 0;

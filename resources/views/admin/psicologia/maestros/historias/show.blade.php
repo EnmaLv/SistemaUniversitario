@@ -7,14 +7,14 @@
             seccionReorder:  @js(route('admin.psicologia.maestros.historias.secciones.reorder', 'PLACEHOLDER')),
             vincular:        @js(route('admin.psicologia.maestros.historias.enfermedad.vincular')),
             csrf:            document.querySelector('meta[name="csrf-token"]')?.content || '',
-            historiaId:      {{ $historia->id }},
+            historiaId:      {{ $historia->id_hcl }},
         };
 
         window._historiaConfig = {
             vinculados: @js($enfermedadesVinculadas->mapWithKeys(fn($items, $key) => [
                 $key => $items->map(fn($v) => ['link_id' => $v->link_id, 'nombre' => $v->nombre_efm]),
             ])),
-            seccionesTitulos: @js($seccionesPersonalizadas->pluck('titulo')->values()->toArray()),
+            seccionesTitulos: @js($seccionesPersonalizadas->pluck('titulo_hsp')->values()->toArray()),
         };
 
         document.addEventListener('alpine:init', () => {
@@ -159,7 +159,7 @@
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
-                            historia_clinica_id: window._historiaRoutes.historiaId,
+                            hcl_id: window._historiaRoutes.historiaId,
                             enfermedad_id: enfermedadId,
                             contexto: contexto
                         })
@@ -306,7 +306,7 @@
                         </style>
                         <div x-show="openTopExport" x-transition x-cloak
                             class="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-30">
-                            <a href="{{ route('admin.psicologia.maestros.historias.expedienteCompletoPdf', $paciente->id) }}"
+                            <a href="{{ route('admin.psicologia.maestros.historias.expedienteCompletoPdf', $paciente->id_use) }}"
                                 target="_blank"
                                 class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                 <div
@@ -319,7 +319,7 @@
                                         completo</span>
                                 </div>
                             </a>
-                            <a href="{{ route('admin.psicologia.maestros.historias.expedienteCompletoWord', $paciente->id) }}"
+                            <a href="{{ route('admin.psicologia.maestros.historias.expedienteCompletoWord', $paciente->id_use) }}"
                                 target="_blank"
                                 class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                 <div
@@ -340,11 +340,11 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                     class="flex gap-1.5 p-1.5 rounded-2xl shadow-sm border w-fit">
-                    <a href="{{ route('admin.psicologia.maestros.historias.show', ['paciente' => $paciente->id, 'tab' => 'expediente']) }}"
+                    <a href="{{ route('admin.psicologia.maestros.historias.show', ['paciente' => $paciente->id_use, 'tab' => 'expediente']) }}"
                         class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 {{ $tab === 'expediente' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
                         Expediente General
                     </a>
-                    <a href="{{ route('admin.psicologia.maestros.historias.show', ['paciente' => $paciente->id, 'tab' => 'evolucion']) }}"
+                    <a href="{{ route('admin.psicologia.maestros.historias.show', ['paciente' => $paciente->id_use, 'tab' => 'evolucion']) }}"
                         class="px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 {{ $tab === 'evolucion' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
                         Línea de Evolución
                     </a>
@@ -368,7 +368,7 @@
 
                             <div x-show="openExport" x-transition x-cloak
                                 class="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                <a href="{{ route('admin.psicologia.maestros.historias.reportePdf', $paciente->id) }}"
+                                <a href="{{ route('admin.psicologia.maestros.historias.reportePdf', $paciente->id_use) }}"
                                     target="_blank"
                                     class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <div
@@ -382,7 +382,7 @@
                                     </div>
                                     <span class="text-xs font-bold text-gray-800 dark:text-gray-200">PDF</span>
                                 </a>
-                                <a href="{{ route('admin.psicologia.maestros.historias.reporteWord', $paciente->id) }}"
+                                <a href="{{ route('admin.psicologia.maestros.historias.reporteWord', $paciente->id_use) }}"
                                     target="_blank"
                                     class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <div
@@ -428,7 +428,7 @@
 
             @if ($tab === 'expediente')
                 <div>
-                    <form action="{{ route('admin.psicologia.maestros.historias.update', $paciente->id) }}"
+                    <form action="{{ route('admin.psicologia.maestros.historias.update', $paciente->id_use) }}"
                         method="POST" @input="hasUnsavedChanges = true" @submit="hasUnsavedChanges = false">
                         @csrf
                         @method('PATCH')
@@ -436,22 +436,22 @@
 
                         <div class="space-y-6">
                             @foreach ($seccionesPersonalizadas as $indexKey => $seccion)
-                                <div id="seccion-{{ $seccion->id }}"
+                                <div id="seccion-{{ $seccion->id_hsp }}"
                                     style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                                     class="rounded-2xl border shadow-sm p-6 sm:p-8 relative group seccion-dinamica overflow-hidden"
-                                    x-show="matchesSearch('{{ addslashes($seccion->titulo) }}')" x-transition>
+                                    x-show="matchesSearch('{{ addslashes($seccion->titulo_hsp) }}')" x-transition>
                                     <div
                                         class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-gray-800">
                                         <div>
                                             <h3 class="text-lg sm:text-xl font-extrabold tracking-tight"
-                                                style="color: var(--text-main);">{{ $seccion->titulo }}</h3>
+                                                style="color: var(--text-main);">{{ $seccion->titulo_hsp }}</h3>
                                             <p
                                                 class="mt-0.5 text-[10px] font-black uppercase tracking-wider text-gray-400">
-                                                {{ $seccion->descripcion_general ?? 'Sección Personalizada' }}</p>
+                                                {{ $seccion->descripcion_general_hsp ?? 'Sección Personalizada' }}</p>
                                         </div>
                                         <div x-show="isEditing" class="flex items-center gap-1">
                                             <button type="button"
-                                                @click.stop.prevent="reorderSection({{ $seccion->id }}, 'up')"
+                                                @click.stop.prevent="reorderSection({{ $seccion->id_hsp }}, 'up')"
                                                 class="btn-subir p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition-all active:scale-95"
                                                 title="Subir sección">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -461,7 +461,7 @@
                                                 </svg>
                                             </button>
                                             <button type="button"
-                                                @click.stop.prevent="reorderSection({{ $seccion->id }}, 'down')"
+                                                @click.stop.prevent="reorderSection({{ $seccion->id_hsp }}, 'down')"
                                                 class="btn-bajar p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition-all active:scale-95"
                                                 title="Bajar sección">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -471,7 +471,7 @@
                                                 </svg>
                                             </button>
                                             <button type="button"
-                                                @click.stop.prevent="deleteSection({{ $seccion->id }})"
+                                                @click.stop.prevent="deleteSection({{ $seccion->id_hsp }})"
                                                 class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-all active:scale-95"
                                                 title="Eliminar sección">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -492,21 +492,21 @@
                                                 <div>
                                                     <div x-show="isEditing" x-cloak>
                                                         <input type="text"
-                                                            name="segmentos_metadata[{{ $segmento->id }}][titulo]"
-                                                            value="{{ $segmento->titulo }}"
+                                                            name="segmentos_metadata[{{ $segmento->id_hsm }}][titulo]"
+                                                            value="{{ $segmento->titulo_hsm }}"
                                                             style="color: var(--text-main);"
                                                             class="w-full bg-transparent border-b border-dashed border-gray-300 dark:border-gray-700 pb-1 text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 focus:outline-none focus:border-indigo-500"
                                                             placeholder="Título del segmento">
                                                     </div>
                                                     <div x-show="!isEditing" x-cloak>
                                                         <label
-                                                            class="block text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">{{ $segmento->titulo ?? 'Información' }}</label>
+                                                            class="block text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">{{ $segmento->titulo_hsm ?? 'Información' }}</label>
                                                     </div>
                                                 </div>
 
                                                 <div class="flex flex-wrap gap-1.5 mb-2">
                                                     <template
-                                                        x-for="vinculo in (vinculados['seg_{{ $segmento->id }}'] || [])"
+                                                        x-for="vinculo in (vinculados['seg_{{ $segmento->id_hsm }}'] || [])"
                                                         :key="vinculo.link_id">
                                                         <span
                                                             class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold tracking-wider rounded-xl border border-indigo-100 dark:border-indigo-900/50 group/tag">
@@ -526,12 +526,12 @@
                                                     </template>
                                                 </div>
 
-                                                <textarea name="segmentos_extra[{{ $segmento->id }}]" rows="4" :readonly="!isEditing"
+                                                <textarea name="segmentos_extra[{{ $segmento->id_hsm }}]" rows="4" :readonly="!isEditing"
                                                     style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                                     :class="isEditing ?
                                                         'border-indigo-300 dark:border-indigo-700 focus:ring-2 focus:ring-indigo-500/20' :
                                                         'border-transparent pointer-events-none opacity-90'"
-                                                    class="w-full border rounded-xl p-4 text-xs font-medium transition-all focus:outline-none placeholder-gray-400 dark:placeholder-gray-500">{{ $segmento->contenido }}</textarea>
+                                                    class="w-full border rounded-xl p-4 text-xs font-medium transition-all focus:outline-none placeholder-gray-400 dark:placeholder-gray-500">{{ $segmento->contenido_hsm }}</textarea>
 
                                                 <div class="flex justify-end -mt-1 pr-1" x-show="isEditing"
                                                     x-transition x-data="{
@@ -547,7 +547,7 @@
                                                                     this.loading = false; });
                                                         }
                                                     }"
-                                                    @linked-seg-{{ $segmento->id }}.window="query = ''; results = []; isOpen = false"
+                                                    @linked-seg-{{ $segmento->id_hsm }}.window="query = ''; results = []; isOpen = false"
                                                     @click.away="isOpen = false">
 
                                                     <div class="flex items-center gap-2">
@@ -558,7 +558,7 @@
                                                             class="relative">
                                                             <input type="text" x-model="query"
                                                                 @input.debounce.300ms="search()"
-                                                                @keydown.enter.prevent="if(results.length > 0) vincular(results[0].id_efm, 'seg_{{ $segmento->id }}')"
+                                                                @keydown.enter.prevent="if(results.length > 0) vincular(results[0].id_efm, 'seg_{{ $segmento->id_hsm }}')"
                                                                 placeholder="Buscar..."
                                                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                                                 class="w-40 border rounded-xl py-1.5 px-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm placeholder-gray-400 dark:placeholder-gray-500">
@@ -576,7 +576,7 @@
                                                                         :key="item.id_efm">
                                                                         <button type="button"
                                                                             class="w-full text-left p-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition-colors group"
-                                                                            @click="vincular(item.id_efm, 'seg_{{ $segmento->id }}')">
+                                                                            @click="vincular(item.id_efm, 'seg_{{ $segmento->id_hsm }}')">
                                                                             <div class="flex items-center gap-2">
                                                                                 <div class="w-1.5 h-1.5 rounded-full"
                                                                                     :class="item.categoria_efm === 'mental' ?
@@ -668,8 +668,8 @@
                     exportFormat: 'pdf',
                     modoDescarga: 'unificado',
                     selectAll: true,
-                    selectedNotes: @js($citasPaciente->pluck('id')->toArray()),
-                    allNoteIds: @js($citasPaciente->pluck('id')->toArray()),
+                    selectedNotes: @js($citasPaciente->pluck('id_cps')->toArray()),
+                    allNoteIds: @js($citasPaciente->pluck('id_cps')->toArray()),
                     toggleAll() {
                         if (this.selectAll) {
                             this.selectedNotes = [...this.allNoteIds];
@@ -695,8 +695,8 @@
                     submitExport() {
                         const form = this.$refs.exportForm;
                         form.action = this.exportFormat === 'pdf' ?
-                            '{{ route('admin.psicologia.maestros.historias.evolucion.pdf', $paciente->id) }}' :
-                            '{{ route('admin.psicologia.maestros.historias.evolucion.word', $paciente->id) }}';
+                            '{{ route('admin.psicologia.maestros.historias.evolucion.pdf', $paciente->id_use) }}' :
+                            '{{ route('admin.psicologia.maestros.historias.evolucion.word', $paciente->id_use) }}';
                         form.submit();
                     }
                 }">
@@ -778,7 +778,7 @@
                         @endif
 
                         <form
-                            action="{{ route('admin.psicologia.maestros.historias.evolucion.store', $paciente->id) }}"
+                            action="{{ route('admin.psicologia.maestros.historias.evolucion.store', $paciente->id_use) }}"
                             method="POST">
                             @csrf
                             <button type="submit"
@@ -816,7 +816,7 @@
                                             <div
                                                 class="flex {{ $index % 2 == 0 ? 'md:flex-row-reverse' : '' }} items-center gap-3 mb-3">
                                                 <span
-                                                    class="text-[10px] font-black {{ $cita->is_manual ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400' }} uppercase tracking-wider">{{ $cita->fecha?->translatedFormat('d M, Y') }}</span>
+                                                    class="text-[10px] font-black {{ $cita->is_manual ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400' }} uppercase tracking-wider">{{ $cita->fecha_cps?->translatedFormat('d M, Y') }}</span>
                                                 @if (!$cita->is_manual)
                                                     <span
                                                         class="w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full"></span>
@@ -837,7 +837,7 @@
                                             </p>
                                             <div
                                                 class="flex {{ $index % 2 == 0 ? 'md:flex-row-reverse' : '' }} flex-wrap gap-2">
-                                                <a href="{{ route('admin.psicologia.maestros.citas.edit.note', $cita->id) }}"
+                                                <a href="{{ route('admin.psicologia.maestros.citas.edit.note', $cita->id_cps) }}"
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
                                                     title="Editar Nota">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
@@ -850,7 +850,7 @@
                                                     Editar
                                                 </a>
                                                 @if (!$cita->is_manual)
-                                                    <a href="{{ route('admin.psicologia.maestros.citas.constancia.pdf', $cita->id) }}"
+                                                    <a href="{{ route('admin.psicologia.maestros.citas.constancia.pdf', $cita->id_cps) }}"
                                                         target="_blank"
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-emerald-100 dark:border-emerald-900/50 hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
                                                         title="Descargar Constancia">
@@ -866,7 +866,7 @@
                                                 @endif
                                                 @if ($cita->is_manual)
                                                     <button type="button"
-                                                        @click="deleteTarget = {{ $cita->id }}; showDeleteModal = true"
+                                                        @click="deleteTarget = {{ $cita->id_cps }}; showDeleteModal = true"
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50/70 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-red-100 dark:border-red-900/50 hover:bg-red-600 hover:text-white transition-all active:scale-95"
                                                         title="Eliminar Nota Manual">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
@@ -1063,12 +1063,12 @@
                                             @foreach ($citasPaciente as $index => $cita)
                                                 <label
                                                     class="flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-colors"
-                                                    :class="selectedNotes.includes({{ $cita->id }}) ?
+                                                    :class="selectedNotes.includes({{ $cita->id_cps }}) ?
                                                         'bg-indigo-50/50 dark:bg-indigo-950/30' :
                                                         'hover:bg-gray-50 dark:hover:bg-gray-800/50'">
-                                                    <input type="checkbox" value="{{ $cita->id }}"
-                                                        :checked="selectedNotes.includes({{ $cita->id }})"
-                                                        @change="toggleNote({{ $cita->id }})"
+                                                    <input type="checkbox" value="{{ $cita->id_cps }}"
+                                                        :checked="selectedNotes.includes({{ $cita->id_cps }})"
+                                                        @change="toggleNote({{ $cita->id_cps }})"
                                                         class="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
                                                     <div class="flex-1 min-w-0">
                                                         <div class="flex items-center gap-2">
@@ -1076,7 +1076,7 @@
                                                                 class="text-xs font-black text-indigo-600 dark:text-indigo-400 shrink-0">Nota
                                                                 {{ $citasPaciente->total() - ($citasPaciente->currentPage() - 1) * $citasPaciente->perPage() - $index }}</span>
                                                             <span
-                                                                class="text-[10px] text-gray-400 font-medium truncate">{{ $cita->fecha?->translatedFormat('d M, Y') }}</span>
+                                                                class="text-[10px] text-gray-400 font-medium truncate">{{ $cita->fecha_cps?->translatedFormat('d M, Y') }}</span>
                                                         </div>
                                                         <p
                                                             class="text-[11px] text-gray-500 dark:text-gray-400 truncate">
@@ -1240,7 +1240,7 @@
                     </div>
 
                     <form x-ref="formSeccion"
-                        action="{{ route('admin.psicologia.maestros.historias.secciones.store', $paciente->id) }}"
+                        action="{{ route('admin.psicologia.maestros.historias.secciones.store', $paciente->id_use) }}"
                         method="POST">
                         @csrf
                         <div class="space-y-6 max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
@@ -1318,10 +1318,10 @@
     $plantillas
         ->map(function ($p) {
             return [
-                'id' => $p->id,
-                'titulo' => $p->titulo,
-                'descripcion_general' => $p->descripcion_general ?? '',
-                'segmentos' => $p->segmentos ?? '[]',
+                'id' => $p->id_sph,
+                'titulo' => $p->titulo_sph,
+                'descripcion_general' => $p->descripcion_general_sph ?? '',
+                'segmentos' => $p->segmentos_sph ?? '[]',
             ];
         })
         ->values()

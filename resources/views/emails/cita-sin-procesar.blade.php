@@ -7,9 +7,9 @@
 </head>
 <body>
     @php
-        $fechaStr = $cita->fecha ? \Carbon\Carbon::parse($cita->fecha)->format('d/m/Y') : '';
-        $horaStr = $cita->hora ? \Carbon\Carbon::parse($cita->hora)->format('g:i A') : '';
-        $pacienteName = $cita->paciente_nombre ?? ($cita->paciente->name ?? 'Desconocido');
+        $fechaStr = $cita->fecha_cps ? \Carbon\Carbon::parse($cita->fecha_cps)->format('d/m/Y') : '';
+        $horaStr = $cita->hora_cps ? \Carbon\Carbon::parse($cita->hora_cps)->format('g:i A') : '';
+        $pacienteName = $cita->paciente_nombre ?? ($cita->paciente->nombre_completo ?? 'Desconocido');
     @endphp
     
     <p>Hola,</p>

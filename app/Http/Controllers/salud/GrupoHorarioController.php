@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\salud;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cita;
 use App\Models\salud\GrupoHorario;
 use App\Models\salud\Horario;
 use Illuminate\Http\Request;
@@ -53,9 +52,9 @@ class GrupoHorarioController extends Controller
         }
 
         GrupoHorario::crear([
-            'user_id' => $userId,
-            'nombre' => $request->nombre,
-            'activo' => GrupoHorario::STATUS_INACTIVE,
+            'psicologo_use_id' => $userId,
+            'nombre_gha' => $request->nombre,
+            'status_id' => GrupoHorario::STATUS_INACTIVE,
         ]);
 
         return redirect()->route('admin.psicologia.maestros.grupos_horarios.index')
@@ -65,20 +64,20 @@ class GrupoHorarioController extends Controller
     public function show($id)
     {
         $grupoHorario = GrupoHorario::obtenerPorId($id);
-        if (!$grupoHorario || $grupoHorario->user_id !== Auth::id()) {
+        if (!$grupoHorario || (int) $grupoHorario->psicologo_use_id !== (int) Auth::id()) {
             abort(403, 'No autorizado.');
         }
 
-        if ($grupoHorario->activo == GrupoHorario::STATUS_DELETED) {
+        if ($grupoHorario->deleted_at !== null) {
             return redirect()->route('admin.psicologia.maestros.grupos_horarios.index')->with('error', 'Este grupo ha sido eliminado.');
         }
 
         $dias = Horario::diasSemana();
-        $horarios = Horario::obtenerPorGrupo($grupoHorario->id);
+        $horarios = Horario::obtenerPorGrupo($grupoHorario->id_gha);
 
         $horariosPorDia = [];
         foreach ($dias as $dia) {
-            $horariosPorDia[$dia] = $horarios->where('dia', $dia);
+            $horariosPorDia[$dia] = $horarios->where('dia_hpr', $dia);
         }
 
         $tieneCitasPendientes = Horario::hasPendingCitas(Auth::id());
@@ -89,11 +88,11 @@ class GrupoHorarioController extends Controller
     public function edit($id)
     {
         $grupoHorario = GrupoHorario::obtenerPorId($id);
-        if (!$grupoHorario || $grupoHorario->user_id !== Auth::id()) {
+        if (!$grupoHorario || (int) $grupoHorario->psicologo_use_id !== (int) Auth::id()) {
             abort(403, 'No autorizado.');
         }
 
-        if ($grupoHorario->activo == GrupoHorario::STATUS_DELETED) {
+        if ($grupoHorario->deleted_at !== null) {
             return redirect()->route('admin.psicologia.maestros.grupos_horarios.index')->with('error', 'Este grupo ha sido eliminado.');
         }
 
@@ -108,11 +107,11 @@ class GrupoHorarioController extends Controller
     {
         $userId = Auth::id();
         $grupoHorario = GrupoHorario::obtenerPorId($id);
-        if (!$grupoHorario || $grupoHorario->user_id !== $userId) {
+        if (!$grupoHorario || (int) $grupoHorario->psicologo_use_id !== (int) $userId) {
             abort(403, 'No autorizado.');
         }
 
-        if ($grupoHorario->activo == GrupoHorario::STATUS_DELETED) {
+        if ($grupoHorario->deleted_at !== null) {
             return redirect()->route('admin.psicologia.maestros.grupos_horarios.index')->with('error', 'Este grupo ha sido eliminado.');
         }
 
@@ -124,13 +123,13 @@ class GrupoHorarioController extends Controller
             'nombre' => 'required|string|max:255',
         ]);
 
-        if (GrupoHorario::existeNombre($userId, $request->nombre, $grupoHorario->id)) {
+        if (GrupoHorario::existeNombre($userId, $request->nombre, $grupoHorario->id_gha)) {
             return redirect()->route('admin.psicologia.maestros.grupos_horarios.index')
                 ->with('error', 'Ya existe otro grupo con ese nombre. Cambia el nombre.');
         }
 
-        GrupoHorario::actualizar($grupoHorario->id, [
-            'nombre' => $request->nombre,
+        GrupoHorario::actualizar($grupoHorario->id_gha, [
+            'nombre_gha' => $request->nombre,
         ]);
 
         return redirect()->route('admin.psicologia.maestros.grupos_horarios.index')
@@ -140,11 +139,11 @@ class GrupoHorarioController extends Controller
     public function destroy(Request $request, $id)
     {
         $grupoHorario = GrupoHorario::obtenerPorId($id);
-        if (!$grupoHorario || $grupoHorario->user_id !== Auth::id()) {
+        if (!$grupoHorario || (int) $grupoHorario->psicologo_use_id !== (int) Auth::id()) {
             abort(403, 'No autorizado.');
         }
 
-        if ($grupoHorario->activo == GrupoHorario::STATUS_DELETED) {
+        if ($grupoHorario->deleted_at !== null) {
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json(['status' => 'error', 'message' => 'Este grupo ya ha sido eliminado.'], 400);
             }
@@ -205,11 +204,11 @@ class GrupoHorarioController extends Controller
     public function activate(Request $request, $id)
     {
         $grupoHorario = GrupoHorario::obtenerPorId($id);
-        if (!$grupoHorario || $grupoHorario->user_id !== Auth::id()) {
+        if (!$grupoHorario || (int) $grupoHorario->psicologo_use_id !== (int) Auth::id()) {
             abort(403, 'No autorizado.');
         }
 
-        if ($grupoHorario->activo == GrupoHorario::STATUS_DELETED) {
+        if ($grupoHorario->deleted_at !== null) {
             if ($request->ajax()) {
                 return response()->json([
                     'status' => 'error',
@@ -231,9 +230,9 @@ class GrupoHorarioController extends Controller
             return redirect()->route('admin.psicologia.maestros.grupos_horarios.index')->with('error', 'No puedes cambiar o activar otro grupo de horarios mientras tengas citas pendientes o confirmadas.');
         }
 
-        $count = DB::table('horarios')
-            ->where('grupo_horario_id', $id)
-            ->where('activo', '!=', Horario::STATUS_DELETED)
+        $count = DB::table('horario_profesional')
+            ->where('gha_id', $id)
+            ->whereNull('deleted_at')
             ->count();
         if ($count < 2) {
             if ($request->ajax()) {
@@ -261,11 +260,11 @@ class GrupoHorarioController extends Controller
     public function deactivate(Request $request, $id)
     {
         $grupoHorario = GrupoHorario::obtenerPorId($id);
-        if (!$grupoHorario || $grupoHorario->user_id !== Auth::id()) {
+        if (!$grupoHorario || (int) $grupoHorario->psicologo_use_id !== (int) Auth::id()) {
             abort(403, 'No autorizado.');
         }
 
-        if ($grupoHorario->activo == GrupoHorario::STATUS_DELETED) {
+        if ($grupoHorario->deleted_at !== null) {
             if ($request->ajax()) {
                 return response()->json([
                     'status' => 'error',

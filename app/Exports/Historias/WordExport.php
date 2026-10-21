@@ -96,7 +96,7 @@ class WordExport
         $section->addText('', [], []);
         $titleStyle = ['bold' => true, 'size' => 13, 'color' => '111827'];
         $section->addText(mb_strtoupper($paciente->name), $titleStyle);
-        $section->addText('Sesiones: ' . $stats['realizadas'] . '  |  N° Expediente: ' . $historia->id, ['bold' => true, 'size' => 10, 'color' => '374151']); // Gray 700
+        $section->addText('Sesiones: ' . $stats['realizadas'] . '  |  N° Expediente: ' . $historia->id_hcl, ['bold' => true, 'size' => 10, 'color' => '374151']); // Gray 700
         $section->addText('', [], []);
 
 
@@ -124,25 +124,27 @@ class WordExport
         $section->addTextBreak(1);
 
         $section->addText('Datos Personales', ['bold' => true, 'size' => 14, 'color' => '111827']);
+        $persona = $paciente->persona;
+        $pnf = $persona?->personaPnf->first()?->pnf?->nombre_prg;
         $infoTable = $section->addTable(['borderSize' => 0]);
         $infoTable->addRow();
-        $infoTable->addCell(4500)->addText('Cédula: ' . ($paciente->cedula ?? 'N/A'), ['size' => 10, 'color' => '374151']);
-        $infoTable->addCell(4500)->addText('Edad: ' . ($paciente->fecha_nacimiento ? Carbon::parse($paciente->fecha_nacimiento)->age . ' años' : 'N/A'), ['size' => 10, 'color' => '374151']);
+        $infoTable->addCell(4500)->addText('Cédula: ' . ($persona->cedula_per ?? 'N/A'), ['size' => 10, 'color' => '374151']);
+        $infoTable->addCell(4500)->addText('Edad: ' . (!empty($persona?->fecha_nacimiento_per) ? Carbon::parse($persona->fecha_nacimiento_per)->age . ' años' : 'N/A'), ['size' => 10, 'color' => '374151']);
         $infoTable->addRow();
-        $infoTable->addCell(4500)->addText('Teléfono: ' . ($paciente->telefono ?? 'N/A'), ['size' => 10, 'color' => '374151']);
-        $infoTable->addCell(4500)->addText('Carrera/PNF: ' . ($paciente->pnf ?? 'N/A'), ['size' => 10, 'color' => '374151']);
+        $infoTable->addCell(4500)->addText('Teléfono: ' . ($persona->telefono_per ?? 'N/A'), ['size' => 10, 'color' => '374151']);
+        $infoTable->addCell(4500)->addText('Carrera/PNF: ' . ($pnf ?? 'N/A'), ['size' => 10, 'color' => '374151']);
         $section->addTextBreak(1);
 
         $apaStyle = ['indentation' => ['firstLine' => 720], 'alignment' => Jc::BOTH, 'lineHeight' => 1.5];
 
         foreach ($seccionesPersonalizadas as $seccion) {
-            $section->addText(htmlspecialchars($seccion->titulo), ['bold' => true, 'size' => 14, 'color' => '111827']);
-            if ($seccion->descripcion_general) {
-                $section->addText(htmlspecialchars($seccion->descripcion_general), ['italic' => true, 'color' => '6B7280'], $apaStyle);
+            $section->addText(htmlspecialchars($seccion->titulo_hsp), ['bold' => true, 'size' => 14, 'color' => '111827']);
+            if ($seccion->descripcion_general_hsp) {
+                $section->addText(htmlspecialchars($seccion->descripcion_general_hsp), ['italic' => true, 'color' => '6B7280'], $apaStyle);
             }
             foreach ($seccion->segmentos as $segmento) {
-                $section->addText(htmlspecialchars($segmento->titulo . ':'), ['bold' => true, 'color' => '374151']);
-                $textoPlano = strip_tags($segmento->contenido ?? 'Sin contenido registrado.');
+                $section->addText(htmlspecialchars($segmento->titulo_hsm . ':'), ['bold' => true, 'color' => '374151']);
+                $textoPlano = strip_tags($segmento->contenido_hsm ?? 'Sin contenido registrado.');
                 $section->addText(htmlspecialchars($textoPlano), ['color' => '4B5563'], $apaStyle);
                 $section->addTextBreak(1);
             }
@@ -155,15 +157,15 @@ class WordExport
         $sesionNum = 0;
         foreach ($citasSeleccionadas as $cita) {
             $sesionNum++;
-            $fechaStr = $cita->fecha ? $cita->fecha->format('d M Y') : 'Sin fecha';
-            $motivo = $cita->motivo ?? 'Consulta General';
+            $fechaStr = $cita->fecha_cps ? $cita->fecha_cps->format('d M Y') : 'Sin fecha';
+            $motivo = $cita->motivo_cps ?? 'Consulta General';
 
             $section->addText('');
             $section->addText('Sesión No. ' . $sesionNum . ' - ' . $motivo . ' (' . $fechaStr . ')', ['bold' => true, 'size' => 11, 'color' => '374151']);
 
             $notasData = null;
-            if ($cita->notas) {
-                $notasData = json_decode($cita->notas, true);
+            if ($cita->notas_cps) {
+                $notasData = json_decode($cita->notas_cps, true);
                 if (json_last_error() !== JSON_ERROR_NONE) $notasData = null;
             }
 
@@ -178,13 +180,13 @@ class WordExport
             $bodyFont = ['size' => 10, 'color' => '374151'];
 
             if ($notasData && is_array($notasData)) {
-                $camposDinamicos = CitaNotaEvolucion::obtenerPorCita($cita->id);
+                $camposDinamicos = CitaNotaEvolucion::obtenerPorCita($cita->id_cps);
                 
                 foreach($camposDinamicos as $campo) {
-                    if (!empty(trim($campo->contenido))) {
+                    if (!empty(trim($campo->contenido_cno ?? ''))) {
                         $run = $section->addTextRun($apaStyle);
-                        $run->addText(htmlspecialchars($campo->titulo . ': '), $labelFont);
-                        $run->addText(htmlspecialchars(trim($campo->contenido)), $bodyFont);
+                        $run->addText(htmlspecialchars($campo->titulo_cne . ': '), $labelFont);
+                        $run->addText(htmlspecialchars(trim($campo->contenido_cno)), $bodyFont);
                     }
                 }
 

@@ -147,13 +147,13 @@ class HomeController extends Controller
         return [
             'fechaInicio'  => $fechaInicio,
             'fechaFin'     => $fechaFin,
-            'avances'      => DB::table('avances_sesion')
-                ->where('status', 1)
-                ->orderBy('nombre', 'asc')
+            'avances'      => DB::table('avance_sesion')
+                ->whereNull('deleted_at')
+                ->orderBy('nombre_avs', 'asc')
                 ->get(),
-            'estadosAnimo' => DB::table('estado_animos')
-                ->where('status', 1)
-                ->orderBy('valor', 'asc')
+            'estadosAnimo' => DB::table('estado_animo')
+                ->whereNull('deleted_at')
+                ->orderBy('valor_esa', 'asc')
                 ->get(),
         ];
     }
@@ -171,7 +171,7 @@ class HomeController extends Controller
 
         $estado          = $request->input('estado');
         $avanceId        = $request->input('avance_id');
-        $estadoAnimoId   = $request->input('estado_animo_id');
+        $estadoAnimoId   = $request->input('esa_id');
         $prioridad       = $request->input('prioridad');
         $perfilAcademico = $request->input('perfil_academico');
         $pnf             = $request->input('pnf');
@@ -185,7 +185,7 @@ class HomeController extends Controller
         );
 
         $resumen = Cita::obtenerResumenEstadistico($citas, $fechaInicio, $fechaFin, null);
-        $resumen['por_estado'] = $citas->groupBy('estado')->map->count()->toArray();
+        $resumen['por_estado'] = $citas->groupBy('estado_cita_cps')->map->count()->toArray();
         unset($resumen['avances_pacientes'], $resumen['prioridades_pacientes'], $resumen['estados_animo_pacientes']);
 
         $porPsicologo = Cita::obtenerEstadisticasPorPsicologo($fechaInicio, $fechaFin);

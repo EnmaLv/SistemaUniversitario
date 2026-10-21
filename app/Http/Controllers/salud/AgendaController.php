@@ -36,8 +36,8 @@ class AgendaController extends Controller
 
         $data = Cita::obtenerDataAgenda($request, $user);
 
-        $data['avances'] = DB::table('avances_sesion')->orderBy('nombre', 'asc')->get();
-        $data['estados_animo'] = DB::table('estado_animos')->orderBy('valor', 'asc')->get();
+        $data['avances'] = DB::table('avance_sesion')->whereNull('deleted_at')->orderBy('nombre_avs', 'asc')->get();
+        $data['estados_animo'] = DB::table('estado_animo')->whereNull('deleted_at')->orderBy('valor_esa', 'asc')->get();
         $data['prioridades'] = Prioridad::obtenerParaPsicologo($user->id_use);
 
         return view('admin.psicologia.maestros.agenda.index', $data);
@@ -81,8 +81,8 @@ class AgendaController extends Controller
         if ($prioridad === 'critica') $prioridad = 'crítica';
 
         // Validación: paciente sin cita pendiente/confirmada
-        $existe = Cita::where('user_id', $pacienteId)
-            ->whereIn('estado', ['pendiente', 'confirmada'])
+        $existe = Cita::where('paciente_use_id', $pacienteId)
+            ->whereIn('estado_cita_cps', ['pendiente', 'confirmada'])
             ->exists();
 
         if ($existe) {
@@ -106,13 +106,13 @@ class AgendaController extends Controller
         $bloqueLabel = "{$diaSemana} {$bloqueInicio} - {$bloqueFin}";
 
         // Verificar que el bloque esté libre
-        $bloqueOcupado = Cita::where('psicologo_id', $user->id_use)
-            ->where('fecha', $fecha)
-            ->whereIn('estado', ['confirmada', 'realizada'])
-            ->whereNotNull('bloque_propuesto')
+        $bloqueOcupado = Cita::where('psicologo_use_id', $user->id_use)
+            ->where('fecha_cps', $fecha)
+            ->whereIn('estado_cita_cps', ['confirmada', 'realizada'])
+            ->whereNotNull('bloque_propuesto_cps')
             ->get()
             ->first(function ($c) use ($bloqueLabel) {
-                $bloqueDecrypted = $c->bloque_propuesto;
+                $bloqueDecrypted = $c->bloque_propuesto_cps;
                 try {
                     $try = decrypt($bloqueDecrypted);
                     if (is_array($try) || is_object($try)) {
@@ -121,7 +121,7 @@ class AgendaController extends Controller
                     $bloqueDecrypted = $try;
                 } catch (\Exception $e) {
                     try {
-                        $bloqueDecrypted = Crypt::decryptString($c->bloque_propuesto);
+                        $bloqueDecrypted = Crypt::decryptString($c->bloque_propuesto_cps);
                     } catch (\Exception $e2) {
                         // Se queda el valor crudo
                     }
@@ -139,15 +139,15 @@ class AgendaController extends Controller
 
         // Crear directamente como CONFIRMADA con bloque asignado
         $cita = Cita::create([
-            'user_id'          => $pacienteId,
-            'psicologo_id'     => $user->id_use,
-            'fecha'            => $fecha,
-            'hora'             => $hora,
-            'estado'           => 'confirmada',
-            'prioridad'        => $prioridad,
-            'motivo'           => Crypt::encryptString('Gestionada por psicólogo'),
-            'bloque_propuesto' => Crypt::encryptString($bloqueLabel),
-            'confirmado_en'    => now(),
+            'paciente_use_id'      => $pacienteId,
+            'psicologo_use_id'     => $user->id_use,
+            'fecha_cps'            => $fecha,
+            'hora_cps'             => $hora,
+            'estado_cita_cps'      => 'confirmada',
+            'prioridad_texto_cps'  => $prioridad,
+            'motivo_cps'           => Crypt::encryptString('Gestionada por psicólogo'),
+            'bloque_propuesto_cps' => Crypt::encryptString($bloqueLabel),
+            'confirmado_en_cps'    => now(),
         ]);
 
         // Notificación in-app
@@ -171,13 +171,13 @@ class AgendaController extends Controller
         // Correo al paciente
         try {
             $citaData = (object) [
-                'id'       => $cita->id,
+                'id'       => $cita->id_cps,
                 'paciente' => $paciente,
                 'fecha'    => $fecha,
                 'hora'     => $hora,
                 'bloque'   => $bloqueLabel,
             ];
-            Mail::to($paciente->persona->correo_per ?? $paciente->username)
+            Mail::to($paciente->persona->correo_per ?? $paciente->email_use)
                 ->queue(new \App\Mail\CitaAsignadaManualMail($citaData, $user));
         } catch (\Exception $e) {
             Log::error('Error enviando correo de cita manual: ' . $e->getMessage());
@@ -186,7 +186,7 @@ class AgendaController extends Controller
         return response()->json([
             'success'  => true,
             'message'  => 'Cita agendada correctamente.',
-            'cita_id'  => $cita->id,
+            'cita_id'  => $cita->id_cps,
             'bloque'   => $bloqueLabel,
         ]);
     }
@@ -210,7 +210,7 @@ class AgendaController extends Controller
         $fechaFin = $request->input('end_date', Carbon::now()->toDateString());
         $estado = $request->input('estado');
         $avanceId = $request->input('avance_id');
-        $estadoAnimoId = $request->input('estado_animo_id');
+        $estadoAnimoId = $request->input('esa_id');
         $prioridad = $request->input('prioridad');
         $perfilAcademico = $request->input('perfil_academico');
         $pnf = $request->input('pnf');
@@ -221,12 +221,12 @@ class AgendaController extends Controller
         $resumen = Cita::obtenerResumenEstadistico($citas, $fechaInicio, $fechaFin, $psicologoId);
         $psicologo = Usuario::find($psicologoId);
 
-        $avanceNombre = $avanceId ? DB::table('avances_sesion')->where('id', $avanceId)->value('nombre') : null;
+        $avanceNombre = $avanceId ? DB::table('avance_sesion')->where('id_avs', $avanceId)->value('nombre_avs') : null;
 
         $estadoAnimoNombre = null;
         if ($estadoAnimoId) {
-            $animo = DB::table('estado_animos')->where('id', $estadoAnimoId)->first();
-            $estadoAnimoNombre = $animo ? "{$animo->valor} - {$animo->nombre}" : null;
+            $animo = DB::table('estado_animo')->where('id_esa', $estadoAnimoId)->first();
+            $estadoAnimoNombre = $animo ? "{$animo->valor_esa} - {$animo->nombre_esa}" : null;
         }
 
         if ($format === 'json') {
@@ -244,8 +244,8 @@ class AgendaController extends Controller
                 'psicologoId' => $psicologoId,
                 'fechaInicio' => $fechaInicio,
                 'fechaFin' => $fechaFin,
-                'avances' => DB::table('avances_sesion')->orderBy('nombre', 'asc')->where('status', 1)->get(),
-                'estados_animo' => DB::table('estado_animos')->orderBy('valor', 'asc')->where('status', 1)->get(),
+                'avances' => DB::table('avance_sesion')->orderBy('nombre_avs', 'asc')->whereNull('deleted_at')->get(),
+                'estados_animo' => DB::table('estado_animo')->orderBy('valor_esa', 'asc')->whereNull('deleted_at')->get(),
                 'prioridades' => Prioridad::obtenerParaPsicologo($psicologoId)
             ]);
         }
@@ -273,7 +273,7 @@ class AgendaController extends Controller
             'estado' => $estado,
             'avance_id' => $avanceId,
             'avance_nombre' => $avanceNombre,
-            'estado_animo_id' => $estadoAnimoId,
+            'esa_id' => $estadoAnimoId,
             'estado_animo_nombre' => $estadoAnimoNombre,
             'prioridad' => $prioridad,
             'perfil_academico' => $perfilAcademico,
@@ -308,9 +308,9 @@ class AgendaController extends Controller
             $finSemana = $currentDate->copy()->endOfWeek(Carbon::SUNDAY)->format('Y-m-d');
 
             $citas = Cita::with('paciente')
-                ->where('psicologo_id', $psicologoId)
-                ->where('estado', 'confirmada')
-                ->whereBetween('fecha', [$inicioSemana, $finSemana])
+                ->where('psicologo_use_id', $psicologoId)
+                ->where('estado_cita_cps', 'confirmada')
+                ->whereBetween('fecha_cps', [$inicioSemana, $finSemana])
                 ->get();
 
             $citasCalendario = $citas->map(function($cita) {
@@ -323,7 +323,7 @@ class AgendaController extends Controller
                 $pApellido = explode(' ', trim($apellidos))[0] ?? '';
                 $cita->paciente_short_name = trim("{$pNombre} {$pApellido}") ?: 'Paciente';
 
-                $cita->fecha = Carbon::parse($cita->fecha);
+                $cita->fecha_cps = Carbon::parse($cita->fecha_cps);
                 return $cita;
             });
 
@@ -336,11 +336,11 @@ class AgendaController extends Controller
         $dias = Horario::diasSemana();
 
         $grupoActivo = GrupoHorario::obtenerActivoPorPsicologo($psicologoId);
-        $horarios = Horario::obtenerPorFiltros($psicologoId, $grupoActivo ? $grupoActivo->id : null, null);
+        $horarios = Horario::obtenerPorFiltros($psicologoId, $grupoActivo ? $grupoActivo->id_gha : null, null);
 
         $horariosPorDia = [];
         foreach ($dias as $dia) {
-            $horariosPorDia[$dia] = $horarios->where('dia', $dia);
+            $horariosPorDia[$dia] = $horarios->where('dia_hpr', $dia);
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
@@ -348,6 +348,6 @@ class AgendaController extends Controller
             compact('semanasInfo', 'dias', 'psicologo', 'horarios', 'horariosPorDia')
         )->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Agenda_Semanal_' . Str::slug($psicologo->username ?? 'Psicologo') . '.pdf');
+        return $pdf->stream('Agenda_Semanal_' . Str::slug($psicologo->username_use ?? 'Psicologo') . '.pdf');
     }
 }

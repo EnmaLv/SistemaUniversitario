@@ -105,7 +105,7 @@
                     class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
                     <option value="">Todos</option>
                     @foreach ($avances as $avance)
-                        <option value="{{ $avance->id }}">{{ $avance->nombre }}</option>
+                        <option value="{{ $avance->id_avs }}">{{ $avance->nombre_avs }}</option>
                     @endforeach
                 </select>
             </div>
@@ -116,7 +116,7 @@
                     class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
                     <option value="">Todos</option>
                     @foreach ($estadosAnimo as $animo)
-                        <option value="{{ $animo->id }}">{{ $animo->valor }} - {{ $animo->nombre }}</option>
+                        <option value="{{ $animo->id_esa }}">{{ $animo->valor_esa }} - {{ $animo->nombre_esa }}</option>
                     @endforeach
                 </select>
             </div>
@@ -330,7 +330,7 @@
             const map = {
                 psicoAdminFilterEstado:  'estado',
                 psicoAdminFilterAvance:  'avance_id',
-                psicoAdminFilterAnimo:   'estado_animo_id',
+                psicoAdminFilterAnimo:   'esa_id',
                 psicoAdminFilterPerfil:  'perfil_academico',
                 psicoAdminFilterPnf:     'pnf',
             };

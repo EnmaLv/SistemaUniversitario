@@ -221,7 +221,7 @@
         <div class="patient-name">{{ $paciente->persona->nombres_per }} {{ $paciente->persona->apellidos_per }}</div>
         <div class="patient-meta">
             <span>Sesiones: {{ $stats['realizadas'] }}</span>
-            <span>N Expediente: {{ $historia->id }}</span>
+            <span>N Expediente: {{ $historia->id_hcl }}</span>
         </div>
     </div>
 
@@ -233,11 +233,11 @@
     @foreach($citasSeleccionadas as $cita)
         @php
             $sesionNum++;
-            $fechaStr = $cita->fecha ? $cita->fecha->translatedFormat('d M Y') : 'Sin fecha';
-            $motivo = $cita->motivo ?? 'Consulta General';
+            $fechaStr = $cita->fecha_cps ? $cita->fecha_cps->translatedFormat('d M Y') : 'Sin fecha';
+            $motivo = $cita->motivo_cps ?? 'Consulta General';
             $notasData = null;
-            if ($cita->notas) {
-                $notasData = json_decode($cita->notas, true);
+            if ($cita->notas_cps) {
+                $notasData = json_decode($cita->notas_cps, true);
                 if (json_last_error() !== JSON_ERROR_NONE) $notasData = null;
             }
         @endphp
@@ -249,12 +249,12 @@
             <div class="timeline-body">
                 @if($notasData && is_array($notasData))
                     @php
-                        $camposDinamicos = \App\Models\salud\CitaNotaEvolucion::obtenerPorCita($cita->id);
+                        $camposDinamicos = \App\Models\salud\CitaNotaEvolucion::obtenerPorCita($cita->id_cps);
                     @endphp
                     
                     @foreach($camposDinamicos as $campo)
-                        @if(!empty(trim($campo->contenido)))
-                            <strong>{{ $campo->titulo }}:</strong> {{ trim($campo->contenido) }}<br>
+                        @if(!empty(trim($campo->contenido_cno)))
+                            <strong>{{ $campo->titulo_cne }}:</strong> {{ trim($campo->contenido_cno) }}<br>
                         @endif
                     @endforeach
 

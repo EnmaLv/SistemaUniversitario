@@ -15,10 +15,10 @@
                             $primerNombre = $partes[0] ?? '';
                             $primerApellido = $partes[1] ?? '';
                             $iniciales = strtoupper(substr($primerNombre, 0, 1) . substr($primerApellido, 0, 1));
-                            $isManual = $cita->motivo === 'Nota de Evolución (Manual)';
+                            $isManual = $cita->motivo_cps === 'Nota de Evolución (Manual)';
                             $fechaCita =
-                                $cita->confirmado_en ?? null
-                                    ? \Carbon\Carbon::parse($cita->confirmado_en)->format('d/m/Y')
+                                $cita->confirmado_en_cps ?? null
+                                    ? \Carbon\Carbon::parse($cita->confirmado_en_cps)->format('d/m/Y')
                                     : 'No disponible';
                             $edad =
                                 $paciente->persona->fecha_nacimiento_per ?? null
@@ -41,7 +41,7 @@
                             data-patient-cedula="{{ $paciente->persona->cedula_per ?? 'No disponible' }}"
                             data-patient-genero="{{ $paciente->persona->genero_per ?? 'No disponible' }}"
                             data-patient-nacimiento="{{ $nacimiento }}"
-                            data-patient-semestre="{{ $paciente->persona->semestre_per ?? null ? $paciente->persona->semestre . '° Semestre' : 'No aplica' }}"
+                            data-patient-semestre="{{ $paciente->persona->semestre_per ?? null ? $paciente->persona->semestre_per . '° Semestre' : 'No aplica' }}"
                             data-patient-edad="{{ $edad }}" title="Ver perfil del paciente">
                             <span class="text-lg font-black tracking-wider">{{ $iniciales }}</span>
                         </button>
@@ -49,18 +49,18 @@
                         <div class="flex-1 min-w-0">
                             <h1
                                 class="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white flex flex-wrap items-center gap-2 leading-tight">
-                                Nota de Sesión: {{ $cita->paciente->name }}
+                                Nota de Sesión: {{ $cita->paciente->nombre_completo }}
                             </h1>
                             <p
                                 class="mt-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                {{ $cita->fecha?->translatedFormat('d M, Y') ?? 'S/F' }}
-                                ({{ $cita->hora ? \Carbon\Carbon::parse($cita->hora)->format('g:i A') : 'S/H' }})
+                                {{ $cita->fecha_cps?->translatedFormat('d M, Y') ?? 'S/F' }}
+                                ({{ $cita->hora_cps ? \Carbon\Carbon::parse($cita->hora_cps)->format('g:i A') : 'S/H' }})
                             </p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('admin.psicologia.maestros.historias.show', $cita->user_id) }}"
+                        <a href="{{ route('admin.psicologia.maestros.historias.show', $cita->paciente_use_id) }}"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold border border-gray-200 dark:border-gray-700 shadow-sm transition-all active:scale-95 group">
                             <i class="fas fa-arrow-left text-xs transition-transform group-hover:-translate-x-1"></i>
                             <span>Volver al Historial</span>
@@ -87,7 +87,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.psicologia.maestros.citas.update.notas', $cita->id) }}" method="POST"
+            <form action="{{ route('admin.psicologia.maestros.citas.update.notas', $cita->id_cps) }}" method="POST"
                 id="form-notas-evolucion" class="relative">
                 @csrf
                 @method('PATCH')
@@ -99,7 +99,7 @@
 
                 <div class="space-y-8">
                     <div class="space-y-6" id="campos-dinamicos-container">
-                        @if ($cita->motivo === 'Nota de Evolución (Manual)')
+                        @if ($cita->motivo_cps === 'Nota de Evolución (Manual)')
                             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                                 class="rounded-2xl border shadow-sm p-6 sm:p-8">
                                 <div class="flex items-center gap-2 mb-4">
@@ -260,13 +260,13 @@
                                             <span class="text-red-500">*</span>
                                         @endif
                                     </label>
-                                    <select name="estado_animo_id" x-model="data.estado_animo_id"
+                                    <select name="esa_id" x-model="data.esa_id"
                                         @if (!$isManual) required @endif
                                         style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                         class="w-full border rounded-xl h-11 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
                                         <option value="">Seleccionar estado de ánimo...</option>
                                         @foreach ($estadosAnimo as $animo)
-                                            <option value="{{ $animo->id }}">{{ $animo->nombre }}</option>
+                                            <option value="{{ $animo->id_esa }}">{{ $animo->nombre_esa }}</option>
                                         @endforeach
                                     </select>
                                     <textarea name="estado_animo_detalle" rows="2" @if (!$isManual) required @endif
@@ -288,7 +288,7 @@
                                         class="w-full border rounded-xl h-11 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer">
                                         <option value="">Seleccionar estado de avance...</option>
                                         @foreach ($avances as $avance)
-                                            <option value="{{ $avance->id }}">{{ $avance->nombre }}</option>
+                                            <option value="{{ $avance->id_avs }}">{{ $avance->nombre_avs }}</option>
                                         @endforeach
                                     </select>
                                     <textarea name="avance_detalle" rows="2" @if (!$isManual) required @endif
@@ -333,7 +333,7 @@
 
                 <div
                     class="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:bottom-8 sm:right-8 z-30 flex items-center gap-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-2.5 rounded-full shadow-2xl border border-gray-200 dark:border-gray-700">
-                    <a href="{{ route('admin.psicologia.maestros.historias.show', $cita->user_id) }}" title="Volver"
+                    <a href="{{ route('admin.psicologia.maestros.historias.show', $cita->paciente_use_id) }}" title="Volver"
                         class="w-12 h-12 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full flex items-center justify-center transition-all active:scale-95 border border-gray-100 dark:border-gray-700">
                         <i class="fas fa-arrow-left text-lg"></i>
                     </a>
@@ -563,7 +563,7 @@
             let initialData = {
                 titulo_manual: '',
                 diagnosticos: [],
-                estado_animo_id: '',
+                esa_id: '',
                 estado_animo_detalle: '',
                 avance_estado: '',
                 avance_detalle: '',
@@ -573,7 +573,7 @@
                 campos_dinamicos: @json($camposGuardados)
             };
 
-            const rawNotas = @json($cita->notas);
+            const rawNotas = @json($cita->notas_cps);
             try {
                 const parsed = JSON.parse(rawNotas);
                 if (typeof parsed === 'object' && parsed !== null) {
@@ -585,7 +585,7 @@
             } catch (e) {}
 
             const initialSnapshot = JSON.stringify(initialData);
-            const isRealizada = @json($cita->estado === 'realizada');
+            const isRealizada = @json($cita->estado_cita_cps === 'realizada');
 
             return {
                 data: initialData,

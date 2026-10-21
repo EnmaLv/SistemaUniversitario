@@ -196,7 +196,7 @@
         <div class="patient-name">{{ $paciente->persona->nombres_per }} {{ $paciente->persona->apellidos_per }}</div>
         <div class="patient-meta">
             <span>Sesiones Totales: {{ $stats['realizadas'] }}</span>
-            <span>N° Expediente: {{ $historia->id }}</span>
+            <span>N° Expediente: {{ $historia->id_hcl }}</span>
         </div>
     </div>
 
@@ -232,18 +232,18 @@
     </table>
 
     @foreach($seccionesPersonalizadas as $seccion)
-        <div class="section-title">{{ $seccion->titulo }}</div>
-        @if($seccion->descripcion_general)
-            <div style="font-size: 10px; color: #6b7280; margin-bottom: 10px;">{{ $seccion->descripcion_general }}</div>
+        <div class="section-title">{{ $seccion->titulo_hsp }}</div>
+        @if($seccion->descripcion_general_hsp)
+            <div style="font-size: 10px; color: #6b7280; margin-bottom: 10px;">{{ $seccion->descripcion_general_hsp }}</div>
         @endif
         
         @foreach($seccion->segmentos as $segmento)
-            <div class="segment-title">{{ $segmento->titulo }}</div>
+            <div class="segment-title">{{ $segmento->titulo_hsm }}</div>
             <div class="segment-content">
-                {!! nl2br(e(strip_tags($segmento->contenido ?? 'Sin información registrada.'))) !!}
+                {!! nl2br(e(strip_tags($segmento->contenido_hsm ?? 'Sin información registrada.'))) !!}
                 
                 @php
-                    $contextoSeg = 'seg_' . $segmento->id;
+                    $contextoSeg = 'seg_' . $segmento->id_hsm;
                     $enfermedadesSeg = $enfermedadesVinculadas[$contextoSeg] ?? [];
                 @endphp
                 @if(count($enfermedadesSeg) > 0)

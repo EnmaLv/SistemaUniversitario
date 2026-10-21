@@ -24,19 +24,20 @@ class PsicologiaHomeService
 
         $estadoAnimoHoy = EstadoAnimoDiario::getTodayForUser($userId);
 
-        $proximaCita = DB::table('citas')
-            ->join('user', 'citas.psicologo_id', '=', 'user.id_use')
+        $proximaCita = DB::table('cita_psicologica')
+            ->join('user', 'cita_psicologica.psicologo_use_id', '=', 'user.id_use')
             ->join('persona', 'user.per_id', '=', 'persona.id_per')
-            ->select('citas.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
-            ->where('citas.user_id', $userId)
-            ->where('citas.estado', 'confirmada')
-            ->where('citas.fecha', '>=', $now->format('Y-m-d'))
-            ->orderBy('citas.fecha', 'asc')
-            ->orderBy('citas.hora', 'asc')
+            ->select('cita_psicologica.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
+            ->where('cita_psicologica.paciente_use_id', $userId)
+            ->where('cita_psicologica.estado_cita_cps', 'confirmada')
+            ->whereNull('cita_psicologica.deleted_at')
+            ->where('cita_psicologica.fecha_cps', '>=', $now->format('Y-m-d'))
+            ->orderBy('cita_psicologica.fecha_cps', 'asc')
+            ->orderBy('cita_psicologica.hora_cps', 'asc')
             ->first();
 
         if ($proximaCita) {
-            $fechaHoraP = Carbon::parse("{$proximaCita->fecha} " . ($proximaCita->hora ?? '00:00:00'));
+            $fechaHoraP = Carbon::parse("{$proximaCita->fecha_cps} " . ($proximaCita->hora_cps ?? '00:00:00'));
             if ($fechaHoraP->isPast()) {
                 $proximaCita = null;
             } else {
@@ -44,13 +45,14 @@ class PsicologiaHomeService
             }
         }
 
-        $citaPendiente = DB::table('citas')
-            ->join('user', 'citas.psicologo_id', '=', 'user.id_use')
+        $citaPendiente = DB::table('cita_psicologica')
+            ->join('user', 'cita_psicologica.psicologo_use_id', '=', 'user.id_use')
             ->join('persona', 'user.per_id', '=', 'persona.id_per')
-            ->select('citas.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
-            ->where('citas.user_id', $userId)
-            ->where('citas.estado', 'pendiente')
-            ->orderBy('citas.created_at', 'desc')
+            ->select('cita_psicologica.*', 'persona.nombres_per as psi_nombres', 'persona.apellidos_per as psi_apellidos')
+            ->where('cita_psicologica.paciente_use_id', $userId)
+            ->where('cita_psicologica.estado_cita_cps', 'pendiente')
+            ->whereNull('cita_psicologica.deleted_at')
+            ->orderBy('cita_psicologica.created_at', 'desc')
             ->first();
 
         if ($citaPendiente) {
@@ -80,8 +82,12 @@ class PsicologiaHomeService
             if (($data['type_id'] ?? null) === 'cita_postponed') {
                 $notificacionCita = null;
             } elseif (!empty($data['cita_id'])) {
-                $citaNotif = DB::table('citas')->where('id', $data['cita_id'])->first();
-                if (!$citaNotif || ($citaNotif->fecha && $citaNotif->hora && Carbon::parse("{$citaNotif->fecha} {$citaNotif->hora}")->isPast())) {
+                $citaNotif = DB::table('cita_psicologica')
+                    ->where('id_cps', $data['cita_id'])
+                    ->where('paciente_use_id', $userId)
+                    ->whereNull('deleted_at')
+                    ->first();
+                if (!$citaNotif || ($citaNotif->fecha_cps && $citaNotif->hora_cps && Carbon::parse("{$citaNotif->fecha_cps} {$citaNotif->hora_cps}")->isPast())) {
                     $notificacionCita = null;
                 }
             }
@@ -91,7 +97,7 @@ class PsicologiaHomeService
             $notificacionCita = (object)[
                 'type' => 'App\Notifications\CitaConfirmedNotification',
                 'data' => json_encode([
-                    'cita_id' => $proximaCita->id,
+                    'cita_id' => $proximaCita->id_cps,
                     'body'    => '¡Tienes una cita confirmada!'
                 ])
             ];
@@ -102,7 +108,7 @@ class PsicologiaHomeService
 
         $horariosHoy = collect();
         if ($grupoActivo) {
-            $horariosHoy = GrupoHorario::obtenerHorariosHoy($grupoActivo->id, $diaActual);
+            $horariosHoy = GrupoHorario::obtenerHorariosHoy($grupoActivo->id_gha, $diaActual);
         }
 
         $confirmadasHoy = Cita::obtenerCitasConfirmadasHoyPorPsicologo(Auth::id(), 3);

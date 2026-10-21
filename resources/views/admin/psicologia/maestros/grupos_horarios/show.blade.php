@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('Grupo: ') . $grupoHorario->nombre }}
+                {{ __('Grupo: ') . $grupoHorario->nombre_gha }}
             </h2>
             <div class="flex space-x-2">
                 @if(!empty($tieneCitasPendientes))
@@ -10,7 +10,7 @@
                         Editar Grupo
                     </button>
                 @else
-                    <a href="{{ route('admin.psicologia.maestros.grupos_horarios.edit', $grupoHorario->id) }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">
+                    <a href="{{ route('admin.psicologia.maestros.grupos_horarios.edit', $grupoHorario->id_gha) }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">
                         Editar Grupo
                     </a>
                 @endif
@@ -28,8 +28,8 @@
                     {{-- ================================Estado del Grupo================================== --}}
                     <div class="mb-6">
                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Estado del Grupo</h3>
-                        <span class="px-3 py-1 rounded {{ $grupoHorario->activo == \App\Models\GrupoHorario::STATUS_ACTIVE ? 'bg-green-200 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300' }}">
-                            {{ $grupoHorario->activo == \App\Models\GrupoHorario::STATUS_ACTIVE ? 'Activo' : 'Inactivo' }}
+                        <span class="px-3 py-1 rounded {{ $grupoHorario->status_id == \App\Models\salud\GrupoHorario::STATUS_ACTIVE ? 'bg-green-200 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300' }}">
+                            {{ $grupoHorario->status_id == \App\Models\salud\GrupoHorario::STATUS_ACTIVE ? 'Activo' : 'Inactivo' }}
                         </span>
                     </div>
 
@@ -43,12 +43,12 @@
                                 @else
                                     <div class="space-y-2">
                                         @foreach ($horariosDia as $horario)
-                                            <div class="relative bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center {{ $horario->activo == \App\Models\Horario::STATUS_INACTIVE ? 'opacity-50' : '' }}">
+                                            <div class="relative bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center {{ $horario->status_id == \App\Models\salud\Horario::STATUS_INACTIVE ? 'opacity-50' : '' }}">
                                                 <div class="mb-2">
-                                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ $horario->hora_inicio }} - {{ $horario->hora_fin }}</span>
+                                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ $horario->hora_inicio_hpr }} - {{ $horario->hora_fin_hpr }}</span>
                                                 </div>
-                                                @if($horario->descripcion)
-                                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $horario->descripcion }}</p>
+                                                @if($horario->descripcion_hpr)
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $horario->descripcion_hpr }}</p>
                                                 @endif
                                             </div>
                                         @endforeach
@@ -60,13 +60,13 @@
 
                     {{-- ================================Acciones================================== --}}
                     <div class="mt-6 flex space-x-4">
-                        @if($grupoHorario->activo != \App\Models\GrupoHorario::STATUS_ACTIVE)
+                        @if($grupoHorario->status_id != \App\Models\salud\GrupoHorario::STATUS_ACTIVE)
                             @if(!empty($tieneCitasPendientes))
                                 <button type="button" disabled class="bg-green-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed" title="No puedes activar mientras tengas citas pendientes">
                                     Activar Grupo
                                 </button>
                             @else
-                                <form action="{{ route('admin.psicologia.maestros.grupos_horarios.activate', $grupoHorario->id) }}" method="POST" class="inline">
+                                <form action="{{ route('admin.psicologia.maestros.grupos_horarios.activate', $grupoHorario->id_gha) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition">
@@ -80,7 +80,7 @@
                                     Desactivar Grupo
                                 </button>
                             @else
-                                <form action="{{ route('admin.psicologia.maestros.grupos_horarios.deactivate', $grupoHorario->id) }}" method="POST" class="inline">
+                                <form action="{{ route('admin.psicologia.maestros.grupos_horarios.deactivate', $grupoHorario->id_gha) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition">
@@ -95,7 +95,7 @@
                                 Eliminar Grupo
                             </button>
                         @else
-                            <form action="{{ route('admin.psicologia.maestros.grupos_horarios.destroy', $grupoHorario->id) }}" method="POST" data-ajax-reload="true" class="inline" data-confirm-message="¿Estás seguro de eliminar este grupo?">
+                            <form action="{{ route('admin.psicologia.maestros.grupos_horarios.destroy', $grupoHorario->id_gha) }}" method="POST" data-ajax-reload="true" class="inline" data-confirm-message="¿Estás seguro de eliminar este grupo?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition">

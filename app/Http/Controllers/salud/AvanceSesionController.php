@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\salud\AvanceSesion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class AvanceSesionController extends Controller
 {
@@ -67,7 +66,7 @@ class AvanceSesionController extends Controller
     {
         $this->verificarAcceso();
 
-        $avance = DB::table('avances_sesion')->where('id', $id)->first();
+        $avance = AvanceSesion::obtenerVisible($id, Auth::id());
         if (!$avance) {
             abort(404);
         }

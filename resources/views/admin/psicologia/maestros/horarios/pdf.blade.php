@@ -172,15 +172,15 @@
 
                                         $horarioBloque = ($horariosPorDia[$dia] ?? collect())
                                             ->first(function ($h) use ($blockStart, $blockEnd) {
-                                                $hInicio = \Carbon\Carbon::parse($h->hora_inicio);
-                                                $hFin    = \Carbon\Carbon::parse($h->hora_fin);
+                                                $hInicio = \Carbon\Carbon::parse($h->hora_inicio_hpr);
+                                                $hFin    = \Carbon\Carbon::parse($h->hora_fin_hpr);
                                                 return $hInicio->lt($blockEnd) && $hFin->gt($blockStart);
                                             });
                                     @endphp
                                     @if($horarioBloque)
                                         <td style="background-color: #f1f5f9; border: 1px solid #cbd5e1; text-align: center; padding: 5px;">
                                             <span style="font-size: 7px; font-weight: 900; color: #1e293b; display: block;">
-                                                {{ \Carbon\Carbon::parse($horarioBloque->hora_inicio)->format('g:i A') }} - {{ \Carbon\Carbon::parse($horarioBloque->hora_fin)->format('g:i A') }}
+                                                {{ \Carbon\Carbon::parse($horarioBloque->hora_inicio_hpr)->format('g:i A') }} - {{ \Carbon\Carbon::parse($horarioBloque->hora_fin_hpr)->format('g:i A') }}
                                             </span>
                                         </td>
                                     @else

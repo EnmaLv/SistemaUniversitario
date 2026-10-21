@@ -122,9 +122,9 @@
                 titular de la cédula de identidad 
                 <strong>{{ $paciente->persona->cedula_per ?? 'No registrada' }}</strong>, 
                 asistió a la consulta psicológica en el día 
-                <strong>{{ $cita->fecha ? $cita->fecha->translatedFormat('d \d\e F \d\e Y') : 'No registrada' }}</strong> 
+                <strong>{{ $cita->fecha_cps ? $cita->fecha_cps->translatedFormat('d \d\e F \d\e Y') : 'No registrada' }}</strong> 
                 a las 
-                <strong>{{ $cita->hora ? \Carbon\Carbon::parse($cita->hora)->format('g:i A') : 'No registrada' }}</strong>, 
+                <strong>{{ $cita->hora_cps ? \Carbon\Carbon::parse($cita->hora_cps)->format('g:i A') : 'No registrada' }}</strong>, 
                 siendo atendido(a) en el área correspondiente por el/la profesional de la psicología 
                 <strong>Psic. {{ $psicologo->persona->nombres_per }} {{ $psicologo->persona->apellidos_per }}</strong>.
             </div>

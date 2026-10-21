@@ -75,35 +75,36 @@ class CitaController extends Controller
             return response()->json(['disponibilidad' => []]);
         }
 
-        $horarios = \Illuminate\Support\Facades\DB::table('horarios')
-            ->where('grupo_horario_id', $grupoActivo->id)
-            ->whereIn('activo', [1, 2])
+        $horarios = \Illuminate\Support\Facades\DB::table('horario_profesional')
+            ->where('gha_id', $grupoActivo->id_gha)
+            ->whereIn('status_id', [1, 2])
+            ->whereNull('deleted_at')
             ->get();
 
         $horariosPorDia = [];
         foreach ($horarios as $h) {
-            $diaName = $h->dia === 'Miercoles' ? 'Miércoles' : $h->dia;
+            $diaName = $h->dia_hpr === 'Miercoles' ? 'Miércoles' : $h->dia_hpr;
             $horariosPorDia[$diaName][] = $h;
         }
 
         foreach ($horariosPorDia as $dia => &$hrs) {
-            usort($hrs, fn($a, $b) => strcmp($a->hora_inicio, $b->hora_inicio));
+            usort($hrs, fn($a, $b) => strcmp($a->hora_inicio_hpr, $b->hora_inicio_hpr));
         }
 
         $startDate = now();
         $endDate = now()->addDays(30);
 
-        $citasConfirmadas = Cita::where('psicologo_id', $request->psicologo_id)
-            ->where('estado', 'confirmada')
-            ->whereBetween('fecha', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->get(['fecha', 'hora']);
+        $citasConfirmadas = Cita::where('psicologo_use_id', $request->psicologo_id)
+            ->where('estado_cita_cps', 'confirmada')
+            ->whereBetween('fecha_cps', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get(['fecha_cps', 'hora_cps']);
 
         $citasPorFecha = [];
         foreach ($citasConfirmadas as $cita) {
-            $fechaKey = $cita->fecha instanceof \Carbon\Carbon 
-                ? $cita->fecha->format('Y-m-d') 
-                : Carbon::parse($cita->fecha)->format('Y-m-d');
-            $citasPorFecha[$fechaKey][] = Carbon::parse($cita->hora);
+            $fechaKey = $cita->fecha_cps instanceof \Carbon\Carbon 
+                ? $cita->fecha_cps->format('Y-m-d') 
+                : Carbon::parse($cita->fecha_cps)->format('Y-m-d');
+            $citasPorFecha[$fechaKey][] = Carbon::parse($cita->hora_cps);
         }
 
         $disponibilidad = [];
@@ -121,8 +122,8 @@ class CitaController extends Controller
             $ahora = now();
 
             foreach ($horariosPorDia[$diaSemana] as $h) {
-                $inicio = Carbon::parse($h->hora_inicio);
-                $fin = Carbon::parse($h->hora_fin);
+                $inicio = Carbon::parse($h->hora_inicio_hpr);
+                $fin = Carbon::parse($h->hora_fin_hpr);
 
                 if ($i === 0 && $inicio->format('H:i:s') <= $ahora->format('H:i:s')) {
                     continue;
@@ -159,7 +160,7 @@ class CitaController extends Controller
             'psicologo_id' => 'required|exists:user,id_use',
             'fecha_solicitada' => 'required|date_format:Y-m-d|after_or_equal:today',
             'motivo' => 'required|string|max:100',
-            'bloques_sugeridos' => 'required|string|max:1000',
+            'bloques_sugeridos_cps' => 'required|string|max:1000',
         ]);
 
         $psicologo = Usuario::find($validated['psicologo_id']);
@@ -170,7 +171,7 @@ class CitaController extends Controller
         [$isPass, $message, $cita] = Cita::crear($user, $validated);
 
         if (!$isPass) {
-            return back()->withErrors(['bloques_sugeridos' => $message])->withInput();
+            return back()->withErrors(['bloques_sugeridos_cps' => $message])->withInput();
         }
 
         return redirect()->route('admin.psicologia.maestros.citas.index')->with('success', $message);
@@ -222,8 +223,8 @@ class CitaController extends Controller
         $user = Auth::user();
         $this->verificarPsicologoDueno($cita);
 
-        $avances = \Illuminate\Support\Facades\DB::table('avances_sesion')->orderBy('nombre', 'asc')->get();
-        $estadosAnimo = \Illuminate\Support\Facades\DB::table('estado_animos')->orderBy('valor', 'asc')->get();
+        $avances = \Illuminate\Support\Facades\DB::table('avance_sesion')->whereNull('deleted_at')->orderBy('nombre_avs', 'asc')->get();
+        $estadosAnimo = \Illuminate\Support\Facades\DB::table('estado_animo')->whereNull('deleted_at')->orderBy('valor_esa', 'asc')->get();
 
         $camposGuardadosRaw = CitaNotaEvolucion::obtenerPorCita($citaId);
 
@@ -242,18 +243,28 @@ class CitaController extends Controller
         ];
 
         if ($camposGuardadosRaw->isEmpty()) {
-            $camposDefault = NotaEvolucionCampo::obtenerCamposDisponibles(null)->whereNull('psicologo_id');
-            $camposGuardados = $camposDefault->filter(fn($campo) => !in_array($campo->titulo, $camposOcultos))
+            $camposDefault = NotaEvolucionCampo::obtenerCamposDisponibles(null)->whereNull('psicologo_use_id');
+            $camposGuardados = $camposDefault->filter(fn($campo) => !in_array($campo->titulo_cne, $camposOcultos))
                 ->map(fn($campo) => (object)[
-                    'campo_id' => $campo->id,
-                    'titulo' => $campo->titulo,
+                    'campo_id' => $campo->id_cne,
+                    'titulo' => $campo->titulo_cne,
                     'contenido' => ''
                 ])->values();
         } else {
-            $camposGuardados = $camposGuardadosRaw->filter(fn($campo) => !in_array($campo->titulo, $camposOcultos))->values();
+            $camposGuardados = $camposGuardadosRaw->filter(fn($campo) => !in_array($campo->titulo_cne, $camposOcultos))
+                ->map(fn($campo) => (object)[
+                    'campo_id' => $campo->cne_id,
+                    'titulo' => $campo->titulo_cne,
+                    'contenido' => $campo->contenido_cno
+                ])->values();
         }
 
-        $camposDisponibles = NotaEvolucionCampo::obtenerPorPsicologo($user->id_use);
+        $camposDisponibles = NotaEvolucionCampo::obtenerPorPsicologo($user->id_use)
+            ->map(fn($campo) => (object)[
+                'id' => $campo->id_cne,
+                'titulo' => $campo->titulo_cne,
+                'psicologo_id' => $campo->psicologo_use_id
+            ])->values();
 
         return view('admin.psicologia.maestros.citas.edit_note', 
         compact('cita', 'avances', 'estadosAnimo', 'camposGuardados', 'camposDisponibles', 'tipo', 'categoriaFiltro', 'returnTo', 'editing'));
@@ -270,14 +281,14 @@ class CitaController extends Controller
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="nota-sesion-' . $cita->id . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="nota-sesion-' . $cita->id_cps . '.pdf"',
         ]);
     }
 
     private function generatePdfContent($cita): string
     {
-        $paciente = Usuario::with('persona')->find($cita->user_id);
-        $psicologo = Usuario::with('persona')->find($cita->psicologo_id);
+        $paciente = Usuario::with('persona')->find($cita->paciente_use_id);
+        $psicologo = Usuario::with('persona')->find($cita->psicologo_use_id);
 
         $pacienteName = $paciente ? $paciente->persona->nombres_per : 'Desconocido';
         $psicologoName = $psicologo ? $psicologo->persona->nombres_per : 'Desconocido';
@@ -287,13 +298,13 @@ class CitaController extends Controller
             'Nota de sesión',
             'Paciente: ' . $pacienteName,
             'Psicólogo: ' . $psicologoName,
-            'Fecha de sesión: ' . ($cita->fecha ? Carbon::parse($cita->fecha)->format('d/m/Y') : 'Sin fecha'),
-            'Motivo de Solicitud: ' . ($cita->motivo ?: 'No definido'),
+            'Fecha de sesión: ' . ($cita->fecha_cps ? Carbon::parse($cita->fecha_cps)->format('d/m/Y') : 'Sin fecha'),
+            'Motivo de Solicitud: ' . ($cita->motivo_cps ?: 'No definido'),
             '',
         ];
 
         $noteLines = [];
-        $rawNotas = $cita->notas;
+        $rawNotas = $cita->notas_cps;
 
         try {
             $data = json_decode($rawNotas, true);
@@ -323,8 +334,8 @@ class CitaController extends Controller
                     $noteLines[] = 'AVANCES DE SESIÓN:';
                     $avanceNombreDisplay = 'N/A';
                     if (!empty($data['avance_estado'])) {
-                        $avanceRecord = DB::table('avances_sesion')->where('id', $data['avance_estado'])->first();
-                        $avanceNombreDisplay = $avanceRecord ? $avanceRecord->nombre : 'ID: ' . $data['avance_estado'];
+                        $avanceRecord = DB::table('avance_sesion')->where('id_avs', $data['avance_estado'])->first();
+                        $avanceNombreDisplay = $avanceRecord ? $avanceRecord->nombre_avs : 'ID: ' . $data['avance_estado'];
                     }
                     $noteLines[] = 'Estado: ' . $avanceNombreDisplay;
                     if (!empty($data['avance_detalle'])) {
@@ -406,7 +417,7 @@ class CitaController extends Controller
         $persona = $paciente?->persona;
 
         $fotoUrl = null;
-        if ($paciente && $paciente->profile_photo_path) {
+        if ($paciente && !empty($paciente->profile_photo_path)) {
             if (file_exists(public_path('storage/' . $paciente->profile_photo_path))) {
                 $fotoUrl = asset('storage/' . $paciente->profile_photo_path);
             }
@@ -427,27 +438,27 @@ class CitaController extends Controller
         }
 
         return response()->json([
-            'id' => $cita->id,
+            'id' => $cita->id_cps,
             'paciente' => $pacienteShortName,
             'paciente_foto' => $fotoUrl,
             'psicologo' => $psicologoShortName,
             'fecha_solicitud' => Carbon::parse($cita->created_at)->format('g:i A'),
             'fecha_solicitud_iso' => Carbon::parse($cita->created_at)->toIso8601String(),
-            'fecha_confirmada' => $cita->estado === 'pendiente' ? 'Pendiente' : ($cita->fecha ? Carbon::parse($cita->fecha)->format('Y-m-d') : 'Sin fecha'),
-            'bloque_confirmado' => $cita->bloque_propuesto ?: null,
-            'hora_confirmada' => $cita->confirmado_en ? Carbon::parse($cita->confirmado_en)->format('g:i A') : 'En espera',
-            'hora_confirmada_iso' => $cita->confirmado_en ? Carbon::parse($cita->confirmado_en)->toIso8601String() : null,
-            'estado' => $cita->estado === 'no_asistio' ? 'Ausente' : ucfirst($cita->estado),
-            'prioridad' => $cita->prioridad ?? 'media',
-            'motivo' => $cita->motivo ?: 'No especificado',
-            'bloques_sugeridos' => $cita->bloques_sugeridos ?? '',
-            'bloque_propuesto' => $cita->bloque_propuesto,
-            'bloques_propuestos' => $cita->bloques_propuestos ?? '',
-            'propuesta_estado' => $cita->propuesta_estado ?? null,
-            'propuesta_bloque_seleccionado' => $cita->propuesta_bloque_seleccionado ?? null,
-            'motivo_rechazo_propuesta' => $cita->motivo_rechazo_propuesta ?? null,
+            'fecha_confirmada' => $cita->estado_cita_cps === 'pendiente' ? 'Pendiente' : ($cita->fecha_cps ? Carbon::parse($cita->fecha_cps)->format('Y-m-d') : 'Sin fecha'),
+            'bloque_confirmado' => $cita->bloque_propuesto_cps ?: null,
+            'hora_confirmada' => $cita->confirmado_en_cps ? Carbon::parse($cita->confirmado_en_cps)->format('g:i A') : 'En espera',
+            'hora_confirmada_iso' => $cita->confirmado_en_cps ? Carbon::parse($cita->confirmado_en_cps)->toIso8601String() : null,
+            'estado' => $cita->estado_cita_cps === 'no_asistio' ? 'Ausente' : ucfirst($cita->estado_cita_cps),
+            'prioridad' => $cita->prioridad_texto_cps ?? 'media',
+            'motivo' => $cita->motivo_cps ?: 'No especificado',
+            'bloques_sugeridos_cps' => $cita->bloques_sugeridos_cps ?? '',
+            'bloque_propuesto_cps' => $cita->bloque_propuesto_cps,
+            'bloques_propuestos_cps' => $cita->bloques_propuestos_cps ?? '',
+            'propuesta_estado_cps' => $cita->propuesta_estado_cps ?? null,
+            'propuesta_bloque_seleccionado_cps' => $cita->propuesta_bloque_seleccionado_cps ?? null,
+            'motivo_rechazo_propuesta_cps' => $cita->motivo_rechazo_propuesta_cps ?? null,
             'paciente_horario' => null,
-            'email' => $persona->correo_per ?? $paciente->email ?? null,
+            'email' => $persona->correo_per ?? $paciente->email_use ?? null,
             'telefono' => $persona->telefono_per ?? null,
             'registrado_en' => $paciente?->created_at ? Carbon::parse($paciente->created_at)->format('d M, Y') : null,
             'cedula' => $persona->cedula_per ?? null,
@@ -472,11 +483,11 @@ class CitaController extends Controller
 
         $userId = (int) $user->id_use;
 
-        if ($user->esPsicologo() && (int) $cita->psicologo_id === $userId) {
+        if ($user->esPsicologo() && (int) $cita->psicologo_use_id === $userId) {
             return;
         }
 
-        abort_unless((int) $cita->user_id === $userId, 403, 'Esta cita no te pertenece.');
+        abort_unless((int) $cita->paciente_use_id === $userId, 403, 'Esta cita no te pertenece.');
     }
 
     public function updatePriority(Request $request, $citaId)
@@ -506,7 +517,7 @@ class CitaController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'prioridad' => $cita->prioridad,
+                'prioridad' => $cita->prioridad_texto_cps,
                 'message' => $message
             ]);
         }
@@ -522,8 +533,8 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
         $this->verificarPsicologoDueno($cita);
-        $marcarRealizada = ($cita->estado === 'confirmada');
-        $isManual = ($cita->motivo === 'Nota de Evolución (Manual)');
+        $marcarRealizada = ($cita->estado_cita_cps === 'confirmada');
+        $isManual = ($cita->motivo_cps === 'Nota de Evolución (Manual)');
         $requireFields = $marcarRealizada && !$isManual;
 
         if ($marcarRealizada) {
@@ -543,9 +554,9 @@ class CitaController extends Controller
             $rules = [
                 'titulo_manual' => 'nullable|string|max:255',
                 'diagnosticos' => 'nullable|array',
-                'estado_animo_id' => $requireFields ? 'required|integer|exists:estado_animos,id' : 'nullable|integer|exists:estado_animos,id',
+                'esa_id' => $requireFields ? 'required|integer|exists:estado_animo,id_esa' : 'nullable|integer|exists:estado_animo,id_esa',
                 'estado_animo_detalle' => $requireFields ? 'required|string|max:2000' : 'nullable|string|max:2000',
-                'avance_estado' => $requireFields ? 'required|integer|exists:avances_sesion,id' : 'nullable|integer|exists:avances_sesion,id',
+                'avance_estado' => $requireFields ? 'required|integer|exists:avance_sesion,id_avs' : 'nullable|integer|exists:avance_sesion,id_avs',
                 'avance_detalle' => $requireFields ? 'required|string|max:2000' : 'nullable|string|max:2000',
                 'proxima_cita_fecha' => 'nullable|date',
                 'campos_dinamicos' => 'nullable|array',
@@ -555,8 +566,8 @@ class CitaController extends Controller
             $messages = [
                 'avance_estado.required' => 'Debe seleccionar un nivel de avance clínico para completar la cita.',
                 'avance_estado.exists' => 'El nivel de avance seleccionado no es válido.',
-                'estado_animo_id.required' => 'Debe seleccionar un estado de ánimo del paciente para completar la cita.',
-                'estado_animo_id.exists' => 'El estado de ánimo seleccionado no es válido.',
+                'esa_id.required' => 'Debe seleccionar un estado de ánimo del paciente para completar la cita.',
+                'esa_id.exists' => 'El estado de ánimo seleccionado no es válido.',
                 'avance_detalle.required' => 'Debe detallar el avance de la sesión.',
             ];
 
@@ -570,7 +581,7 @@ class CitaController extends Controller
 
             if ($isManual) {
                 $hasContent = !empty(trim($request->input('titulo_manual')))
-                    || $request->input('estado_animo_id')
+                    || $request->input('esa_id')
                     || $request->input('avance_estado')
                     || !empty($request->input('diagnosticos'));
 
@@ -593,14 +604,14 @@ class CitaController extends Controller
             if (isset($validated['campos_dinamicos'])) {
                 foreach ($validated['campos_dinamicos'] as $campoId => $contenido) {
                     if (!empty(trim($contenido))) {
-                        CitaNotaEvolucion::guardarCampo($cita->id, $campoId, trim($contenido));
+                        CitaNotaEvolucion::guardarCampo($cita->id_cps, $campoId, trim($contenido));
                     }
                 }
                 unset($validated['campos_dinamicos']);
             }
 
-            if (isset($validated['estado_animo_id'])) {
-                $cita->update(['estado_animo_id' => $validated['estado_animo_id']]);
+            if (isset($validated['esa_id'])) {
+                $cita->update(['esa_id' => $validated['esa_id']]);
             }
 
             Cita::actualizarNota($cita, json_encode($validated));
@@ -615,7 +626,7 @@ class CitaController extends Controller
         }
 
         if ($marcarRealizada) {
-            $resultado = Cita::marcarRealizada($cita->id, $user->id_use);
+            $resultado = Cita::marcarRealizada($cita->id_cps, $user->id_use);
             if (!$resultado[0]) {
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $resultado[1]], 400);
@@ -625,14 +636,14 @@ class CitaController extends Controller
         }
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'notas' => $cita->notas]);
+            return response()->json(['success' => true, 'notas' => $cita->notas_cps]);
         }
 
         $msg = $marcarRealizada
             ? 'La cita se ha completado con éxito y la nota de evolución ha sido registrada.'
             : 'Nota de sesión actualizada correctamente.';
 
-        return redirect()->route('admin.psicologia.maestros.historias.show', ['paciente' => $cita->user_id, 'tab' => 'evolucion'])->with('success', $msg);
+        return redirect()->route('admin.psicologia.maestros.historias.show', ['paciente' => $cita->paciente_use_id, 'tab' => 'evolucion'])->with('success', $msg);
     }
 
     public function storeCampoAjax(Request $request)
@@ -672,7 +683,7 @@ class CitaController extends Controller
             'motivo_rechazo' => 'nullable|string|max:1000',
         ]);
 
-        [$isPass, $message] = Cita::rechazar($cita->id, $validated['motivo_rechazo']);
+        [$isPass, $message] = Cita::rechazar($cita->id_cps, $validated['motivo_rechazo']);
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -690,7 +701,7 @@ class CitaController extends Controller
 
         $this->authorizeAccess($cita);
 
-        [$isPass, $message] = Cita::cancelar($cita->id, $user->id_use, $request->input('motivo_cancelacion'));
+        [$isPass, $message] = Cita::cancelar($cita->id_cps, $user->id_use, $request->input('motivo_cancelacion'));
 
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
@@ -715,7 +726,7 @@ class CitaController extends Controller
             'motivo_cancelacion' => 'nullable|string|max:1000',
         ]);
 
-        [$isPass, $message] = Cita::cancelar($cita->id, $user->id_use, $validated['motivo_cancelacion'] ?? null);
+        [$isPass, $message] = Cita::cancelar($cita->id_cps, $user->id_use, $validated['motivo_cancelacion'] ?? null);
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -732,7 +743,7 @@ class CitaController extends Controller
         $user = Auth::user();
 
         $this->verificarPsicologoDueno($cita);
-        [$isPass, $message] = Cita::posponer($cita->id, $user->id_use);
+        [$isPass, $message] = Cita::posponer($cita->id_cps, $user->id_use);
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -754,7 +765,7 @@ class CitaController extends Controller
             'bloque' => 'required|string|max:255',
         ]);
 
-        [$isPass, $message] = Cita::proponer($cita->id, $user->id_use, $validated['fecha'], $validated['bloque']);
+        [$isPass, $message] = Cita::proponer($cita->id_cps, $user->id_use, $validated['fecha'], $validated['bloque']);
 
         $status = is_string($isPass) ? $isPass : ($isPass ? 'success' : 'error');
 
@@ -778,7 +789,7 @@ class CitaController extends Controller
             return response()->json(['status' => 'error', 'message' => 'La fecha es obligatoria']);
         }
 
-        [$isPass, $message] = Cita::quitarPropuesta($cita->id, $fecha, $request->input('bloque'));
+        [$isPass, $message] = Cita::quitarPropuesta($cita->id_cps, $fecha, $request->input('bloque'));
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -801,17 +812,17 @@ class CitaController extends Controller
             'bloque' => 'required|string|max:255',
         ]);
 
-        [$isPass, $message] = Cita::confirmar($cita->id, $user->id_use, $validated);
+        [$isPass, $message] = Cita::confirmar($cita->id_cps, $user->id_use, $validated);
 
-        $paciente = Usuario::with('persona')->find($cita->user_id);
+        $paciente = Usuario::with('persona')->find($cita->paciente_use_id);
         $nombrePaciente = $paciente?->persona?->nombres_per ?? 'Paciente';
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
             'message' => $message,
             'paciente' => $nombrePaciente,
-            'paciente_id' => $cita->user_id,
-            'cita_id' => $cita->id
+            'paciente_id' => $cita->paciente_use_id,
+            'cita_id' => $cita->id_cps
         ]);
     }
 
@@ -823,7 +834,7 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
         $this->verificarPsicologoDueno($cita);
-        if ($cita->estado !== 'confirmada') {
+        if ($cita->estado_cita_cps !== 'confirmada') {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Solo se pueden registrar notas para citas en estado Confirmada.'
@@ -841,8 +852,8 @@ class CitaController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Redirigiendo a la creación de la nota de evolución...',
-            'paciente_id' => $cita->user_id,
-            'redirect_url' => route('admin.psicologia.maestros.citas.edit.note', $cita->id)
+            'paciente_id' => $cita->paciente_use_id,
+            'redirect_url' => route('admin.psicologia.maestros.citas.edit.note', $cita->id_cps)
         ]);
     }
 
@@ -855,7 +866,7 @@ class CitaController extends Controller
         $user = Auth::user();
         $this->verificarPsicologoDueno($cita);
 
-        [$isPass, $message] = Cita::marcarNoAsistio($cita->id);
+        [$isPass, $message] = Cita::marcarNoAsistio($cita->id_cps);
 
         if (!$isPass) {
             $isWarning = str_contains($message, 'no ha comenzado');
@@ -888,15 +899,15 @@ class CitaController extends Controller
         $citas = Cita::obtenerHistorialPaciente($user->id_use, 12, $startDate, $endDate, $prioridad);
 
         $citas->getCollection()->transform(fn($c) => [
-            'id' => $c->id,
+            'id' => $c->id_cps,
             'psicologo' => $c->psicologo->persona->nombres_per ?? 'Sin asignar',
-            'fecha' => $c->fecha ? Carbon::parse($c->fecha)->format('d/m/Y') : 'S/F',
-            'fecha_formateada' => $c->fecha ? Carbon::parse($c->fecha)->translatedFormat('l d \d\e F, Y') : 'S/F',
-            'hora' => $c->hora ? Carbon::parse($c->hora)->format('g:i A') : 'S/H',
-            'estado' => $c->estado,
-            'cancelado_por' => $c->cancelado_por ?? null,
-            'motivo' => $c->motivo,
-            'notas' => $this->notasVisiblesParaPaciente($c->notas)
+            'fecha' => $c->fecha_cps ? Carbon::parse($c->fecha_cps)->format('d/m/Y') : 'S/F',
+            'fecha_formateada' => $c->fecha_cps ? Carbon::parse($c->fecha_cps)->translatedFormat('l d \d\e F, Y') : 'S/F',
+            'hora' => $c->hora_cps ? Carbon::parse($c->hora_cps)->format('g:i A') : 'S/H',
+            'estado' => $c->estado_cita_cps,
+            'cancelado_por' => $c->cancelado_por_cps ?? null,
+            'motivo' => $c->motivo_cps,
+            'notas' => $this->notasVisiblesParaPaciente($c->notas_cps)
         ]);
 
         return response()->json($citas);
@@ -925,7 +936,7 @@ class CitaController extends Controller
         );
 
         $userId   = (int) $user->id_use;
-        $citaPsi  = $cita->psicologo_id ? (int) $cita->psicologo_id : null;
+        $citaPsi  = $cita->psicologo_use_id ? (int) $cita->psicologo_use_id : null;
 
         abort_if(
             $citaPsi !== $userId,
@@ -942,7 +953,7 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
         $this->verificarPsicologoDueno($cita);
-        [$isPass, $message] = Cita::enviarPropuesta($cita->id);
+        [$isPass, $message] = Cita::enviarPropuesta($cita->id_cps);
 
         return response()->json([
             'status' => $isPass ? 'success' : 'error',
@@ -957,7 +968,7 @@ class CitaController extends Controller
 
         /** @var Usuario $user */
         $user = Auth::user();
-        abort_if(!$user || (int) $cita->user_id !== (int) $user->id_use, 403, 'Esta cita no te pertenece.');
+        abort_if(!$user || (int) $cita->paciente_use_id !== (int) $user->id_use, 403, 'Esta cita no te pertenece.');
 
         $validated = $request->validate([
             'opcion' => 'required|in:cualquier_dia,sugerencia_aceptada,rechazada,aceptada',
@@ -967,7 +978,7 @@ class CitaController extends Controller
         ]);
 
         [$isPass, $message] = Cita::responderPropuesta(
-            $cita->id,
+            $cita->id_cps,
             $validated['opcion'],
             $validated['bloque'] ?? null,
             $validated['motivo_rechazo'] ?? null,
@@ -988,11 +999,11 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
         $this->verificarPsicologoDueno($cita);
-        abort_if($cita->estado !== 'realizada', 400, 'La constancia solo se puede generar de citas realizadas.');
-        abort_if($cita->motivo === 'Nota de Evolución (Manual)', 400, 'No se puede generar constancia de asistencia para notas manuales.');
+        abort_if($cita->estado_cita_cps !== 'realizada', 400, 'La constancia solo se puede generar de citas realizadas.');
+        abort_if($cita->motivo_cps === 'Nota de Evolución (Manual)', 400, 'No se puede generar constancia de asistencia para notas manuales.');
 
-        $paciente = Usuario::with('persona')->find($cita->user_id);
-        $psicologo = Usuario::with('persona')->find($cita->psicologo_id);
+        $paciente = Usuario::with('persona')->find($cita->paciente_use_id);
+        $psicologo = Usuario::with('persona')->find($cita->psicologo_use_id);
 
         if ($paciente) {
             $paciente->name = $paciente->persona->nombres_per ?? 'Paciente';
@@ -1017,11 +1028,11 @@ class CitaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
         $this->verificarPsicologoDueno($cita);
-        abort_if($cita->motivo !== 'Nota de Evolución (Manual)', 400, 'Solo se pueden eliminar notas de evolución creadas manualmente.');
+        abort_if($cita->motivo_cps !== 'Nota de Evolución (Manual)', 400, 'Solo se pueden eliminar notas de evolución creadas manualmente.');
 
-        $cita->update(['status' => 0]);
+        $cita->delete();
 
-        return redirect()->route('admin.psicologia.maestros.historias.show', $cita->user_id)->with('success', 'Nota de evolución manual eliminada correctamente.');
+        return redirect()->route('admin.psicologia.maestros.historias.show', $cita->paciente_use_id)->with('success', 'Nota de evolución manual eliminada correctamente.');
     }
 
     public function dismissCancelMessage(Request $request, $citaId)

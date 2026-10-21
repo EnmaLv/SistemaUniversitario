@@ -2,6 +2,7 @@
 
 namespace App\Models\salud;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CitaNotaEvolucion
@@ -9,19 +10,33 @@ class CitaNotaEvolucion
     public static function obtenerPorCita($citaId)
     {
         return DB::table('cita_nota_evolucion')
-            ->join('nota_evolucion_campos', 'cita_nota_evolucion.campo_id', '=', 'nota_evolucion_campos.id')
-            ->where('cita_nota_evolucion.cita_id', $citaId)
-            ->where('nota_evolucion_campos.status', 1)
-            ->select('cita_nota_evolucion.*', 'nota_evolucion_campos.titulo')
-            ->orderBy('nota_evolucion_campos.id', 'asc')
+            ->join('campo_nota_evolucion', 'cita_nota_evolucion.cne_id', '=', 'campo_nota_evolucion.id_cne')
+            ->where('cita_nota_evolucion.cps_id', $citaId)
+            ->whereNull('cita_nota_evolucion.deleted_at')
+            ->whereNull('campo_nota_evolucion.deleted_at')
+            ->select('cita_nota_evolucion.*', 'campo_nota_evolucion.titulo_cne')
+            ->orderBy('campo_nota_evolucion.id_cne', 'asc')
             ->get();
     }
 
     public static function guardarCampo($citaId, $campoId, $contenido)
     {
         return DB::table('cita_nota_evolucion')->updateOrInsert(
-            ['cita_id' => $citaId, 'campo_id' => $campoId],
-            ['contenido' => $contenido, 'updated_at' => now(), 'created_at' => DB::raw('COALESCE(created_at, NOW())')]
+            ['cps_id' => $citaId, 'cne_id' => $campoId],
+            function (bool $existe) use ($contenido) {
+                $datos = [
+                    'contenido_cno' => $contenido,
+                    'updated_at' => now(),
+                    'updated_id' => Auth::id(),
+                ];
+
+                if (!$existe) {
+                    $datos['created_at'] = now();
+                    $datos['created_id'] = Auth::id();
+                }
+
+                return $datos;
+            }
         );
     }
 }

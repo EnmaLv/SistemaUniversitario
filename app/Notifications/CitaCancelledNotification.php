@@ -50,7 +50,7 @@ class CitaCancelledNotification extends Notification implements ShouldQueue
         
         return [
             'type_id' => $this->cancelledBy === 'pospuesta' ? 'cita_postponed' : 'cita_cancelled',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'sender_name' => $senderName,
             'body' => $body,
             'url' => $url,

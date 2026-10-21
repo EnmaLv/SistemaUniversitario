@@ -14,7 +14,7 @@ class PlantillaSeccionController extends Controller
         $plantillas = PlantillaSeccion::obtenerPorPsicologo(Auth::id());
         
         foreach ($plantillas as $plantilla) {
-            $plantilla->esta_en_uso = PlantillaSeccion::estaEnUso($plantilla->id, Auth::id());
+            $plantilla->esta_en_uso = PlantillaSeccion::estaEnUso($plantilla->id_sph, Auth::id());
         }
 
         return view('admin.psicologia.maestros.plantillas.index', compact('plantillas'));
@@ -55,10 +55,10 @@ class PlantillaSeccionController extends Controller
             return redirect()->route('admin.psicologia.maestros.plantillas.index')->with('error', 'No se puede editar esta sección porque ya está siendo utilizada por al menos un paciente.');
         }
 
-        if ($plantilla->segmentos) {
-            $plantilla->segmentos = json_decode($plantilla->segmentos, true);
+        if ($plantilla->segmentos_sph) {
+            $plantilla->segmentos_sph = json_decode($plantilla->segmentos_sph, true);
         } else {
-            $plantilla->segmentos = [];
+            $plantilla->segmentos_sph = [];
         }
 
         return view('admin.psicologia.maestros.plantillas.edit', compact('plantilla'));

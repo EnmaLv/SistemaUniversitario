@@ -39,36 +39,54 @@ class PrioridadController extends Controller
         $nombreNormalizado = strtolower(trim($validated['nombre']));
         $nivel = $validated['nivel_gravedad'];
 
-        $existsName = DB::table('prioridades')
-            ->where('nombre', $nombreNormalizado)
-            ->where('activo', 1)
+        $existsName = DB::table('prioridad_atencion')
+            ->where('nombre_pat', $nombreNormalizado)
+            ->where('status_id', Prioridad::STATUS_ACTIVO)
+            ->whereNull('deleted_at')
             ->where(function ($query) use ($userId) {
-                $query->whereNull('psicologo_id')
-                      ->orWhere('psicologo_id', $userId);
+                $query->whereNull('psicologo_use_id')
+                      ->orWhere('psicologo_use_id', $userId);
             })->exists();
 
         if ($existsName) {
             return back()->with('error', 'El nombre de esta prioridad ya está en uso.')->withInput();
         }
 
-        $existsLevel = DB::table('prioridades')
-            ->where('nivel_gravedad', $nivel)
-            ->where('activo', 1)
-            ->where('psicologo_id', $userId)
+        $existsLevel = DB::table('prioridad_atencion')
+            ->where('nivel_gravedad_pat', $nivel)
+            ->where('status_id', Prioridad::STATUS_ACTIVO)
+            ->whereNull('deleted_at')
+            ->where('psicologo_use_id', $userId)
             ->exists();
 
         if ($existsLevel) {
             return back()->with('error', 'Este nivel de gravedad ya está asignado a otra de tus prioridades. Elimínala primero para liberar el nivel.')->withInput();
         }
 
-        DB::table('prioridades')->insert([
-            'nombre' => $nombreNormalizado,
-            'nivel_gravedad' => $nivel,
-            'psicologo_id' => $userId,
-            'activo' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $inactiva = DB::table('prioridad_atencion')
+            ->where('nombre_pat', $nombreNormalizado)
+            ->where('psicologo_use_id', $userId)
+            ->first();
+
+        if ($inactiva) {
+            DB::table('prioridad_atencion')->where('id_pat', $inactiva->id_pat)->update([
+                'nivel_gravedad_pat' => $nivel,
+                'status_id' => Prioridad::STATUS_ACTIVO,
+                'deleted_at' => null,
+                'updated_id' => $userId,
+                'updated_at' => now(),
+            ]);
+        } else {
+            DB::table('prioridad_atencion')->insert([
+                'nombre_pat' => $nombreNormalizado,
+                'nivel_gravedad_pat' => $nivel,
+                'psicologo_use_id' => $userId,
+                'status_id' => Prioridad::STATUS_ACTIVO,
+                'created_id' => $userId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return redirect()->route('admin.psicologia.maestros.prioridades.index')->with('success', 'Prioridad creada correctamente.');
     }
@@ -77,29 +95,38 @@ class PrioridadController extends Controller
     {
         $userId = Auth::id();
 
-        $prioridad = DB::table('prioridades')->where('id', $id)->first();
+        $prioridad = DB::table('prioridad_atencion')
+            ->where('id_pat', $id)
+            ->where('status_id', Prioridad::STATUS_ACTIVO)
+            ->whereNull('deleted_at')
+            ->first();
 
         if (!$prioridad) {
             return back()->with('error', 'Prioridad no encontrada.');
         }
 
-        if ($prioridad->psicologo_id !== $userId) {
+        if ($prioridad->psicologo_use_id === null || (int) $prioridad->psicologo_use_id !== (int) $userId) {
             return back()->with('error', 'No puedes eliminar una prioridad base o que no te pertenece.');
         }
 
-        $citasConPrioridad = DB::table('citas')
-            ->where('psicologo_id', $userId)
-            ->where('prioridad', $prioridad->nombre)
+        $citasConPrioridad = DB::table('cita_psicologica')
+            ->where('psicologo_use_id', $userId)
+            ->where('prioridad_texto_cps', $prioridad->nombre_pat)
+            ->whereNull('deleted_at')
             ->exists();
             
         if ($citasConPrioridad) {
             return back()->with('error', 'No puedes eliminar esta prioridad porque está asignada a una o más citas pendientes.');
         }
 
-        DB::table('prioridades')->where('id', $id)->update([
-            'activo' => 0,
-            'updated_at' => now(),
-        ]);
+        DB::table('prioridad_atencion')
+            ->where('id_pat', $id)
+            ->where('psicologo_use_id', $userId)
+            ->update([
+                'status_id' => Prioridad::STATUS_INACTIVO,
+                'updated_id' => $userId,
+                'updated_at' => now(),
+            ]);
 
         return redirect()->route('admin.psicologia.maestros.prioridades.index')->with('success', 'Prioridad eliminada. El nivel ha sido liberado.');
     }

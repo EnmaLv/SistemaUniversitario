@@ -50,12 +50,13 @@ class PlantillaGlobalController extends Controller
                     ]
                 ];
 
-                DB::table('historia_plantillas_globales')->insert([
-                    'psicologo_id' => $userId,
-                    'titulo' => 'Expediente General de Pacientes',
-                    'descripcion' => 'Especificaciones del record de salud del paciente',
-                    'secciones' => json_encode($seccionesPredefinidas),
-                    'status' => 2,
+                DB::table('plantilla_historia_clinica')->insert([
+                    'psicologo_use_id' => $userId,
+                    'titulo_phc' => 'Expediente General de Pacientes',
+                    'descripcion_phc' => 'Especificaciones del record de salud del paciente',
+                    'secciones_phc' => json_encode($seccionesPredefinidas),
+                    'estado_phc' => PlantillaGlobal::ESTADO_PREDETERMINADA,
+                    'created_id' => $userId,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -106,7 +107,7 @@ class PlantillaGlobalController extends Controller
     {
         $plantilla = PlantillaGlobal::obtenerPorPsicologo(Auth::id());
 
-        if (!$plantilla || $plantilla->status != 1) {
+        if (!$plantilla || (int) $plantilla->estado_phc !== PlantillaGlobal::ESTADO_ACTIVA) {
             return redirect()->route('admin.psicologia.maestros.plantillas_globales.index')
                 ->with('error', 'Debe activar el esquema general antes de aplicarlo a todos los pacientes.');
         }

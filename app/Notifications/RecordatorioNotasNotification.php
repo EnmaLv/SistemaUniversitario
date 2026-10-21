@@ -28,10 +28,10 @@ class RecordatorioNotasNotification extends Notification implements ShouldQueue
         $pacienteName = $this->cita->paciente->persona->nombres_per ?? 'Paciente';
         return [
             'type_id' => 'recordatorio_notas',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'paciente_name' => $pacienteName,
             'body' => 'Recordatorio: Tienes pendiente registrar las notas de la sesión con ' . $pacienteName . '.',
-            'url' => route('admin.psicologia.maestros.historias.show', $this->cita->user_id),
+            'url' => route('admin.psicologia.maestros.historias.show', $this->cita->paciente_use_id),
         ];
     }
 }

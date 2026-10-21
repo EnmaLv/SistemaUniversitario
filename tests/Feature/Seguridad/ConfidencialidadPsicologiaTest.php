@@ -21,13 +21,13 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
     private function crearCita(Usuario $paciente, Usuario $psicologo, string $estado = 'pendiente'): Cita
     {
         return Cita::create([
-            'user_id'      => $paciente->id_use,
-            'psicologo_id' => $psicologo->id_use,
-            'fecha'        => now()->addDays(3)->toDateString(),
-            'hora'         => $estado === 'pendiente' ? null : '09:00:00',
-            'estado'       => $estado,
-            'prioridad'    => 'media',
-            'motivo'       => Crypt::encryptString('Motivo confidencial'),
+            'paciente_use_id'     => $paciente->id_use,
+            'psicologo_use_id'    => $psicologo->id_use,
+            'fecha_cps'           => now()->addDays(3)->toDateString(),
+            'hora_cps'            => $estado === 'pendiente' ? null : '09:00:00',
+            'estado_cita_cps'     => $estado,
+            'prioridad_texto_cps' => 'media',
+            'motivo_cps'          => Crypt::encryptString('Motivo confidencial'),
         ]);
     }
 
@@ -39,16 +39,16 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
 
         $this->actingAs($psicologoA);
 
-        $this->getJson(route('admin.psicologia.maestros.citas.show.json', $citaDeB->id))->assertForbidden();
-        $this->patchJson(route('admin.psicologia.maestros.citas.accept', $citaDeB->id), [
+        $this->getJson(route('admin.psicologia.maestros.citas.show.json', $citaDeB->id_cps))->assertForbidden();
+        $this->patchJson(route('admin.psicologia.maestros.citas.accept', $citaDeB->id_cps), [
             'fecha'  => now()->addDays(3)->toDateString(),
             'hora'   => '09:00',
             'bloque' => 'Lunes 09:00 - 10:00',
         ])->assertForbidden();
-        $this->patchJson(route('admin.psicologia.maestros.citas.reject', $citaDeB->id))->assertForbidden();
-        $this->get(route('admin.psicologia.maestros.citas.edit.note', $citaDeB->id))->assertForbidden();
+        $this->patchJson(route('admin.psicologia.maestros.citas.reject', $citaDeB->id_cps))->assertForbidden();
+        $this->get(route('admin.psicologia.maestros.citas.edit.note', $citaDeB->id_cps))->assertForbidden();
 
-        $this->assertSame('pendiente', $citaDeB->fresh()->estado);
+        $this->assertSame('pendiente', $citaDeB->fresh()->estado_cita_cps);
     }
 
     public function test_cada_psicologo_ve_solo_sus_citas_pendientes(): void
@@ -66,7 +66,7 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
 
         $this->assertSame(
             [$psicologoA->id_use],
-            Cita::obtenerCitasGlobales(null, 50, $psicologoA->id_use)->getCollection()->pluck('psicologo_id')->unique()->values()->all()
+            Cita::obtenerCitasGlobales(null, 50, $psicologoA->id_use)->getCollection()->pluck('psicologo_use_id')->unique()->values()->all()
         );
     }
 
@@ -83,7 +83,7 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
         $this->get(route('admin.psicologia.maestros.historias.reportePdf', $paciente->id_use))->assertForbidden();
         $this->get(route('admin.psicologia.maestros.historias.downloadZip', $paciente->id_use))->assertForbidden();
 
-        $this->assertFalse(HistoriaClinica::where('user_id', $paciente->id_use)->exists());
+        $this->assertFalse(HistoriaClinica::where('paciente_use_id', $paciente->id_use)->exists());
     }
 
     public function test_dos_psicologos_con_el_mismo_paciente_tienen_historias_separadas(): void
@@ -97,22 +97,21 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
         $historiaA = HistoriaClinica::iniciarHistoria($paciente->id_use, $psicologoA->id_use);
         $historiaB = HistoriaClinica::iniciarHistoria($paciente->id_use, $psicologoB->id_use);
 
-        $this->assertNotSame($historiaA->id, $historiaB->id);
+        $this->assertNotSame($historiaA->id_hcl, $historiaB->id_hcl);
 
-        $seccionDeA = DB::table('historia_secciones_personalizadas')->insertGetId([
-            'historia_clinica_id' => $historiaA->id,
-            'titulo'              => 'Sección privada de A',
-            'orden'               => 1,
-            'status'              => 1,
-            'created_at'          => now(),
-            'updated_at'          => now(),
-        ]);
+        $seccionDeA = DB::table('historia_seccion_personalizada')->insertGetId([
+            'hcl_id'     => $historiaA->id_hcl,
+            'titulo_hsp' => 'Sección privada de A',
+            'orden_hsp'  => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], 'id_hsp');
 
         $this->actingAs($psicologoB)
             ->delete(route('admin.psicologia.maestros.historias.secciones.destroy', $seccionDeA))
             ->assertForbidden();
 
-        $this->assertTrue(DB::table('historia_secciones_personalizadas')->where('id', $seccionDeA)->exists());
+        $this->assertTrue(DB::table('historia_seccion_personalizada')->where('id_hsp', $seccionDeA)->exists());
     }
 
     public function test_un_administrador_no_puede_leer_datos_clinicos(): void
@@ -129,7 +128,7 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
         $this->get(route('admin.psicologia.maestros.agenda.index'))->assertForbidden();
         $this->get(route('admin.psicologia.maestros.historias.index'))->assertForbidden();
         $this->get(route('admin.psicologia.maestros.historias.show', $paciente->id_use))->assertForbidden();
-        $this->getJson(route('admin.psicologia.maestros.citas.show.json', $cita->id))->assertForbidden();
+        $this->getJson(route('admin.psicologia.maestros.citas.show.json', $cita->id_cps))->assertForbidden();
         $this->get(route('admin.psicologia.maestros.agenda.estadisticas', ['format' => 'json']))->assertForbidden();
     }
 
@@ -161,16 +160,16 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
         $cita = $this->crearCita($duenio, $psicologo);
 
         $this->actingAs($otro)
-            ->patchJson(route('admin.psicologia.maestros.citas.cancel', $cita->id))
+            ->patchJson(route('admin.psicologia.maestros.citas.cancel', $cita->id_cps))
             ->assertForbidden();
-        $this->assertSame('pendiente', $cita->fresh()->estado);
+        $this->assertSame('pendiente', $cita->fresh()->estado_cita_cps);
 
         $this->actingAs($duenio)
-            ->patchJson(route('admin.psicologia.maestros.citas.cancel', $cita->id))
+            ->patchJson(route('admin.psicologia.maestros.citas.cancel', $cita->id_cps))
             ->assertOk()
             ->assertJson(['status' => 'success']);
-        $this->assertSame('cancelada', $cita->fresh()->estado);
-        $this->assertSame('paciente', $cita->fresh()->cancelado_por);
+        $this->assertSame('cancelada', $cita->fresh()->estado_cita_cps);
+        $this->assertSame('paciente', $cita->fresh()->cancelado_por_cps);
     }
 
     public function test_el_paciente_no_puede_fijar_la_prioridad_de_su_cita(): void
@@ -183,11 +182,11 @@ class ConfidencialidadPsicologiaTest extends SeguridadTestCase
                 'psicologo_id'      => $psicologo->id_use,
                 'fecha_solicitada'  => now()->addDays(2)->toDateString(),
                 'motivo'            => 'Necesito orientación',
-                'bloques_sugeridos' => 'Lunes 09:00 - 10:00',
+                'bloques_sugeridos_cps' => 'Lunes 09:00 - 10:00',
                 'prioridad'         => 'crítica',
             ])
             ->assertRedirect(route('admin.psicologia.maestros.citas.index'));
 
-        $this->assertNotSame('crítica', Cita::where('user_id', $paciente->id_use)->value('prioridad'));
+        $this->assertNotSame('crítica', Cita::where('paciente_use_id', $paciente->id_use)->value('prioridad_texto_cps'));
     }
 }

@@ -19,9 +19,9 @@ class GrupoHorarioSeeder extends Seeder
 
         foreach ($psicologos as $psicologoId) {
             \App\Models\salud\GrupoHorario::crear([
-                'user_id' => $psicologoId,
-                'nombre' => 'Horario Estándar',
-                'activo' => \App\Models\salud\GrupoHorario::STATUS_ACTIVE,
+                'psicologo_use_id' => $psicologoId,
+                'nombre_gha' => 'Horario Estándar',
+                'status_id' => \App\Models\salud\GrupoHorario::STATUS_ACTIVE,
             ]);
         }
     }

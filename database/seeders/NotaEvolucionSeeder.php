@@ -25,11 +25,10 @@ class NotaEvolucionSeeder extends Seeder
         ];
 
         foreach ($campos as $campo) {
-            if (!\Illuminate\Support\Facades\DB::table('nota_evolucion_campos')->where('titulo', $campo)->whereNull('psicologo_id')->exists()) {
-                \Illuminate\Support\Facades\DB::table('nota_evolucion_campos')->insert([
-                    'psicologo_id' => null, // Global
-                    'titulo' => $campo,
-                    'status' => 1,
+            if (!\Illuminate\Support\Facades\DB::table('campo_nota_evolucion')->where('titulo_cne', $campo)->whereNull('psicologo_use_id')->exists()) {
+                \Illuminate\Support\Facades\DB::table('campo_nota_evolucion')->insert([
+                    'psicologo_use_id' => null,
+                    'titulo_cne' => $campo,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

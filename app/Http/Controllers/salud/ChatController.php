@@ -157,9 +157,9 @@ class ChatController extends Controller
 
         // Paciente/becario → solo con psicólogos con cita
         if ($isPacienteOBecario) {
-            return DB::table('citas')
-                ->where('user_id', $userId)
-                ->where('psicologo_id', $targetUserId)
+            return DB::table('cita_psicologica')
+                ->where('paciente_use_id', $userId)
+                ->where('psicologo_use_id', $targetUserId)
                 ->exists();
         }
 
@@ -174,7 +174,7 @@ class ChatController extends Controller
             if (in_array('administrador', $currentRoles, true)) {
                 return true;
             }
-            return DB::table('citas')->where('user_id', $targetUserId)->where('psicologo_id', $userId)->exists();
+            return DB::table('cita_psicologica')->where('paciente_use_id', $targetUserId)->where('psicologo_use_id', $userId)->exists();
         }
 
         return false;

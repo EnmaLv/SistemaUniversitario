@@ -23,9 +23,9 @@ class EstadoAnimoSeeder extends Seeder
         ];
 
         foreach ($estados as $estado) {
-            DB::table('estado_animos')->updateOrInsert(
-                ['valor' => $estado['valor']],
-                array_merge($estado, ['created_at' => now(), 'updated_at' => now()])
+            DB::table('estado_animo')->updateOrInsert(
+                ['valor_esa' => $estado['valor'], 'deleted_at' => null],
+                ['nombre_esa' => $estado['nombre'], 'created_at' => now(), 'updated_at' => now()]
             );
         }
     }

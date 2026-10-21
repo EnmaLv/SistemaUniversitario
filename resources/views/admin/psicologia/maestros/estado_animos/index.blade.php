@@ -48,14 +48,14 @@
                 @forelse($estados as $estado)
                     @php
                         $colorClass = match (true) {
-                            $estado->valor <= 2 => 'bg-rose-500',
-                            $estado->valor <= 4 => 'bg-amber-500',
-                            $estado->valor <= 6 => 'bg-yellow-400',
-                            $estado->valor <= 8 => 'bg-emerald-400',
+                            $estado->valor_esa <= 2 => 'bg-rose-500',
+                            $estado->valor_esa <= 4 => 'bg-amber-500',
+                            $estado->valor_esa <= 6 => 'bg-yellow-400',
+                            $estado->valor_esa <= 8 => 'bg-emerald-400',
                             default => 'bg-emerald-600',
                         };
-                        $barWidth = ($estado->valor / 10) * 100;
-                        $enUso = \App\Models\salud\EstadoAnimo::enUsoUltimaNota($estado->id);
+                        $barWidth = ($estado->valor_esa / 10) * 100;
+                        $enUso = \App\Models\salud\EstadoAnimo::enUsoUltimaNota($estado->id_esa);
                     @endphp
 
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -63,10 +63,10 @@
 
                         <div class="flex items-center gap-4 mb-4">
                             <div class="w-12 h-12 rounded-xl bg-{{ $themeColor }}-50 dark:bg-{{ $themeColor }}-950/50 text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400 flex items-center justify-center shrink-0 font-black text-lg shadow-sm">
-                                {{ $estado->valor }}
+                                {{ $estado->valor_esa }}
                             </div>
                             <h3 class="text-lg font-bold tracking-tight uppercase leading-tight" style="color: var(--text-main);">
-                                {{ $estado->nombre }}
+                                {{ $estado->nombre_esa }}
                             </h3>
                         </div>
 
@@ -76,18 +76,18 @@
                                 <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden flex-grow border border-gray-200/50 dark:border-gray-700/50">
                                     <div class="h-full rounded-full {{ $colorClass }} transition-all duration-500" style="width: {{ $barWidth }}%"></div>
                                 </div>
-                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 w-10 text-right">{{ $estado->valor }}/10</span>
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 w-10 text-right">{{ $estado->valor_esa }}/10</span>
                             </div>
                         </div>
 
                         <div class="flex items-center justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-800/80 mt-auto">
                             @if (!$enUso)
-                                <a href="{{ route('admin.psicologia.maestros.estado_animos.edit', $estado->id) }}"
+                                <a href="{{ route('admin.psicologia.maestros.estado_animos.edit', $estado->id_esa) }}"
                                     class="p-2.5 bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 rounded-xl hover:bg-sky-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
                                     title="Editar Estado de Ánimo">
                                     <i class="fas fa-pen"></i>
                                 </a>
-                                <form action="{{ route('admin.psicologia.maestros.estado_animos.destroy', $estado->id) }}"
+                                <form action="{{ route('admin.psicologia.maestros.estado_animos.destroy', $estado->id_esa) }}"
                                     method="POST" class="inline-block"
                                     onsubmit="event.preventDefault(); AppModal.confirm('Confirmar', '¿Estás seguro de eliminar este estado de ánimo? El valor quedará libre.').then(c => { if(c) this.submit(); });">
                                     @csrf

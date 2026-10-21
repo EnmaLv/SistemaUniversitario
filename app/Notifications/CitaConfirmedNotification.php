@@ -33,7 +33,7 @@ class CitaConfirmedNotification extends Notification implements ShouldQueue
     {
         return [
             'type_id' => 'cita_confirmed',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'psicologo_name' => $this->cita->psicologo->persona->nombres_per,
             'body' => 'Tienes una nueva cita confirmada con ' . $this->cita->psicologo->persona->nombres_per . '.',
             'url' => route('admin.psicologia.maestros.citas.index'),

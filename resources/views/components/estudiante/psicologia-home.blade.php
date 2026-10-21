@@ -90,8 +90,8 @@
                                             {{ $proximaCita->psicologo_nombre ?? 'Psicólogo Asignado' }}
                                         </p>
                                         <p class="text-[11px] font-medium text-gray-500">
-                                            {{ \Carbon\Carbon::parse($proximaCita->fecha)->format('d M') }} -
-                                            {{ $proximaCita->hora ? \Carbon\Carbon::parse($proximaCita->hora)->format('h:i A') : 'Por definir' }}
+                                            {{ \Carbon\Carbon::parse($proximaCita->fecha_cps)->format('d M') }} -
+                                            {{ $proximaCita->hora_cps ? \Carbon\Carbon::parse($proximaCita->hora_cps)->format('h:i A') : 'Por definir' }}
                                             <span class="text-teal-600 font-bold ml-1">(Confirmada)</span>
                                         </p>
                                     </div>
@@ -106,7 +106,7 @@
                                             {{ $citaPendiente->psicologo_nombre ?? 'Psicólogo' }}
                                         </p>
                                         <p class="text-[11px] font-medium text-gray-500">
-                                            {{ \Carbon\Carbon::parse($citaPendiente->fecha_sugerida ?? $citaPendiente->fecha)->format('d M') }}
+                                            {{ \Carbon\Carbon::parse($citaPendiente->fecha_sugerida ?? $citaPendiente->fecha_cps)->format('d M') }}
                                             <span class="text-amber-600 font-bold ml-1">(Pendiente)</span>
                                         </p>
                                     </div>
@@ -199,7 +199,7 @@
 
                 <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                     <span class="text-[11px] font-bold text-gray-400">Hoy, {{ $now->translatedFormat('d M') }}</span>
-                    @if (!empty($proximaCita) && \Carbon\Carbon::parse($proximaCita->fecha)->isToday())
+                    @if (!empty($proximaCita) && \Carbon\Carbon::parse($proximaCita->fecha_cps)->isToday())
                         <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">1 Sesión programada</span>
                     @else
                         <span class="text-xs font-bold text-gray-500">Sin citas hoy</span>
@@ -222,7 +222,7 @@
 
                     <div class="flex flex-col justify-center min-h-[110px]">
                         @if ($estadoAnimoHoy)
-                            @php $valorAnimo = $estadoAnimoHoy->valor ?? 5; @endphp
+                            @php $valorAnimo = $estadoAnimoHoy->valor_ead ?? 5; @endphp
                             <div class="text-center py-1">
                                 <p class="text-xs font-medium text-gray-500 mb-2">Registro de hoy realizado:</p>
                                 <div class="inline-flex items-center justify-center text-4xl" id="saved-mood-icon">

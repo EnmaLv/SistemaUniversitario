@@ -253,7 +253,7 @@ class Usuario extends Authenticatable
 
     public function citas()
     {
-        return $this->hasMany(\App\Models\salud\Cita::class, 'user_id', 'id_use');
+        return $this->hasMany(\App\Models\salud\Cita::class, 'paciente_use_id', 'id_use');
     }
 
     public function getAuthPassword()
@@ -385,11 +385,7 @@ class Usuario extends Authenticatable
             $initials = strtoupper(substr($user->nombres_per ?? '', 0, 1) . substr($user->apellidos_per ?? '', 0, 1));
             $user->avatar = $user->profile_photo_url ?: ($initials ?: 'PR');
 
-            $user->primera_cita = DB::table('citas')
-                ->where('user_id', $id)
-                ->whereNotNull('fecha')
-                ->orderBy('fecha', 'asc')
-                ->value('fecha');
+            $user->primera_cita = \App\Models\salud\Cita::obtenerFechaPrimeraCita($id, Auth::id());
 
             return $user;
         }
@@ -428,21 +424,21 @@ class Usuario extends Authenticatable
             ->where('user.id_use', '!=', $psicologoId)
             ->whereNotExists(function ($subquery) {
                 $subquery->select(DB::raw(1))
-                    ->from('citas')
-                    ->whereColumn('citas.user_id', 'user.id_use')
-                    ->whereIn('citas.estado', ['pendiente', 'confirmada']);
+                    ->from('cita_psicologica')
+                    ->whereColumn('cita_psicologica.paciente_use_id', 'user.id_use')
+                    ->whereIn('cita_psicologica.estado_cita_cps', ['pendiente', 'confirmada']);
             })
             ->where(function ($q) use ($psicologoId) {
                 $q->whereNotExists(function ($subquery) use ($psicologoId) {
                     $subquery->select(DB::raw(1))
-                        ->from('citas')
-                        ->whereColumn('citas.user_id', 'user.id_use')
-                        ->where('citas.psicologo_id', '!=', $psicologoId);
+                        ->from('cita_psicologica')
+                        ->whereColumn('cita_psicologica.paciente_use_id', 'user.id_use')
+                        ->where('cita_psicologica.psicologo_use_id', '!=', $psicologoId);
                 })->orWhereExists(function ($subquery) use ($psicologoId) {
                     $subquery->select(DB::raw(1))
-                        ->from('citas')
-                        ->whereColumn('citas.user_id', 'user.id_use')
-                        ->where('citas.psicologo_id', $psicologoId);
+                        ->from('cita_psicologica')
+                        ->whereColumn('cita_psicologica.paciente_use_id', 'user.id_use')
+                        ->where('cita_psicologica.psicologo_use_id', $psicologoId);
                 });
             })
             ->distinct();
@@ -480,7 +476,7 @@ class Usuario extends Authenticatable
             ->join('persona', 'user.per_id', '=', 'persona.id_per')
             ->join('usuario_rol', 'user.id_use', '=', 'usuario_rol.use_id')
             ->join('rol', 'usuario_rol.rol_id', '=', 'rol.id_rol')
-            ->join('grupos_horarios', 'user.id_use', '=', 'grupos_horarios.user_id')
+            ->join('grupo_horario_atencion', 'user.id_use', '=', 'grupo_horario_atencion.psicologo_use_id')
             ->select(
                 'user.id_use',
                 'user.username_use',
@@ -494,7 +490,8 @@ class Usuario extends Authenticatable
                     ->orWhere('rol.nombre_rol', 'like', '%psicologo%')
                     ->orWhere('rol.nombre_rol', 'like', '%administrador%');
             })
-            ->where('grupos_horarios.activo', 1)
+            ->where('grupo_horario_atencion.status_id', 1)
+            ->whereNull('grupo_horario_atencion.deleted_at')
             ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('persona.sed_id', $sede))
             ->distinct()
             ->get();
@@ -502,31 +499,33 @@ class Usuario extends Authenticatable
         $diasMapSort = ['Lunes' => 1, 'Martes' => 2, 'Miércoles' => 3, 'Miercoles' => 3, 'Jueves' => 4, 'Viernes' => 5];
 
         foreach ($psicologos as $psicologo) {
-            $psicologo->gruposHorarios = DB::table('grupos_horarios')
-                ->where('user_id', $psicologo->id_use)
-                ->where('activo', 1)
+            $psicologo->gruposHorarios = DB::table('grupo_horario_atencion')
+                ->where('psicologo_use_id', $psicologo->id_use)
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
                 ->get();
 
             $slots = [];
             $diasLaborables = [];
 
             foreach ($psicologo->gruposHorarios as $grupo) {
-                $horarios = DB::table('horarios')
-                    ->where('grupo_horario_id', $grupo->id)
-                    ->whereIn('activo', [1, true])
+                $horarios = DB::table('horario_profesional')
+                    ->where('gha_id', $grupo->id_gha)
+                    ->where('status_id', 1)
+                    ->whereNull('deleted_at')
                     ->get();
 
                 $horariosSorted = $horarios->sortBy(function ($h) use ($diasMapSort) {
-                    return ($diasMapSort[$h->dia] ?? 9) . '-' . $h->hora_inicio;
+                    return ($diasMapSort[$h->dia_hpr] ?? 9) . '-' . $h->hora_inicio_hpr;
                 });
 
                 foreach ($horariosSorted as $h) {
-                    $diaName = $h->dia === 'Miercoles' ? 'Miércoles' : $h->dia;
+                    $diaName = $h->dia_hpr === 'Miercoles' ? 'Miércoles' : $h->dia_hpr;
                     if (!in_array($diaName, $diasLaborables)) {
                         $diasLaborables[] = $diaName;
                     }
-                    $inicio = \Carbon\Carbon::parse($h->hora_inicio)->format('g:i A');
-                    $fin = \Carbon\Carbon::parse($h->hora_fin)->format('g:i A');
+                    $inicio = \Carbon\Carbon::parse($h->hora_inicio_hpr)->format('g:i A');
+                    $fin = \Carbon\Carbon::parse($h->hora_fin_hpr)->format('g:i A');
                     $blockStr = $diaName . ': ' . $inicio . ' - ' . $fin;
                     if (!in_array($blockStr, $slots)) {
                         $slots[] = $blockStr;
@@ -564,9 +563,10 @@ class Usuario extends Authenticatable
         if ($isPacienteOBecario) {
             // Solo los psicólogos con los que tiene cita
             $contactIds = $contactIds->merge(
-                DB::table('citas')
-                    ->where('user_id', $userId)
-                    ->pluck('psicologo_id')
+                DB::table('cita_psicologica')
+                    ->where('paciente_use_id', $userId)
+                    ->whereNull('deleted_at')
+                    ->pluck('psicologo_use_id')
             );
         } else {
             // STAFF: todo el personal interno (cualquier rol que no sea paciente/becario)
@@ -581,9 +581,10 @@ class Usuario extends Authenticatable
             // Si además es psicólogo, añade a sus pacientes
             if ($isPsicologo) {
                 $contactIds = $contactIds->merge(
-                    DB::table('citas')
-                        ->where('psicologo_id', $userId)
-                        ->pluck('user_id')
+                    DB::table('cita_psicologica')
+                        ->where('psicologo_use_id', $userId)
+                        ->whereNull('deleted_at')
+                        ->pluck('paciente_use_id')
                 );
             }
         }

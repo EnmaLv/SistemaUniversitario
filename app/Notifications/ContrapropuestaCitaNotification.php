@@ -35,7 +35,7 @@ class ContrapropuestaCitaNotification extends Notification implements ShouldQueu
 
         return [
             'type_id' => 'contrapropuesta_cita',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'psicologo_name' => $this->cita->psicologo->persona->nombres_per ?? 'Tu psicólogo',
             'body' => "Hola $pacienteName, tu psicólogo te ha enviado una contrapropuesta de horario para tu cita. Revísala y responde como corresponde.",
             'url' => route('admin.psicologia.maestros.citas.index'),

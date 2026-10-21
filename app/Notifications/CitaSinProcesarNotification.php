@@ -31,13 +31,13 @@ class CitaSinProcesarNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
-        $fechaStr = $this->cita->fecha ? \Carbon\Carbon::parse($this->cita->fecha)->format('d/m/Y') : '';
-        $horaStr = $this->cita->hora ? \Carbon\Carbon::parse($this->cita->hora)->format('g:i A') : '';
+        $fechaStr = $this->cita->fecha_cps ? \Carbon\Carbon::parse($this->cita->fecha_cps)->format('d/m/Y') : '';
+        $horaStr = $this->cita->hora_cps ? \Carbon\Carbon::parse($this->cita->hora_cps)->format('g:i A') : '';
         $pacienteName = $this->cita->paciente->persona->nombres_per ?? ($this->cita->paciente->persona->nombres_per ?? 'Desconocido');
         
         return [
             'type_id' => 'cita_sin_procesar',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'paciente_name' => $pacienteName,
             'body' => "Hay citas pendientes por gestionar, del paciente {$pacienteName} por el cual se ha pasado la semana de la gestión de esa precisa cita.",
             'url' => route('admin.psicologia.maestros.historias.index'), 

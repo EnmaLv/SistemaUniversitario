@@ -152,21 +152,21 @@ class HistoriaController extends Controller
         $returnTo = $request->get('return_to');
         $editing = $request->get('editing');
 
-        $paciente->name = trim(($paciente->nombres_per ?? '') . ' ' . ($paciente->apellidos_per ?? ''));
-        $paciente->primera_cita = Cita::obtenerFechaPrimeraCita($paciente->id);
+        $paciente->name = $this->nombrePaciente($paciente);
+        $paciente->primera_cita = Cita::obtenerFechaPrimeraCita($paciente->id_use, Auth::id());
 
-        $historia = HistoriaClinica::iniciarHistoria($paciente->id, Auth::id());
+        $historia = HistoriaClinica::iniciarHistoria($paciente->id_use, Auth::id());
 
-        $citasRaw = Cita::obtenerCitasPsicologoPacienteRaw($paciente->id, Auth::id());
+        $citasRaw = Cita::obtenerCitasPsicologoPacienteRaw($paciente->id_use, Auth::id());
         foreach ($citasRaw as $c) {
-            $cDecrypted = Cita::obtenerDetalle($c->id);
-            if ($cDecrypted && $cDecrypted->motivo === 'Nota de Evolución (Manual)') {
+            $cDecrypted = Cita::obtenerDetalle($c->id_cps);
+            if ($cDecrypted && $cDecrypted->motivo_cps === 'Nota de Evolución (Manual)') {
                 $isEmpty = true;
-                if ($cDecrypted->notas) {
-                    $data = json_decode($cDecrypted->notas, true);
+                if ($cDecrypted->notas_cps) {
+                    $data = json_decode($cDecrypted->notas_cps, true);
                     if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
                         $hasContent = false;
-                        $fieldsToCheck = ['motivo_consulta', 'observaciones', 'intervenciones', 'plan_tratamiento', 'proxima_cita_razon', 'titulo_manual', 'estado_animo_id', 'avance_estado', 'diagnosticos'];
+                        $fieldsToCheck = ['motivo_consulta', 'observaciones', 'intervenciones', 'plan_tratamiento', 'proxima_cita_razon', 'titulo_manual', 'esa_id', 'avance_estado', 'diagnosticos'];
                         foreach ($fieldsToCheck as $field) {
                             if (!empty($data[$field])) {
                                 $hasContent = true;
@@ -176,20 +176,20 @@ class HistoriaController extends Controller
                         if ($hasContent) {
                             $isEmpty = false;
                         }
-                    } else if (trim($cDecrypted->notas) !== '') {
+                    } else if (trim($cDecrypted->notas_cps) !== '') {
                         $isEmpty = false;
                     }
                 }
                 if ($isEmpty) {
-                    Cita::eliminarFisicamente($c->id);
+                    Cita::eliminarFisicamente($c->id_cps);
                 }
             }
         }
 
-        $stats = Cita::obtenerEstadisticasPaciente($paciente->id, Auth::id());
-        $citasPaciente = Cita::obtenerCitasRealizadas($paciente->id, Auth::id());
-        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id);
-        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id);
+        $stats = Cita::obtenerEstadisticasPaciente($paciente->id_use, Auth::id());
+        $citasPaciente = Cita::obtenerCitasRealizadas($paciente->id_use, Auth::id());
+        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id_hcl);
+        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id_hcl);
         $plantillas = PlantillaSeccion::obtenerPorPsicologo(Auth::id());
 
         return view('admin.psicologia.maestros.historias.show', [
@@ -210,15 +210,15 @@ class HistoriaController extends Controller
     public function vincularEnfermedad(Request $request)
     {
         $request->validate([
-            'historia_clinica_id' => 'required|exists:historia_clinicas,id',
+            'hcl_id' => 'required|exists:historia_clinica,id_hcl',
             'enfermedad_id' => 'required|exists:enfermedad,id_efm',
             'contexto' => 'required|string',
         ]);
 
-        $historia = HistoriaClinica::findOrFail($request->historia_clinica_id);
+        $historia = HistoriaClinica::findOrFail($request->hcl_id);
         $this->autorizarHistoria($historia);
 
-        $result = HistoriaClinica::vincularEnfermedad($request->historia_clinica_id, $request->enfermedad_id, $request->contexto);
+        $result = HistoriaClinica::vincularEnfermedad($request->hcl_id, $request->enfermedad_id, $request->contexto);
         return response()->json($result);
     }
 
@@ -228,7 +228,7 @@ class HistoriaController extends Controller
             'link_id' => 'required'
         ]);
 
-        $historiaId = DB::table('historia_enfermedad')->where('id', $request->link_id)->value('historia_clinica_id');
+        $historiaId = DB::table('historia_enfermedad')->where('id_hie', $request->link_id)->value('hcl_id');
         $historia = $historiaId ? HistoriaClinica::find($historiaId) : null;
         abort_if(!$historia, 404);
         $this->autorizarHistoria($historia);
@@ -244,13 +244,13 @@ class HistoriaController extends Controller
         $user = Auth::user();
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
-        $historia = HistoriaClinica::obtenerPorPaciente($paciente->id, Auth::id());
+        $historia = HistoriaClinica::obtenerPorPaciente($paciente->id_use, Auth::id());
         abort_if(!$historia, 404);
 
-        $segmentosPropios = array_flip(DB::table('historia_segmentos_personalizados as segmento')
-            ->join('historia_secciones_personalizadas as seccion', 'seccion.id', '=', 'segmento.seccion_id')
-            ->where('seccion.historia_clinica_id', $historia->id)
-            ->pluck('segmento.id')
+        $segmentosPropios = array_flip(DB::table('historia_segmento_personalizado as segmento')
+            ->join('historia_seccion_personalizada as seccion', 'seccion.id_hsp', '=', 'segmento.hsp_id')
+            ->where('seccion.hcl_id', $historia->id_hcl)
+            ->pluck('segmento.id_hsm')
             ->all());
 
         SegmentoPersonalizado::actualizarSegmentosExtra(array_intersect_key((array) $request->segmentos_extra, $segmentosPropios));
@@ -282,24 +282,24 @@ class HistoriaController extends Controller
             abort(404);
         }
 
-        $historia = HistoriaClinica::obtenerPorId($seccion->historia_clinica_id);
+        $historia = HistoriaClinica::obtenerPorId($seccion->hcl_id);
         if (!$historia) {
             abort(404, 'Historia clínica no encontrada.');
         }
 
         $this->autorizarHistoria($historia);
 
-        $titulo = $seccion->titulo;
+        $titulo = $seccion->titulo_hsp;
 
         DB::transaction(function () use ($seccionId) {
             // 1) Borrar primero los segmentos hijos
-            DB::table('historia_segmentos_personalizados')
-                ->where('seccion_id', $seccionId)
+            DB::table('historia_segmento_personalizado')
+                ->where('hsp_id', $seccionId)
                 ->delete();
 
             // 2) Ahora la sección
-            DB::table('historia_secciones_personalizadas')
-                ->where('id', $seccionId)
+            DB::table('historia_seccion_personalizada')
+                ->where('id_hsp', $seccionId)
                 ->delete();
         });
 
@@ -324,7 +324,7 @@ class HistoriaController extends Controller
             abort(404);
         }
 
-        $historia = HistoriaClinica::obtenerPorId($seccion->historia_clinica_id);
+        $historia = HistoriaClinica::obtenerPorId($seccion->hcl_id);
         abort_if(!$historia, 404);
         $this->autorizarHistoria($historia);
 
@@ -347,7 +347,7 @@ class HistoriaController extends Controller
 
         $cita = Cita::crearNotaManual($pacienteId, Auth::id());
 
-        return redirect()->route('admin.psicologia.maestros.citas.edit.note', $cita->id);
+        return redirect()->route('admin.psicologia.maestros.citas.edit.note', $cita->id_cps);
     }
 
     public function downloadZip($pacienteId)
@@ -358,13 +358,14 @@ class HistoriaController extends Controller
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
 
-        $historia = HistoriaClinica::verificarAcceso($paciente->id, $userId);
+        $historia = HistoriaClinica::verificarAcceso($paciente->id_use, $userId);
 
         if (!$historia) {
             abort(403, 'No tienes acceso a este expediente.');
         }
 
-        $citasPaciente = Cita::obtenerCitasRealizadas($paciente->id, $userId);
+        $paciente->name = $this->nombrePaciente($paciente);
+        $citasPaciente = Cita::obtenerCitasRealizadas($paciente->id_use, $userId);
 
         $zip = new ZipArchive();
         $zipFileName = 'Expedientes_' . Str::slug($paciente->name) . '_' . time() . '.zip';
@@ -375,7 +376,7 @@ class HistoriaController extends Controller
 
             foreach ($citasPaciente as $index => $cita) {
                 $numeroSesion = $citasPaciente->count() - $index;
-                $fechaStr = $cita->fecha ? $cita->fecha->format('Y-m-d') : 'SinFecha';
+                $fechaStr = $cita->fecha_cps ? $cita->fecha_cps->format('Y-m-d') : 'SinFecha';
                 $fileName = "Sesion_{$numeroSesion}_{$fechaStr}.pdf";
                 $zip->addFromString($fileName, $this->generateSesionPdfContent($cita));
             }
@@ -397,17 +398,17 @@ class HistoriaController extends Controller
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
 
-        $paciente->name = trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''));
+        $paciente->name = $this->nombrePaciente($paciente);
 
-        $historia = HistoriaClinica::verificarAcceso($paciente->id, $userId);
+        $historia = HistoriaClinica::verificarAcceso($paciente->id_use, $userId);
 
         if (!$historia) {
             abort(403, 'No tienes acceso a este expediente.');
         }
 
-        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id);
-        $stats = Cita::obtenerEstadisticasPaciente($paciente->id, $userId);
-        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id);
+        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id_hcl);
+        $stats = Cita::obtenerEstadisticasPaciente($paciente->id_use, $userId);
+        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id_hcl);
 
         $pdf = PDF::loadView('admin.psicologia.maestros.historias.reportePDF', compact('paciente', 'historia', 'seccionesPersonalizadas', 'stats', 'enfermedadesVinculadas'))
             ->setPaper('a4', 'portrait');
@@ -423,15 +424,15 @@ class HistoriaController extends Controller
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
 
-        $paciente->name = trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''));
-        $historia = HistoriaClinica::verificarAcceso($paciente->id, $userId);
+        $paciente->name = $this->nombrePaciente($paciente);
+        $historia = HistoriaClinica::verificarAcceso($paciente->id_use, $userId);
 
         if (!$historia) {
             abort(403, 'No tienes acceso a este expediente.');
         }
 
-        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id);
-        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id);
+        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id_hcl);
+        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id_hcl);
 
         $tempFile = \App\Exports\Historias\WordExport::generateExpedienteGeneral($paciente, $seccionesPersonalizadas, $enfermedadesVinculadas);
 
@@ -447,18 +448,18 @@ class HistoriaController extends Controller
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
 
-        $paciente->name = trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''));
-        $historia = HistoriaClinica::verificarAcceso($paciente->id, $userId);
+        $paciente->name = $this->nombrePaciente($paciente);
+        $historia = HistoriaClinica::verificarAcceso($paciente->id_use, $userId);
 
         if (!$historia) {
             abort(403, 'No tienes acceso a este expediente.');
         }
 
-        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id);
-        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id);
+        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id_hcl);
+        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id_hcl);
 
-        $citasSeleccionadas = Cita::obtenerCitasRealizadas($paciente->id, $userId);
-        $stats = Cita::obtenerEstadisticasPaciente($paciente->id, $userId);
+        $citasSeleccionadas = Cita::obtenerCitasRealizadas($paciente->id_use, $userId);
+        $stats = Cita::obtenerEstadisticasPaciente($paciente->id_use, $userId);
 
         $pdf = PDF::loadView('admin.psicologia.maestros.historias.expedienteCompletoPDF', compact('paciente', 'historia', 'seccionesPersonalizadas', 'enfermedadesVinculadas', 'citasSeleccionadas', 'stats'))
             ->setPaper('a4', 'portrait');
@@ -474,20 +475,20 @@ class HistoriaController extends Controller
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
 
-        $paciente->name = trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''));
-        $historia = HistoriaClinica::verificarAcceso($paciente->id, $userId);
+        $paciente->name = $this->nombrePaciente($paciente);
+        $historia = HistoriaClinica::verificarAcceso($paciente->id_use, $userId);
 
         if (!$historia) {
             abort(403, 'No tienes acceso a este expediente.');
         }
 
-        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id);
-        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id);
-        $citasSeleccionadas = Cita::obtenerCitasRealizadas($paciente->id, $userId);
-        $stats = Cita::obtenerEstadisticasPaciente($paciente->id, $userId);
+        $seccionesPersonalizadas = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id_hcl);
+        $enfermedadesVinculadas = HistoriaClinica::obtenerEnfermedadesVinculadas($historia->id_hcl);
+        $citasSeleccionadas = Cita::obtenerCitasRealizadas($paciente->id_use, $userId);
+        $stats = Cita::obtenerEstadisticasPaciente($paciente->id_use, $userId);
 
         $psicologo = $user->obtenerUsuarioPorId($userId);
-        $psicologoName = trim(($psicologo->nombres ?? '') . ' ' . ($psicologo->apellidos ?? ''));
+        $psicologoName = $this->nombrePaciente($psicologo);
 
         $tempFile = \App\Exports\Historias\WordExport::generateExpedienteCompleto($paciente, $historia, $seccionesPersonalizadas, $enfermedadesVinculadas, $citasSeleccionadas, $stats, $psicologoName);
 
@@ -504,21 +505,21 @@ class HistoriaController extends Controller
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
 
-        $paciente->name = trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''));
+        $paciente->name = $this->nombrePaciente($paciente);
 
-        $historia = HistoriaClinica::verificarAcceso($paciente->id, $userId);
+        $historia = HistoriaClinica::verificarAcceso($paciente->id_use, $userId);
         if (!$historia) {
             abort(403, 'No tienes acceso a este expediente.');
         }
 
         $citasIds = $request->input('citas_ids', []);
-        $todasLasCitas = Cita::obtenerCitasRealizadas($paciente->id, $userId);
+        $todasLasCitas = Cita::obtenerCitasRealizadas($paciente->id_use, $userId);
 
         $citasSeleccionadas = !empty($citasIds)
-            ? $todasLasCitas->filter(fn($c) => in_array($c->id, $citasIds))
+            ? $todasLasCitas->filter(fn($c) => in_array($c->id_cps, $citasIds))
             : $todasLasCitas;
 
-        $stats = Cita::obtenerEstadisticasPaciente($paciente->id, $userId);
+        $stats = Cita::obtenerEstadisticasPaciente($paciente->id_use, $userId);
         $modoDescarga = $request->input('modo_descarga', 'unificado');
 
         if ($modoDescarga === 'individuales') {
@@ -531,7 +532,7 @@ class HistoriaController extends Controller
                 foreach ($citasSeleccionadas as $cita) {
                     $citasUna = collect([$cita]);
                     $pdf = PDF::loadView('admin.psicologia.maestros.historias.evolucionPDF', ['paciente' => $paciente, 'historia' => $historia, 'citasSeleccionadas' => $citasUna, 'stats' => $stats])->setPaper('a4', 'portrait');
-                    $fecha = $cita->fecha ? $cita->fecha->format('Y-m-d') : 'SinFecha';
+                    $fecha = $cita->fecha_cps ? $cita->fecha_cps->format('Y-m-d') : 'SinFecha';
                     $pdfContent = $pdf->output();
                     $zip->addFromString("Nota_{$count}_{$fecha}.pdf", $pdfContent);
                     $count++;
@@ -557,24 +558,24 @@ class HistoriaController extends Controller
         $paciente = $user->obtenerUsuarioPorId($pacienteId);
         abort_if(!$paciente, 404);
 
-        $paciente->name = trim(($paciente->nombres ?? '') . ' ' . ($paciente->apellidos ?? ''));
+        $paciente->name = $this->nombrePaciente($paciente);
 
-        $historia = HistoriaClinica::verificarAcceso($paciente->id, $userId);
+        $historia = HistoriaClinica::verificarAcceso($paciente->id_use, $userId);
         if (!$historia) {
             abort(403, 'No tienes acceso a este expediente.');
         }
 
         $citasIds = $request->input('citas_ids', []);
-        $todasLasCitas = Cita::obtenerCitasRealizadas($paciente->id, $userId);
+        $todasLasCitas = Cita::obtenerCitasRealizadas($paciente->id_use, $userId);
 
         $citasSeleccionadas = !empty($citasIds)
-            ? $todasLasCitas->filter(fn($c) => in_array($c->id, $citasIds))
+            ? $todasLasCitas->filter(fn($c) => in_array($c->id_cps, $citasIds))
             : $todasLasCitas;
 
-        $stats = Cita::obtenerEstadisticasPaciente($paciente->id, $userId);
+        $stats = Cita::obtenerEstadisticasPaciente($paciente->id_use, $userId);
 
         $psicologo = $user->obtenerUsuarioPorId($userId);
-        $psicologoName = trim(($psicologo->nombres ?? '') . ' ' . ($psicologo->apellidos ?? ''));
+        $psicologoName = $this->nombrePaciente($psicologo);
 
         $modoDescarga = $request->input('modo_descarga', 'unificado');
 
@@ -589,7 +590,7 @@ class HistoriaController extends Controller
                 foreach ($citasSeleccionadas as $cita) {
                     $tempDocPath = $this->rutaTemporal('temp_doc_' . $count . '.docx');
                     \App\Exports\Historias\WordExport::generateEvolucion(collect([$cita]), $paciente, $historia, $stats, $psicologoName, $tempDocPath);
-                    $fecha = $cita->fecha ? $cita->fecha->format('Y-m-d') : 'SinFecha';
+                    $fecha = $cita->fecha_cps ? $cita->fecha_cps->format('Y-m-d') : 'SinFecha';
                     $zip->addFile($tempDocPath, "Nota_{$count}_{$fecha}.docx");
                     $tempFiles[] = $tempDocPath;
                     $count++;
@@ -620,7 +621,7 @@ class HistoriaController extends Controller
             'enfermedad_id' => $request->input('enfermedad_id'),
             'prioridad' => $request->input('prioridad'),
             'avance_id' => $request->input('avance_id'),
-            'estado_animo_id' => $request->input('estado_animo_id')
+            'esa_id' => $request->input('esa_id')
         ];
     }
 
@@ -634,7 +635,7 @@ class HistoriaController extends Controller
             'prioridad' => $filters['prioridad'],
             'enfermedad' => !empty($filters['enfermedad_id']) ? Enfermedad::obtenerNombrePorId($filters['enfermedad_id']) : null,
             'avance' => !empty($filters['avance_id']) ? AvanceSesion::obtenerNombrePorId($filters['avance_id']) : null,
-            'estado_animo' => !empty($filters['estado_animo_id']) ? EstadoAnimo::obtenerNombrePorId($filters['estado_animo_id']) : null,
+            'estado_animo' => !empty($filters['esa_id']) ? EstadoAnimo::obtenerNombrePorId($filters['esa_id']) : null,
         ];
     }
 
@@ -644,24 +645,24 @@ class HistoriaController extends Controller
             'Psico-Guia UPTP',
             'Expediente General',
             'Paciente: ' . $paciente->name,
-            'Email: ' . $paciente->email,
+            'Email: ' . ($paciente->persona->correo_per ?? ''),
             'Generado el: ' . now()->format('d/m/Y H:i A'),
             '',
             '=== SECCIONES CLINICAS ===',
             '',
         ];
 
-        $secciones = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id);
+        $secciones = HistoriaClinica::obtenerSeccionesConSegmentos($historia->id_hcl);
         foreach ($secciones as $seccion) {
-            $headerLines[] = '=== ' . mb_strtoupper($seccion->titulo) . ' ===';
-            if (!empty($seccion->descripcion_general)) {
-                $headerLines[] = '(' . $seccion->descripcion_general . ')';
+            $headerLines[] = '=== ' . mb_strtoupper($seccion->titulo_hsp) . ' ===';
+            if (!empty($seccion->descripcion_general_hsp)) {
+                $headerLines[] = '(' . $seccion->descripcion_general_hsp . ')';
             }
             $headerLines[] = '';
 
             foreach ($seccion->segmentos as $segmento) {
-                $headerLines[] = '- ' . $segmento->titulo . ':';
-                $contenido = $segmento->contenido ?: 'Sin registro.';
+                $headerLines[] = '- ' . $segmento->titulo_hsm . ':';
+                $contenido = $segmento->contenido_hsm ?: 'Sin registro.';
                 $lineasContenido = explode("\n", trim($contenido));
                 foreach ($lineasContenido as $linea) {
                     $headerLines[] = '  ' . $linea;
@@ -677,8 +678,8 @@ class HistoriaController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        $paciente = $user->obtenerUsuarioPorId($cita->user_id);
-        $psicologo = $user->obtenerUsuarioPorId($cita->psicologo_id);
+        $paciente = $user->obtenerUsuarioPorId($cita->paciente_use_id);
+        $psicologo = $user->obtenerUsuarioPorId($cita->psicologo_use_id);
         $pacienteName = $paciente ? $paciente->name : 'Desconocido';
         $psicologoName = $psicologo ? $psicologo->name : 'Desconocido';
 
@@ -687,13 +688,13 @@ class HistoriaController extends Controller
             'Nota de sesión',
             'Paciente: ' . ($pacienteName ?: 'Desconocido'),
             'Psicólogo: ' . ($psicologoName ?: 'Desconocido'),
-            'Fecha de sesión: ' . ($cita->fecha ? $cita->fecha->format('d/m/Y') : 'Sin fecha'),
-            'Motivo de Solicitud: ' . ($cita->motivo ?: 'No definido'),
+            'Fecha de sesión: ' . ($cita->fecha_cps ? $cita->fecha_cps->format('d/m/Y') : 'Sin fecha'),
+            'Motivo de Solicitud: ' . ($cita->motivo_cps ?: 'No definido'),
             '',
         ];
 
         $noteLines = [];
-        $rawNotas = $cita->notas;
+        $rawNotas = $cita->notas_cps;
 
         try {
             $data = json_decode($rawNotas, true);
@@ -803,19 +804,27 @@ class HistoriaController extends Controller
         return Temporales::ruta(Str::random(16) . '_' . $nombre);
     }
 
+    private function nombrePaciente($usuario): string
+    {
+        $persona = $usuario?->persona;
+        $nombre = trim(($persona->nombres_per ?? '') . ' ' . ($persona->apellidos_per ?? ''));
+
+        return $nombre !== '' ? $nombre : (string) ($usuario->name ?? '');
+    }
+
     private function autorizarPaciente(int $pacienteId): void
     {
         $userId = (int) Auth::id();
 
         $tieneRelacion = $pacienteId !== $userId
-            && (DB::table('citas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists()
-                || DB::table('historia_clinicas')->where('user_id', $pacienteId)->where('psicologo_id', $userId)->exists());
+            && (DB::table('cita_psicologica')->where('paciente_use_id', $pacienteId)->where('psicologo_use_id', $userId)->exists()
+                || DB::table('historia_clinica')->where('paciente_use_id', $pacienteId)->where('psicologo_use_id', $userId)->exists());
 
         abort_unless($tieneRelacion, 403, 'No tienes acceso al expediente de este paciente.');
     }
 
     private function autorizarHistoria(HistoriaClinica $historia): void
     {
-        abort_unless((int) $historia->psicologo_id === (int) Auth::id(), 403, 'No tienes acceso al expediente de este paciente.');
+        abort_unless((int) $historia->psicologo_use_id === (int) Auth::id(), 403, 'No tienes acceso al expediente de este paciente.');
     }
 }

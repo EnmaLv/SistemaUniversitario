@@ -42,7 +42,7 @@ class RespuestaPropuestaNotification extends Notification implements ShouldQueue
 
         return [
             'type_id' => 'respuesta_propuesta_cita',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'body' => $body,
             'url' => route('admin.psicologia.maestros.agenda.index'),
         ];

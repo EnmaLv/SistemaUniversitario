@@ -3,8 +3,10 @@
 namespace App\Models\salud;
 
 use App\Models\Usuario;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
@@ -12,77 +14,83 @@ use Carbon\Carbon;
 
 class Cita extends Model
 {
-    protected $table = 'citas';
-    protected $primaryKey = 'id';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'cita_psicologica';
+    protected $primaryKey = 'id_cps';
 
     protected $fillable = [
-        'user_id',
-        'psicologo_id',
-        'fecha',
-        'hora',
-        'estado',
-        'cancelado_por',
-        'prioridad',
-        'motivo',
-        'notas',
-        'bloque_propuesto',
-        'bloques_sugeridos',
-        'bloques_propuestos',
-        'propuesta_estado',
-        'propuesta_bloque_seleccionado',
-        'estado_animo_id',
-        'confirmado_en',
+        'paciente_use_id',
+        'psicologo_use_id',
+        'fecha_cps',
+        'hora_cps',
+        'estado_cita_cps',
+        'cancelado_por_cps',
+        'prioridad_texto_cps',
+        'motivo_cps',
+        'notas_cps',
+        'bloque_propuesto_cps',
+        'bloques_sugeridos_cps',
+        'bloques_propuestos_cps',
+        'propuesta_estado_cps',
+        'propuesta_bloque_seleccionado_cps',
+        'motivo_rechazo_propuesta_cps',
+        'esa_id',
+        'confirmado_en_cps',
+        'status_id',
     ];
 
     protected $casts = [
-        'fecha' => 'date',
-        'confirmado_en' => 'datetime',
+        'fecha_cps' => 'date',
+        'confirmado_en_cps' => 'datetime',
     ];
 
     public function paciente()
     {
-        return $this->belongsTo(Usuario::class, 'user_id', 'id_use');
+        return $this->belongsTo(Usuario::class, 'paciente_use_id', 'id_use');
     }
 
     public function psicologo()
     {
-        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_use');
+        return $this->belongsTo(Usuario::class, 'psicologo_use_id', 'id_use');
     }
+
 
     public function scopePorPsicologo(Builder $query, $psicologoId): Builder
     {
-        return $query->when($psicologoId, fn ($q) => $q->where('psicologo_id', $psicologoId));
+        return $query->when($psicologoId, fn ($q) => $q->where('psicologo_use_id', $psicologoId));
     }
 
     public function scopePorPaciente(Builder $query, $pacienteId): Builder
     {
-        return $query->where('user_id', $pacienteId);
+        return $query->where('paciente_use_id', $pacienteId);
     }
 
     public function scopePorEstado(Builder $query, $estado): Builder
     {
-        return $query->when($estado, fn($q) => $q->where('estado', $estado));
+        return $query->when($estado, fn($q) => $q->where('estado_cita_cps', $estado));
     }
 
     public function scopePendientes(Builder $query): Builder
     {
-        return $query->where('estado', 'pendiente');
+        return $query->where('estado_cita_cps', 'pendiente');
     }
 
     public function scopeConfirmadas(Builder $query): Builder
     {
-        return $query->where('estado', 'confirmada');
+        return $query->where('estado_cita_cps', 'confirmada');
     }
 
     public function scopeRealizadas(Builder $query): Builder
     {
-        return $query->where('estado', 'realizada');
+        return $query->where('estado_cita_cps', 'realizada');
     }
 
     public static function obtenerCitasGlobales($estado = null, $cantidad = 10, $psicologoId = null)
     {
         $paginator = self::with(['paciente.persona', 'psicologo.persona'])
-            ->where('psicologo_id', $psicologoId)
+            ->where('psicologo_use_id', $psicologoId)
             ->porEstado($estado)
             ->latest('created_at')
             ->paginate($cantidad);
@@ -94,7 +102,7 @@ class Cita extends Model
             $item->psicologo_nombre = $item->psicologo && $item->psicologo->persona
                 ? trim("{$item->psicologo->persona->nombres_per} {$item->psicologo->persona->apellidos_per}")
                 : '';
-            $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+            $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
             return self::desencriptarItem($item);
         });
@@ -107,19 +115,19 @@ class Cita extends Model
         $query = self::with('paciente');
 
         if (!$todosLosPsicologos) {
-            $query->where('psicologo_id', $psicologoId);
+            $query->where('psicologo_use_id', $psicologoId);
         }
 
         if ($fechaInicio && $fechaFin) {
             $query->where(function ($q) use ($fechaInicio, $fechaFin) {
-                $q->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                $q->whereBetween('fecha_cps', [$fechaInicio, $fechaFin])
                     ->orWhereBetween('created_at', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
             });
         }
 
         $query->porEstado($estado)
-            ->when($estadoAnimoId, fn($q) => $q->where('estado_animo_id', $estadoAnimoId))
-            ->when($prioridad, fn($q) => $q->where('prioridad', $prioridad))
+            ->when($estadoAnimoId, fn($q) => $q->where('esa_id', $estadoAnimoId))
+            ->when($prioridad, fn($q) => $q->where('prioridad_texto_cps', $prioridad))
             ->when($perfilAcademico || $pnf, function ($q) use ($perfilAcademico, $pnf) {
                 $q->whereHas('paciente', function ($u) use ($perfilAcademico, $pnf) {
                     if ($perfilAcademico) {
@@ -148,7 +156,7 @@ class Cita extends Model
                 $cita->apellidos = $paciente->persona->apellidos_per;
                 $cita->genero = $paciente->persona->genero_per;
                 $cita->fecha_nacimiento = $paciente->persona->fecha_nacimiento_per;
-                $cita->perfil_academico = $paciente->persona->perfil->nombre_perfil;
+                $cita->perfil_academico = $paciente->persona->perfil->nombre_perfil ?? null;
                 $cita->pnf = 'No especificado';
 
                 $personaPnf = $cita->paciente->persona->personaPnf;
@@ -176,8 +184,8 @@ class Cita extends Model
             }
 
             $cita->paciente_nombre = trim(($cita->paciente->persona->nombres_per ?? '') . ' ' . ($cita->paciente->persona->apellidos_per ?? ''));
-            $cita->cita_id = $cita->id;
-            $cita->fecha_carbon = $cita->fecha ? Carbon::parse($cita->fecha) : null;
+            $cita->cita_id = $cita->id_cps;
+            $cita->fecha_carbon = $cita->fecha_cps ? Carbon::parse($cita->fecha_cps) : null;
             $cita->created_at_carbon = $cita->created_at ? Carbon::parse($cita->created_at) : null;
             return $cita;
         });
@@ -224,7 +232,7 @@ class Cita extends Model
             'estados_animo_pacientes' => []
         ];
 
-        $avancesDb = DB::table('avances_sesion')->pluck('nombre', 'id')->toArray();
+        $avancesDb = DB::table('avance_sesion')->pluck('nombre_avs', 'id_avs')->toArray();
         foreach ($avancesDb as $nombre) {
             $resumen['avances'][$nombre] = 0;
             $resumen['avances_pacientes'][$nombre] = [];
@@ -232,7 +240,7 @@ class Cita extends Model
         $resumen['avances']['No especificado'] = 0;
         $resumen['avances_pacientes']['No especificado'] = [];
 
-        $prioridadesDb = DB::table('prioridades')->pluck('nombre')->toArray();
+        $prioridadesDb = DB::table('prioridad_atencion')->pluck('nombre_pat')->toArray();
         foreach ($prioridadesDb as $nombre) {
             $nombreFormat = ucfirst($nombre);
             $resumen['prioridades'][$nombreFormat] = 0;
@@ -241,7 +249,7 @@ class Cita extends Model
         $resumen['prioridades']['No especificado'] = 0;
         $resumen['prioridades_pacientes']['No especificado'] = [];
 
-        $estadosAnimoDb = DB::table('estado_animos')->pluck('nombre', 'id')->toArray();
+        $estadosAnimoDb = DB::table('estado_animo')->pluck('nombre_esa', 'id_esa')->toArray();
         foreach ($estadosAnimoDb as $nombre) {
             $resumen['estados_animo'][$nombre] = 0;
             $resumen['estados_animo_pacientes'][$nombre] = [];
@@ -260,15 +268,15 @@ class Cita extends Model
         $citasOrdenadas = $citas->sortByDesc('fecha_carbon');
 
         foreach ($citasOrdenadas as $cita) {
-            if ($cita->estado === 'realizada') $totalRealizadas++;
+            if ($cita->estado_cita_cps === 'realizada') $totalRealizadas++;
 
-            if ($cita->fecha_carbon && !in_array($cita->estado, ['cancelada', 'rechazada'])) {
+            if ($cita->fecha_carbon && !in_array($cita->estado_cita_cps, ['cancelada', 'rechazada'])) {
                 $semanaKey = $cita->fecha_carbon->format('W-Y');
                 $citasSemanales[$semanaKey] = ($citasSemanales[$semanaKey] ?? 0) + 1;
             }
 
-            if ($cita->hora) {
-                $horaCarbon = Carbon::parse($cita->hora);
+            if ($cita->hora_cps) {
+                $horaCarbon = Carbon::parse($cita->hora_cps);
                 $bloque = $horaCarbon->format('h:00 A') . ' - ' . $horaCarbon->copy()->addHour()->format('h:00 A');
                 $horasBloques[$bloque] = ($horasBloques[$bloque] ?? 0) + 1;
             }
@@ -279,8 +287,8 @@ class Cita extends Model
                 $citasConEspera++;
             }
 
-            if (!isset($pacientes[$cita->user_id])) {
-                $pacientes[$cita->user_id] = true;
+            if (!isset($pacientes[$cita->paciente_use_id])) {
+                $pacientes[$cita->paciente_use_id] = true;
                 $resumen['total_pacientes']++;
 
                 $genero = strtolower(trim($cita->paciente->persona->genero_per ?? ''));
@@ -340,8 +348,8 @@ class Cita extends Model
                 $resumen['pnf'][$pnfVal] = ($resumen['pnf'][$pnfVal] ?? 0) + 1;
 
                 $avanceId = null;
-                if ($cita->notas) {
-                    $notas = is_string($cita->notas) ? json_decode($cita->notas, true) : $cita->notas;
+                if ($cita->notas_cps) {
+                    $notas = is_string($cita->notas_cps) ? json_decode($cita->notas_cps, true) : $cita->notas_cps;
                     if (json_last_error() === JSON_ERROR_NONE && is_array($notas) && isset($notas['avance_estado'])) {
                         $avanceId = $notas['avance_estado'];
                     }
@@ -353,14 +361,14 @@ class Cita extends Model
                     $resumen['avances_pacientes'][$keyAvance][] = $cita->paciente->persona->nombres_per;
                 }
 
-                $prioridad = ucfirst($cita->prioridad ?? 'No especificado');
+                $prioridad = ucfirst($cita->prioridad_texto_cps ?? 'No especificado');
                 if (!isset($resumen['prioridades'][$prioridad])) $prioridad = 'No especificado';
                 $resumen['prioridades'][$prioridad]++;
                 if (!in_array($cita->paciente->persona->nombres_per, $resumen['prioridades_pacientes'][$prioridad])) {
                     $resumen['prioridades_pacientes'][$prioridad][] = $cita->paciente->persona->nombres_per;
                 }
 
-                $estadoAnimoId = $cita->estado_animo_id;
+                $estadoAnimoId = $cita->esa_id;
                 $keyAnimo = ($estadoAnimoId && isset($estadosAnimoDb[$estadoAnimoId])) ? $estadosAnimoDb[$estadoAnimoId] : 'No especificado';
                 $resumen['estados_animo'][$keyAnimo]++;
                 if (!in_array($cita->paciente->persona->nombres_per, $resumen['estados_animo_pacientes'][$keyAnimo])) {
@@ -412,7 +420,7 @@ class Cita extends Model
 
             $prevCitas = self::porPsicologo($psicologoId)
                 ->where(function ($q) use ($prevInicio, $prevFin) {
-                    $q->whereBetween('fecha', [$prevInicio->toDateString(), $prevFin->toDateString()])
+                    $q->whereBetween('fecha_cps', [$prevInicio->toDateString(), $prevFin->toDateString()])
                         ->orWhereBetween('created_at', [$prevInicio->toDateString() . ' 00:00:00', $prevFin->toDateString() . ' 23:59:59']);
                 })
                 ->count();
@@ -440,7 +448,7 @@ class Cita extends Model
         if (!$user) return;
         $notifiable = new \App\Models\salud\NotifiableUser();
         $notifiable->id = $user->id_use;
-        $notifiable->email = $user->persona->correo_per ?? $user->username;
+        $notifiable->email = $user->persona->correo_per ?? $user->email_use;
         $notifiable->nombres = $user->persona->nombres_per ?? '';
         $notifiable->apellidos = $user->persona->apellidos_per ?? '';
         $notifiable->name = trim($notifiable->nombres . ' ' . $notifiable->apellidos);
@@ -456,13 +464,13 @@ class Cita extends Model
             ->paginate($cantidad);
 
         $coleccionFiltrada = $paginator->getCollection()->transform(function ($item) {
-            $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+            $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
             $item->paciente_nombre = $item->paciente && $item->paciente->persona
                 ? trim("{$item->paciente->persona->nombres_per} {$item->paciente->persona->apellidos_per}")
                 : '';
             return self::desencriptarItem($item);
-        })->filter(fn($item) => trim($item->motivo) !== 'Nota de Evolución (Manual)')->values();
+        })->filter(fn($item) => trim($item->motivo_cps) !== 'Nota de Evolución (Manual)')->values();
 
         $paginator->setCollection($coleccionFiltrada);
 
@@ -503,10 +511,10 @@ class Cita extends Model
 
         $cita = self::desencriptarItem($cita);
 
-        if (isset($cita->fecha) && $cita->fecha) $cita->fecha = Carbon::parse($cita->fecha);
+        if (isset($cita->fecha_cps) && $cita->fecha_cps) $cita->fecha_cps = Carbon::parse($cita->fecha_cps);
         if (isset($cita->created_at) && $cita->created_at) $cita->created_at = Carbon::parse($cita->created_at);
         if (isset($cita->updated_at) && $cita->updated_at) $cita->updated_at = Carbon::parse($cita->updated_at);
-        if (isset($cita->confirmado_en) && $cita->confirmado_en) $cita->confirmado_en = Carbon::parse($cita->confirmado_en);
+        if (isset($cita->confirmado_en_cps) && $cita->confirmado_en_cps) $cita->confirmado_en_cps = Carbon::parse($cita->confirmado_en_cps);
 
         $pNombre = explode(' ', trim($cita->paciente->persona->nombres_per ?? ''))[0];
         $pApellido = explode(' ', trim($cita->paciente->persona->apellidos_per ?? ''))[0];
@@ -523,7 +531,7 @@ class Cita extends Model
     {
         if (!$item) return $item;
 
-        $campos = ['motivo', 'notes', 'notas', 'bloque_propuesto', 'bloques_sugeridos', 'bloques_propuestos', 'propuesta_bloque_seleccionado'];
+        $campos = ['motivo_cps', 'notas_cps', 'bloque_propuesto_cps', 'bloques_sugeridos_cps', 'bloques_propuestos_cps', 'propuesta_bloque_seleccionado_cps'];
         foreach ($campos as $campo) {
             if (isset($item->$campo) && !empty($item->$campo) && is_string($item->$campo)) {
                 if (strlen($item->$campo) > 40 && !str_contains($item->$campo, ' ')) {
@@ -569,13 +577,13 @@ class Cita extends Model
         $resetAt = $paciente ? $paciente->infracciones_reset_at_use : null;
 
         $queryCancelaciones = self::porPaciente($userId)
-            ->where('estado', 'cancelada')
-            ->where('cancelado_por', 'paciente');
+            ->where('estado_cita_cps', 'cancelada')
+            ->where('cancelado_por_cps', 'paciente');
 
         if ($resetAt) $queryCancelaciones->where('updated_at', '>', $resetAt);
         $cancelacionesPaciente = $queryCancelaciones->count();
 
-        $queryNoAsistencias = self::porPaciente($userId)->where('estado', 'no_asistio');
+        $queryNoAsistencias = self::porPaciente($userId)->where('estado_cita_cps', 'no_asistio');
         if ($resetAt) $queryNoAsistencias->where('updated_at', '>', $resetAt);
         $noAsistencias = $queryNoAsistencias->count();
 
@@ -587,12 +595,12 @@ class Cita extends Model
         $resetAt = Usuario::where('id_use', $userId)->value('infracciones_reset_at_use');
 
         $queryCancelaciones = self::porPaciente($userId)
-            ->where('estado', 'cancelada')
-            ->where('cancelado_por', 'paciente');
+            ->where('estado_cita_cps', 'cancelada')
+            ->where('cancelado_por_cps', 'paciente');
         if ($resetAt) $queryCancelaciones->where('updated_at', '>', $resetAt);
         $cancelacionesPaciente = $queryCancelaciones->count();
 
-        $queryNoAsistencias = self::porPaciente($userId)->where('estado', 'no_asistio');
+        $queryNoAsistencias = self::porPaciente($userId)->where('estado_cita_cps', 'no_asistio');
         if ($resetAt) $queryNoAsistencias->where('updated_at', '>', $resetAt);
         $noAsistencias = $queryNoAsistencias->count();
 
@@ -604,7 +612,7 @@ class Cita extends Model
             } else {
                 $ultimaCita = self::porPaciente($userId)->latest('created_at')->first();
                 if ($ultimaCita) {
-                    self::notificarUsuario($ultimaCita->psicologo_id, new \App\Notifications\PenalizacionPsicologoNotification((object)['id' => $userId]));
+                    self::notificarUsuario($ultimaCita->psicologo_use_id, new \App\Notifications\PenalizacionPsicologoNotification((object)['id' => $userId]));
                 }
             }
         }
@@ -618,9 +626,9 @@ class Cita extends Model
             $ids = self::porPaciente($userId)
                 ->pendientes()
                 ->limit(10)
-                ->pluck('id');
+                ->pluck('id_cps');
 
-            self::whereIn('id', $ids)->update(['prioridad' => $prioridad]);
+            self::whereIn('id_cps', $ids)->update(['prioridad_texto_cps' => $prioridad]);
         });
     }
 
@@ -630,13 +638,13 @@ class Cita extends Model
             return;
         }
 
-        $rechazos = self::porPaciente($userId)->porPsicologo($psicologoId)->where('estado', 'rechazada')->count();
-        $cancelaciones = self::porPaciente($userId)->porPsicologo($psicologoId)->where('estado', 'cancelada')->where('cancelado_por', 'psicologo')->count();
+        $rechazos = self::porPaciente($userId)->porPsicologo($psicologoId)->where('estado_cita_cps', 'rechazada')->count();
+        $cancelaciones = self::porPaciente($userId)->porPsicologo($psicologoId)->where('estado_cita_cps', 'cancelada')->where('cancelado_por_cps', 'psicologo')->count();
 
         if (($rechazos + $cancelaciones) == 3) {
             $ultimaCita = self::porPaciente($userId)->porPsicologo($psicologoId)->latest('updated_at')->first();
             if ($ultimaCita) {
-                $citaModel = self::instanciarParaNotificacion($ultimaCita->id);
+                $citaModel = self::instanciarParaNotificacion($ultimaCita->id_cps);
                 if ($citaModel) {
                     try {
                         self::notificarUsuario($psicologoId, new \App\Notifications\AvisoAtencionPsicologoNotification((object)['id' => $userId], $citaModel));
@@ -652,7 +660,7 @@ class Cita extends Model
     {
         return DB::transaction(function () use ($user, $validated) {
             $tieneCitaPendiente = self::porPaciente($user->id_use)
-                ->whereIn('estado', ['pendiente', 'confirmada'])
+                ->whereIn('estado_cita_cps', ['pendiente', 'confirmada'])
                 ->lockForUpdate()
                 ->exists();
 
@@ -660,7 +668,7 @@ class Cita extends Model
                 return [false, 'Tienes una cita pendiente o confirmada. Espera a que se marque como realizada, no asistió o cancelada antes de solicitar otra.', null];
             }
 
-            if (empty($validated['bloques_sugeridos'])) {
+            if (empty($validated['bloques_sugeridos_cps'])) {
                 return [false, 'Debes seleccionar un bloque de horario.', null];
             }
 
@@ -672,17 +680,17 @@ class Cita extends Model
             }
 
             $cita = self::create([
-                'user_id' => $user->id_use,
-                'psicologo_id' => $psicologo->id_use,
-                'fecha' => $validated['fecha_solicitada'],
-                'hora' => null,
-                'estado' => 'pendiente',
-                'prioridad' => $prioridad,
-                'motivo' => Crypt::encryptString($validated['motivo']),
-                'bloques_sugeridos' => !empty($validated['bloques_sugeridos']) ? $validated['bloques_sugeridos'] : null,
+                'paciente_use_id' => $user->id_use,
+                'psicologo_use_id' => $psicologo->id_use,
+                'fecha_cps' => $validated['fecha_solicitada'],
+                'hora_cps' => null,
+                'estado_cita_cps' => 'pendiente',
+                'prioridad_texto_cps' => $prioridad,
+                'motivo_cps' => Crypt::encryptString($validated['motivo']),
+                'bloques_sugeridos_cps' => !empty($validated['bloques_sugeridos_cps']) ? $validated['bloques_sugeridos_cps'] : null,
             ]);
 
-            $citaModel = self::instanciarParaNotificacion($cita->id);
+            $citaModel = self::instanciarParaNotificacion($cita->id_cps);
             if ($citaModel) {
                 self::notificarUsuario($psicologo->id_use, new \App\Notifications\CitaRequestedNotification($citaModel));
             }
@@ -696,16 +704,16 @@ class Cita extends Model
         try {
             return DB::transaction(function () use ($citaId, $validated) {
                 $cita = self::find($citaId);
-                if (!$cita || $cita->estado !== 'pendiente') {
+                if (!$cita || $cita->estado_cita_cps !== 'pendiente') {
                     return [false, 'Error: Solo se pueden aceptar citas que estén en estado pendiente.'];
                 }
 
                 $motivo = '';
-                if (!empty($cita->motivo)) {
+                if (!empty($cita->motivo_cps)) {
                     try {
-                        $motivo = Crypt::decryptString($cita->motivo);
+                        $motivo = Crypt::decryptString($cita->motivo_cps);
                     } catch (\Exception $e) {
-                        $motivo = $cita->motivo;
+                        $motivo = $cita->motivo_cps;
                     }
                 }
 
@@ -720,20 +728,20 @@ class Cita extends Model
                     }
                 }
 
-                $bloqueConfirmadoExistente = self::porPsicologo($cita->psicologo_id)
+                $bloqueConfirmadoExistente = self::porPsicologo($cita->psicologo_use_id)
                     ->confirmadas()
-                    ->where('fecha', $validated['fecha'])
-                    ->where('id', '!=', $citaId)
+                    ->where('fecha_cps', $validated['fecha'])
+                    ->where('id_cps', '!=', $citaId)
                     ->get()
                     ->first(function ($otraCita) use ($validated) {
-                        if (!$otraCita->bloque_propuesto) return false;
+                        if (!$otraCita->bloque_propuesto_cps) return false;
                         try {
-                            $bloqueDecrypted = decrypt($otraCita->bloque_propuesto);
+                            $bloqueDecrypted = decrypt($otraCita->bloque_propuesto_cps);
                         } catch (\Exception $e) {
                             try {
-                                $bloqueDecrypted = Crypt::decryptString($otraCita->bloque_propuesto);
+                                $bloqueDecrypted = Crypt::decryptString($otraCita->bloque_propuesto_cps);
                             } catch (\Exception $e2) {
-                                $bloqueDecrypted = $otraCita->bloque_propuesto;
+                                $bloqueDecrypted = $otraCita->bloque_propuesto_cps;
                             }
                         }
                         if (is_array($bloqueDecrypted) || is_object($bloqueDecrypted)) {
@@ -747,27 +755,28 @@ class Cita extends Model
                 }
 
                 $cita->update([
-                    'estado' => 'confirmada',
-                    'fecha' => $validated['fecha'],
-                    'hora' => $validated['hora'],
-                    'bloque_propuesto' => Crypt::encryptString($validated['bloque']),
-                    'bloques_propuestos' => null,
-                    'confirmado_en' => now(),
+                    'estado_cita_cps' => 'confirmada',
+                    'fecha_cps' => $validated['fecha'],
+                    'hora_cps' => $validated['hora'],
+                    'bloque_propuesto_cps' => Crypt::encryptString($validated['bloque']),
+                    'bloques_propuestos_cps' => null,
+                    'confirmado_en_cps' => now(),
                 ]);
 
-                $pacienteRow = Usuario::find($cita->user_id);
+                $pacienteRow = Usuario::find($cita->paciente_use_id);
 
                 if ($pacienteRow) {
                     $citaModel = self::instanciarParaNotificacion($citaId);
                     if ($citaModel) {
-                        if (filter_var($pacienteRow->email, FILTER_VALIDATE_EMAIL)) {
+                        $correoPaciente = $pacienteRow->persona->correo_per ?? $pacienteRow->email_use;
+                        if (filter_var($correoPaciente, FILTER_VALIDATE_EMAIL)) {
                             try {
-                                Mail::to($pacienteRow->email)->send(new \App\Mail\CitaConfirmada($citaModel));
+                                Mail::to($correoPaciente)->send(new \App\Mail\CitaConfirmada($citaModel));
                             } catch (\Throwable $exception) {
                                 report($exception);
                             }
                         }
-                        self::notificarUsuario($cita->user_id, new \App\Notifications\CitaConfirmedNotification($citaModel));
+                        self::notificarUsuario($cita->paciente_use_id, new \App\Notifications\CitaConfirmedNotification($citaModel));
                     }
                 }
 
@@ -783,20 +792,20 @@ class Cita extends Model
         try {
             return DB::transaction(function () use ($citaId, $motivo) {
                 $cita = self::find($citaId);
-                if (!$cita || $cita->estado !== 'pendiente') {
+                if (!$cita || $cita->estado_cita_cps !== 'pendiente') {
                     return [false, 'Error: Solo se pueden rechazar citas con estado pendiente.'];
                 }
 
                 $cita->update([
-                    'estado' => 'rechazada',
-                    'notas' => Crypt::encryptString($motivo ?: 'Lo siento, no puedo atenderte en los horarios solicitados'),
+                    'estado_cita_cps' => 'rechazada',
+                    'notas_cps' => Crypt::encryptString($motivo ?: 'Lo siento, no puedo atenderte en los horarios solicitados'),
                 ]);
 
-                self::evaluarAvisoAtencionPsicologo($cita->user_id, $cita->psicologo_id);
+                self::evaluarAvisoAtencionPsicologo($cita->paciente_use_id, $cita->psicologo_use_id);
 
                 $citaModel = self::instanciarParaNotificacion($citaId);
                 if ($citaModel) {
-                    self::notificarUsuario($cita->user_id, new \App\Notifications\CitaRechazadaNotification($citaModel));
+                    self::notificarUsuario($cita->paciente_use_id, new \App\Notifications\CitaRechazadaNotification($citaModel));
                 }
 
                 return [true, 'La solicitud de cita ha sido rechazada correctamente.'];
@@ -811,11 +820,11 @@ class Cita extends Model
         try {
             return DB::transaction(function () use ($citaId) {
                 $cita = self::find($citaId);
-                if (!$cita || $cita->estado !== 'confirmada') {
+                if (!$cita || $cita->estado_cita_cps !== 'confirmada') {
                     return [false, 'Error: Solo se pueden marcar como realizada citas que ya han sido confirmadas.'];
                 }
 
-                $cita->update(['estado' => 'realizada']);
+                $cita->update(['estado_cita_cps' => 'realizada']);
 
                 return [true, 'La cita ha sido marcada como realizada exitosamente.'];
             });
@@ -829,14 +838,14 @@ class Cita extends Model
         try {
             return DB::transaction(function () use ($citaId) {
                 $cita = self::find($citaId);
-                if (!$cita || $cita->estado !== 'confirmada') {
+                if (!$cita || $cita->estado_cita_cps !== 'confirmada') {
                     return [false, 'Error: Solo se pueden marcar como "no asistió" citas que estaban confirmadas.'];
                 }
 
-                $cita->update(['estado' => 'no_asistio']);
+                $cita->update(['estado_cita_cps' => 'no_asistio']);
 
-                self::verificarUmbralInfraccionesPaciente($cita->user_id, $cita->psicologo_id);
-                self::aplicarRecalculoPrioridad($cita->user_id, $cita->psicologo_id);
+                self::verificarUmbralInfraccionesPaciente($cita->paciente_use_id, $cita->psicologo_use_id);
+                self::aplicarRecalculoPrioridad($cita->paciente_use_id, $cita->psicologo_use_id);
 
                 return [true, 'Cita marcada como "no asistió". Se han procesado las penalizaciones correspondientes.'];
             });
@@ -845,12 +854,13 @@ class Cita extends Model
         }
     }
 
-    public static function obtenerFechaPrimeraCita($userId)
+    public static function obtenerFechaPrimeraCita($userId, $psicologoId)
     {
         return self::porPaciente($userId)
-            ->whereNotNull('fecha')
-            ->orderBy('fecha', 'asc')
-            ->value('fecha');
+            ->where('psicologo_use_id', $psicologoId)
+            ->whereNotNull('fecha_cps')
+            ->orderBy('fecha_cps', 'asc')
+            ->value('fecha_cps');
     }
 
     public static function cancelar($citaId, $userId, $motivo = null)
@@ -867,37 +877,37 @@ class Cita extends Model
                     return [false, 'Error: Usuario no identificado.'];
                 }
 
-                $actor = (int) $cita->psicologo_id === (int) $user->id_use ? 'psicologo' : 'paciente';
+                $actor = (int) $cita->psicologo_use_id === (int) $user->id_use ? 'psicologo' : 'paciente';
 
                 if ($actor === 'psicologo' || $actor === 'admin') {
-                    if ($cita->estado !== 'confirmada') {
+                    if ($cita->estado_cita_cps !== 'confirmada') {
                         return [false, 'Validación: Solo se pueden cancelar citas que ya estén confirmadas.'];
                     }
 
                     $notas = $motivo ?: 'Lo siento, no podré atenderte, surgió un inconveniente a última hora.';
 
                     $cita->update([
-                        'estado' => 'cancelada',
-                        'cancelado_por' => 'psicologo',
-                        'notas' => Crypt::encryptString($notas),
+                        'estado_cita_cps' => 'cancelada',
+                        'cancelado_por_cps' => 'psicologo',
+                        'notas_cps' => Crypt::encryptString($notas),
                     ]);
 
-                    self::aplicarRecalculoPrioridad($cita->user_id, $cita->psicologo_id);
-                    self::evaluarAvisoAtencionPsicologo($cita->user_id, $cita->psicologo_id);
+                    self::aplicarRecalculoPrioridad($cita->paciente_use_id, $cita->psicologo_use_id);
+                    self::evaluarAvisoAtencionPsicologo($cita->paciente_use_id, $cita->psicologo_use_id);
 
                     $citaModel = self::instanciarParaNotificacion($citaId);
                     if ($citaModel) {
-                        self::notificarUsuario($cita->user_id, new \App\Notifications\CitaCancelledNotification($citaModel, 'psicologo'));
+                        self::notificarUsuario($cita->paciente_use_id, new \App\Notifications\CitaCancelledNotification($citaModel, 'psicologo'));
                     }
                 } else {
-                    if (!in_array($cita->estado, ['pendiente', 'confirmada'])) {
+                    if (!in_array($cita->estado_cita_cps, ['pendiente', 'confirmada'])) {
                         return [false, 'Validación: Sólo se pueden cancelar citas pendientes o confirmadas.'];
                     }
 
-                    if ($actor === 'paciente' && $cita->estado === 'confirmada' && $cita->fecha && $cita->hora) {
-                        $fechaSolo = Carbon::parse($cita->fecha)->format('Y-m-d');
-                        $horaInicioStr = $cita->hora;
-                        if (preg_match('/(\d{1,2}:\d{2}(?:\s*[aApP][mM])?)/i', $cita->hora, $m)) {
+                    if ($actor === 'paciente' && $cita->estado_cita_cps === 'confirmada' && $cita->fecha_cps && $cita->hora_cps) {
+                        $fechaSolo = Carbon::parse($cita->fecha_cps)->format('Y-m-d');
+                        $horaInicioStr = $cita->hora_cps;
+                        if (preg_match('/(\d{1,2}:\d{2}(?:\s*[aApP][mM])?)/i', $cita->hora_cps, $m)) {
                             $horaInicioStr = $m[1];
                         }
                         $fechaHoraCita = Carbon::parse($fechaSolo . ' ' . $horaInicioStr);
@@ -908,17 +918,17 @@ class Cita extends Model
                     }
 
                     $cita->update([
-                        'estado' => 'cancelada',
-                        'cancelado_por' => $actor,
+                        'estado_cita_cps' => 'cancelada',
+                        'cancelado_por_cps' => $actor,
                     ]);
 
                     if ($actor === 'paciente') {
-                        self::verificarUmbralInfraccionesPaciente($cita->user_id, $cita->psicologo_id);
-                        self::aplicarRecalculoPrioridad($cita->user_id, $cita->psicologo_id);
+                        self::verificarUmbralInfraccionesPaciente($cita->paciente_use_id, $cita->psicologo_use_id);
+                        self::aplicarRecalculoPrioridad($cita->paciente_use_id, $cita->psicologo_use_id);
 
                         $citaModel = self::instanciarParaNotificacion($citaId);
                         if ($citaModel) {
-                            self::notificarUsuario($cita->psicologo_id, new \App\Notifications\CitaCancelledNotification($citaModel, $actor));
+                            self::notificarUsuario($cita->psicologo_use_id, new \App\Notifications\CitaCancelledNotification($citaModel, $actor));
                         }
                     }
                 }
@@ -940,34 +950,34 @@ class Cita extends Model
                 }
 
                 $user = Usuario::find($userId);
-                if (!$user || !$user->tieneRol('psicologo') || $cita->psicologo_id !== $user->id_use) {
+                if (!$user || !$user->tieneRol('psicologo') || $cita->psicologo_use_id !== $user->id_use) {
                     return [false, 'Error: Usuario no autorizado para esta acción.'];
                 }
 
-                if ($cita->estado !== 'confirmada') {
+                if ($cita->estado_cita_cps !== 'confirmada') {
                     return [false, 'Validación: Solo se pueden posponer citas que ya estén confirmadas.'];
                 }
 
-                if ($cita->fecha && $cita->hora) {
-                    $fechaSolo = Carbon::parse($cita->fecha)->format('Y-m-d');
-                    $fechaHoraCita = Carbon::parse($fechaSolo . ' ' . $cita->hora);
+                if ($cita->fecha_cps && $cita->hora_cps) {
+                    $fechaSolo = Carbon::parse($cita->fecha_cps)->format('Y-m-d');
+                    $fechaHoraCita = Carbon::parse($fechaSolo . ' ' . $cita->hora_cps);
                     if ($fechaHoraCita->isPast()) {
                         return [false, 'Validación: No es posible posponer una cita cuya hora programada ya ha comenzado o pasado. En su lugar, registre si el paciente asistió o no.'];
                     }
                 }
 
                 $cita->update([
-                    'estado' => 'pendiente',
-                    'bloque_propuesto' => null,
-                    'bloques_propuestos' => null,
-                    'propuesta_estado' => null,
-                    'propuesta_bloque_seleccionado' => null,
+                    'estado_cita_cps' => 'pendiente',
+                    'bloque_propuesto_cps' => null,
+                    'bloques_propuestos_cps' => null,
+                    'propuesta_estado_cps' => null,
+                    'propuesta_bloque_seleccionado_cps' => null,
                 ]);
 
                 $citaModel = self::instanciarParaNotificacion($citaId);
                 if ($citaModel) {
                     try {
-                        self::notificarUsuario($cita->user_id, new \App\Notifications\CitaCancelledNotification($citaModel, 'pospuesta'));
+                        self::notificarUsuario($cita->paciente_use_id, new \App\Notifications\CitaCancelledNotification($citaModel, 'pospuesta'));
                     } catch (\Throwable $e) {
                         report($e);
                     }
@@ -989,7 +999,7 @@ class Cita extends Model
 
                 $cita = self::desencriptarItem($cita);
 
-                if ($cita->motivo !== 'Gestionada por psicólogo' && !self::validarBloqueFuturo($fecha, $nuevoBloque)) {
+                if ($cita->motivo_cps !== 'Gestionada por psicólogo' && !self::validarBloqueFuturo($fecha, $nuevoBloque)) {
                     return [false, 'No se pueden proponer fechas u horas pasadas.'];
                 }
 
@@ -997,11 +1007,11 @@ class Cita extends Model
                 $bloqueNormalizado = self::normalizarBloque($nuevoBloque);
 
                 $bloqueConfirmadoExistente = self::porPsicologo($psicologoId)
-                    ->where('fecha', $fecha)
+                    ->where('fecha_cps', $fecha)
                     ->confirmadas()
                     ->get()
                     ->first(function ($otraCita) use ($bloqueNormalizado) {
-                        return $otraCita->bloque_propuesto && self::normalizarBloque($otraCita->bloque_propuesto) === $bloqueNormalizado;
+                        return $otraCita->bloque_propuesto_cps && self::normalizarBloque($otraCita->bloque_propuesto_cps) === $bloqueNormalizado;
                     });
 
                 if ($bloqueConfirmadoExistente) {
@@ -1009,12 +1019,12 @@ class Cita extends Model
                 }
 
                 $propuestaPendienteExistente = self::porPsicologo($psicologoId)
-                    ->where('id', '!=', $citaId)
-                    ->where('propuesta_estado', 'pendiente')
+                    ->where('id_cps', '!=', $citaId)
+                    ->where('propuesta_estado_cps', 'pendiente')
                     ->get()
                     ->first(function ($otraCita) use ($bloqueConFecha) {
                         $otraCitaDes = self::desencriptarItem($otraCita);
-                        $bloquesOtros = array_filter(array_map('trim', explode(';', $otraCitaDes->bloques_propuestos ?? '')));
+                        $bloquesOtros = array_filter(array_map('trim', explode(';', $otraCitaDes->bloques_propuestos_cps ?? '')));
                         return in_array($bloqueConFecha, $bloquesOtros);
                     });
 
@@ -1022,10 +1032,10 @@ class Cita extends Model
                     return [false, 'Conflicto: Ya has enviado una solicitud para esta fecha y bloque a otro paciente que está en espera de respuesta.'];
                 }
 
-                $bloquesPropuestos = array_filter(array_map('trim', explode(';', $cita->bloques_propuestos ?? '')));
+                $bloquesPropuestos = array_filter(array_map('trim', explode(';', $cita->bloques_propuestos_cps ?? '')));
 
                 if (in_array($bloqueConFecha, $bloquesPropuestos)) {
-                    if ($cita->propuesta_estado === 'rechazada') {
+                    if ($cita->propuesta_estado_cps === 'rechazada') {
                         return [false, 'El paciente ya rechazó una propuesta para este mismo horario. Por favor, elige otro bloque.'];
                     }
                     return [false, 'Este paciente ya se encuentra propuesto en este bloque.'];
@@ -1033,7 +1043,7 @@ class Cita extends Model
 
                 $bloquesPropuestos[] = $bloqueConFecha;
                 $cita->update([
-                    'bloques_propuestos' => Crypt::encryptString(implode(';', $bloquesPropuestos)),
+                    'bloques_propuestos_cps' => Crypt::encryptString(implode(';', $bloquesPropuestos)),
                 ]);
 
                 return [true, 'Bloque propuesto correctamente.'];
@@ -1060,12 +1070,12 @@ class Cita extends Model
 
                 $bloqueConFecha = $fecha . '|' . $bloque;
 
-                $propuestos = array_filter(array_map('trim', explode(';', $cita->bloques_propuestos ?? '')));
+                $propuestos = array_filter(array_map('trim', explode(';', $cita->bloques_propuestos_cps ?? '')));
                 $propuestos = array_filter($propuestos, fn($item) => $item !== $bloqueConFecha);
                 $nuevosPropuestos = $propuestos ? implode(';', $propuestos) : null;
 
                 $cita->update([
-                    'bloques_propuestos' => $nuevosPropuestos ? Crypt::encryptString($nuevosPropuestos) : null,
+                    'bloques_propuestos_cps' => $nuevosPropuestos ? Crypt::encryptString($nuevosPropuestos) : null,
                 ]);
 
                 return [true, 'Propuesta retirada.'];
@@ -1082,12 +1092,12 @@ class Cita extends Model
         }
 
         $prioridades = Prioridad::obtenerParaPsicologo($psicologoId);
-        $validPrioridades = $prioridades->pluck('nombre')->toArray();
-        $orderedPrioridades = $prioridades->sortByDesc('nivel_gravedad')->pluck('nombre')->toArray();
+        $validPrioridades = $prioridades->pluck('nombre_pat')->toArray();
+        $orderedPrioridades = $prioridades->sortByDesc('nivel_gravedad_pat')->pluck('nombre_pat')->toArray();
 
         $confirmedPatientIds = self::porPsicologo($psicologoId)
             ->confirmadas()
-            ->pluck('user_id')
+            ->pluck('paciente_use_id')
             ->unique()
             ->all();
 
@@ -1096,11 +1106,11 @@ class Cita extends Model
             ->pendientes();
 
         if (!empty($confirmedPatientIds)) {
-            $query->whereNotIn('user_id', $confirmedPatientIds);
+            $query->whereNotIn('paciente_use_id', $confirmedPatientIds);
         }
 
         if ($prioridadFilter && in_array(strtolower($prioridadFilter), array_map('strtolower', $validPrioridades), true)) {
-            $query->where('prioridad', strtolower($prioridadFilter));
+            $query->where('prioridad_texto_cps', strtolower($prioridadFilter));
         }
 
         if ($q) {
@@ -1115,7 +1125,7 @@ class Cita extends Model
 
         $prioridadesList = count($orderedPrioridades) > 0 ? $orderedPrioridades : ['crítica', 'alta', 'media', 'baja'];
         $prioridadesList = array_values($prioridadesList);
-        $caseSql = "CASE prioridad ";
+        $caseSql = "CASE prioridad_texto_cps ";
         foreach ($prioridadesList as $index => $prio) {
             $caseSql .= "WHEN ? THEN " . ($index + 1) . " ";
         }
@@ -1126,7 +1136,7 @@ class Cita extends Model
             ->paginate($perPage);
 
         $paginator->getCollection()->transform(function ($item) {
-            $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+            $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
             if ($item->paciente) {
@@ -1153,16 +1163,16 @@ class Cita extends Model
     {
         $query = self::with('psicologo')
             ->porPaciente($userId)
-            ->whereIn('estado', ['realizada', 'no_asistio', 'cancelada', 'rechazada']);
+            ->whereIn('estado_cita_cps', ['realizada', 'no_asistio', 'cancelada', 'rechazada']);
 
         if ($startDate) $query->whereDate('created_at', '>=', $startDate);
         if ($endDate) $query->whereDate('created_at', '<=', $endDate);
-        if ($prioridad) $query->where('prioridad', $prioridad);
+        if ($prioridad) $query->where('prioridad_texto_cps', $prioridad);
 
         $paginator = $query->latest('created_at')->paginate($cantidad);
 
         $coleccionFiltrada = $paginator->getCollection()->transform(function ($item) {
-            $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+            $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
             if ($item->psicologo) {
@@ -1177,12 +1187,12 @@ class Cita extends Model
             $item->psicologo_short_name = trim($firstName . ' ' . $firstLastName);
             $item->psicologo_nombre = $item->psicologo_short_name;
 
-            if (trim($item->motivo) === 'Asignado manualmente por psicólogo') {
-                $item->motivo = 'Gestionada por psicólogo';
+            if (trim($item->motivo_cps) === 'Asignado manualmente por psicólogo') {
+                $item->motivo_cps = 'Gestionada por psicólogo';
             }
 
             return $item;
-        })->filter(fn($item) => trim($item->motivo) !== 'Nota de Evolución (Manual)')->values();
+        })->filter(fn($item) => trim($item->motivo_cps) !== 'Nota de Evolución (Manual)')->values();
 
         $paginator->setCollection($coleccionFiltrada);
 
@@ -1195,16 +1205,16 @@ class Cita extends Model
 
         if (!empty($startDate) || !empty($endDate)) {
             if ($tipoFiltroFecha === 'primera_cita' || $tipoFiltroFecha === 'ultima_cita') {
-                $func = ($tipoFiltroFecha === 'primera_cita') ? 'MIN(fecha)' : 'MAX(fecha)';
-                $subquery = self::select('user_id')
+                $func = ($tipoFiltroFecha === 'primera_cita') ? 'MIN(fecha_cps)' : 'MAX(fecha_cps)';
+                $subquery = self::select('paciente_use_id')
                     ->porPsicologo($psicologoId)
                     ->realizadas()
-                    ->groupBy('user_id');
+                    ->groupBy('paciente_use_id');
 
                 if (!empty($startDate)) $subquery->havingRaw("{$func} >= ?", [$startDate]);
                 if (!empty($endDate)) $subquery->havingRaw("{$func} <= ?", [$endDate]);
 
-                $query->whereIn('user_id', $subquery->pluck('user_id'));
+                $query->whereIn('paciente_use_id', $subquery->pluck('paciente_use_id'));
             } else {
                 if ($startDate) $query->whereDate('created_at', '>=', $startDate);
                 if ($endDate) $query->whereDate('created_at', '<=', $endDate);
@@ -1213,25 +1223,25 @@ class Cita extends Model
 
         if ($estado) {
             if ($estado === 'cancelada_paciente') {
-                $query->where('estado', 'cancelada')->where('cancelado_por', 'paciente');
+                $query->where('estado_cita_cps', 'cancelada')->where('cancelado_por_cps', 'paciente');
             } elseif ($estado === 'cancelada_psicologo') {
-                $query->where('estado', 'cancelada')->where('cancelado_por', 'psicologo');
+                $query->where('estado_cita_cps', 'cancelada')->where('cancelado_por_cps', 'psicologo');
             } elseif ($estado === 'sin_cita') {
                 $query->whereDoesntHave('paciente.citas', function ($q) use ($psicologoId) {
-                    $q->where('psicologo_id', $psicologoId)->where('estado', 'realizada');
+                    $q->where('psicologo_use_id', $psicologoId)->where('estado_cita_cps', 'realizada');
                 });
             } else {
-                $query->where('estado', $estado);
+                $query->where('estado_cita_cps', $estado);
             }
         }
 
-        if ($estadoAnimoId) $query->where('estado_animo_id', $estadoAnimoId);
-        if ($prioridad) $query->where('prioridad', $prioridad);
+        if ($estadoAnimoId) $query->where('esa_id', $estadoAnimoId);
+        if ($prioridad) $query->where('prioridad_texto_cps', $prioridad);
 
         $paginator = $query->latest('created_at')->paginate($cantidad);
 
         $coleccionFiltrada = $paginator->getCollection()->transform(function ($item) {
-            $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+            $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
             $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
             if ($item->paciente) {
@@ -1247,14 +1257,14 @@ class Cita extends Model
             $item->paciente_nombre = trim(($item->user_nombres ?? '') . ' ' . ($item->user_apellidos ?? '')) ?: 'Paciente';
 
             return $item;
-        })->filter(fn($item) => trim($item->motivo) !== 'Nota de Evolución (Manual)')->values();
+        })->filter(fn($item) => trim($item->motivo_cps) !== 'Nota de Evolución (Manual)')->values();
 
         $paginator->setCollection($coleccionFiltrada);
 
         if ($avanceId) {
             $filtered = $paginator->getCollection()->filter(function ($item) use ($avanceId) {
-                if (!$item->notas) return false;
-                $notes = is_string($item->notas) ? json_decode($item->notas, true) : $item->notas;
+                if (!$item->notas_cps) return false;
+                $notes = is_string($item->notas_cps) ? json_decode($item->notas_cps, true) : $item->notas_cps;
                 return (json_last_error() === JSON_ERROR_NONE && is_array($notes) && isset($notes['avance_estado']) && $notes['avance_estado'] == $avanceId);
             });
             $paginator->setCollection($filtered->values());
@@ -1267,7 +1277,7 @@ class Cita extends Model
     {
         return DB::transaction(function () use ($cita, $notas) {
             $model = is_object($cita) ? $cita : self::findOrFail($cita);
-            return $model->update(['notas' => Crypt::encryptString($notas)]);
+            return $model->update(['notas_cps' => Crypt::encryptString($notas)]);
         });
     }
 
@@ -1275,10 +1285,10 @@ class Cita extends Model
     {
         try {
             return DB::transaction(function () use ($cita, $prioridad) {
-                $id = is_object($cita) ? $cita->id : $cita;
+                $id = is_object($cita) ? $cita->id_cps : $cita;
 
                 // Actualizar directamente en la base de datos para evitar guardar atributos dinámicos como paciente_short_name
-                $updated = self::where('id', $id)->update(['prioridad' => $prioridad]);
+                $updated = self::where('id_cps', $id)->update(['prioridad_texto_cps' => $prioridad]);
 
                 if (!$updated) {
                     throw new \Exception('No se pudo guardar la prioridad en la base de datos.');
@@ -1296,22 +1306,22 @@ class Cita extends Model
         $realizadasQuery = self::porPaciente($pacienteId)
             ->porPsicologo($psicologoId)
             ->realizadas()
-            ->where('status', 1)
-            ->get(['id', 'motivo']);
+            ->where('status_id', 1)
+            ->get(['id_cps', 'motivo_cps']);
 
         $realizadasCount = $realizadasQuery->filter(function ($cita) {
             try {
-                return Crypt::decryptString($cita->motivo) !== 'Nota de Evolución (Manual)';
+                return Crypt::decryptString($cita->motivo_cps) !== 'Nota de Evolución (Manual)';
             } catch (\Exception $e) {
                 return true;
             }
         })->count();
 
-        $inasistenciasCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado', 'no_asistio')->count();
-        $pacienteCancelPreCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado', 'cancelada')->where('cancelado_por', 'paciente')->whereNull('confirmado_en')->count();
-        $pacienteCancelPostCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado', 'cancelada')->where('cancelado_por', 'paciente')->whereNotNull('confirmado_en')->count();
-        $psicologoCancelCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado', 'cancelada')->where('cancelado_por', 'psicologo')->count();
-        $rechazadasCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado', 'rechazada')->count();
+        $inasistenciasCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado_cita_cps', 'no_asistio')->count();
+        $pacienteCancelPreCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado_cita_cps', 'cancelada')->where('cancelado_por_cps', 'paciente')->whereNull('confirmado_en_cps')->count();
+        $pacienteCancelPostCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado_cita_cps', 'cancelada')->where('cancelado_por_cps', 'paciente')->whereNotNull('confirmado_en_cps')->count();
+        $psicologoCancelCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado_cita_cps', 'cancelada')->where('cancelado_por_cps', 'psicologo')->count();
+        $rechazadasCount = self::porPaciente($pacienteId)->porPsicologo($psicologoId)->where('estado_cita_cps', 'rechazada')->count();
 
         return [
             'realizadas' => $realizadasCount,
@@ -1329,19 +1339,19 @@ class Cita extends Model
         $paginator = self::porPaciente($pacienteId)
             ->porPsicologo($psicologoId)
             ->realizadas()
-            ->where('status', 1)
-            ->orderBy('fecha', 'desc')
-            ->orderBy('hora', 'desc')
+            ->where('status_id', 1)
+            ->orderBy('fecha_cps', 'desc')
+            ->orderBy('hora_cps', 'desc')
             ->paginate(10);
 
         $paginator->getCollection()->transform(function ($item) use ($pacienteId, $psicologoId) {
-            $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+            $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
             $item = self::desencriptarItem($item);
 
             $item->notas_limpias = 'Sin notas registradas.';
             $data = null;
-            if ($item->notas) {
-                $data = json_decode($item->notas, true);
+            if ($item->notas_cps) {
+                $data = json_decode($item->notas_cps, true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
                     $preview = null;
                     foreach (['observaciones', 'avance_detalle', 'motivo_consulta', 'intervenciones'] as $previewField) {
@@ -1352,32 +1362,32 @@ class Cita extends Model
                     }
                     $item->notas_limpias = $preview ?: 'Sin observaciones.';
                 } else {
-                    $item->notas_limpias = $item->notas;
+                    $item->notas_limpias = $item->notas_cps;
                 }
             }
 
-            if ($item->motivo === 'Nota de Evolución (Manual)') {
+            if ($item->motivo_cps === 'Nota de Evolución (Manual)') {
                 $item->is_manual = true;
                 $item->display_title = (is_array($data) && !empty($data['titulo_manual'])) ? $data['titulo_manual'] : 'Nota de Evolución';
             } else {
                 $item->is_manual = false;
-                $item->display_title = $item->motivo ?? 'Consulta General';
+                $item->display_title = $item->motivo_cps ?? 'Consulta General';
 
                 $item->session_number = self::porPaciente($pacienteId)
                     ->porPsicologo($psicologoId)
                     ->realizadas()
-                    ->where('status', 1)
+                    ->where('status_id', 1)
                     ->where(function ($q) use ($item) {
-                        $q->where('fecha', '<', $item->fecha->format('Y-m-d'))
+                        $q->where('fecha_cps', '<', $item->fecha_cps->format('Y-m-d'))
                             ->orWhere(function ($q2) use ($item) {
-                                $q2->where('fecha', $item->fecha->format('Y-m-d'))
-                                    ->where('hora', '<=', $item->hora);
+                                $q2->where('fecha_cps', $item->fecha_cps->format('Y-m-d'))
+                                    ->where('hora_cps', '<=', $item->hora_cps);
                             });
                     })
-                    ->get(['id', 'motivo'])
+                    ->get(['id_cps', 'motivo_cps'])
                     ->filter(function ($c) {
                         try {
-                            return Crypt::decryptString($c->motivo) !== 'Nota de Evolución (Manual)';
+                            return Crypt::decryptString($c->motivo_cps) !== 'Nota de Evolución (Manual)';
                         } catch (\Exception $e) {
                             return true;
                         }
@@ -1394,13 +1404,13 @@ class Cita extends Model
     {
         return DB::transaction(function () use ($pacienteId, $psicologoId) {
             return self::create([
-                'user_id' => $pacienteId,
-                'psicologo_id' => $psicologoId,
-                'fecha' => Carbon::today(),
-                'hora' => Carbon::now()->format('H:i'),
-                'estado' => 'realizada',
-                'motivo' => Crypt::encryptString('Nota de Evolución (Manual)'),
-                'notas' => Crypt::encryptString(''),
+                'paciente_use_id' => $pacienteId,
+                'psicologo_use_id' => $psicologoId,
+                'fecha_cps' => Carbon::today(),
+                'hora_cps' => Carbon::now()->format('H:i'),
+                'estado_cita_cps' => 'realizada',
+                'motivo_cps' => Crypt::encryptString('Nota de Evolución (Manual)'),
+                'notas_cps' => Crypt::encryptString(''),
             ]);
         });
     }
@@ -1409,12 +1419,12 @@ class Cita extends Model
     {
         return self::with('paciente')
             ->porPsicologo($psicologoId)
-            ->whereBetween('fecha', [$inicio, $fin])
-            ->orderBy('fecha')
-            ->orderBy('hora')
+            ->whereBetween('fecha_cps', [$inicio, $fin])
+            ->orderBy('fecha_cps')
+            ->orderBy('hora_cps')
             ->get()
             ->map(function ($item) {
-                $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+                $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
                 if ($item->paciente) {
                     $item->user_nombres = $item->paciente->persona->nombres_per;
                     $item->user_apellidos = $item->paciente->persona->apellidos_per;
@@ -1442,7 +1452,7 @@ class Cita extends Model
     {
         return DB::transaction(function () use ($id) {
             $cita = self::findOrFail($id);
-            return $cita->update(['estado' => 'cancelada']);
+            return $cita->update(['estado_cita_cps' => 'cancelada']);
         });
     }
 
@@ -1453,7 +1463,7 @@ class Cita extends Model
             ->confirmadas()
             ->get()
             ->map(function ($item) {
-                $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+                $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
                 if ($item->paciente) {
                     $item->user_nombres = $item->paciente->persona->nombres_per;
                     $item->user_apellidos = $item->paciente->persona->apellidos_per;
@@ -1473,10 +1483,10 @@ class Cita extends Model
     {
         return self::with('paciente')
             ->porPsicologo($psicologoId)
-            ->whereDate('fecha', $fecha)
+            ->whereDate('fecha_cps', $fecha)
             ->get()
             ->map(function ($item) {
-                $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+                $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
                 if ($item->paciente) {
                     $item->user_nombres = $item->paciente->persona->nombres_per;
                     $item->user_apellidos = $item->paciente->persona->apellidos_per;
@@ -1499,7 +1509,7 @@ class Cita extends Model
             ->latest('created_at')
             ->get()
             ->map(function ($item) {
-                $item->fecha = $item->fecha ? Carbon::parse($item->fecha) : null;
+                $item->fecha_cps = $item->fecha_cps ? Carbon::parse($item->fecha_cps) : null;
                 $item->created_at = $item->created_at ? Carbon::parse($item->created_at) : null;
 
                 if ($item->psicologo) {
@@ -1508,25 +1518,25 @@ class Cita extends Model
                 }
 
                 $item = self::desencriptarItem($item);
-                $item->bloques_propuestos_raw = $item->bloques_propuestos;
+                $item->bloques_propuestos_raw = $item->bloques_propuestos_cps;
                 $firstName = explode(' ', trim($item->psicologo_nombres ?? ''))[0];
                 $firstLastName = explode(' ', trim($item->psicologo_apellidos ?? ''))[0];
                 $item->psicologo_nombre = trim($firstName . ' ' . $firstLastName) ?: 'N/A';
 
-                if (trim($item->motivo) === 'Asignado manualmente por psicólogo') {
-                    $item->motivo = 'Gestionada por psicólogo';
+                if (trim($item->motivo_cps) === 'Asignado manualmente por psicólogo') {
+                    $item->motivo_cps = 'Gestionada por psicólogo';
                 }
 
                 return $item;
             })
-            ->filter(fn($item) => trim($item->motivo) !== 'Nota de Evolución (Manual)')
+            ->filter(fn($item) => trim($item->motivo_cps) !== 'Nota de Evolución (Manual)')
             ->values();
     }
 
     public static function tieneCitaActiva($userId)
     {
         return self::porPaciente($userId)
-            ->whereIn('estado', ['pendiente', 'confirmada'])
+            ->whereIn('estado_cita_cps', ['pendiente', 'confirmada'])
             ->exists();
     }
 
@@ -1557,7 +1567,7 @@ class Cita extends Model
                     'day' => $tempDate->day,
                     'isCurrentMonth' => $tempDate->month === $currentDate->month,
                     'isToday' => $tempDate->isToday(),
-                    'citas' => $citasCalendario->filter(fn($c) => $c->fecha->isSameDay($tempDate))
+                    'citas' => $citasCalendario->filter(fn($c) => $c->fecha_cps->isSameDay($tempDate))
                 ];
                 $tempDate->addDay();
             }
@@ -1574,7 +1584,7 @@ class Cita extends Model
             $endDate = $request->input('end_date', now()->toDateString());
             $estado = $request->input('estado');
             $avanceId = $request->input('avance_id');
-            $estadoAnimoId = $request->input('estado_animo_id');
+            $estadoAnimoId = $request->input('esa_id');
             $prioridadHistorial = $request->input('prioridad');
             $tipoFiltroFecha = $request->input('tipo_filtro_fecha', 'rango');
             $citasCalendario = self::obtenerHistorial($psicologoId, 12, $startDate, $endDate, $estado, $avanceId, $estadoAnimoId, $prioridadHistorial, $tipoFiltroFecha);
@@ -1585,7 +1595,7 @@ class Cita extends Model
         $citasPendientes = self::obtenerPendientes($psicologoId, $prioridadFilter, $q);
 
         $grupoActivo = $psicologoId ? GrupoHorario::obtenerActivoPorPsicologo($psicologoId) : null;
-        $horarios = $grupoActivo ? Horario::obtenerPorGrupo($grupoActivo->id) : collect();
+        $horarios = $grupoActivo ? Horario::obtenerPorGrupo($grupoActivo->id_gha) : collect();
 
         $citasAsignadas = $psicologoId ? self::obtenerCitasAsignadas($psicologoId) : collect();
         $prioridadesDisponibles = $psicologoId ? Prioridad::obtenerParaPsicologo($psicologoId) : collect();
@@ -1608,11 +1618,11 @@ class Cita extends Model
     public static function obtenerCitasDiariasJson($psicologoId, $fecha)
     {
         return self::obtenerCitasPorFecha($psicologoId, $fecha)->map(fn($c) => [
-            'id' => $c->id,
+            'id' => $c->id_cps,
             'paciente' => $c->paciente_nombre ?? 'Paciente sin nombre',
-            'hora' => $c->hora ? Carbon::parse($c->hora)->format('g:i A') : 'S/H',
-            'estado' => $c->estado,
-            'paciente_id' => $c->user_id
+            'hora' => $c->hora_cps ? Carbon::parse($c->hora_cps)->format('g:i A') : 'S/H',
+            'estado' => $c->estado_cita_cps,
+            'paciente_id' => $c->paciente_use_id
         ]);
     }
 
@@ -1623,7 +1633,7 @@ class Cita extends Model
 
     public static function contarCitasHoy()
     {
-        return self::whereDate('fecha', Carbon::today())->count();
+        return self::whereDate('fecha_cps', Carbon::today())->count();
     }
 
     public static function obtenerCitasConfirmadasHoyPorPsicologo($psicologoId, $limit = 3)
@@ -1631,9 +1641,9 @@ class Cita extends Model
         return self::with('paciente')
             ->porPsicologo($psicologoId)
             ->confirmadas()
-            ->whereDate('fecha', Carbon::today())
-            ->whereTime('hora', '>=', Carbon::now()->format('H:i:s'))
-            ->orderBy('hora')
+            ->whereDate('fecha_cps', Carbon::today())
+            ->whereTime('hora_cps', '>=', Carbon::now()->format('H:i:s'))
+            ->orderBy('hora_cps')
             ->take($limit)
             ->get()
             ->map(function ($cita) {
@@ -1651,16 +1661,16 @@ class Cita extends Model
                     return [false, 'Cita no encontrada.'];
                 }
 
-                if ($psicologoId && $cita->psicologo_id != $psicologoId) {
+                if ($psicologoId && $cita->psicologo_use_id != $psicologoId) {
                     return [false, 'No tienes permiso para esta acción.'];
                 }
 
-                if ($cita->propuesta_estado === 'pendiente') {
+                if ($cita->propuesta_estado_cps === 'pendiente') {
                     return [false, 'Ya se envió una contrapropuesta y está en espera de respuesta por parte del paciente.'];
                 }
 
                 $citaDes = self::desencriptarItem($cita);
-                $propuestos = array_filter(array_map('trim', explode(';', $citaDes->bloques_propuestos ?? '')));
+                $propuestos = array_filter(array_map('trim', explode(';', $citaDes->bloques_propuestos_cps ?? '')));
 
                 if (empty($propuestos)) {
                     return [false, 'No hay bloques propuestos para enviar. Primero arrastra al paciente a los bloques que deseas proponer.'];
@@ -1668,16 +1678,16 @@ class Cita extends Model
 
                 foreach ($propuestos as $b) {
                     $parts = explode('|', $b);
-                    if (count($parts) === 2 && $citaDes->motivo !== 'Gestionada por psicólogo' && !self::validarBloqueFuturo($parts[0], $parts[1])) {
+                    if (count($parts) === 2 && $citaDes->motivo_cps !== 'Gestionada por psicólogo' && !self::validarBloqueFuturo($parts[0], $parts[1])) {
                         return [false, 'Uno de los bloques propuestos ya ha pasado. Por favor, remuévelo antes de enviar la propuesta.'];
                     }
                 }
 
-                $cita->update(['propuesta_estado' => 'pendiente']);
+                $cita->update(['propuesta_estado_cps' => 'pendiente']);
 
                 $citaModel = self::instanciarParaNotificacion($citaId);
                 if ($citaModel) {
-                    self::notificarUsuario($cita->user_id, new \App\Notifications\ContrapropuestaCitaNotification($citaModel));
+                    self::notificarUsuario($cita->paciente_use_id, new \App\Notifications\ContrapropuestaCitaNotification($citaModel));
                 }
 
                 return [true, 'La contrapropuesta ha sido enviada al paciente. Los bloques propuestos: ' . implode(', ', $propuestos)];
@@ -1692,13 +1702,13 @@ class Cita extends Model
         try {
             return DB::transaction(function () use ($citaId, $respuesta, $bloqueSeleccionado, $motivoRechazo, $nuevosBloques) {
                 $cita = self::find($citaId);
-                if (!$cita || $cita->propuesta_estado !== 'pendiente') {
+                if (!$cita || $cita->propuesta_estado_cps !== 'pendiente') {
                     return [false, 'No hay una propuesta pendiente para responder.'];
                 }
 
                 if ($respuesta === 'aceptada') {
                     $citaDes = self::desencriptarItem($cita);
-                    $bloquesPropuestos = array_filter(array_map('trim', explode(';', $citaDes->bloques_propuestos ?? '')));
+                    $bloquesPropuestos = array_filter(array_map('trim', explode(';', $citaDes->bloques_propuestos_cps ?? '')));
 
                     if (empty($bloquesPropuestos)) {
                         return [false, 'No hay bloque propuesto para confirmar.'];
@@ -1707,7 +1717,7 @@ class Cita extends Model
                     $bloqueAConfirmar = $bloqueSeleccionado ?: $bloquesPropuestos[0];
 
                     $parts = explode('|', $bloqueAConfirmar);
-                    if (count($parts) === 2 && $citaDes->motivo !== 'Gestionada por psicólogo' && !self::validarBloqueFuturo($parts[0], $parts[1])) {
+                    if (count($parts) === 2 && $citaDes->motivo_cps !== 'Gestionada por psicólogo' && !self::validarBloqueFuturo($parts[0], $parts[1])) {
                         return [false, 'Esta propuesta no puede ser seleccionada porque su fecha u hora ya ha pasado.'];
                     }
 
@@ -1727,11 +1737,11 @@ class Cita extends Model
                     $hora = $horaMatch[1] ?? '00:00';
 
                     $cita->update([
-                        'propuesta_estado' => 'aceptada',
-                        'propuesta_bloque_seleccionado' => Crypt::encryptString($bloqueAConfirmar),
+                        'propuesta_estado_cps' => 'aceptada',
+                        'propuesta_bloque_seleccionado_cps' => Crypt::encryptString($bloqueAConfirmar),
                     ]);
 
-                    $resultado = self::confirmar($citaId, $cita->psicologo_id, [
+                    $resultado = self::confirmar($citaId, $cita->psicologo_use_id, [
                         'fecha' => $fecha,
                         'hora' => $hora,
                         'bloque' => $bloqueLabel,
@@ -1740,7 +1750,7 @@ class Cita extends Model
                     if ($resultado[0]) {
                         $citaModel = self::instanciarParaNotificacion($citaId);
                         if ($citaModel) {
-                            self::notificarUsuario($cita->psicologo_id, new \App\Notifications\RespuestaPropuestaNotification($citaModel, 'aceptada'));
+                            self::notificarUsuario($cita->psicologo_use_id, new \App\Notifications\RespuestaPropuestaNotification($citaModel, 'aceptada'));
                         }
                         return [true, 'Contrapropuesta aceptada con éxito.'];
                     }
@@ -1749,7 +1759,7 @@ class Cita extends Model
                 } elseif ($respuesta === 'rechazada') {
                     if ($nuevosBloques) {
                         $citaDes = self::desencriptarItem($cita);
-                        $propuestosArr = array_filter(array_map('trim', explode(';', $citaDes->bloques_propuestos ?? '')));
+                        $propuestosArr = array_filter(array_map('trim', explode(';', $citaDes->bloques_propuestos_cps ?? '')));
 
                         $pacienteBloques = [];
                         $parts = explode('|', $nuevosBloques);
@@ -1785,41 +1795,41 @@ class Cita extends Model
                         }
 
                         $updateData = [
-                            'propuesta_estado' => null,
-                            'bloques_propuestos' => null,
-                            'bloques_sugeridos' => Crypt::encryptString($nuevosBloques),
+                            'propuesta_estado_cps' => null,
+                            'bloques_propuestos_cps' => null,
+                            'bloques_sugeridos_cps' => Crypt::encryptString($nuevosBloques),
                         ];
                     } else {
-                        $updateData = ['propuesta_estado' => 'rechazada'];
+                        $updateData = ['propuesta_estado_cps' => 'rechazada'];
                     }
 
                     if ($motivoRechazo) {
-                        $updateData['motivo'] = Crypt::encryptString($motivoRechazo);
+                        $updateData['motivo_cps'] = Crypt::encryptString($motivoRechazo);
                     }
 
                     $cita->update($updateData);
 
-                    $psicologoRow = Usuario::find($cita->psicologo_id);
+                    $psicologoRow = Usuario::find($cita->psicologo_use_id);
                     if ($psicologoRow) {
                         $citaModel = self::instanciarParaNotificacion($citaId);
                         if ($citaModel) {
-                            self::notificarUsuario($cita->psicologo_id, new \App\Notifications\ContrapropuestaRechazadaNotification($citaModel));
+                            self::notificarUsuario($cita->psicologo_use_id, new \App\Notifications\ContrapropuestaRechazadaNotification($citaModel));
                         }
                     }
 
                     return [true, 'Contrapropuesta rechazada y nueva solicitud enviada.'];
                 }
 
-                $update = ['propuesta_estado' => $respuesta];
+                $update = ['propuesta_estado_cps' => $respuesta];
                 if ($respuesta === 'sugerencia_aceptada' && $bloqueSeleccionado) {
-                    $update['propuesta_bloque_seleccionado'] = Crypt::encryptString($bloqueSeleccionado);
+                    $update['propuesta_bloque_seleccionado_cps'] = Crypt::encryptString($bloqueSeleccionado);
                 }
 
                 $cita->update($update);
 
                 $citaModel = self::instanciarParaNotificacion($citaId);
-                if ($citaModel && $citaModel->psicologo_id) {
-                    self::notificarUsuario($citaModel->psicologo_id, new \App\Notifications\RespuestaPropuestaNotification($citaModel, 'aceptada'));
+                if ($citaModel && $citaModel->psicologo_use_id) {
+                    self::notificarUsuario($citaModel->psicologo_use_id, new \App\Notifications\RespuestaPropuestaNotification($citaModel, 'aceptada'));
                 }
 
                 return [true, 'Respuesta registrada correctamente.'];
@@ -1845,7 +1855,7 @@ class Cita extends Model
         try {
             return DB::transaction(function () use ($citaId) {
                 $cita = self::findOrFail($citaId);
-                $cita->update(['bloque_propuesto' => null]);
+                $cita->update(['bloque_propuesto_cps' => null]);
                 return [true, 'Mensaje ocultado correctamente.'];
             });
         } catch (\Exception $e) {
@@ -1872,12 +1882,12 @@ class Cita extends Model
 
     public static function obtenerEstadisticasCitasPsicologo($psicologoId)
     {
-        $stats = self::select('estado', DB::raw('count(*) as total'))
+        $stats = self::select('estado_cita_cps', DB::raw('count(*) as total'))
             ->porPsicologo($psicologoId)
-            ->whereIn('estado', ['realizada', 'cancelada'])
-            ->groupBy('estado')
+            ->whereIn('estado_cita_cps', ['realizada', 'cancelada'])
+            ->groupBy('estado_cita_cps')
             ->get()
-            ->keyBy('estado');
+            ->keyBy('estado_cita_cps');
 
         return [
             'realizada' => $stats->has('realizada') ? $stats->get('realizada')->total : 0,
@@ -1894,7 +1904,7 @@ class Cita extends Model
 
             $total = self::porPsicologo($psicologoId)
                 ->realizadas()
-                ->whereBetween('fecha', [$inicioSemana->toDateString(), $finSemana->toDateString()])
+                ->whereBetween('fecha_cps', [$inicioSemana->toDateString(), $finSemana->toDateString()])
                 ->count();
 
             $tendencia[] = [
@@ -1931,21 +1941,21 @@ class Cita extends Model
 
     public static function eliminarFisicamente($id)
     {
-        return self::where('id', $id)->delete();
+        return self::withTrashed()->where('id_cps', $id)->forceDelete();
     }
 
     public static function obtenerEstadisticasPorPsicologo($fechaInicio, $fechaFin)
     {
-        return self::select('psicologo_id', DB::raw('count(*) as total'))
+        return self::select('psicologo_use_id', DB::raw('count(*) as total'))
             ->with('psicologo.persona')
             ->where(function ($q) use ($fechaInicio, $fechaFin) {
-                $q->whereBetween('fecha', [$fechaInicio, $fechaFin])
+                $q->whereBetween('fecha_cps', [$fechaInicio, $fechaFin])
                 ->orWhereBetween('created_at', [
                     $fechaInicio . ' 00:00:00',
                     $fechaFin . ' 23:59:59',
                 ]);
             })
-            ->groupBy('psicologo_id')
+            ->groupBy('psicologo_use_id')
             ->orderByDesc('total')
             ->get()
             ->map(function ($item) {
@@ -1957,7 +1967,7 @@ class Cita extends Model
                     );
                 }
                 return [
-                    'id'     => $item->psicologo_id,
+                    'id'     => $item->psicologo_use_id,
                     'nombre' => $nombre ?: 'Sin asignar',
                     'total'  => (int) $item->total,
                 ];

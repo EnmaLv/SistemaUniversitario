@@ -41,7 +41,7 @@
                 <div class="space-y-2">
                     @foreach ($confirmadasHoy as $cita)
                         @php
-                            $colorPrioridad = match (strtolower($cita->prioridad ?? '')) {
+                            $colorPrioridad = match (strtolower($cita->prioridad_texto_cps ?? '')) {
                                 'alta'                => 'bg-amber-500',
                                 'crítica', 'critica'  => 'bg-rose-500',
                                 'media'               => 'bg-red-500',
@@ -54,14 +54,14 @@
                             <span class="w-2 h-2 rounded-full {{ $colorPrioridad }} shrink-0"></span>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                    {{ optional($cita->paciente)->name ?: 'Paciente confirmado' }}
+                                    {{ optional($cita->paciente)->nombre_completo ?: 'Paciente confirmado' }}
                                 </p>
                                 <p class="text-[10px] text-gray-400 capitalize">
-                                    Prioridad: {{ $cita->prioridad ?? 'media' }}
+                                    Prioridad: {{ $cita->prioridad_texto_cps ?? 'media' }}
                                 </p>
                             </div>
                             <span class="text-xs font-black font-mono text-red-600 dark:text-red-400">
-                                {{ \Carbon\Carbon::parse($cita->hora)->format('H:i') }}
+                                {{ \Carbon\Carbon::parse($cita->hora_cps)->format('H:i') }}
                             </span>
                         </div>
                     @endforeach
@@ -102,7 +102,7 @@
                 <div class="space-y-2">
                     @foreach ($citasPendientesAntiguas as $cita)
                         @php
-                            $colorPrioridad = match (strtolower($cita->prioridad ?? '')) {
+                            $colorPrioridad = match (strtolower($cita->prioridad_texto_cps ?? '')) {
                                 'alta'                => 'bg-amber-500',
                                 'crítica', 'critica'  => 'bg-rose-500',
                                 'media'               => 'bg-red-500',
@@ -118,7 +118,7 @@
                                     {{ $cita->paciente->persona->nombres_per ?? 'Paciente' }}
                                 </p>
                                 <p class="text-[10px] text-gray-400 capitalize">
-                                    Prioridad: {{ $cita->prioridad ?? 'media' }}
+                                    Prioridad: {{ $cita->prioridad_texto_cps ?? 'media' }}
                                 </p>
                             </div>
                             <div class="text-right shrink-0">

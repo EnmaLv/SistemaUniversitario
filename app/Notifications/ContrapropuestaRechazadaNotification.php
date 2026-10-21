@@ -35,8 +35,8 @@ class ContrapropuestaRechazadaNotification extends Notification implements Shoul
         
         return [
             'type_id' => 'contrapropuesta_rechazada',
-            'cita_id' => $this->cita->id,
-            'body' => $this->cita->propuesta_estado === null 
+            'cita_id' => $this->cita->id_cps,
+            'body' => $this->cita->propuesta_estado_cps === null 
                 ? "El paciente $pacienteName ha rechazado la contrapropuesta y ha enviado una nueva sugerencia de horario." 
                 : "El paciente $pacienteName ha rechazado tu contrapropuesta de horario. La cita permanece pendiente.",
             'url' => route('admin.psicologia.maestros.agenda.index'),

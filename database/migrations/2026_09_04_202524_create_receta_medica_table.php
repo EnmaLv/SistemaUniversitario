@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('receta_medica', function (Blueprint $table) {
             $table->id('id_rme');
             $table->date('fecha_emision_rme')->nullable();
-            $table->date('fecha_vigencia_rme');
-            $table->text('descripcion_rme');
+            $table->date('fecha_vigencia_rme')->nullable();
+            $table->text('descripcion_rme')->nullable();
             $table->unsignedTinyInteger('estado_rme')->default(1);
             $table->foreignId('cme_id')->constrained('consulta_medica', 'id_cme')->cascadeOnDelete();
             $table->foreignId('paciente_per_id')->constrained('persona', 'id_per')->cascadeOnDelete();

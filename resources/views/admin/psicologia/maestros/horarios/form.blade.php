@@ -87,7 +87,7 @@
                 <p class="mt-2 text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                     <i class="fas fa-layer-group text-{{ $themeColor }}-500 text-[10px]"></i>
                     Grupo: <span
-                        class="font-bold text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $grupoSeleccionado->nombre }}</span>
+                        class="font-bold text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $grupoSeleccionado->nombre_gha }}</span>
                 </p>
             @endisset
         </div>

@@ -30,9 +30,9 @@ class CitaConfirmada extends Mailable implements ShouldQueue
             ->with([
                 'paciente' => optional($this->paciente->persona)->nombres_per ?: 'Paciente',
                 'psicologo' => optional($this->psicologo->persona)->nombres_per ?: 'Tu psicólogo',
-                'fecha' => $this->cita->fecha ? Carbon::parse($this->cita->fecha)->translatedFormat('d \d\e F, Y') : now()->translatedFormat('d \d\e F, Y'),
-                'hora' => $this->cita->hora ?: 'Pendiente',
-                'bloque' => $this->cita->bloque_propuesto ?? ($this->cita->bloques_sugeridos ?? 'No definido'),
+                'fecha' => $this->cita->fecha_cps ? Carbon::parse($this->cita->fecha_cps)->translatedFormat('d \d\e F, Y') : now()->translatedFormat('d \d\e F, Y'),
+                'hora' => $this->cita->hora_cps ?: 'Pendiente',
+                'bloque' => $this->cita->bloque_propuesto_cps ?? ($this->cita->bloques_sugeridos_cps ?? 'No definido'),
             ]);
     }
 }

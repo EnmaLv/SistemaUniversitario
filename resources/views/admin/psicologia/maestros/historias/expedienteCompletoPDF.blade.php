@@ -237,7 +237,7 @@
         <div class="patient-name">{{ $paciente->persona->nombres_per }} {{ $paciente->persona->apellidos_per }}</div>
         <div class="patient-meta">
             <span>Sesiones Totales: {{ $stats['realizadas'] }}</span>
-            <span>N° Expediente: {{ $historia->id }}</span>
+            <span>N° Expediente: {{ $historia->id_hcl }}</span>
         </div>
     </div>
 
@@ -255,7 +255,7 @@
             <td>
                 @php
                     $edad = 'No registrada';
-                    if(!empty($paciente->fecha_nacimiento)) {
+                    if(!empty($paciente->persona->fecha_nacimiento_per)) {
                         $edad = \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->age . ' años';
                     }
                 @endphp
@@ -280,16 +280,16 @@
     </table>
 
     @foreach($seccionesPersonalizadas as $seccion)
-        <div class="section-title">{{ $seccion->titulo }}</div>
-        @if($seccion->descripcion_general)
-            <div style="font-size: 9px; color: #6b7280; margin-bottom: 8px;">{{ $seccion->descripcion_general }}</div>
+        <div class="section-title">{{ $seccion->titulo_hsp }}</div>
+        @if($seccion->descripcion_general_hsp)
+            <div style="font-size: 9px; color: #6b7280; margin-bottom: 8px;">{{ $seccion->descripcion_general_hsp }}</div>
         @endif
         @foreach($seccion->segmentos as $segmento)
-            <div class="segment-title">{{ $segmento->titulo }}</div>
+            <div class="segment-title">{{ $segmento->titulo_hsm }}</div>
             <div class="segment-content">
-                {!! nl2br(e(strip_tags($segmento->contenido ?? 'Sin información registrada.'))) !!}
+                {!! nl2br(e(strip_tags($segmento->contenido_hsm ?? 'Sin información registrada.'))) !!}
                 @php
-                    $contextoSeg = 'seg_' . $segmento->id;
+                    $contextoSeg = 'seg_' . $segmento->id_hsm;
                     $enfermedadesSeg = $enfermedadesVinculadas[$contextoSeg] ?? [];
                 @endphp
                 @if(count($enfermedadesSeg) > 0)
@@ -330,11 +330,11 @@
         @foreach($citasSeleccionadas as $cita)
             @php
                 $sesionNum++;
-                $fechaStr = $cita->fecha ? $cita->fecha->translatedFormat('d M Y') : 'Sin fecha';
-                $motivo = $cita->motivo ?? 'Consulta General';
+                $fechaStr = $cita->fecha_cps ? $cita->fecha_cps->translatedFormat('d M Y') : 'Sin fecha';
+                $motivo = $cita->motivo_cps ?? 'Consulta General';
                 $notasData = null;
-                if ($cita->notas) {
-                    $notasData = json_decode($cita->notas, true);
+                if ($cita->notas_cps) {
+                    $notasData = json_decode($cita->notas_cps, true);
                     if (json_last_error() !== JSON_ERROR_NONE) $notasData = null;
                 }
             @endphp
@@ -346,12 +346,12 @@
                 <div class="timeline-body">
                     @if($notasData && is_array($notasData))
                         @php
-                            $camposDinamicos = \App\Models\salud\CitaNotaEvolucion::obtenerPorCita($cita->id);
+                            $camposDinamicos = \App\Models\salud\CitaNotaEvolucion::obtenerPorCita($cita->id_cps);
                         @endphp
                         
                         @foreach($camposDinamicos as $campo)
-                            @if(!empty(trim($campo->contenido)))
-                                <strong>{{ $campo->titulo }}:</strong> {{ trim($campo->contenido) }}<br>
+                            @if(!empty(trim($campo->contenido_cno)))
+                                <strong>{{ $campo->titulo_cne }}:</strong> {{ trim($campo->contenido_cno) }}<br>
                             @endif
                         @endforeach
 

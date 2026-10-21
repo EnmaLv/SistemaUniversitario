@@ -45,8 +45,8 @@
                     @csrf
                     <input type="hidden" name="fecha_solicitada" id="fecha_solicitada"
                         value="{{ old('fecha_solicitada') }}">
-                    <input type="hidden" name="bloques_sugeridos" id="bloques_sugeridos"
-                        value="{{ old('bloques_sugeridos') }}">
+                    <input type="hidden" name="bloques_sugeridos_cps" id="bloques_sugeridos_cps"
+                        value="{{ old('bloques_sugeridos_cps') }}">
 
                     <div class="space-y-6">
 
@@ -88,12 +88,12 @@
                                         @php
                                             $firstName = explode(' ', trim($psicologo->nombres_per ?? ''))[0] ?? '';
                                             $firstLastName = explode(' ', trim($psicologo->apellidos_per ?? ''))[0] ?? '';
-                                            $fullName = trim("$firstName $firstLastName") ?: $psicologo->username;
+                                            $fullName = trim("$firstName $firstLastName") ?: $psicologo->username_use;
 
                                             $photoPath =$psicologo->profile_photo_path ?? null;
                                             $hasPhoto = !empty($photoPath);
 
-                                            $initialN = mb_substr($firstName ?: $psicologo->username, 0, 1);$initialA = mb_substr($firstLastName, 0, 1);$initials = strtoupper($initialN .$initialA);
+                                            $initialN = mb_substr($firstName ?: $psicologo->username_use, 0, 1);$initialA = mb_substr($firstLastName, 0, 1);$initials = strtoupper($initialN .$initialA);
                                         @endphp
                                         <button type="button"
                                             class="psicologo-card group relative flex items-center gap-3.5 p-3.5 sm:p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 hover:border-{{ $themeColor }}-400 dark:hover:border-{{$themeColor }}-500 hover:bg-{{ $themeColor }}-50/30 dark:hover:bg-{{$themeColor }}-950/20 transition-all duration-200 text-left cursor-pointer"
@@ -363,7 +363,7 @@
             const slotsLoading = document.getElementById('slotsLoading');
             const slotsEmpty = document.getElementById('slotsEmpty');
             const hiddenFecha = document.getElementById('fecha_solicitada');
-            const hiddenBloques = document.getElementById('bloques_sugeridos');
+            const hiddenBloques = document.getElementById('bloques_sugeridos_cps');
             const hiddenPsicologoId = document.getElementById('psicologo_id');
             const submitBtn = document.getElementById('submitBtn');
             const motivoInput = document.getElementById('motivo');
