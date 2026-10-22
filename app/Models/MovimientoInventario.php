@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Inventario\FiltroTipoProducto;
 use App\Traits\PerteneceASede;
 use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
@@ -91,6 +92,8 @@ class MovimientoInventario extends Model
         if ($filtro['fecha_hasta'] !== null && $filtro['fecha_hasta'] !== '') {
             $query->whereDate('fecha_movimiento_moi', '<=', $filtro['fecha_hasta']);
         }
+
+        FiltroTipoProducto::aplicar($query, $filtro['tipo_producto'] ?? null, 'movimiento_inventario.pdt_id');
 
         $movimiento = $query
             ->with(['lote.producto', 'lote.proveedor', 'sede', 'unidad'])

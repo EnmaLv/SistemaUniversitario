@@ -29,9 +29,15 @@
 @section('content')
     @include('components.alert')
 
+    <form action="{{ route('admin.movimientos.sedes_lotes') }}" method="GET"
+        class="mb-4 flex flex-col gap-2 rounded-2xl border p-3 shadow-sm sm:flex-row sm:items-center sm:justify-end"
+        style="background-color: var(--bg-card); border-color: var(--border-color);">
+        <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" />
+    </form>
+
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @forelse ($sedes as $sede)
-            <a href="{{ route('admin.movimientos.sedes_lotes.show', $sede->id_sed) }}"
+            <a href="{{ route('admin.movimientos.sedes_lotes.show', [$sede->id_sed, \App\Support\Inventario\FiltroTipoProducto::PARAMETRO => \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto)]) }}"
                 class="group rounded-2xl border p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
                 style="background-color: var(--bg-card); border-color: var(--border-color);">
                 <div class="flex items-start justify-between gap-3">

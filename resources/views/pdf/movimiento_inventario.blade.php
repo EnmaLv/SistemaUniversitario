@@ -282,7 +282,8 @@
             <div class="info-cell">
                 <strong>RANGO DE BÚSQUEDA:</strong>
                 Desde: {{ $filtro['fecha_desde'] ?? 'Hoy' }}<br>
-                Hasta: {{ $filtro['fecha_hasta'] ?? 'N/A' }}
+                Hasta: {{ $filtro['fecha_hasta'] ?? 'N/A' }}<br>
+                Tipo de producto: {{ $filtro['tipo_producto_nombre'] ?? 'Todos' }}
             </div>
             <div class="info-cell">
                 <strong>GENERADO EL:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}<br>

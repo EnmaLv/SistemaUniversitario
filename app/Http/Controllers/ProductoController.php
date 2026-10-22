@@ -9,6 +9,7 @@ use App\Models\ExchangeRates;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ProductoRequest;
+use App\Support\Inventario\FiltroTipoProducto;
 use Illuminate\Support\Facades\Log;
 
 class ProductoController extends Controller
@@ -18,15 +19,22 @@ class ProductoController extends Controller
     {
         $activo = $request->input('activo', 1);
         $categoria = $request->input('categoria', null);
-
-        $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, 1);
+        $tipoProducto = FiltroTipoProducto::resolver($request);
+        $tiposProducto = FiltroTipoProducto::opciones();
 
         $categorias = Categoria::select('id_cap', 'nombre_cap')
             ->where('status_id', Categoria::STATUS_ACTIVO)
-            ->where('tpr_id', 1)
+            ->when($tipoProducto !== null, fn ($consulta) => $consulta->where('tpr_id', $tipoProducto))
             ->get();
 
-        return view('admin.maestros.productos.index', compact('productos', 'categorias'));
+        if ($categoria !== null && $categoria !== '' && ! $categorias->contains('id_cap', (int) $categoria)) {
+            $categoria = null;
+        }
+
+        $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, $tipoProducto)
+            ->appends(FiltroTipoProducto::PARAMETRO, FiltroTipoProducto::valorUrl($tipoProducto));
+
+        return view('admin.maestros.productos.index', compact('productos', 'categorias', 'tipoProducto', 'tiposProducto'));
     }
 
     public function create(Request $request)
@@ -99,7 +107,9 @@ class ProductoController extends Controller
         $tipo = $request->input('tipo', 'alimento');
         $esMedicamento = ($tipo === 'medicamento') || ($producto->enp_id !== null);
 
-        $tipoProductoId = $esMedicamento ? 2 : 1;
+        $tipoProductoId = $esMedicamento
+            ? 2
+            : (int) (Categoria::whereKey($producto->cap_id)->value('tpr_id') ?? 1);
 
         $datos = Producto::getDatosFormulario($tipoProductoId);
         $datos['esMedicamento'] = $esMedicamento;

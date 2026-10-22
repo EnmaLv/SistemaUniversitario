@@ -42,15 +42,17 @@
                             </div>
                         </div>
 
-                        <form action="{{ route('admin.movimientos.lotes.mermar') }}" method="POST" class="shrink-0">
-                            @csrf
-                            <button type="submit"
-                                onclick="confirmarMerma(event, this)"
-                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 hover:bg-red-800 text-white text-sm font-extrabold px-5 py-2.5 shadow-md active:scale-[0.98] transition-all">
-                                <i class="fas fa-trash-alt text-xs"></i>
-                                Mermar productos vencidos
-                            </button>
-                        </form>
+                        @canRoute('admin.movimientos.lotes.mermar')
+                            <form action="{{ route('admin.movimientos.lotes.mermar') }}" method="POST" class="shrink-0">
+                                @csrf
+                                <button type="submit"
+                                    onclick="confirmarMerma(event, this)"
+                                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 hover:bg-red-800 text-white text-sm font-extrabold px-5 py-2.5 shadow-md active:scale-[0.98] transition-all">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                    Mermar productos vencidos
+                                </button>
+                            </form>
+                        @endcanRoute
                     </div>
                 </div>
             @endif
@@ -73,6 +75,8 @@
                         </div>
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:ml-auto">
+
+                            <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" form="lotesSearchForm" :etiqueta="false" />
 
                             <div class="relative flex-1 sm:w-64">
                                 <i class="fas fa-search absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none text-sm"></i>
@@ -107,6 +111,7 @@
 
                     <div id="filtros-lotes" class="hidden mt-4">
                         <form action="{{ route('admin.movimientos.lotes.index') }}" method="GET">
+                            <input type="hidden" name="tipo" value="{{ \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto) }}">
                             <div class="rounded-xl border p-4"
                                 style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
 

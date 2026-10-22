@@ -17,11 +17,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <a href="{{ url('admin/maestros/productos/create') }}"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-red-800 hover:bg-red-900 hover:text-white' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
-                        <i class="fas fa-plus text-xs"></i>
-                        <span>Crear Producto</span>
-                    </a>
+                    @canRoute('admin.maestros.productos.create')
+                        <a href="{{ url('admin/maestros/productos/create') }}"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-red-800 hover:bg-red-900 hover:text-white' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span>Crear Producto</span>
+                        </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -29,7 +31,7 @@
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="p-2.5 rounded-2xl border shadow-sm mb-3 flex flex-col lg:flex-row lg:items-center gap-4">
 
-                <form action="{{ route('admin.maestros.productos.index') }}" method="GET"
+                <form id="productosBuscarForm" action="{{ route('admin.maestros.productos.index') }}" method="GET"
                     class="relative w-full">
                     <input type="hidden" name="activo" value="{{ request('activo', 1) }}">
                     <input type="hidden" name="categoria" value="{{ request('categoria') }}">
@@ -44,6 +46,8 @@
                 </form>
 
                 <div class="flex items-center gap-3 shrink-0">
+                    <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" form="productosBuscarForm" :etiqueta="false" />
+
                     {{-- Toggle estado --}}
                     <div class="flex items-center gap-2 px-3 py-2 rounded-xl border "
                         style="border-color: var(--border-color);">
@@ -74,6 +78,7 @@
                     class="flex flex-col sm:flex-row sm:items-end gap-4">
                     <input type="hidden" name="activo" value="{{ request('activo', 1) }}">
                     <input type="hidden" name="buscar" value="{{ request('buscar') }}">
+                    <input type="hidden" name="tipo" value="{{ \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto) }}">
 
                     <div class="flex-1">
                         <label

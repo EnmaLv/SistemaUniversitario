@@ -14,17 +14,20 @@
                     </p>
                 </div>
 
-                <button type="button" id="pdfBtn"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                    <i class="fas fa-file-pdf text-xs"></i>
-                    <span>Exportar PDF</span>
-                </button>
+                @canRoute('admin.movimientos.historial_movimientos.export_pdf')
+                    <button type="button" id="pdfBtn"
+                        data-url="{{ route('admin.movimientos.historial_movimientos.export_pdf', array_merge(request()->query(), [\App\Support\Inventario\FiltroTipoProducto::PARAMETRO => \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto)])) }}"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                        <i class="fas fa-file-pdf text-xs"></i>
+                        <span>Exportar PDF</span>
+                    </button>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm mb-3 p-3">
                 <form action="{{ route('admin.movimientos.historial_movimientos.index') }}" method="GET"
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 items-end gap-3">
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 items-end gap-3">
                     <div class="lg:col-span-2">
                         <label for="buscar"
                             class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -79,7 +82,15 @@
                         </select>
                     </div>
 
-                    <div class="sm:col-span-2 lg:col-span-5 flex justify-end gap-2">
+                    <div>
+                        <label for="filtro-tipo-producto"
+                            class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Tipo de producto
+                        </label>
+                        <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" :etiqueta="false" :enviarAlCambiar="false" />
+                    </div>
+
+                    <div class="sm:col-span-2 lg:col-span-6 flex justify-end gap-2">
                         <a href="{{ route('admin.movimientos.historial_movimientos.index') }}"
                             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             style="border-color: var(--border-color);">
@@ -182,9 +193,7 @@
     @push('js')
         <script>
             document.getElementById('pdfBtn')?.addEventListener('click', function() {
-                const params = new URLSearchParams(window.location.search);
-                const url = `{{ route('admin.movimientos.historial_movimientos.export_pdf') }}?${params.toString()}`;
-                window.open(url, '_blank');
+                window.open(this.dataset.url, '_blank');
             });
         </script>
     @endpush

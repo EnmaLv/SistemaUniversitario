@@ -9,6 +9,7 @@ use App\Models\Proveedor;
 use App\Models\DetalleCompra;
 use App\Models\MovimientoInventario;
 use App\Models\Sede;
+use App\Support\Inventario\FiltroTipoProducto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -98,6 +99,9 @@ class LoteController extends Controller
             $query->where('codigo_lote_lot', 'like', "%{$buscar}%");
         }
 
+        $tipoProducto = FiltroTipoProducto::resolver($request);
+        FiltroTipoProducto::aplicar($query, $tipoProducto, 'lote.pdt_id');
+
         if ($fecha_desde && $fecha_hasta) {
             $query->whereBetween('fecha_vencimiento_lot', [$fecha_desde, $fecha_hasta]);
         } elseif ($fecha_desde) {
@@ -106,7 +110,10 @@ class LoteController extends Controller
             $query->where('fecha_vencimiento_lot', '<=', $fecha_hasta);
         }
 
-        $lotes = $query->orderBy('id_lot', 'desc')->paginate(10)->withQueryString();
+        $lotes = $query->orderBy('id_lot', 'desc')
+            ->paginate(10)
+            ->withQueryString()
+            ->appends(FiltroTipoProducto::PARAMETRO, FiltroTipoProducto::valorUrl($tipoProducto));
 
         $lotes->each(function ($lote) {
             $fecha = Carbon::parse($lote->fecha_vencimiento_lot);
@@ -120,6 +127,8 @@ class LoteController extends Controller
 
         $sedeNombre = Sede::where('id_sed', $sedeId)->value('nombre_sed');
 
-        return view('admin.movimientos.lotes.index', compact('lotes', 'hayLotesVencidosSinMerma', 'sedeNombre'));
+        $tiposProducto = FiltroTipoProducto::opciones();
+
+        return view('admin.movimientos.lotes.index', compact('lotes', 'hayLotesVencidosSinMerma', 'sedeNombre', 'tipoProducto', 'tiposProducto'));
     }
 }

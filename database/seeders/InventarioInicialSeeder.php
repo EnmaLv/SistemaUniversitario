@@ -17,6 +17,8 @@ class InventarioInicialSeeder extends Seeder
 
     public function run(): void
     {
+        (new CategoriaSeeder())->sembrarComplementarias();
+
         $proveedor = DB::table('proveedor')->orderBy('id_prv')->value('id_prv');
 
         if (! $proveedor) {

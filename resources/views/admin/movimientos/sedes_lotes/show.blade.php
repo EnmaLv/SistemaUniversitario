@@ -12,7 +12,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <div class="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-400">
-                        <a href="{{ route('admin.movimientos.sedes_lotes') }}"
+                        <a href="{{ route('admin.movimientos.sedes_lotes', [\App\Support\Inventario\FiltroTipoProducto::PARAMETRO => \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto)]) }}"
                             class="transition hover:text-red-600">Existencia por sedes</a>
                         <i class="fas fa-chevron-right text-[9px]"></i>
                         <span>{{ $sedeNombre }}</span>
@@ -26,7 +26,7 @@
                     </p>
                 </div>
 
-                <a href="{{ route('admin.movimientos.sedes_lotes') }}"
+                <a href="{{ route('admin.movimientos.sedes_lotes', [\App\Support\Inventario\FiltroTipoProducto::PARAMETRO => \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto)]) }}"
                     class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-extrabold transition-all hover:border-red-500 hover:text-red-600"
                     style="border-color: var(--border-color); color: var(--text-main);">
                     <i class="fas fa-arrow-left text-xs"></i>
@@ -91,9 +91,16 @@
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:ml-auto">
 
+                            <form action="{{ route('admin.movimientos.sedes_lotes.show', $sedeId) }}" method="GET">
+                                <input type="hidden" name="estado" value="{{ $activo }}">
+                                <input type="hidden" name="buscar" value="{{ $buscar ?? '' }}">
+                                <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" :etiqueta="false" />
+                            </form>
+
                             <form action="{{ route('admin.movimientos.sedes_lotes.show', $sedeId) }}"
                                 method="GET" class="relative flex-1 sm:w-64">
                                 <input type="hidden" name="estado" value="{{ $activo }}">
+                                <input type="hidden" name="tipo" value="{{ \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto) }}">
                                 <i class="fas fa-search absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none text-sm"></i>
                                 <input type="text" name="buscar" value="{{ $buscar ?? '' }}"
                                     placeholder="Buscar lote o producto…"
