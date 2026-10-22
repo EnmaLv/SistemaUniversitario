@@ -62,6 +62,10 @@
                 @endif
             @break
 
+            @case('deportes')
+                @include('components.deportes-home')
+            @break
+
             @default
                 @if (!empty($resumenGeneral))
                     @include('components.resumen-general')

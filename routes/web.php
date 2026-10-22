@@ -368,6 +368,9 @@ Route::middleware(['auth'])->group(function () {
         // PSICOLOGIA
         require __DIR__ . '/psicologia.php';
 
+        // DEPORTES
+        require __DIR__ . '/deportes.php';
+
         // BECA
         require __DIR__ . '/beca.php';
 
