@@ -76,3 +76,4 @@
 - Trabaja siempre en una rama propia, nunca directamente en `principal`/`main`.
 - Haz commits pequeños por fase, con mensajes en español en imperativo.
 - No hagas push salvo que se te pida.
+- Cada vez que termines un cambio que agregue o modifique una funcionalidad visible, actualiza el README.md en el mismo commit.
