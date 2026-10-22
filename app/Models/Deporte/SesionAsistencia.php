@@ -50,4 +50,14 @@ class SesionAsistencia extends Model
     {
         return $this->hasMany(AsistenciaDeportiva::class, 'sad_id', 'id_sad');
     }
+
+    public function presentes()
+    {
+        return $this->asistencias()->where('estado_asd', AsistenciaDeportiva::ESTADO_PRESENTE);
+    }
+
+    public function estaCerrada(): bool
+    {
+        return (bool) $this->cerrada_sad;
+    }
 }

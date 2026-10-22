@@ -391,6 +391,30 @@ class DeportesPrestamosTest extends SeguridadTestCase
         $this->get(route('admin.deportes.entregas.index'))->assertOk();
     }
 
+    public function test_el_inicio_de_deportes_muestra_prestamos_sanciones_y_stock_minimo(): void
+    {
+        $producto = $this->producto(TipoProducto::IMPLEMENTO_DEPORTIVO, 'Balón del inicio');
+        DB::table('producto')->where('id_pdt', $producto)->update(['stock_minimo_pdt' => 5]);
+        $lote = $this->loteConExistencia($producto, 3, $this->sedeA());
+        $activo = $this->persona();
+        $sancionada = $this->persona();
+        $this->prestar($activo, $lote);
+        $prestamo = $this->prestar($sancionada, $lote);
+
+        $this->put(route('admin.deportes.prestamos.update_devolucion', $prestamo->id_prd), ['estado_devolucion' => 'perdido'])
+            ->assertSessionMissing('error');
+
+        $this->withSession(['modulo_activo' => 'deporte', 'permisos_usuario_id' => $this->admin->id_use]);
+
+        $this->get('/home')
+            ->assertOk()
+            ->assertSee('Inicio de Deportes')
+            ->assertSee('Balón del inicio')
+            ->assertSee('Reponer')
+            ->assertSee('Préstamos por devolver')
+            ->assertSee('Sanciones activas');
+    }
+
     public function test_pantallas_de_prestamos_sanciones_y_entregas_responden(): void
     {
         $producto = $this->producto(TipoProducto::IMPLEMENTO_DEPORTIVO, 'Balón pantalla');

@@ -47,6 +47,7 @@ return [
 
     'rutas_accion' => [
         'admin.movimientos.compras.enviarCorreo'          => 'editar',
+        'admin.deportes.asistencia.reabrir'               => 'editar',
         'admin.salud.movimientos.consultas.recetacion'    => 'crear',
         'admin.salud.movimientos.consultas.dispensacion'  => 'crear',
         'admin.psicologia.maestros.publicaciones.reaccionar' => 'ver',

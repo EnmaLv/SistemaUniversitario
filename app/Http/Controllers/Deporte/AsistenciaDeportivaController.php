@@ -3,84 +3,49 @@
 namespace App\Http\Controllers\Deporte;
 
 use App\Http\Controllers\Controller;
-use App\Models\Deporte\AsistenciaDeportiva;
+use App\Models\Deporte\DeporteCalendario;
 use App\Models\Deporte\DeporteHorario;
-use App\Models\Deporte\InscripcionDeportiva;
 use App\Models\Deporte\SesionAsistencia;
 use App\Support\Deportes\ServicioAsistencia;
+use App\Support\Deportes\ServicioEventos;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class AsistenciaDeportivaController extends Controller
 {
-    private function horariosSeleccionables()
-    {
-        return DeporteHorario::query()
-            ->with(['actividad', 'espacio'])
-            ->whereIn('estado_hde', [DeporteHorario::ESTADO_ACTIVO, DeporteHorario::ESTADO_COMPLETADO])
-            ->orderBy('hora_inicio_hde')
-            ->get()
-            ->sortBy(fn ($h) => ($h->actividad?->nombre_acd ?? '') . ' ' . array_search($h->diaClave(), DeporteHorario::DIAS))
-            ->values();
-    }
-
-    private function fechaValida($valor): Carbon
-    {
-        try {
-            return $valor ? Carbon::parse($valor)->startOfDay() : Carbon::today();
-        } catch (\Throwable $e) {
-            return Carbon::today();
-        }
-    }
+    public const DIAS_RECIENTES = 14;
 
     public function index(Request $request)
     {
-        $horarios = $this->horariosSeleccionables();
-        $fecha = $this->fechaValida($request->query('fecha'));
-        $horario = null;
-        $sesion = null;
-        $inscritos = collect();
-        $marcas = collect();
-        $fechasSugeridas = [];
-        $sesionesRecientes = collect();
+        $buscar = trim((string) $request->query('q', ''));
+        $hoy = Carbon::today();
+        $fecha = null;
 
-        if ($request->filled('hde_id')) {
-            $horario = DeporteHorario::query()->with(['actividad', 'espacio', 'calendario'])->find($request->integer('hde_id'));
+        if ($request->filled('fecha')) {
+            try {
+                $fecha = Carbon::parse($request->query('fecha'))->startOfDay();
+            } catch (\Throwable $e) {
+                $fecha = null;
+            }
         }
 
-        if ($horario) {
-            $sesion = ServicioAsistencia::sesionDe($horario, $fecha);
-
-            if ($sesion) {
-                $inscritos = ServicioAsistencia::inscritosDeSesion($sesion);
-                $marcas = AsistenciaDeportiva::query()->where('sad_id', $sesion->id_sad)->pluck('estado_asd', 'ide_id');
-            } else {
-                $inscritos = $horario->inscripciones()
-                    ->with('persona')
-                    ->where('estado_ide', '!=', InscripcionDeportiva::ESTADO_RETIRADO)
-                    ->whereDate('fecha_registro_ide', '<=', $fecha->toDateString())
-                    ->get();
-            }
-
-            for ($dia = Carbon::today(), $i = 0; $i < 120 && count($fechasSugeridas) < 6; $i++, $dia->subDay()) {
-                if ($horario->aplicaEnFecha($dia)) {
-                    $fechasSugeridas[] = $dia->copy();
-                }
-            }
-
-            $sesionesRecientes = SesionAsistencia::query()
-                ->where('hde_id', $horario->id_hde)
-                ->withCount([
-                    'asistencias as presentes_count' => fn ($q) => $q->where('estado_asd', AsistenciaDeportiva::ESTADO_PRESENTE),
-                    'asistencias as inasistentes_count' => fn ($q) => $q->where('estado_asd', AsistenciaDeportiva::ESTADO_INASISTENTE),
-                ])
-                ->orderByDesc('fecha_sad')
-                ->limit(8)
-                ->get();
+        if ($fecha && $fecha->gt($hoy)) {
+            $fecha = $hoy->copy();
         }
 
-        return view('admin.deportes.asistencia.index', compact('horarios', 'horario', 'fecha', 'sesion', 'inscritos', 'marcas', 'fechasSugeridas', 'sesionesRecientes'));
+        $eventos = $fecha
+            ? ServicioEventos::listar($fecha, $fecha, $buscar)
+            : ServicioEventos::listar($hoy->copy()->subDays(self::DIAS_RECIENTES), $hoy, $buscar);
+
+        return view('admin.deportes.asistencia.index', [
+            'eventos' => $eventos,
+            'buscar'  => $buscar,
+            'fecha'   => $fecha,
+            'hoy'     => $hoy,
+            'dias'    => self::DIAS_RECIENTES,
+        ]);
     }
 
     public function store(Request $request)
@@ -89,74 +54,134 @@ class AsistenciaDeportivaController extends Controller
             'hde_id' => ['required', 'integer'],
             'fecha'  => ['required', 'date'],
         ], [
-            'hde_id.required' => 'Selecciona un horario.',
-            'fecha.required'  => 'Indica la fecha de la sesión.',
+            'hde_id.required' => 'Elige el evento de la lista.',
+            'fecha.required'  => 'Falta la fecha del evento.',
         ]);
 
-        $horario = DeporteHorario::query()->with('calendario')->findOrFail($validado['hde_id']);
-        $sesion = ServicioAsistencia::abrir($horario, $validado['fecha']);
+        $bloque = DeporteHorario::query()->with('calendario')->findOrFail($validado['hde_id']);
+        $sesion = ServicioAsistencia::abrir($bloque, $validado['fecha']);
 
-        return redirect()->route('admin.deportes.asistencia.index', ['hde_id' => $horario->id_hde, 'fecha' => $sesion->fecha_sad->format('Y-m-d')])
-            ->with('success', 'Sesión de asistencia abierta.');
+        return redirect()->route('admin.deportes.asistencia.show', $sesion->id_sad);
     }
 
-    public function update(Request $request, SesionAsistencia $sesion)
+    public function show(SesionAsistencia $sesion)
     {
-        $presentes = array_filter((array) $request->input('presentes', []), 'is_numeric');
+        $bloque = ServicioAsistencia::bloque($sesion);
 
-        ServicioAsistencia::marcar($sesion, $presentes);
-
-        return redirect()->route('admin.deportes.asistencia.index', ['hde_id' => $sesion->hde_id, 'fecha' => $sesion->fecha_sad->format('Y-m-d')])
-            ->with('success', 'Asistencia guardada. La sesión sigue abierta.');
+        return view('admin.deportes.asistencia.show', [
+            'sesion' => $sesion->load('cerradaPor.persona'),
+            'bloque' => $bloque,
+            'estado' => ServicioAsistencia::estado($sesion, $bloque),
+        ]);
     }
 
-    public function cerrar(Request $request, SesionAsistencia $sesion)
+    public function storePresentes(Request $request, SesionAsistencia $sesion)
     {
-        $presentes = $request->has('marcas_enviadas')
-            ? array_filter((array) $request->input('presentes', []), 'is_numeric')
-            : null;
+        $request->validate(['cedulas' => ['required', 'string', 'max:20000']], [
+            'cedulas.required' => 'Escribe al menos una cédula.',
+        ]);
 
-        $sesion = ServicioAsistencia::cerrar($sesion, $presentes);
+        try {
+            $resultados = ServicioAsistencia::marcarCedulas($sesion, $request->input('cedulas'));
+        } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['mensaje' => collect($e->errors())->flatten()->first()], 422);
+            }
 
-        return redirect()->route('admin.deportes.asistencia.index', ['hde_id' => $sesion->hde_id, 'fecha' => $sesion->fecha_sad->format('Y-m-d')])
-            ->with('success', 'Sesión cerrada. Los inscritos no marcados quedaron como inasistentes.');
-    }
-
-    private function datosReporte(Request $request): array
-    {
-        $horario = $request->filled('hde_id')
-            ? DeporteHorario::query()->with(['actividad', 'espacio', 'calendario.sede'])->find($request->integer('hde_id'))
-            : null;
-
-        $hasta = $this->fechaValida($request->query('hasta'));
-        $desde = $request->filled('desde')
-            ? $this->fechaValida($request->query('desde'))
-            : ($horario?->calendario?->fecha_inicio_cld?->copy() ?? $hasta->copy()->subMonth());
-
-        if ($desde->gt($hasta)) {
-            [$desde, $hasta] = [$hasta, $desde];
+            throw $e;
         }
 
-        $reporte = $horario ? ServicioAsistencia::reporte($horario, $desde, $hasta) : null;
+        if ($request->expectsJson()) {
+            return response()->json([
+                'resultados' => $resultados,
+                'estado'     => ServicioAsistencia::estado($sesion->fresh()),
+            ]);
+        }
 
-        return compact('horario', 'desde', 'hasta', 'reporte');
+        return redirect()->route('admin.deportes.asistencia.show', $sesion->id_sad)->with('resultados_asistencia', $resultados);
     }
 
-    public function reporte(Request $request)
+    public function storeQuitar(Request $request, SesionAsistencia $sesion)
     {
-        return view('admin.deportes.asistencia.reporte', $this->datosReporte($request) + [
-            'horarios' => $this->horariosSeleccionables(),
+        $validado = $request->validate(['asistencia_id' => ['required', 'integer']]);
+
+        try {
+            ServicioAsistencia::quitar($sesion, (int) $validado['asistencia_id']);
+        } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['mensaje' => collect($e->errors())->flatten()->first()], 422);
+            }
+
+            throw $e;
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['estado' => ServicioAsistencia::estado($sesion->fresh())]);
+        }
+
+        return redirect()->route('admin.deportes.asistencia.show', $sesion->id_sad)->with('success', 'Se quitó a la persona de la lista de presentes.');
+    }
+
+    public function storeCierre(SesionAsistencia $sesion)
+    {
+        $sesion = ServicioAsistencia::cerrar($sesion);
+
+        return redirect()->route('admin.deportes.asistencia.reporte', $sesion->id_sad)
+            ->with('success', 'Asistencia cerrada. Los inscritos que no se marcaron quedaron como inasistentes.');
+    }
+
+    public function reabrir(Request $request, SesionAsistencia $sesion)
+    {
+        $validado = $request->validate(['motivo' => ['nullable', 'string', 'max:500']]);
+
+        ServicioAsistencia::reabrir($sesion, $validado['motivo'] ?? null);
+
+        return redirect()->route('admin.deportes.asistencia.show', $sesion->id_sad)
+            ->with('success', 'Asistencia reabierta. Corrige la lista y vuelve a cerrarla.');
+    }
+
+    public function reporte(SesionAsistencia $sesion)
+    {
+        $bloque = ServicioAsistencia::bloque($sesion);
+
+        return view('admin.deportes.asistencia.reporte', [
+            'sesion'  => $sesion->load('cerradaPor.persona'),
+            'bloque'  => $bloque,
+            'reporte' => ServicioAsistencia::reporteEvento($sesion, $bloque),
         ]);
     }
 
-    public function reportePdf(Request $request)
+    public function reportePdf(SesionAsistencia $sesion)
     {
-        $datos = $this->datosReporte($request);
+        $bloque = ServicioAsistencia::bloque($sesion);
 
-        abort_unless($datos['horario'], 404);
+        return Pdf::loadView('admin.deportes.asistencia.reporte_pdf', [
+            'sesion'  => $sesion->load('cerradaPor.persona'),
+            'bloque'  => $bloque,
+            'reporte' => ServicioAsistencia::reporteEvento($sesion, $bloque),
+        ])->setPaper('letter', 'portrait')->stream('asistencia_' . $sesion->id_sad . '.pdf');
+    }
 
-        return Pdf::loadView('admin.deportes.asistencia.reporte_pdf', $datos)
-            ->setPaper('letter', 'portrait')
-            ->stream('asistencia_deportiva_' . $datos['horario']->id_hde . '.pdf');
+    public function historial(DeporteCalendario $calendario)
+    {
+        if (! $calendario->esRecurrente()) {
+            return redirect()->route('admin.deportes.calendarios.show', $calendario->id_cld)
+                ->with('error', 'El historial por persona solo existe para actividades que se repiten cada semana. En los eventos de una sola vez revisa el reporte de cada evento.');
+        }
+
+        return view('admin.deportes.asistencia.historial', [
+            'actividad' => $calendario->load(['programa', 'horarios.actividad', 'horarios.espacio']),
+            'historial' => ServicioAsistencia::historial($calendario),
+        ]);
+    }
+
+    public function historialPdf(DeporteCalendario $calendario)
+    {
+        abort_unless($calendario->esRecurrente(), 404);
+
+        return Pdf::loadView('admin.deportes.asistencia.historial_pdf', [
+            'actividad' => $calendario->load(['programa', 'sede', 'horarios.actividad', 'horarios.espacio']),
+            'historial' => ServicioAsistencia::historial($calendario),
+        ])->setPaper('letter', 'portrait')->stream('historial_asistencia_' . $calendario->id_cld . '.pdf');
     }
 }

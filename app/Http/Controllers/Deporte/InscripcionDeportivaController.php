@@ -3,60 +3,54 @@
 namespace App\Http\Controllers\Deporte;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deporte\DeporteCalendario;
 use App\Models\Deporte\DeporteHorario;
 use App\Models\Deporte\InscripcionDeportiva;
-use App\Models\Deporte\TorneoDeportivo;
 use App\Support\Cuentas\Cedula;
 use App\Support\Deportes\ServicioInscripcion;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class InscripcionDeportivaController extends Controller
 {
     public function index(Request $request)
     {
-        $horarios = DeporteHorario::query()
-            ->with(['actividad', 'espacio'])
-            ->vigentes()
-            ->withCount(['inscripcionesVigentes as inscritos_count'])
-            ->orderBy('hora_inicio_hde')
+        $actividades = DeporteCalendario::query()
+            ->actividades()
+            ->with([
+                'programa',
+                'horarios' => fn ($q) => $q->vigentes()
+                    ->with(['actividad', 'espacio'])
+                    ->withCount(['inscripcionesVigentes as inscritos_count'])
+                    ->orderBy('hora_inicio_hde'),
+            ])
+            ->where('status_id', 1)
+            ->where('con_inscripcion_cld', true)
+            ->where('fecha_fin_cld', '>=', Carbon::today()->subDays(30)->toDateString())
+            ->orderBy('fecha_inicio_cld')
             ->get()
-            ->sortBy(fn ($h) => ($h->actividad?->nombre_acd ?? '') . ' ' . array_search($h->diaClave(), DeporteHorario::DIAS))
+            ->filter(fn ($actividad) => $actividad->horarios->isNotEmpty())
             ->values();
 
-        $torneos = TorneoDeportivo::query()
-            ->with('horario')
-            ->where('estado_tde', TorneoDeportivo::ESTADO_ABIERTO)
-            ->orderBy('nombre_tde')
-            ->get();
-
-        $horario = null;
-        $torneo = null;
+        $bloque = null;
         $inscripciones = collect();
 
-        if ($request->filled('tde_id')) {
-            $torneo = TorneoDeportivo::query()->find($request->integer('tde_id'));
-            $horarioId = $torneo?->hde_id;
-        } else {
-            $horarioId = $request->integer('hde_id') ?: null;
+        if ($request->filled('hde_id')) {
+            $bloque = DeporteHorario::query()
+                ->with(['calendario.programa', 'actividad', 'espacio', 'torneos'])
+                ->find($request->integer('hde_id'));
         }
 
-        if ($horarioId) {
-            $horario = DeporteHorario::query()
-                ->with(['actividad', 'espacio', 'calendario', 'torneos'])
-                ->find($horarioId);
-        }
-
-        if ($horario) {
-            $torneo ??= $horario->torneos->sortByDesc('id_tde')->first();
-            $inscripciones = $horario->inscripciones()
-                ->with(['persona.perfil', 'registradoPor'])
+        if ($bloque && ! $bloque->esDeTorneo()) {
+            $inscripciones = $bloque->inscripciones()
+                ->with(['persona.perfil', 'registradoPor.persona'])
                 ->orderByRaw("CASE WHEN estado_ide = 'retirado' THEN 1 ELSE 0 END")
                 ->orderBy('fecha_registro_ide')
                 ->orderBy('id_ide')
                 ->get();
         }
 
-        return view('admin.deportes.inscripciones.index', compact('horarios', 'torneos', 'horario', 'torneo', 'inscripciones'));
+        return view('admin.deportes.inscripciones.index', compact('actividades', 'bloque', 'inscripciones'));
     }
 
     public function buscarPersona(Request $request)
@@ -64,13 +58,13 @@ class InscripcionDeportivaController extends Controller
         $cedula = (string) $request->query('cedula', '');
 
         if (Cedula::normalizar($cedula) === null) {
-            return response()->json(['encontrada' => false, 'mensaje' => 'La cédula no tiene un formato válido.'], 422);
+            return response()->json(['encontrada' => false, 'mensaje' => 'La cédula no es válida. Escríbela solo con números.'], 422);
         }
 
         $persona = ServicioInscripcion::buscarPersona($cedula);
 
         if (! $persona) {
-            return response()->json(['encontrada' => false, 'mensaje' => 'No existe ninguna persona con esa cédula.'], 404);
+            return response()->json(['encontrada' => false, 'mensaje' => 'No hay ninguna persona registrada con esa cédula.'], 404);
         }
 
         $persona->loadMissing(['perfil', 'sede']);
@@ -91,28 +85,19 @@ class InscripcionDeportivaController extends Controller
     {
         $validado = $request->validate([
             'cedula'            => ['required', 'string', 'max:20'],
-            'hde_id'            => ['nullable', 'integer', 'required_without:tde_id'],
-            'tde_id'            => ['nullable', 'integer'],
+            'hde_id'            => ['required', 'integer'],
             'observaciones_ide' => ['nullable', 'string', 'max:1000'],
         ], [
-            'cedula.required'         => 'Indica la cédula de la persona a inscribir.',
-            'hde_id.required_without' => 'Selecciona un horario o un torneo.',
+            'cedula.required' => 'Escribe la cédula de la persona que quieres inscribir.',
+            'hde_id.required' => 'Primero elige la actividad y el bloque donde se inscribe.',
         ]);
 
-        if (! empty($validado['tde_id'])) {
-            $torneo = TorneoDeportivo::query()->findOrFail($validado['tde_id']);
-            $inscripcion = ServicioInscripcion::inscribirEnTorneo($torneo, $validado['cedula'], $validado['observaciones_ide'] ?? null);
-            $destino = ['tde_id' => $torneo->id_tde];
-        } else {
-            $horario = DeporteHorario::query()->findOrFail($validado['hde_id']);
-            $inscripcion = ServicioInscripcion::inscribir($horario, $validado['cedula'], $validado['observaciones_ide'] ?? null);
-            $destino = ['hde_id' => $horario->id_hde];
-        }
-
+        $bloque = DeporteHorario::query()->findOrFail($validado['hde_id']);
+        $inscripcion = ServicioInscripcion::inscribir($bloque, $validado['cedula'], $validado['observaciones_ide'] ?? null);
         $inscripcion->load('persona');
 
-        return redirect()->route('admin.deportes.inscripciones.index', $destino)
-            ->with('success', ServicioInscripcion::nombre($inscripcion->persona) . ' quedó inscrito(a) correctamente.');
+        return redirect()->route('admin.deportes.inscripciones.index', ['hde_id' => $bloque->id_hde])
+            ->with('success', ServicioInscripcion::nombre($inscripcion->persona) . ' quedó inscrito(a).');
     }
 
     public function destroy(InscripcionDeportiva $inscripcion)
@@ -124,6 +109,6 @@ class InscripcionDeportivaController extends Controller
         ServicioInscripcion::retirar($inscripcion);
 
         return redirect()->route('admin.deportes.inscripciones.index', ['hde_id' => $inscripcion->hde_id])
-            ->with('success', 'Inscripción retirada. El cupo quedó liberado.');
+            ->with('success', 'Inscripción retirada. El cupo quedó libre.');
     }
 }

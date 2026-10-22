@@ -97,6 +97,7 @@ class HomeController extends Controller
             'jornadasRenovables' => $jornadasRenovables,
             'psicologiaAdminData' => $psicologiaAdminData,
             'administracionData' => $administracionData,
+            'deportesData'       => session('modulo_activo') === 'deporte' ? app(\App\Services\Deporte\DeporteHomeService::class)->datos() : null,
         ], $psicologiaData));
     }
 

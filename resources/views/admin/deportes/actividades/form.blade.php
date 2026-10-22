@@ -1,6 +1,5 @@
 @php
     $editando = $actividad !== null;
-    $tipoActual = old('tipo_acd', $actividad?->tipo_acd ?? 'programada');
 @endphp
 <x-app-layout>
 
@@ -9,11 +8,12 @@
     <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <a href="{{ route('admin.deportes.actividades.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold" style="color:var(--text-muted);">
-                <i class="fas fa-arrow-left text-xs"></i> Volver a actividades
+                <i class="fas fa-arrow-left text-xs"></i> Volver a disciplinas
             </a>
-            <h1 class="mt-2 mb-6 text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">
-                {{ $editando ? 'Editar actividad deportiva' : 'Registrar actividad deportiva' }}
+            <h1 class="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">
+                {{ $editando ? 'Editar disciplina' : 'Registrar disciplina' }}
             </h1>
+            <p class="mt-1 mb-6 text-sm" style="color:var(--text-muted);">Escribe el nombre del deporte tal como lo verá la gente en los carteles y listados.</p>
 
             @include('admin.deportes.partials.errores')
 
@@ -28,15 +28,6 @@
                     <label for="nombre_acd" class="mb-1 block text-sm font-bold" style="color:var(--text-main);">Nombre <span class="text-red-600">*</span></label>
                     <input id="nombre_acd" type="text" name="nombre_acd" maxlength="150" required value="{{ old('nombre_acd', $actividad?->nombre_acd) }}"
                         class="w-full rounded-xl border px-3 py-2.5 text-sm" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);" placeholder="Ej. Voleibol, Fútbol sala">
-                </div>
-
-                <div>
-                    <label for="tipo_acd" class="mb-1 block text-sm font-bold" style="color:var(--text-main);">Tipo <span class="text-red-600">*</span></label>
-                    <select id="tipo_acd" name="tipo_acd" required class="w-full rounded-xl border px-3 py-2.5 text-sm" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);">
-                        @foreach (\App\Models\Deporte\DeporteActividad::TIPOS as $valor => $etiqueta)
-                            <option value="{{ $valor }}" @selected($tipoActual === $valor)>{{ $etiqueta }}</option>
-                        @endforeach
-                    </select>
                 </div>
 
                 <div>

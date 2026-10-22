@@ -9,7 +9,7 @@
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Torneos deportivos</h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         <i class="fas fa-trophy mr-1" style="color:var(--color-primary)"></i>
-                        Campeonatos y competencias · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        Campeonatos por equipos. Las personas participan como integrantes de un equipo (se agregan por cédula dentro de cada torneo).
                     </p>
                 </div>
                 @canRoute('admin.deportes.torneos.create')
@@ -53,19 +53,15 @@
                             <tr class="border-b text-[13px] font-black uppercase tracking-wider" style="background-color:var(--bg-card);border-color:var(--border-color);color:var(--text-main);">
                                 <th class="px-6 py-4 text-center">#</th>
                                 <th class="px-6 py-4">Torneo</th>
-                                <th class="px-6 py-4">Horario</th>
-                                <th class="px-6 py-4 text-center">Inscritos</th>
+                                <th class="px-6 py-4">Disciplina, lugar y fechas</th>
                                 <th class="px-6 py-4 text-center">Equipos</th>
+                                <th class="px-6 py-4 text-center">Participantes</th>
                                 <th class="px-6 py-4 text-center">Estado</th>
                                 <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="fade-in">
                             @forelse ($torneos as $torneo)
-                                @php
-                                    $cupo = $torneo->horario?->cupo_maximo_hde;
-                                    $totalInscritos = (int) ($inscritos[$torneo->hde_id] ?? 0);
-                                @endphp
                                 <x-table-row :id="$torneo->id_tde" class="border-b" style="border-color:var(--border-color);">
                                     <td class="px-6 py-4 text-center font-bold" style="color:var(--text-muted);">
                                         {{ ($torneos->currentPage() - 1) * $torneos->perPage() + $loop->iteration }}
@@ -82,10 +78,8 @@
                                             <span style="color:var(--text-muted);">Fuera de la sede activa</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-center text-sm font-bold" style="color:var(--text-main);">
-                                        {{ $totalInscritos }}{{ $cupo !== null ? ' / ' . $cupo : '' }}
-                                    </td>
                                     <td class="px-6 py-4 text-center text-sm font-bold" style="color:var(--text-main);">{{ $torneo->equipos_count }}</td>
+                                    <td class="px-6 py-4 text-center text-sm font-bold" style="color:var(--text-main);">{{ (int) ($participantes[$torneo->id_tde] ?? 0) }}</td>
                                     <td class="px-6 py-4 text-center">@include('admin.deportes.partials.estado_torneo', ['torneo' => $torneo])</td>
                                     <x-table-actions :id="$torneo->id_tde" baseUrl="admin/deportes/torneos" :toggle="false"
                                         :pdfUrl="route('admin.deportes.torneos.cartel_pdf', $torneo->id_tde)" pdfTitle="Cartel PDF" />
@@ -95,6 +89,7 @@
                                     <td colspan="7" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
                                         <i class="fas fa-trophy fa-3x mb-3" style="opacity: 0.1"></i>
                                         <p>No hay torneos registrados.</p>
+                                        <p class="mt-1 normal-case font-medium">Usa "Crear torneo" y luego agrega los equipos con sus integrantes.</p>
                                     </td>
                                 </tr>
                             @endforelse

@@ -4,7 +4,6 @@ namespace App\Support\Deportes;
 
 use App\Models\Deporte\DeporteHorario;
 use App\Models\Deporte\InscripcionDeportiva;
-use App\Models\Deporte\TorneoDeportivo;
 use App\Models\Persona;
 use App\Support\Auditoria\Bitacora;
 use App\Support\Cuentas\Cedula;
@@ -22,44 +21,64 @@ class ServicioInscripcion
             return null;
         }
 
+        $variantes = [$normalizada];
+
+        foreach (['V', 'E'] as $prefijo) {
+            $variantes[] = $prefijo . $normalizada;
+            $variantes[] = $prefijo . '-' . $normalizada;
+        }
+
         return Persona::query()
             ->whereNull('deleted_at')
-            ->where('cedula_per', $normalizada)
+            ->whereIn('cedula_per', $variantes)
+            ->orderBy('id_per')
             ->first();
     }
 
     public static function personaPorCedula(?string $cedula, string $campo = 'cedula'): Persona
     {
         if (Cedula::normalizar($cedula) === null) {
-            throw ValidationException::withMessages([$campo => 'La cédula indicada no tiene un formato válido.']);
+            throw ValidationException::withMessages([$campo => 'La cédula "' . trim((string) $cedula) . '" no es válida. Escríbela solo con números, por ejemplo 12345678.']);
         }
 
         $persona = static::buscarPersona($cedula);
 
         if (! $persona) {
-            throw ValidationException::withMessages([$campo => 'No existe ninguna persona registrada con la cédula ' . Cedula::normalizar($cedula) . '.']);
+            throw ValidationException::withMessages([$campo => 'No hay ninguna persona registrada con la cédula ' . Cedula::normalizar($cedula) . '. Pide que la registren primero en Personas.']);
         }
 
         if ((int) $persona->status_id !== 1) {
-            throw ValidationException::withMessages([$campo => 'La persona con esa cédula está inactiva en el sistema.']);
+            throw ValidationException::withMessages([$campo => 'La persona con la cédula ' . $persona->cedula_per . ' está inactiva en el sistema.']);
         }
 
         return $persona;
     }
 
-    public static function inscribirEnTorneo(TorneoDeportivo $torneo, ?string $cedula, ?string $observaciones = null): InscripcionDeportiva
+    public static function separarCedulas(?string $texto): array
     {
-        if (! $torneo->admiteInscripciones()) {
-            throw ValidationException::withMessages(['tde_id' => 'El torneo "' . $torneo->nombre_tde . '" no está abierto a inscripciones.']);
+        $resultado = [];
+
+        foreach (preg_split('/[\r\n,;\t]+/u', (string) $texto) ?: [] as $trozo) {
+            $trozo = trim($trozo);
+
+            if ($trozo === '') {
+                continue;
+            }
+
+            if (Cedula::normalizar($trozo) === null && preg_match('/\s/u', $trozo)) {
+                foreach (preg_split('/\s+/u', $trozo) ?: [] as $parte) {
+                    if (trim($parte) !== '') {
+                        $resultado[] = trim($parte);
+                    }
+                }
+
+                continue;
+            }
+
+            $resultado[] = $trozo;
         }
 
-        $horario = DeporteHorario::query()->todasLasSedes()->find($torneo->hde_id);
-
-        if (! $horario) {
-            throw ValidationException::withMessages(['tde_id' => 'El torneo no tiene un horario válido.']);
-        }
-
-        return static::inscribir($horario, $cedula, $observaciones);
+        return $resultado;
     }
 
     public static function inscribir(DeporteHorario $horario, ?string $cedula, ?string $observaciones = null): InscripcionDeportiva
@@ -67,24 +86,28 @@ class ServicioInscripcion
         $persona = static::personaPorCedula($cedula);
 
         return DB::transaction(function () use ($horario, $persona, $observaciones) {
-            $bloqueado = DeporteHorario::query()->todasLasSedes()->whereKey($horario->getKey())->lockForUpdate()->first();
+            $bloqueado = DeporteHorario::query()->todasLasSedes()
+                ->with(['calendario' => fn ($q) => $q->todasLasSedes(), 'actividad'])
+                ->whereKey($horario->getKey())
+                ->lockForUpdate()
+                ->first();
 
-            if (! $bloqueado || $bloqueado->estado_hde !== DeporteHorario::ESTADO_ACTIVO) {
-                throw ValidationException::withMessages(['hde_id' => 'El horario no está activo; no admite inscripciones.']);
+            $actividad = $bloqueado?->calendario;
+
+            if (! $bloqueado || ! $actividad) {
+                throw ValidationException::withMessages(['hde_id' => 'La actividad elegida no existe.']);
             }
 
-            $torneoCerrado = TorneoDeportivo::query()->todasLasSedes()
-                ->where('hde_id', $bloqueado->id_hde)
-                ->where('estado_tde', '!=', TorneoDeportivo::ESTADO_ABIERTO)
-                ->exists();
+            if ($actividad->esTorneo()) {
+                throw ValidationException::withMessages(['hde_id' => 'En los torneos no hay inscripción individual: agrega a la persona como integrante de un equipo desde la pantalla del torneo.']);
+            }
 
-            $torneoAbierto = TorneoDeportivo::query()->todasLasSedes()
-                ->where('hde_id', $bloqueado->id_hde)
-                ->where('estado_tde', TorneoDeportivo::ESTADO_ABIERTO)
-                ->exists();
+            if (! $actividad->con_inscripcion_cld) {
+                throw ValidationException::withMessages(['hde_id' => 'La actividad "' . $actividad->nombre_cld . '" es abierta: no lleva inscripción. Solo se toma la asistencia el día del evento.']);
+            }
 
-            if ($torneoCerrado && ! $torneoAbierto) {
-                throw ValidationException::withMessages(['hde_id' => 'El torneo de este horario ya no admite inscripciones.']);
+            if (! $actividad->estaActiva() || ! $bloqueado->estaActivo()) {
+                throw ValidationException::withMessages(['hde_id' => 'La actividad está cancelada o terminada y ya no admite inscripciones.']);
             }
 
             $existente = InscripcionDeportiva::query()->todasLasSedes()->withTrashed()
@@ -93,7 +116,23 @@ class ServicioInscripcion
                 ->first();
 
             if ($existente && ! $existente->trashed() && $existente->estaVigente()) {
-                throw ValidationException::withMessages(['cedula' => 'La persona ' . static::nombre($persona) . ' ya está inscrita en este horario.']);
+                throw ValidationException::withMessages(['cedula' => static::nombre($persona) . ' ya está inscrito(a) en este bloque.']);
+            }
+
+            $simultanea = InscripcionDeportiva::query()->todasLasSedes()
+                ->with(['horario' => fn ($q) => $q->todasLasSedes()->with('actividad')])
+                ->where('per_id', $persona->id_per)
+                ->where('estado_ide', '!=', InscripcionDeportiva::ESTADO_RETIRADO)
+                ->whereHas('horario', fn ($q) => $q->todasLasSedes()
+                    ->where('cld_id', $actividad->id_cld)
+                    ->where('id_hde', '!=', $bloqueado->id_hde)
+                    ->where('estado_hde', DeporteHorario::ESTADO_ACTIVO)
+                    ->where('hora_inicio_hde', '<', $bloqueado->hora_fin_hde)
+                    ->where('hora_fin_hde', '>', $bloqueado->hora_inicio_hde))
+                ->first();
+
+            if ($simultanea) {
+                throw ValidationException::withMessages(['cedula' => static::nombre($persona) . ' ya está inscrito(a) en ' . ($simultanea->horario?->actividad?->nombre_acd ?? 'otro bloque') . ', que ocurre a la misma hora en esta actividad.']);
             }
 
             $ocupados = InscripcionDeportiva::query()->todasLasSedes()
@@ -102,7 +141,7 @@ class ServicioInscripcion
                 ->count();
 
             if ($bloqueado->cupo_maximo_hde !== null && $ocupados >= $bloqueado->cupo_maximo_hde) {
-                throw ValidationException::withMessages(['cedula' => 'No hay cupos disponibles: el horario ya tiene ' . $ocupados . ' de ' . $bloqueado->cupo_maximo_hde . ' inscritos.']);
+                throw ValidationException::withMessages(['cedula' => 'Ya no hay cupos: este bloque tiene ' . $ocupados . ' de ' . $bloqueado->cupo_maximo_hde . ' inscritos.']);
             }
 
             $datos = [
@@ -134,11 +173,11 @@ class ServicioInscripcion
                 registroId: $inscripcion->id_ide,
                 datosModificados: [
                     'hde_id'     => $bloqueado->id_hde,
+                    'cld_id'     => $actividad->id_cld,
                     'per_id'     => $persona->id_per,
-                    'cedula_per' => $persona->cedula_per,
                     'estado_ide' => InscripcionDeportiva::ESTADO_INSCRITO,
                 ],
-                observacion: 'Inscripción de ' . static::nombre($persona) . ' en el horario #' . $bloqueado->id_hde,
+                observacion: 'Inscripción en "' . $actividad->nombre_cld . '" (' . ($bloqueado->actividad?->nombre_acd ?? 'bloque #' . $bloqueado->id_hde) . ')',
             );
 
             return $inscripcion;

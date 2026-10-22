@@ -77,4 +77,9 @@ class TorneoDeportivo extends Model
     {
         return $this->estado_tde === self::ESTADO_ABIERTO;
     }
+
+    public function estaVigente(): bool
+    {
+        return in_array($this->estado_tde, self::ESTADOS_VIGENTES, true);
+    }
 }

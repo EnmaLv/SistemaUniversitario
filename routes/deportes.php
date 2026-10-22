@@ -3,19 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Deporte\HorarioDeporteController;
 
-// Maestros - Horarios Deportes
 Route::get('/deportes/maestros/horarios', [HorarioDeporteController::class, 'index'])->name('admin.deportes.maestros.horarios.index');
-Route::get('/deportes/maestros/horarios/historial', [HorarioDeporteController::class, 'historial'])->name('admin.deportes.maestros.horarios.historial');
-Route::get('/deportes/maestros/horarios/create', [HorarioDeporteController::class, 'create'])->name('admin.deportes.maestros.horarios.create');
-Route::post('/deportes/maestros/horarios', [HorarioDeporteController::class, 'store'])->name('admin.deportes.maestros.horarios.store');
-Route::get('/deportes/maestros/horarios/{id}/edit', [HorarioDeporteController::class, 'edit'])->name('admin.deportes.maestros.horarios.edit');
-Route::put('/deportes/maestros/horarios/{id}', [HorarioDeporteController::class, 'update'])->name('admin.deportes.maestros.horarios.update');
-Route::delete('/deportes/maestros/horarios/{id}', [HorarioDeporteController::class, 'destroy'])->name('admin.deportes.maestros.horarios.destroy');
-Route::patch('/deportes/maestros/horarios/{id}/activate', [HorarioDeporteController::class, 'activate'])->name('admin.deportes.maestros.horarios.activate');
-Route::patch('/deportes/maestros/horarios/{id}/deactivate', [HorarioDeporteController::class, 'deactivate'])->name('admin.deportes.maestros.horarios.deactivate');
 Route::get('/deportes/maestros/horarios/exportar-pdf', [HorarioDeporteController::class, 'exportarPdf'])->name('admin.deportes.maestros.horarios.exportarPdf');
-Route::get('/deportes/maestros/horarios/{id}', [HorarioDeporteController::class, 'show'])->name('admin.deportes.maestros.horarios.show');
-Route::get('/deportes/maestros/horarios/{id}/cartel-pdf', [HorarioDeporteController::class, 'cartelPdf'])->whereNumber('id')->name('admin.deportes.maestros.horarios.cartel_pdf');
 
 Route::prefix('/deportes')->name('admin.deportes.')->group(function () {
     Route::get('/espacios', [\App\Http\Controllers\Deporte\EspacioDeportivoController::class, 'index'])->name('espacios.index');
@@ -37,6 +26,8 @@ Route::prefix('/deportes')->name('admin.deportes.')->group(function () {
     Route::get('/calendarios', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'index'])->name('calendarios.index');
     Route::get('/calendarios/create', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'create'])->name('calendarios.create');
     Route::post('/calendarios', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'store'])->name('calendarios.store');
+    Route::get('/calendarios/{calendario}', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'show'])->whereNumber('calendario')->name('calendarios.show');
+    Route::get('/calendarios/{calendario}/cartel-pdf', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'cartelPdf'])->whereNumber('calendario')->name('calendarios.cartel_pdf');
     Route::get('/calendarios/{calendario}/edit', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'edit'])->whereNumber('calendario')->name('calendarios.edit');
     Route::put('/calendarios/{calendario}', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'update'])->whereNumber('calendario')->name('calendarios.update');
     Route::delete('/calendarios/{calendario}', [\App\Http\Controllers\Deporte\CalendarioDeportivoController::class, 'destroy'])->whereNumber('calendario')->name('calendarios.destroy');
@@ -61,11 +52,16 @@ Route::prefix('/deportes')->name('admin.deportes.')->group(function () {
     Route::delete('/inscripciones/{inscripcion}', [\App\Http\Controllers\Deporte\InscripcionDeportivaController::class, 'destroy'])->whereNumber('inscripcion')->name('inscripciones.destroy');
 
     Route::get('/asistencia', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'index'])->name('asistencia.index');
-    Route::get('/asistencia/reporte', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'reporte'])->name('asistencia.reporte');
-    Route::get('/asistencia/reporte/pdf', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'reportePdf'])->name('asistencia.reporte_pdf');
     Route::post('/asistencia', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'store'])->name('asistencia.store');
-    Route::put('/asistencia/{sesion}', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'update'])->whereNumber('sesion')->name('asistencia.update');
-    Route::post('/asistencia/{sesion}/cerrar', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'cerrar'])->whereNumber('sesion')->name('asistencia.cerrar');
+    Route::get('/asistencia/historial/{calendario}', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'historial'])->whereNumber('calendario')->name('asistencia.historial');
+    Route::get('/asistencia/historial/{calendario}/pdf', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'historialPdf'])->whereNumber('calendario')->name('asistencia.historial_pdf');
+    Route::get('/asistencia/{sesion}', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'show'])->whereNumber('sesion')->name('asistencia.show');
+    Route::post('/asistencia/{sesion}/presentes', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'storePresentes'])->whereNumber('sesion')->name('asistencia.store_presentes');
+    Route::post('/asistencia/{sesion}/quitar', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'storeQuitar'])->whereNumber('sesion')->name('asistencia.store_quitar');
+    Route::post('/asistencia/{sesion}/cerrar', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'storeCierre'])->whereNumber('sesion')->name('asistencia.store_cierre');
+    Route::post('/asistencia/{sesion}/reabrir', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'reabrir'])->whereNumber('sesion')->name('asistencia.reabrir');
+    Route::get('/asistencia/{sesion}/reporte', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'reporte'])->whereNumber('sesion')->name('asistencia.reporte');
+    Route::get('/asistencia/{sesion}/reporte-pdf', [\App\Http\Controllers\Deporte\AsistenciaDeportivaController::class, 'reportePdf'])->whereNumber('sesion')->name('asistencia.reporte_pdf');
 });
 
 Route::prefix('/deportes')->name('admin.deportes.')->group(function () {

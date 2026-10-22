@@ -2,7 +2,6 @@
     $horario = $torneo->horario;
     $vigente = in_array($torneo->estado_tde, \App\Models\Deporte\TorneoDeportivo::ESTADOS_VIGENTES, true);
     $estiloCampo = 'background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);';
-    $cupo = $horario?->cupo_maximo_hde;
 @endphp
 <x-app-layout>
 
@@ -17,6 +16,7 @@
             <div class="mt-2 mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">{{ $torneo->nombre_tde }}</h1>
+                    <p class="mt-1 text-sm" style="color:var(--text-muted);">Arma aquí los equipos. Los participantes del torneo son los integrantes de sus equipos.</p>
                     <div class="mt-2 flex flex-wrap items-center gap-2">
                         @include('admin.deportes.partials.estado_torneo', ['torneo' => $torneo])
                         @if ($torneo->modalidad_tde)
@@ -46,11 +46,11 @@
                 <div class="space-y-6 lg:col-span-1">
                     <div class="rounded-2xl border p-5 shadow-sm space-y-3" style="background-color:var(--bg-card);border-color:var(--border-color);color:var(--text-main);">
                         <h3 class="text-sm font-black uppercase tracking-wider" style="color:var(--text-muted);">Datos del torneo</h3>
-                        <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Actividad</p><p class="font-semibold">{{ $horario?->actividad?->nombre_acd ?? '-' }}</p></div>
+                        <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Disciplina</p><p class="font-semibold">{{ $horario?->actividad?->nombre_acd ?? '-' }}</p></div>
                         <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Espacio</p><p class="font-semibold">{{ $horario?->espacio?->nombre_epd ?? '-' }}</p></div>
                         <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Cuándo</p><p class="font-semibold">{{ $horario?->descripcionCuando() ?? '-' }}</p></div>
                         <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Sede</p><p class="font-semibold">{{ $horario?->calendario?->sede?->nombre_sed ?? '-' }}</p></div>
-                        <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Inscritos</p><p class="font-semibold">{{ $inscripciones->count() }}{{ $cupo !== null ? ' de ' . $cupo : ' · sin límite' }}</p></div>
+                        <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Participantes</p><p class="font-semibold">{{ $participantes }} en {{ $torneo->equipos->count() }} equipos</p></div>
                         <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Coordinador</p><p class="font-semibold">{{ trim(($torneo->coordinador?->persona?->nombres_per ?? '') . ' ' . ($torneo->coordinador?->persona?->apellidos_per ?? '')) ?: '-' }}</p></div>
                         @if ($torneo->descripcion_tde)
                             <div><p class="text-xs font-bold uppercase" style="color:var(--text-muted);">Descripción</p><p class="text-sm">{{ $torneo->descripcion_tde }}</p></div>
@@ -73,37 +73,23 @@
                         </form>
                         @endcanRoute
                     @endif
+
+                    <div class="rounded-2xl border p-5 shadow-sm space-y-2 text-sm" style="background-color:var(--bg-card);border-color:var(--border-color);color:var(--text-main);">
+                        <h3 class="text-sm font-black uppercase tracking-wider" style="color:var(--text-muted);">Cómo inscribir un equipo</h3>
+                        <ol class="list-decimal space-y-1 pl-5">
+                            <li>Escribe el nombre del equipo y, si representa a un PNF, elígelo. Pulsa "Agregar equipo".</li>
+                            <li>En el equipo, escribe la cédula de cada integrante y pulsa "Agregar". Puedes pegar varias cédulas separadas por coma o una por línea.</li>
+                            <li>Una persona solo puede estar en un equipo del mismo torneo.</li>
+                        </ol>
+                        @canRoute('admin.deportes.asistencia.index')
+                        <a href="{{ route('admin.deportes.asistencia.index', ['q' => $torneo->nombre_tde]) }}" class="mt-2 inline-flex items-center gap-2 text-xs font-bold" style="color:var(--color-primary);">
+                            <i class="fas fa-clipboard-check"></i> Tomar asistencia de un día del torneo
+                        </a>
+                        @endcanRoute
+                    </div>
                 </div>
 
                 <div class="space-y-6 lg:col-span-2">
-                    <div class="rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
-                        <div class="flex flex-col gap-2 border-b p-4 sm:flex-row sm:items-center sm:justify-between" style="border-color:var(--border-color);">
-                            <h3 class="text-lg font-extrabold" style="color:var(--text-main);"><i class="fas fa-users mr-1" style="color:var(--color-primary);"></i> Inscritos</h3>
-                            @if ($torneo->admiteInscripciones())
-                                @canRoute('admin.deportes.inscripciones.index')
-                                <a href="{{ route('admin.deportes.inscripciones.index', ['tde_id' => $torneo->id_tde]) }}" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-4 py-2 text-sm font-extrabold text-white hover:bg-red-900">
-                                    <i class="fas fa-user-plus text-xs"></i> Inscribir
-                                </a>
-                                @endcanRoute
-                            @endif
-                        </div>
-                        <div class="max-h-72 overflow-y-auto">
-                            <table class="w-full text-left text-sm" style="color:var(--text-main);">
-                                <tbody>
-                                    @forelse ($inscripciones as $inscripcion)
-                                        <tr class="border-b" style="border-color:var(--border-color);">
-                                            <td class="px-4 py-2 font-mono text-xs" style="color:var(--text-muted);">{{ $inscripcion->persona?->cedula_per }}</td>
-                                            <td class="px-4 py-2 font-semibold">{{ trim(($inscripcion->persona?->nombres_per ?? '') . ' ' . ($inscripcion->persona?->apellidos_per ?? '')) }}</td>
-                                            <td class="px-4 py-2 text-xs" style="color:var(--text-muted);">{{ $inscripcion->fecha_registro_ide?->format('d/m/Y') }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr><td class="px-4 py-6 text-center text-xs font-bold uppercase text-gray-400">Sin inscritos todavía.</td></tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
                     <div class="rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
                         <div class="border-b p-4" style="border-color:var(--border-color);">
                             <h3 class="text-lg font-extrabold" style="color:var(--text-main);"><i class="fas fa-shield-alt mr-1" style="color:var(--color-primary);"></i> Equipos</h3>
@@ -171,10 +157,10 @@
 
                                     @if ($vigente)
                                         @canRoute('admin.deportes.torneos.integrantes.store')
-                                        <form method="POST" action="{{ route('admin.deportes.torneos.integrantes.store', $equipo->id_etd) }}" class="flex gap-2">
+                                        <form method="POST" action="{{ route('admin.deportes.torneos.integrantes.store', $equipo->id_etd) }}" class="flex flex-col gap-2 sm:flex-row">
                                             @csrf
-                                            <input type="text" name="cedula" maxlength="20" required placeholder="Cédula del integrante"
-                                                class="w-56 rounded-xl border px-3 py-1.5 text-sm" style="{{ $estiloCampo }}">
+                                            <input type="text" name="cedula" maxlength="2000" required placeholder="Cédula (o varias separadas por coma)"
+                                                class="w-full rounded-xl border px-3 py-1.5 text-sm sm:w-80" style="{{ $estiloCampo }}">
                                             <button type="submit" class="inline-flex items-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-bold" style="border-color:var(--border-color);color:var(--text-main);">
                                                 <i class="fas fa-user-plus text-[10px]"></i> Agregar
                                             </button>
@@ -183,7 +169,7 @@
                                     @endif
                                 </div>
                             @empty
-                                <p class="p-6 text-center text-xs font-bold uppercase text-gray-400">Sin equipos registrados.</p>
+                                <p class="p-6 text-center text-sm" style="color:var(--text-muted);">Todavía no hay equipos. Escribe el nombre del primero arriba y pulsa "Agregar equipo".</p>
                             @endforelse
                         </div>
                     </div>

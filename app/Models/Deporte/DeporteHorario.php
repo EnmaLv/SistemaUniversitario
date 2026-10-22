@@ -22,25 +22,7 @@ class DeporteHorario extends Model
 
     public const ESTADO_COMPLETADO = 'completado';
 
-    public const DIAS = [
-        1 => 'lunes',
-        2 => 'martes',
-        3 => 'miercoles',
-        4 => 'jueves',
-        5 => 'viernes',
-        6 => 'sabado',
-        7 => 'domingo',
-    ];
-
-    public const DIAS_LEGIBLES = [
-        'lunes'     => 'Lunes',
-        'martes'    => 'Martes',
-        'miercoles' => 'Miércoles',
-        'jueves'    => 'Jueves',
-        'viernes'   => 'Viernes',
-        'sabado'    => 'Sábado',
-        'domingo'   => 'Domingo',
-    ];
+    public const ESTADOS_CON_EVENTOS = [self::ESTADO_ACTIVO, self::ESTADO_COMPLETADO];
 
     protected $relacionSede = 'calendario';
 
@@ -51,7 +33,6 @@ class DeporteHorario extends Model
     protected $fillable = [
         'dia_semana_hde',
         'fecha_especifica_hde',
-        'semana_inicio_hde',
         'hora_inicio_hde',
         'hora_fin_hde',
         'cupo_maximo_hde',
@@ -67,7 +48,6 @@ class DeporteHorario extends Model
 
     protected $casts = [
         'fecha_especifica_hde' => 'date',
-        'semana_inicio_hde'    => 'date',
         'cupo_maximo_hde'      => 'integer',
         'status_id'            => 'integer',
     ];
@@ -117,54 +97,6 @@ class DeporteHorario extends Model
         return $consulta->where($this->qualifyColumn('estado_hde'), self::ESTADO_ACTIVO);
     }
 
-    public function scopeEnRango(Builder $consulta, $desde, $hasta): Builder
-    {
-        $desde = Carbon::parse($desde)->toDateString();
-        $hasta = Carbon::parse($hasta)->toDateString();
-
-        return $consulta->where(function (Builder $q) use ($desde, $hasta) {
-            $q->whereBetween($this->qualifyColumn('fecha_especifica_hde'), [$desde, $hasta])
-                ->orWhere(function (Builder $recurrente) use ($desde, $hasta) {
-                    $recurrente->whereNull($this->qualifyColumn('fecha_especifica_hde'))
-                        ->where(fn (Builder $s) => $s->whereNull($this->qualifyColumn('semana_inicio_hde'))->orWhereDate($this->qualifyColumn('semana_inicio_hde'), '<=', $hasta))
-                        ->whereHas('calendario', fn (Builder $c) => $c->whereDate('fecha_inicio_cld', '<=', $hasta)->whereDate('fecha_fin_cld', '>=', $desde));
-                });
-        });
-    }
-
-    public static function normalizarDia(?string $dia): ?string
-    {
-        if ($dia === null || trim($dia) === '') {
-            return null;
-        }
-
-        $dia = strtr(mb_strtolower(trim($dia), 'UTF-8'), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u']);
-
-        return in_array($dia, self::DIAS, true) ? $dia : null;
-    }
-
-    public static function diaDeFecha($fecha): string
-    {
-        return self::DIAS[Carbon::parse($fecha)->dayOfWeekIso];
-    }
-
-    public function esFechaEspecifica(): bool
-    {
-        return $this->fecha_especifica_hde !== null;
-    }
-
-    public function diaClave(): ?string
-    {
-        return $this->esFechaEspecifica()
-            ? self::diaDeFecha($this->fecha_especifica_hde)
-            : self::normalizarDia($this->dia_semana_hde);
-    }
-
-    public function diaLegible(): string
-    {
-        return self::DIAS_LEGIBLES[$this->diaClave()] ?? '-';
-    }
-
     public function horaInicio(string $formato = 'H:i'): string
     {
         return Carbon::parse($this->hora_inicio_hde)->format($formato);
@@ -175,60 +107,44 @@ class DeporteHorario extends Model
         return Carbon::parse($this->hora_fin_hde)->format($formato);
     }
 
-    public function descripcionCuando(): string
+    public function horas(): string
     {
-        $horas = $this->horaInicio('g:i A') . ' - ' . $this->horaFin('g:i A');
-
-        return $this->esFechaEspecifica()
-            ? $this->diaLegible() . ' ' . $this->fecha_especifica_hde->format('d/m/Y') . ', ' . $horas
-            : 'Todos los ' . mb_strtolower($this->diaLegible()) . ', ' . $horas;
+        return $this->horaInicio('g:i A') . ' a ' . $this->horaFin('g:i A');
     }
 
-    public function etiqueta(): string
+    public function esDeTorneo(): bool
     {
-        return trim(($this->actividad?->nombre_acd ?? 'Actividad') . ' · ' . ($this->espacio?->nombre_epd ?? 'Sin espacio') . ' · ' . $this->descripcionCuando());
+        return (bool) $this->calendario?->esTorneo();
     }
 
-    public static function vigenciaRecurrente($semanaInicio, $inicioCalendario, $finCalendario): array
+    public function estaActivo(): bool
     {
-        $desde = Carbon::parse($inicioCalendario)->startOfDay();
-
-        if ($semanaInicio) {
-            $semana = Carbon::parse($semanaInicio)->startOfWeek(Carbon::MONDAY)->startOfDay();
-
-            if ($semana->gt($desde)) {
-                $desde = $semana;
-            }
-        }
-
-        return [$desde, Carbon::parse($finCalendario)->startOfDay()];
+        return $this->estado_hde === self::ESTADO_ACTIVO;
     }
 
-    public function vigencia(): ?array
+    public function fechasEntre($desde, $hasta): array
     {
-        if ($this->esFechaEspecifica()) {
-            $fecha = $this->fecha_especifica_hde->copy()->startOfDay();
-
-            return [$fecha, $fecha->copy()];
-        }
-
-        $calendario = $this->calendario;
-
-        if (! $calendario) {
-            return null;
-        }
-
-        return self::vigenciaRecurrente($this->semana_inicio_hde, $calendario->fecha_inicio_cld, $calendario->fecha_fin_cld);
+        return $this->calendario ? $this->calendario->fechasEntre($desde, $hasta) : [];
     }
 
     public function aplicaEnFecha($fecha): bool
     {
-        $fecha = Carbon::parse($fecha)->startOfDay();
-        $vigencia = $this->vigencia();
+        return (bool) $this->calendario?->aplicaEnFecha($fecha);
+    }
 
-        return $vigencia !== null
-            && self::diaDeFecha($fecha) === $this->diaClave()
-            && $fecha->betweenIncluded($vigencia[0], $vigencia[1]);
+    public function descripcionCuando(): string
+    {
+        return trim(($this->calendario?->descripcionCuando() ?? '') . ', ' . $this->horas(), ', ');
+    }
+
+    public function etiqueta(): string
+    {
+        return implode(' · ', array_filter([
+            $this->calendario?->nombre_cld,
+            $this->actividad?->nombre_acd,
+            $this->espacio?->nombre_epd,
+            $this->horas(),
+        ]));
     }
 
     public function cuposOcupados(): int
@@ -241,50 +157,67 @@ class DeporteHorario extends Model
         return $this->cupo_maximo_hde === null ? null : max(0, $this->cupo_maximo_hde - $this->cuposOcupados());
     }
 
-    public static function compartenDia(?string $diaA, Carbon $desdeA, Carbon $hastaA, ?string $diaB, Carbon $desdeB, Carbon $hastaB): bool
+    public static function seSolapan(string $inicioA, string $finA, string $inicioB, string $finB): bool
     {
-        if ($diaA === null || $diaA !== $diaB) {
-            return false;
-        }
+        $normalizar = fn ($hora) => Carbon::parse($hora)->format('H:i:s');
 
-        $desde = $desdeA->gt($desdeB) ? $desdeA->copy() : $desdeB->copy();
-        $hasta = $hastaA->lt($hastaB) ? $hastaA->copy() : $hastaB->copy();
-
-        for ($i = 0; $i < 7 && $desde->lte($hasta); $i++, $desde->addDay()) {
-            if (self::diaDeFecha($desde) === $diaA) {
-                return true;
-            }
-        }
-
-        return false;
+        return $normalizar($inicioA) < $normalizar($finB) && $normalizar($inicioB) < $normalizar($finA);
     }
 
-    public static function buscarSolape(int $espacioId, ?string $dia, $desde, $hasta, string $horaInicio, string $horaFin, ?int $excluirId = null): ?self
+    public static function buscarChoque(int $espacioId, array $fechas, string $horaInicio, string $horaFin, array $excluir = []): ?array
     {
+        $fechas = array_values(array_unique($fechas));
+
+        if ($fechas === []) {
+            return null;
+        }
+
+        sort($fechas);
+
         $inicio = Carbon::parse($horaInicio)->format('H:i:s');
         $fin = Carbon::parse($horaFin)->format('H:i:s');
-        $desde = Carbon::parse($desde)->startOfDay();
-        $hasta = Carbon::parse($hasta)->startOfDay();
-        $dia = self::normalizarDia($dia);
+        $primera = $fechas[0];
+        $ultima = $fechas[count($fechas) - 1];
 
         $candidatos = static::query()
             ->todasLasSedes()
             ->with(['calendario' => fn ($q) => $q->todasLasSedes(), 'actividad'])
             ->where('epd_id', $espacioId)
             ->where('estado_hde', self::ESTADO_ACTIVO)
-            ->when($excluirId, fn ($q) => $q->where('id_hde', '!=', $excluirId))
+            ->when($excluir !== [], fn ($q) => $q->whereNotIn('id_hde', $excluir))
             ->where('hora_inicio_hde', '<', $fin)
             ->where('hora_fin_hde', '>', $inicio)
+            ->whereHas('calendario', fn ($q) => $q->todasLasSedes()
+                ->where('status_id', 1)
+                ->where('fecha_inicio_cld', '<=', $ultima)
+                ->where('fecha_fin_cld', '>=', $primera))
+            ->orderBy('id_hde')
             ->get();
 
         foreach ($candidatos as $candidato) {
-            $vigencia = $candidato->vigencia();
+            $comunes = array_values(array_intersect($fechas, $candidato->fechasEntre($primera, $ultima)));
 
-            if ($vigencia !== null && self::compartenDia($dia, $desde, $hasta, $candidato->diaClave(), $vigencia[0], $vigencia[1])) {
-                return $candidato;
+            if ($comunes !== []) {
+                return ['bloque' => $candidato, 'fecha' => $comunes[0]];
             }
         }
 
         return null;
+    }
+
+    public static function mensajeChoque(array $choque, ?string $espacio = null): string
+    {
+        $bloque = $choque['bloque'];
+        $fecha = Carbon::parse($choque['fecha']);
+
+        return sprintf(
+            '%s ya está ocupado el %s %s de %s por "%s" (%s). Elige otro espacio u otra hora.',
+            $espacio ?? 'El espacio',
+            mb_strtolower(DeporteCalendario::DIAS_LEGIBLES[DeporteCalendario::diaDeFecha($fecha)]),
+            $fecha->format('d/m/Y'),
+            $bloque->horas(),
+            $bloque->calendario?->nombre_cld ?? 'otra actividad',
+            $bloque->actividad?->nombre_acd ?? 'otra disciplina'
+        );
     }
 }

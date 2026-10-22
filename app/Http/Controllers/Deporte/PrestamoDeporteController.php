@@ -30,10 +30,13 @@ class PrestamoDeporteController extends Controller
         $prestamos = PrestamoDeportivo::with(['persona', 'producto', 'sede'])
             ->withExists(['sanciones as tiene_sancion_activa' => fn ($consulta) => $consulta->todasLasSedes()->where('estado_snd', SancionDeportiva::ESTADO_ACTIVA)])
             ->when($buscar !== '', function ($consulta) use ($buscar) {
-                $consulta->whereHas('persona', function ($persona) use ($buscar) {
-                    $persona->where('cedula_per', 'like', "%{$buscar}%")
-                        ->orWhere('nombres_per', 'like', "%{$buscar}%")
-                        ->orWhere('apellidos_per', 'like', "%{$buscar}%");
+                $patron = '%' . mb_strtolower($buscar) . '%';
+
+                $consulta->whereHas('persona', function ($persona) use ($patron) {
+                    $persona->where(fn ($filtro) => $filtro
+                        ->whereRaw('LOWER(cedula_per) LIKE ?', [$patron])
+                        ->orWhereRaw('LOWER(nombres_per) LIKE ?', [$patron])
+                        ->orWhereRaw('LOWER(apellidos_per) LIKE ?', [$patron]));
                 });
             })
             ->when(in_array($estado, [

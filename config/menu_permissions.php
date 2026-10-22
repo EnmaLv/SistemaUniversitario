@@ -180,12 +180,12 @@ return [
     'deportes' => [
         'label'       => 'Deportes',
         'icon'        => 'fas fa-futbol',
-        'description' => 'Espacios, horarios, torneos, préstamos de implementos y solvencia.',
+        'description' => 'Actividades, torneos, asistencia, préstamos de implementos y solvencia.',
         'items' => [
             'deportes_espacios'      => 'Espacios deportivos',
-            'deportes_actividades'   => 'Actividades deportivas',
-            'deportes_calendarios'   => 'Calendarios deportivos',
-            'deportes_horarios'      => 'Horarios deportivos',
+            'deportes_actividades'   => 'Disciplinas',
+            'deportes_calendarios'   => 'Actividades y jornadas',
+            'deportes_horarios'      => 'Horarios de los espacios',
             'deportes_torneos'       => 'Torneos',
             'deportes_inscripciones' => 'Inscripciones deportivas',
             'deportes_asistencia'    => 'Asistencia deportiva',

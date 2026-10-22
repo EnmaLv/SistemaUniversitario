@@ -34,7 +34,7 @@ class ActividadDeportivaController extends Controller
     {
         DeporteActividad::create($this->validar($request) + ['status_id' => 1]);
 
-        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Actividad deportiva registrada correctamente.');
+        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Disciplina registrada correctamente.');
     }
 
     public function edit(DeporteActividad $actividad)
@@ -46,21 +46,21 @@ class ActividadDeportivaController extends Controller
     {
         $actividad->update($this->validar($request, $actividad));
 
-        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Actividad deportiva actualizada correctamente.');
+        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Disciplina actualizada correctamente.');
     }
 
     public function destroy(DeporteActividad $actividad)
     {
         $actividad->update(['status_id' => 2]);
 
-        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Actividad deportiva inactivada. Sus horarios existentes se conservan.');
+        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Disciplina inactivada. Las actividades que ya la usan se conservan.');
     }
 
     public function activar(DeporteActividad $actividad)
     {
         $actividad->update(['status_id' => 1]);
 
-        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Actividad deportiva activada.');
+        return redirect()->route('admin.deportes.actividades.index')->with('success', 'Disciplina activada.');
     }
 
     private function validar(Request $request, ?DeporteActividad $actividad = null): array
@@ -68,11 +68,13 @@ class ActividadDeportivaController extends Controller
         $validado = $request->validate([
             'nombre_acd'      => ['required', 'string', 'max:150'],
             'descripcion_acd' => ['nullable', 'string', 'max:2000'],
-            'tipo_acd'        => ['required', Rule::in(array_keys(DeporteActividad::TIPOS))],
+            'tipo_acd'        => ['nullable', Rule::in(array_keys(DeporteActividad::TIPOS))],
         ], [
-            'nombre_acd.required' => 'El nombre de la actividad es obligatorio.',
-            'tipo_acd.in'         => 'El tipo de actividad no es válido.',
+            'nombre_acd.required' => 'Escribe el nombre de la disciplina.',
+            'tipo_acd.in'         => 'El uso indicado no es válido.',
         ]);
+
+        $validado['tipo_acd'] = $validado['tipo_acd'] ?? $actividad?->tipo_acd ?? 'programada';
 
         $validado['nombre_acd'] = trim($validado['nombre_acd']);
 
@@ -82,7 +84,7 @@ class ActividadDeportivaController extends Controller
             ->exists();
 
         if ($duplicado) {
-            throw ValidationException::withMessages(['nombre_acd' => 'Ya existe una actividad con ese nombre.']);
+            throw ValidationException::withMessages(['nombre_acd' => 'Ya existe una disciplina con ese nombre.']);
         }
 
         return $validado;

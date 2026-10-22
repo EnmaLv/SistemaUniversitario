@@ -25,10 +25,13 @@ class SancionDeporteController extends Controller
 
         $sanciones = SancionDeportiva::with(['persona', 'prestamo.producto', 'levantadaPor.persona'])
             ->when($buscar !== '', function ($consulta) use ($buscar) {
-                $consulta->whereHas('persona', function ($persona) use ($buscar) {
-                    $persona->where('cedula_per', 'like', "%{$buscar}%")
-                        ->orWhere('nombres_per', 'like', "%{$buscar}%")
-                        ->orWhere('apellidos_per', 'like', "%{$buscar}%");
+                $patron = '%' . mb_strtolower($buscar) . '%';
+
+                $consulta->whereHas('persona', function ($persona) use ($patron) {
+                    $persona->where(fn ($filtro) => $filtro
+                        ->whereRaw('LOWER(cedula_per) LIKE ?', [$patron])
+                        ->orWhereRaw('LOWER(nombres_per) LIKE ?', [$patron])
+                        ->orWhereRaw('LOWER(apellidos_per) LIKE ?', [$patron]));
                 });
             })
             ->when(in_array($estado, [SancionDeportiva::ESTADO_ACTIVA, SancionDeportiva::ESTADO_LEVANTADA], true), fn ($consulta) => $consulta->where('estado_snd', $estado))
