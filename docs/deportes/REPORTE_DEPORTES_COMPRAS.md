@@ -283,3 +283,191 @@ Administrador: `admin@example.com` / `12345678`, llave maestra `masterkey123`.
 | `c3fdb34` | Restringe las compras a Administración y reparte la mercancía entre sedes (fase 1) |
 | `885434b` | Reestructura actividades, torneos y asistencia de deportes (fase 2) |
 | (este commit) | Agrega el reporte de deportes y compras (fase 3) |
+
+---
+
+## 7. Implementos y materiales
+
+Rama: `feature/implementos` (creada desde `feature/deportes-compras`). Sin push.
+Encargo: `PROMPT_IMPLEMENTOS.md`.
+
+Verificación:
+- Las fases 1, 2 y 3 se verificaron cada una por separado, en una copia aislada del repositorio que solo tenía los commits anteriores más los cambios de esa fase. En cada copia pasaron `php -l`, la compilación de vistas, `route:list` y la migración completa con todos los seeders sobre la base de pruebas.
+- Resultado de `php artisan test` por fase:
+  - Fase 1: 156 pruebas aprobadas.
+  - Fase 2: 162 pruebas aprobadas.
+  - Fase 3: 170 pruebas aprobadas.
+- La fase 4 se verificó en el árbol completo: `php -l`, compilación de vistas, `route:list` (535 rutas), `migrate:fresh --seed` + `permisos:sincronizar` y `php artisan test` con 177 pruebas aprobadas. Además, las cinco migraciones de datos se probaron con `php artisan migrate` sobre la base de desarrollo previa, que tenía los medicamentos mal clasificados, las vistas de permisos viejas y una entrega de material: los medicamentos quedaron en su tipo, los permisos pasaron a las vistas nuevas y la entrega quedó como préstamo de oficina devuelto con todo gastado.
+
+### 7.1 Resumen por fase
+
+| Fase | Estado | Resultado |
+|---|---|---|
+| 1. Medicamentos en implementos (bug) | Completada | Se corrigió la causa en los seeders (ids fijos) y los datos ya sembrados (migración de datos). Cada listado y formulario filtra y valida en el servidor por tipo de producto. |
+| 2. Unidades y presentaciones | Completada | La unidad del área es siempre "Unidad". La compra por caja entra al inventario en unidades sueltas (3 cajas × 12 = 36) y el reparto entre sedes se hace en unidades. Las presentaciones se separan por tipo con la tabla puente `envase_tipo_producto`. |
+| 3. Vista única | Completada | Hay una vista "Implementos y materiales" para los dos tipos: primero se elige el tipo, las categorías se filtran según el tipo y el listado filtra por tipo y categoría, con la existencia de la sede activa. Las rutas viejas de Material de oficina redirigen a esta vista y sus permisos pasan a la clave nueva. |
+| 4. Préstamo unificado | Completada | Un solo flujo de préstamo, con varias líneas, para implementos y material de oficina. La devolución distingue lo devuelto, dañado, gastado y perdido. El límite es un préstamo activo por tipo. Las sanciones de los dos tipos bloquean préstamos y aparecen en Solvencia. Las entregas se migraron a préstamos y su pantalla se eliminó. |
+| 5. Reporte | Esta sección | |
+
+Ninguna fase quedó revertida.
+
+### 7.2 Causa del bug de la Fase 1
+
+No era el filtro de la vista: "Implementos deportivos" ya filtraba por `categoria_producto.tpr_id`. El problema estaba en los datos sembrados, por el orden de `DatabaseSeeder` y por ids fijos:
+1. `CategoriaSeeder` solo sembraba las categorías del área (Balones, Raquetas y mallas, Papelería, Escritura) si ya existían categorías de medicamentos. Al correr todavía no existían, así que no las sembraba.
+2. `DeporteSeeder`, que corre antes que `CategoriaMedicamentoSeeder`, sí sembraba esas categorías. Quedaron con ids 14 a 17, y las de medicamentos empezaron en el 18.
+3. `MedicamentoSeeder` usaba `cap_id` fijos (14, 15, 21 y 22), calculados para cuando las categorías de medicamentos empezaban en el 14. Así ATAMEL quedó en "Balones" e IBUPROFENO y BRUGESIC en "Raquetas y mallas", es decir, en categorías del tipo Implemento deportivo. Por eso aparecían en esa vista.
+4. **Efecto colateral:** los dos balones de `DeporteSeeder` corrían en 2 los `id_pdt` de los alimentos.
+   - `PrecioProductoSeeder` usaba `pdt_id` fijos, así que el balón recibió el precio de la harina.
+   - `RecetaIngredienteSeeder` también usaba `pdt_id` fijos, así que la receta 1 tenía un balón como ingrediente.
+
+Corrección:
+- Todos esos seeders buscan categorías, unidades, envases y productos por nombre y tipo, o por código.
+- `CategoriaSeeder` siembra siempre las categorías del área.
+- La migración `2026_10_23_000100` corrige los medicamentos de una base ya sembrada.
+- **Validación en el servidor:** cada formulario (Productos, Medicamentos, Implementos y materiales) exige que la categoría pertenezca a sus tipos, al crear y al editar.
+- **Productos de otro tipo:** una pantalla que recibe un producto que no es suyo responde 404, o redirige a la pantalla que le corresponde.
+- **Productos del comedor:** quien solo tiene esa vista ve únicamente alimentos.
+
+### 7.3 Decisión sobre presentaciones (Fase 2)
+
+**Elegida: opción A con tabla puente**, `envase_tipo_producto` (`id_etp`, `enp_id`, `tpr_id`, auditoría, único por `enp_id` + `tpr_id`).
+
+Antes de elegir se revisaron todos los usos de `envase_primario`/`enp_id`: compras (`UnidadCompra`), dosis (`ConversorDosis`), formularios, pruebas y la FK de `producto`.
+
+Por qué una tabla puente y no una columna `tpr_id` en `envase_primario`:
+1. **Presentaciones compartidas:** una misma presentación sirve a varios tipos. "Bolsa" vale para medicamentos, implementos y material de oficina. Con una columna habría que duplicar el nombre, y eso choca con la regla de nombre único de `envase_primario`.
+2. **DER intacto:** `envase_primario` es tabla del DER del profesor y no se modifica.
+3. **Permitido:** crear tablas nuevas está permitido.
+
+Cómo queda:
+- Los medicamentos ven solo sus presentaciones (blíster, frasco, ampolla…). Implementos ven Caja, Paquete, Bolsa y Docena; Material de oficina ve además Resma.
+- La pantalla "Envases primarios" de salud gestiona solo los envases de medicamentos.
+- El backend rechaza una presentación de otro tipo.
+
+### 7.4 Cambios de base de datos
+
+| Migración | Cambio | Justificación frente al DER |
+|---|---|---|
+| `2026_10_23_000100_corrige_categoria_de_medicamentos_sembrados` | Solo datos: pasa los 5 medicamentos sembrados a categorías del tipo Medicamento. | No cambia ninguna estructura. |
+| `2026_10_23_000200_create_envase_tipo_producto_table` | Tabla nueva `envase_tipo_producto`, puente entre `envase_primario` y `tipo_producto`. Vincula a Medicamento los envases que ya existen. | Tabla nueva con la nomenclatura del DER; `envase_primario` queda intacta (sección 7.3). |
+| `2026_10_23_000300_unifica_vista_implementos_materiales` | Solo datos del sistema de permisos: renombra la vista `deportes_implementos` a `implementos_materiales` sin cambiar ids (así se conservan los permisos de roles y usuarios) y absorbe `material_oficina`. | `vista`, `permiso`, `rol_permiso` y `usuario_permiso` son tablas propias, no del DER. |
+| `2026_10_23_000400_unifica_prestamos_y_entregas_material` | **`prestamo_deportivo` (DER):** columna nueva `tipo_prd` (`deportivo`/`oficina`) e índice (`per_id`, `tipo_prd`, `estado_prd`). **`detalle_prestamo_deportivo` (nueva):** `prd_id`, `pdt_id`, `lot_id` y las cantidades prestada, devuelta, dañada, consumida y perdida (`_dpd`), con auditoría. **`entrega_material` y `detalle_entrega_material` (propias):** se convierten en préstamos y se eliminan. | `tipo_prd` hace falta para el límite por tipo y el filtro, sin uniones en cada validación. El detalle existe porque el DER solo admite un producto y un lote por préstamo, y un docente necesita marcadores y borrador juntos; además, cada devolución vuelve al lote del que salió. `pdt_id` y `lot_id` del DER se conservan con la primera línea y `cantidad_prd` queda como total. **Para hablar con el profesor:** `tipo_prd` y la tabla de detalle. |
+| `2026_10_23_000500_absorbe_permisos_de_entregas_en_prestamos` | Solo datos: los roles y usuarios que tenían permisos sobre `deportes_entregas` los reciben sobre `deportes_prestamos`, y se borra la vista vieja. | Tablas propias del sistema de permisos. |
+
+Migración de datos de las entregas:
+- Cada entrega pasa a ser un préstamo de oficina, ya devuelto, en el que todo quedó como "gastado".
+- La dependencia pasa al lugar y a las observaciones del préstamo.
+- Si la entrega no tenía persona, se usa la del usuario que la registró.
+- Los movimientos de inventario de la entrega se reapuntan al préstamo nuevo.
+
+### 7.5 Manual de uso: préstamos de implementos y material de oficina
+
+**Implementos y materiales (Deportes → Implementos y materiales).** Aquí se registra todo lo que el área presta: implementos deportivos (balones, mallas, petos) y material de oficina (marcadores, lápices, resmas).
+1. Pulsa **Nuevo** y elige primero qué vas a registrar: implemento deportivo o material de oficina. Las categorías cambian según lo que elijas.
+2. Todo se cuenta por **unidad**. Si se compra por caja o paquete, marca "Se compra por caja o paquete" e indica cuántas unidades trae. Al comprar 3 cajas de 12 entran 36 unidades al inventario.
+3. En el listado puedes filtrar por tipo (Todos, Deportivo u Oficina) y por categoría, y ver cuántas unidades hay en tu sede.
+
+**Préstamos (Deportes → Préstamos).**
+1. Pulsa **Nuevo préstamo**, escribe la cédula de la persona y pulsa **Buscar**. Solo se presta a personas registradas.
+2. Elige el tipo: **Implemento deportivo** o **Material de oficina**.
+   - Cada persona puede tener a la vez un préstamo de cada tipo, pero no dos del mismo.
+   - Si tiene una sanción activa, no puede recibir préstamos.
+3. Agrega cada producto con su cantidad en unidades. Escribe para qué es, dónde se usará y hasta cuándo. Al guardar, lo prestado sale del inventario de tu sede y queda registrado quién lo entregó.
+4. Cuando lo devuelvan, abre el préstamo y pulsa **Registrar devolución**. Anota cuántas unidades volvieron bien y cuántas dañadas. En material de oficina anota también cuántas **se gastaron** (por ejemplo, marcadores que se acabaron). Lo que falte se cuenta como perdido.
+   - Lo que volvió bien regresa al inventario.
+   - Lo gastado no genera sanción.
+   - Lo dañado o perdido deja a la persona sancionada hasta que lo reponga desde **Sanciones**.
+   - Queda registrado quién recibió la devolución.
+5. Si no se devuelve antes de la fecha "hasta", el préstamo vence y la persona queda sancionada automáticamente. Las sanciones aparecen en **Solvencia**.
+
+La antigua pantalla "Entregas de material" ya no existe: sus registros son ahora préstamos de oficina en los que todo se gastó.
+
+### 7.6 Decisiones tomadas
+
+- **Productos (Fase 1):**
+  - La pantalla general "Productos" sigue mostrando todos los tipos, con su filtro.
+  - "Productos del comedor" muestra solo alimentos a quien no tiene la vista general.
+  - Implementos y material de oficina se editan en su propia pantalla, a la que redirige `productos.edit`.
+  - Un producto de otro tipo responde 404 y no 403, para no revelar que existe.
+- **Inventario del área en unidades (Fase 2):**
+  - Las existencias del área se guardan en unidades, tanto en la presentación como en la unidad base.
+  - La compra se sigue registrando en cajas en `detalle_compra`, pero se reparte entre sedes en unidades enteras: 36 → 18 y 18, en lugar de 2 y 1 cajas.
+  - El sobrante sigue yendo a la sede principal.
+- **Vista única (Fase 3):**
+  - Se conservan los nombres de ruta `admin.deportes.implementos.*` y la URL `/admin/deportes/implementos`, para no romper enlaces; cambian la etiqueta, el permiso (`implementos_materiales`) y el controlador.
+  - La vista también aparece en el menú de Administración, filtrada por material de oficina, para los roles de ese módulo.
+  - Las rutas GET viejas de Material de oficina redirigen a la vista nueva; las de escritura se eliminaron.
+  - Al editar se puede cambiar el tipo, pero la categoría y la caja deben corresponder al tipo nuevo.
+  - Las claves viejas se agregaron a `permisos.claves_obsoletas` para que el sincronizador no las recree.
+- **Préstamos (Fase 4):**
+  - Un préstamo es de un solo tipo; dentro de él puede haber varias líneas.
+  - **Límite:** máximo un préstamo pendiente (activo, vencido o pendiente de reposición) de cada tipo por persona. Se valida con la fila de la persona bloqueada, para evitar dos préstamos simultáneos.
+  - Cualquier sanción activa, venga de deportes u oficina, bloquea préstamos de los dos tipos.
+  - **Lotes:** el sistema elige los lotes automáticamente, primero los que vencen antes, y cada línea guarda su lote. La devolución y la reposición entran a ese mismo lote.
+  - **Unidades:** la salida usa `salidaPorConvertida`, así que nunca se descuenta una caja entera.
+  - **Devolución:** se registra en un solo paso y cierra el préstamo. En cada línea, bien + dañado + gastado + perdido = prestado; lo perdido se calcula solo.
+  - **Dañado:** no vuelve al inventario y genera sanción, como antes.
+  - **Gastado:** solo existe en material de oficina; en implementos deportivos se rechaza.
+  - **Vencido:** si se devuelve sin faltantes, su sanción se levanta como antes.
+  - "Entregas de material" se eliminó: `/admin/deportes/entregas` redirige a Préstamos filtrado por oficina.
+  - Quién entrega y quién recibe se guardan en `registrado_por_use_id` y `recibido_por_use_id`, columnas que ya existían.
+- **Seeders:**
+  - categorías de deportes (Balones, Raquetas y mallas, Equipos, Uniformes y petos, Accesorios de entrenamiento) y de oficina (Escritura, Papelería, Marcadores, Carpetas y archivo, Adhesivos y corte);
+  - presentaciones del área;
+  - marcadores y borradores de ejemplo;
+  - un atleta con un préstamo deportivo y uno de oficina activos a la vez;
+  - un préstamo vencido con su sanción.
+
+Pendientes conocidos:
+- La devolución no admite entregas parciales en días distintos.
+- No hay pantalla para crear presentaciones nuevas del área; se cargan con el seeder.
+- Inactivar desde salud un envase compartido (Bolsa) también lo inactiva para el área.
+- En el resumen de compras, un producto del área comprado por caja muestra el ícono de pastilla. Es solo cosmético.
+
+### 7.7 Cómo probar manualmente
+
+Preparación: `migrate:fresh --seed` y `permisos:sincronizar`, como en la sección 5.
+
+1. **Fase 1:**
+   - En Deportes → Implementos y materiales no aparece ningún medicamento.
+   - En Salud → Medicamentos no aparece ningún balón ni marcador.
+   - Al editar un medicamento, la lista de categorías solo trae categorías de medicamentos.
+2. **Fase 2:**
+   - Al crear un implemento, la unidad aparece fija como "Unidad".
+   - Marca "Se compra por caja o paquete": solo aparecen Caja, Paquete, Bolsa y Docena (y Resma en material de oficina).
+   - En Medicamentos, las presentaciones son solo las de medicinas.
+   - Compra 3 cajas de 12 de un producto del área: la vista previa reparte 36 unidades entre las sedes.
+3. **Fase 3:**
+   - Usa los filtros Todos, Deportivo y Oficina, y el de categoría.
+   - Crea un producto de cada tipo y comprueba que las categorías cambian al elegir el tipo.
+   - Abre `/admin/maestros/material-oficina`: lleva a la vista nueva filtrada por oficina.
+   - Los dos tipos aparecen al agregar productos a una compra.
+4. **Fase 4:**
+   - Presta 4 marcadores a un docente.
+   - Al mismo docente préstale un balón: se permite.
+   - Intenta un segundo préstamo deportivo: se rechaza.
+   - Devuelve 2 marcadores y marca 2 como gastados: no hay sanción y el inventario baja en 2.
+   - Revisa el préstamo vencido sembrado: tiene su sanción y la persona aparece no solvente.
+
+Pruebas automáticas:
+- `ProductosPorTipoTest`: Fase 1.
+- `PresentacionesAreaTest`: Fase 2.
+- `ImplementosMaterialesTest`: Fase 3.
+- `DeportesPrestamosTest` (17 casos): Fase 4.
+  - préstamo de marcadores a un docente;
+  - devolución parcial con consumo;
+  - un deportivo y uno de oficina a la vez, y dos deportivos rechazado;
+  - sanción por vencimiento;
+  - el inventario cuadra.
+
+### 7.8 Lista de commits
+
+| Commit | Mensaje |
+|---|---|
+| `daced9f` | Agrega el encargo de implementos y materiales |
+| `e6681e1` | Separa los medicamentos de los implementos deportivos (fase 1) |
+| `dba1e22` | Cuenta por unidad el inventario del área y separa las presentaciones por tipo (fase 2) |
+| `15d0bb5` | Unifica implementos deportivos y material de oficina en una sola vista (fase 3) |
+| `6c39dca` | Unifica préstamos y entregas de material en un solo flujo (fase 4) |
+| (este commit) | Agrega la sección de implementos y materiales al reporte (fase 5) |
