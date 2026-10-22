@@ -6,10 +6,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Préstamos de implementos</h1>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Préstamos</h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-basketball-ball mr-1" style="color:var(--color-primary)"></i>
-                        Control de implementos deportivos prestados · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        <i class="fas fa-hand-holding mr-1" style="color:var(--color-primary)"></i>
+                        Aquí ves lo que se prestó (balones, marcadores, resmas…), a quién y si ya lo devolvió · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
                 @canRoute('admin.deportes.prestamos.create')
@@ -27,6 +27,12 @@
                                 <h3 class="text-lg font-extrabold" style="color:var(--text-main);">Listado de préstamos</h3>
                             </div>
                             <div class="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+                                <select name="tipo" class="rounded-xl border px-3 py-2.5 text-sm" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);">
+                                    <option value="">Todos los tipos</option>
+                                    @foreach (array_keys(\App\Models\Deporte\PrestamoDeportivo::TIPOS_PRODUCTO) as $opcion)
+                                        <option value="{{ $opcion }}" @selected($tipo === $opcion)>{{ $opcion === 'oficina' ? 'Oficina' : 'Deportivo' }}</option>
+                                    @endforeach
+                                </select>
                                 <select name="estado" class="rounded-xl border px-3 py-2.5 text-sm" style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);">
                                     <option value="">Todos los estados</option>
                                     @foreach (['activo', 'vencido', 'sancionado', 'devuelto', 'repuesto'] as $opcion)
@@ -51,9 +57,9 @@
                             <tr class="border-b text-[13px] font-black uppercase tracking-wider" style="background-color:var(--bg-card);border-color:var(--border-color);color:var(--text-main);">
                                 <th class="px-6 py-4 text-center">#</th>
                                 <th class="px-6 py-4">Persona</th>
-                                <th class="px-6 py-4">Implemento</th>
-                                <th class="px-6 py-4">Entrega</th>
-                                <th class="px-6 py-4">Devolución esperada</th>
+                                <th class="px-6 py-4">Qué se prestó</th>
+                                <th class="px-6 py-4">Desde</th>
+                                <th class="px-6 py-4">Hasta</th>
                                 <th class="px-6 py-4 text-center">Estado</th>
                                 <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
@@ -69,8 +75,11 @@
                                         <p class="text-xs" style="color:var(--text-muted);">C.I. {{ $prestamo->persona?->cedula_per }}</p>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <p class="font-semibold" style="color:var(--text-main);">{{ $prestamo->producto?->nombre_pdt }}</p>
-                                        <p class="text-xs" style="color:var(--text-muted);">Cantidad: {{ $prestamo->cantidad_prd }} · {{ $prestamo->sede?->nombre_sed }}</p>
+                                        <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-extrabold uppercase {{ $prestamo->esDeOficina() ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300' : 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300' }}">
+                                            <i class="fas {{ $prestamo->esDeOficina() ? 'fa-pen' : 'fa-futbol' }}"></i> {{ $prestamo->esDeOficina() ? 'Oficina' : 'Deportivo' }}
+                                        </span>
+                                        <p class="mt-1 font-semibold" style="color:var(--text-main);">{{ $prestamo->resumenProductos() }}</p>
+                                        <p class="text-xs" style="color:var(--text-muted);">{{ $prestamo->motivo_prd }} · {{ $prestamo->sede?->nombre_sed }}</p>
                                     </td>
                                     <td class="px-6 py-4 text-sm" style="color:var(--text-main);">{{ $prestamo->fecha_prestamo_prd?->format('d/m/Y H:i') }}</td>
                                     <td class="px-6 py-4 text-sm" style="color:var(--text-main);">{{ $prestamo->fecha_devolucion_esperada_prd?->format('d/m/Y H:i') }}</td>
@@ -85,8 +94,9 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">
-                                        <i class="fas fa-basketball-ball fa-3x mb-3" style="opacity: 0.1"></i>
-                                        <p>No se encontraron préstamos registrados.</p>
+                                        <i class="fas fa-hand-holding fa-3x mb-3" style="opacity: 0.1"></i>
+                                        <p>No hay préstamos con esos filtros.</p>
+                                        <p class="mt-1 normal-case font-medium tracking-normal">Para prestar algo pulsa "Nuevo préstamo" y escribe la cédula de la persona.</p>
                                     </td>
                                 </tr>
                             @endforelse

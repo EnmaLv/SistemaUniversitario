@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Deporte\DeporteCalendario;
 use App\Models\Deporte\DeporteHorario;
+use App\Models\Deporte\PrestamoDeportivo;
 use App\Models\Deporte\TorneoDeportivo;
+use App\Models\TipoProducto;
 use App\Models\Usuario;
 use App\Services\Deporte\PrestamoService;
 use App\Support\Deportes\ServicioActividades;
@@ -243,25 +245,35 @@ class DeporteSeeder extends Seeder
     {
         (new CategoriaSeeder())->sembrarComplementarias();
 
-        $categoria = DB::table('categoria_producto as c')
-            ->join('tipo_producto as t', 't.id_tpr', '=', 'c.tpr_id')
-            ->where('t.nombre_tpr', 'Implemento deportivo')
-            ->where('c.nombre_cap', 'Balones')
-            ->value('c.id_cap');
         $unidad = DB::table('unidad_medida')->where('nombre_unm', 'Unidad')->value('id_unm')
             ?? DB::table('unidad_medida')->orderBy('id_unm')->value('id_unm');
 
-        if (! $categoria || ! $unidad || count($cedulas) < 2) {
+        if (! $unidad || count($cedulas) < 2) {
             return;
         }
 
-        $lotes = [];
+        $productos = [];
 
         foreach ([
-            'DEP-BAL-FS' => ['Balón de fútbol sala', 10],
-            'DEP-BAL-VO' => ['Balón de voleibol', 4],
-        ] as $codigo => [$nombre, $cantidad]) {
+            'DEP-BAL-FS' => ['Balón de fútbol sala', 10, TipoProducto::IMPLEMENTO_DEPORTIVO, ['Balones']],
+            'DEP-BAL-VO' => ['Balón de voleibol', 4, TipoProducto::IMPLEMENTO_DEPORTIVO, ['Balones']],
+            'OFI-MAR-AC' => ['Marcador acrílico', 24, TipoProducto::MATERIAL_OFICINA, ['Marcadores', 'Escritura']],
+            'OFI-BOR-PZ' => ['Borrador de pizarra', 6, TipoProducto::MATERIAL_OFICINA, ['Útiles', 'Escritura', 'Papelería']],
+        ] as $codigo => [$nombre, $cantidad, $tipo, $categorias]) {
+            $tipoId = TipoProducto::idPorNombre($tipo);
+            $categoria = $tipoId ? $this->categoria($tipoId, $categorias) : null;
+
+            if (! $categoria) {
+                continue;
+            }
+
             $producto = DB::table('producto')->where('codigo_pdt', $codigo)->value('id_pdt')
+                ?? DB::table('producto')
+                    ->join('categoria_producto', 'categoria_producto.id_cap', '=', 'producto.cap_id')
+                    ->where('categoria_producto.tpr_id', $tipoId)
+                    ->whereRaw('LOWER(producto.nombre_pdt) = ?', [mb_strtolower($nombre)])
+                    ->whereNull('producto.deleted_at')
+                    ->value('producto.id_pdt')
                 ?? DB::table('producto')->insertGetId([
                     'codigo_pdt'                => $codigo,
                     'nombre_pdt'                => $nombre,
@@ -275,7 +287,7 @@ class DeporteSeeder extends Seeder
                     'updated_at'                => now(),
                 ], 'id_pdt');
 
-            $lotes[$codigo] = DB::table('lote')->insertGetId([
+            $lote = DB::table('lote')->insertGetId([
                 'codigo_lote_lot'      => 'INI-' . $codigo . '-' . $sedeId,
                 'fecha_entrada_lot'    => now()->toDateString(),
                 'cantidad_inicial_lot' => $cantidad,
@@ -286,34 +298,76 @@ class DeporteSeeder extends Seeder
                 'updated_at'           => now(),
             ], 'id_lot');
 
-            app(ServicioInventario::class)->entrada($lotes[$codigo], $sedeId, $cantidad, $cantidad, [
+            app(ServicioInventario::class)->entrada($lote, $sedeId, $cantidad, $cantidad, [
                 'mod_id'              => PrestamoService::moduloDeporteId(),
                 'referencia_type_moi' => 'inventario_inicial',
-                'observacion_moi'     => 'Implementos de ejemplo del módulo de deportes',
+                'observacion_moi'     => 'Implementos y materiales de ejemplo del módulo de deportes',
             ]);
+
+            $productos[$codigo] = (int) $producto;
         }
 
         $servicio = app(PrestamoService::class);
 
-        $servicio->registrar([
-            'cedula'                    => $cedulas[0],
-            'lot_id'                    => $lotes['DEP-BAL-FS'],
-            'cantidad'                  => 2,
-            'motivo'                    => 'Práctica libre de fútbol sala',
-            'epd_id'                    => $espacios['multiple'],
-            'fecha_devolucion_esperada' => now()->addDay()->format('Y-m-d H:i:s'),
-        ], $sedeId);
+        if (isset($productos['DEP-BAL-FS'])) {
+            $servicio->registrar([
+                'cedula'                    => $cedulas[0],
+                'tipo'                      => PrestamoDeportivo::TIPO_DEPORTIVO,
+                'items'                     => [['pdt_id' => $productos['DEP-BAL-FS'], 'cantidad' => 2]],
+                'motivo'                    => 'Práctica libre de fútbol sala',
+                'epd_id'                    => $espacios['multiple'],
+                'fecha_devolucion_esperada' => now()->addDay()->format('Y-m-d H:i:s'),
+            ], $sedeId);
+        }
 
-        $servicio->registrar([
-            'cedula'                    => $cedulas[1],
-            'lot_id'                    => $lotes['DEP-BAL-VO'],
-            'cantidad'                  => 1,
-            'motivo'                    => 'Entrenamiento de voleibol',
-            'lugar'                     => 'Patio central',
-            'fecha_prestamo'            => now()->subDays(3)->format('Y-m-d H:i:s'),
-            'fecha_devolucion_esperada' => now()->subDays(2)->format('Y-m-d H:i:s'),
-        ], $sedeId);
+        if (isset($productos['OFI-MAR-AC'])) {
+            $items = [['pdt_id' => $productos['OFI-MAR-AC'], 'cantidad' => 4]];
+
+            if (isset($productos['OFI-BOR-PZ'])) {
+                $items[] = ['pdt_id' => $productos['OFI-BOR-PZ'], 'cantidad' => 1];
+            }
+
+            $servicio->registrar([
+                'cedula'                    => $cedulas[0],
+                'tipo'                      => PrestamoDeportivo::TIPO_OFICINA,
+                'items'                     => $items,
+                'motivo'                    => 'Planillas y pizarra del torneo interno',
+                'lugar'                     => 'Oficina de la Coordinación de Deportes',
+                'fecha_devolucion_esperada' => now()->addDays(5)->format('Y-m-d H:i:s'),
+            ], $sedeId);
+        }
+
+        if (isset($productos['DEP-BAL-VO'])) {
+            $servicio->registrar([
+                'cedula'                    => $cedulas[1],
+                'tipo'                      => PrestamoDeportivo::TIPO_DEPORTIVO,
+                'items'                     => [['pdt_id' => $productos['DEP-BAL-VO'], 'cantidad' => 1]],
+                'motivo'                    => 'Entrenamiento de voleibol',
+                'lugar'                     => 'Patio central',
+                'fecha_prestamo'            => now()->subDays(3)->format('Y-m-d H:i:s'),
+                'fecha_devolucion_esperada' => now()->subDays(2)->format('Y-m-d H:i:s'),
+            ], $sedeId);
+        }
 
         $servicio->marcarVencidos();
+    }
+
+    private function categoria(int $tipoId, array $nombres): ?int
+    {
+        foreach ($nombres as $nombre) {
+            $id = DB::table('categoria_producto')
+                ->where('tpr_id', $tipoId)
+                ->whereRaw('LOWER(nombre_cap) = ?', [mb_strtolower($nombre)])
+                ->whereNull('deleted_at')
+                ->value('id_cap');
+
+            if ($id) {
+                return (int) $id;
+            }
+        }
+
+        $id = DB::table('categoria_producto')->where('tpr_id', $tipoId)->whereNull('deleted_at')->orderBy('id_cap')->value('id_cap');
+
+        return $id === null ? null : (int) $id;
     }
 }

@@ -9,8 +9,8 @@
     $alertasStock = $implementos->where('alerta', true)->count();
     $nombrePersona = fn ($persona) => $persona ? trim($persona->nombres_per . ' ' . $persona->apellidos_per) : '-';
     $accesos = [
-        ['ruta' => 'admin.deportes.prestamos.create', 'url' => route('admin.deportes.prestamos.create'), 'icono' => 'fa-basketball-ball', 'titulo' => 'Prestar implemento', 'texto' => 'Entrega un balón o malla a una persona por cédula.'],
-        ['ruta' => 'admin.deportes.prestamos.index', 'url' => route('admin.deportes.prestamos.index', ['estado' => 'activo']), 'icono' => 'fa-undo', 'titulo' => 'Registrar devolución', 'texto' => 'Busca el préstamo y marca cómo volvió el implemento.'],
+        ['ruta' => 'admin.deportes.prestamos.create', 'url' => route('admin.deportes.prestamos.create'), 'icono' => 'fa-basketball-ball', 'titulo' => 'Prestar', 'texto' => 'Presta un balón, marcadores u otro material a una persona por cédula.'],
+        ['ruta' => 'admin.deportes.prestamos.index', 'url' => route('admin.deportes.prestamos.index', ['estado' => 'activo']), 'icono' => 'fa-undo', 'titulo' => 'Registrar devolución', 'texto' => 'Busca el préstamo y anota cuánto volvió bien, dañado o gastado.'],
         ['ruta' => 'admin.deportes.asistencia.index', 'url' => route('admin.deportes.asistencia.index'), 'icono' => 'fa-clipboard-check', 'titulo' => 'Tomar asistencia', 'texto' => 'Elige el evento y marca a los presentes por cédula.'],
         ['ruta' => 'admin.deportes.calendarios.create', 'url' => route('admin.deportes.calendarios.create'), 'icono' => 'fa-plus-circle', 'titulo' => 'Crear actividad', 'texto' => 'Registra una jornada o un entrenamiento semanal.'],
     ];
@@ -23,7 +23,7 @@
     <div>
         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">Inicio de Deportes</h1>
         <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-            Lo que pasa hoy, los préstamos por devolver, las sanciones activas y el stock de implementos{{ $datos['sedeNombre'] ? ' de la sede ' . $datos['sedeNombre'] : '' }}.
+            Lo que pasa hoy, lo prestado por devolver, las sanciones activas y las existencias de implementos y materiales{{ $datos['sedeNombre'] ? ' de la sede ' . $datos['sedeNombre'] : '' }}.
         </p>
     </div>
     <p class="text-sm font-bold" style="color: var(--text-main);">{{ \Carbon\Carbon::now()->format('d/m/Y') }}</p>
@@ -64,7 +64,7 @@
         <p class="text-2xl font-black {{ $sanciones->isNotEmpty() ? 'text-amber-600' : '' }}" style="{{ $sanciones->isEmpty() ? 'color: var(--text-main);' : '' }}">{{ $sanciones->count() }}</p>
     </div>
     <div style="background-color: var(--bg-card); border-color: var(--border-color);" class="col-span-2 md:col-span-1 p-4 rounded-2xl border shadow-sm text-center">
-        <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Implementos en alerta</p>
+        <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Productos por reponer</p>
         <p class="text-2xl font-black {{ $alertasStock > 0 ? 'text-red-600' : '' }}" style="{{ $alertasStock === 0 ? 'color: var(--text-main);' : '' }}">{{ $alertasStock }}</p>
     </div>
 </div>
@@ -119,13 +119,13 @@
                 @php $vencido = $prestamo->estado_prd === \App\Models\Deporte\PrestamoDeportivo::ESTADO_VENCIDO; @endphp
                 <li class="flex items-center justify-between gap-3 px-5 py-3">
                     <a href="{{ route('admin.deportes.prestamos.show', $prestamo->id_prd) }}" class="min-w-0">
-                        <p class="truncate text-sm font-bold" style="color: var(--text-main);">{{ $prestamo->producto?->nombre_pdt ?? 'Implemento' }} x{{ $prestamo->cantidad_prd }}</p>
+                        <p class="truncate text-sm font-bold" style="color: var(--text-main);"><i class="fas {{ $prestamo->esDeOficina() ? 'fa-pen' : 'fa-futbol' }} mr-1 text-xs" style="color: var(--text-muted);"></i>{{ $prestamo->resumenProductos() }}</p>
                         <p class="text-xs" style="color: var(--text-muted);">{{ $nombrePersona($prestamo->persona) }} · devolver el {{ $prestamo->fecha_devolucion_esperada_prd?->format('d/m/Y h:i A') }}</p>
                     </a>
                     <span class="shrink-0 rounded-lg px-2 py-1 text-[10px] font-extrabold uppercase {{ $vencido ? 'bg-red-100 text-red-700' : 'bg-sky-100 text-sky-700' }}">{{ $vencido ? 'Vencido' : 'Activo' }}</span>
                 </li>
             @empty
-                <li class="px-5 py-8 text-center text-sm" style="color: var(--text-muted);">No hay implementos prestados en este momento.</li>
+                <li class="px-5 py-8 text-center text-sm" style="color: var(--text-muted);">No hay nada prestado en este momento.</li>
             @endforelse
         </ul>
     </div>
@@ -155,10 +155,10 @@
 
     <div style="background-color: var(--bg-card); border-color: var(--border-color);" class="rounded-2xl border shadow-sm overflow-hidden">
         <div class="flex items-center justify-between border-b px-5 py-3" style="border-color: var(--border-color);">
-            <h3 class="text-base font-extrabold" style="color: var(--text-main);"><i class="fas fa-boxes mr-1 text-red-700"></i> Stock de implementos</h3>
+            <h3 class="text-base font-extrabold" style="color: var(--text-main);"><i class="fas fa-boxes mr-1 text-red-700"></i> Existencias de implementos y materiales</h3>
             @if (\Illuminate\Support\Facades\Route::has('admin.deportes.implementos.index'))
                 @canRoute('admin.deportes.implementos.index')
-                <a href="{{ route('admin.deportes.implementos.index') }}" class="text-xs font-bold text-red-700 hover:underline">Ver implementos</a>
+                <a href="{{ route('admin.deportes.implementos.index') }}" class="text-xs font-bold text-red-700 hover:underline">Ver todos</a>
                 @endcanRoute
             @endif
         </div>
@@ -166,8 +166,8 @@
             <table class="w-full text-left text-sm">
                 <thead>
                     <tr class="border-b text-[11px] font-black uppercase tracking-wider" style="border-color: var(--border-color); color: var(--text-muted);">
-                        <th class="px-5 py-2">Implemento</th>
-                        <th class="px-3 py-2 text-center">Disponible</th>
+                        <th class="px-5 py-2">Producto</th>
+                        <th class="px-3 py-2 text-center">Disponible (unidades)</th>
                         <th class="px-3 py-2 text-center">Prestados</th>
                         <th class="px-3 py-2 text-center">Mínimo</th>
                     </tr>
@@ -176,17 +176,17 @@
                     @forelse ($implementos as $implemento)
                         <tr class="border-b {{ $implemento->alerta ? 'bg-red-50 dark:bg-red-950/20' : '' }}" style="border-color: var(--border-color); color: var(--text-main);">
                             <td class="px-5 py-2 font-semibold">
-                                {{ $implemento->nombre_pdt }}
+                                <i class="fas {{ $implemento->oficina ? 'fa-pen' : 'fa-futbol' }} mr-1 text-xs" style="color: var(--text-muted);" title="{{ $implemento->oficina ? 'Material de oficina' : 'Implemento deportivo' }}"></i>{{ $implemento->nombre_pdt }}
                                 @if ($implemento->alerta)
                                     <span class="ml-1 rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-700">Reponer</span>
                                 @endif
                             </td>
                             <td class="px-3 py-2 text-center font-bold">{{ rtrim(rtrim(number_format($implemento->cantidad, 2, ',', '.'), '0'), ',') }}</td>
-                            <td class="px-3 py-2 text-center">{{ $implemento->prestados }}</td>
+                            <td class="px-3 py-2 text-center">{{ rtrim(rtrim(number_format($implemento->prestados, 2, ',', '.'), '0'), ',') }}</td>
                             <td class="px-3 py-2 text-center" style="color: var(--text-muted);">{{ rtrim(rtrim(number_format($implemento->minimo, 2, ',', '.'), '0'), ',') }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="px-5 py-8 text-center text-sm" style="color: var(--text-muted);">No hay implementos deportivos registrados. Se agregan como productos de tipo "Implemento deportivo" y entran al inventario con una compra.</td></tr>
+                        <tr><td colspan="4" class="px-5 py-8 text-center text-sm" style="color: var(--text-muted);">No hay implementos ni materiales registrados. Se agregan en "Implementos y materiales" y entran al inventario con una compra.</td></tr>
                     @endforelse
                 </tbody>
             </table>

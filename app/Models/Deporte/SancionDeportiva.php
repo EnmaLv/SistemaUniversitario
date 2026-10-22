@@ -88,8 +88,8 @@ class SancionDeportiva extends Model
     public static function etiquetaForma(?string $forma): string
     {
         return match ($forma) {
-            self::FORMA_DEVOLUCION => 'Devolución del implemento',
-            self::FORMA_REPOSICION => 'Reposición del implemento',
+            self::FORMA_DEVOLUCION => 'Devolución de lo prestado',
+            self::FORMA_REPOSICION => 'Reposición de lo dañado o perdido',
             default                => '—',
         };
     }

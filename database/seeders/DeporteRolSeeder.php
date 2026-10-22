@@ -20,7 +20,7 @@ class DeporteRolSeeder extends Seeder
             $rol = Rol::create([
                 'nombre_rol'      => 'Coordinador de Deportes',
                 'slug_rol'        => self::SLUG,
-                'descripcion_rol' => 'Gestiona espacios, actividades, préstamos de implementos, sanciones, solvencias y entregas de material del módulo de deportes',
+                'descripcion_rol' => 'Gestiona espacios, actividades, préstamos de implementos y material de oficina, sanciones y solvencias del módulo de deportes',
                 'status_id'       => 1,
             ]);
         } elseif ($rol->trashed()) {

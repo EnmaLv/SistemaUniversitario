@@ -23,7 +23,7 @@ class SancionDeporteController extends Controller
         $buscar = trim((string) $request->query('q', ''));
         $estado = $request->query('estado', SancionDeportiva::ESTADO_ACTIVA);
 
-        $sanciones = SancionDeportiva::with(['persona', 'prestamo.producto', 'levantadaPor.persona'])
+        $sanciones = SancionDeportiva::with(['persona', 'prestamo.producto', 'prestamo.detalles.producto', 'levantadaPor.persona'])
             ->when($buscar !== '', function ($consulta) use ($buscar) {
                 $patron = '%' . mb_strtolower($buscar) . '%';
 
@@ -44,7 +44,7 @@ class SancionDeporteController extends Controller
 
     public function show($id)
     {
-        $sancion = SancionDeportiva::with(['persona', 'prestamo.producto', 'prestamo.lote', 'prestamo.sede', 'aplicadaPor.persona', 'levantadaPor.persona', 'loteReposicion'])
+        $sancion = SancionDeportiva::with(['persona', 'prestamo.producto', 'prestamo.lote', 'prestamo.sede', 'prestamo.detalles.producto', 'prestamo.detalles.lote', 'aplicadaPor.persona', 'levantadaPor.persona', 'loteReposicion'])
             ->findOrFail($id);
 
         return view('admin.deportes.sanciones.show', compact('sancion'));
@@ -68,6 +68,6 @@ class SancionDeporteController extends Controller
             return back()->with('error', MensajeError::de($e));
         }
 
-        return redirect()->route('admin.deportes.sanciones.show', $sancion->id_snd)->with('success', 'Reposición registrada: la sanción quedó levantada y el implemento entró al inventario.');
+        return redirect()->route('admin.deportes.sanciones.show', $sancion->id_snd)->with('success', 'Reposición registrada: la sanción quedó levantada y lo repuesto entró al inventario.');
     }
 }

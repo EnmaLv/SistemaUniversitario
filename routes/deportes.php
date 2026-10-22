@@ -78,10 +78,8 @@ Route::prefix('/deportes')->name('admin.deportes.')->group(function () {
     Route::get('/solvencia', [\App\Http\Controllers\Deporte\SolvenciaDeporteController::class, 'index'])->name('solvencia.index');
     Route::get('/solvencia/pdf', [\App\Http\Controllers\Deporte\SolvenciaDeporteController::class, 'pdf'])->name('solvencia.pdf');
 
-    Route::get('/entregas', [\App\Http\Controllers\Deporte\EntregaMaterialController::class, 'index'])->name('entregas.index');
-    Route::get('/entregas/create', [\App\Http\Controllers\Deporte\EntregaMaterialController::class, 'create'])->name('entregas.create');
-    Route::post('/entregas', [\App\Http\Controllers\Deporte\EntregaMaterialController::class, 'store'])->name('entregas.store');
-    Route::get('/entregas/{id}', [\App\Http\Controllers\Deporte\EntregaMaterialController::class, 'show'])->whereNumber('id')->name('entregas.show');
+    Route::get('/entregas', [\App\Http\Controllers\Deporte\PrestamoDeporteController::class, 'redirigirEntregas'])->name('entregas.index');
+    Route::get('/entregas/{ruta}', [\App\Http\Controllers\Deporte\PrestamoDeporteController::class, 'redirigirEntregas'])->where('ruta', '.*')->name('entregas.anteriores');
 });
 
 Route::prefix('/deportes/implementos')->name('admin.deportes.implementos.')->controller(\App\Http\Controllers\ImplementoMaterialController::class)->group(function () {

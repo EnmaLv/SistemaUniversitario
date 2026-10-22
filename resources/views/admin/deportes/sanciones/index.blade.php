@@ -6,10 +6,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Sanciones deportivas</h1>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Sanciones por préstamos</h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         <i class="fas fa-ban mr-1" style="color:var(--color-primary)"></i>
-                        Por préstamos vencidos, implementos dañados o perdidos · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        Personas que no devolvieron a tiempo o que dañaron o perdieron algo prestado (deportivo u oficina); mientras estén activas no reciben préstamos · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
             </div>
@@ -46,7 +46,7 @@
                                 <th class="px-6 py-4 text-center">#</th>
                                 <th class="px-6 py-4">Persona</th>
                                 <th class="px-6 py-4">Motivo</th>
-                                <th class="px-6 py-4">Implemento</th>
+                                <th class="px-6 py-4">Qué se prestó</th>
                                 <th class="px-6 py-4">Fecha</th>
                                 <th class="px-6 py-4 text-center">Estado</th>
                                 <th class="px-6 py-4 text-center">Acciones</th>
@@ -63,7 +63,7 @@
                                         <p class="text-xs" style="color:var(--text-muted);">C.I. {{ $sancion->persona?->cedula_per }}</p>
                                     </td>
                                     <td class="px-6 py-4 text-sm" style="color:var(--text-main);">{{ \Illuminate\Support\Str::limit($sancion->motivo_snd, 70) }}</td>
-                                    <td class="px-6 py-4 text-sm" style="color:var(--text-main);">{{ $sancion->prestamo?->producto?->nombre_pdt }}</td>
+                                    <td class="px-6 py-4 text-sm" style="color:var(--text-main);">{{ $sancion->prestamo?->resumenProductos() }}</td>
                                     <td class="px-6 py-4 text-sm" style="color:var(--text-main);">{{ $sancion->fecha_sancion_snd?->format('d/m/Y') }}</td>
                                     <td class="px-6 py-4 text-center">
                                         <span class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide {{ $sancion->estaActiva() ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' }}">

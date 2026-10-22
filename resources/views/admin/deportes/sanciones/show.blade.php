@@ -11,12 +11,19 @@
             'Motivo'            => $sancion->motivo_snd,
             'Fecha de sanción'  => $sancion->fecha_sancion_snd?->format('d/m/Y'),
             'Aplicada por'      => $sancion->aplicadaPor?->nombre_completo ?? 'Sistema (vencimiento automático)',
-            'Préstamo'          => $prestamo ? '#' . $prestamo->id_prd . ' · ' . ($prestamo->producto?->nombre_pdt ?? '') . ' x' . $prestamo->cantidad_prd . ' · ' . ($prestamo->sede?->nombre_sed ?? '') : '—',
+            'Préstamo'          => $prestamo ? '#' . $prestamo->id_prd . ' · ' . \App\Models\Deporte\PrestamoDeportivo::etiquetaTipo($prestamo->tipo_prd) . ' · ' . $prestamo->resumenProductos() . ' · ' . ($prestamo->sede?->nombre_sed ?? '') : '—',
             'Estado'            => ucfirst($sancion->estado_snd),
             'Levantamiento'     => $sancion->fecha_levantamiento_snd ? $sancion->fecha_levantamiento_snd->format('d/m/Y') . ' · ' . \App\Models\Deporte\SancionDeportiva::etiquetaForma($sancion->forma_levantamiento_snd) : '—',
             'Levantada por'     => $sancion->levantadaPor?->nombre_completo ?? '—',
             'Lote de reposición' => $sancion->loteReposicion?->codigo_lote_lot ?? '—',
         ];
+        $sinDevolver = $prestamo && $prestamo->fecha_devolucion_real_prd === null;
+        $porReponer = $prestamo
+            ? $prestamo->detalles
+                ->map(fn ($detalle) => ['nombre' => $detalle->producto?->nombre_pdt ?? 'Producto', 'lote' => $detalle->lote?->codigo_lote_lot, 'cantidad' => $sinDevolver ? (float) $detalle->cantidad_dpd : $detalle->porReponer()])
+                ->filter(fn ($linea) => $linea['cantidad'] > 0)
+                ->values()
+            : collect();
     @endphp
 
     <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
@@ -62,7 +69,7 @@
             @if ($sancion->estaActiva() && $prestamo && in_array($prestamo->estado_prd, ['vencido', 'sancionado'], true))
                 @if ($prestamo->estado_prd === 'vencido')
                     <div class="mb-4 rounded-xl border p-4 text-sm" style="border-color:var(--border-color);color:var(--text-muted);">
-                        <i class="fas fa-info-circle mr-1"></i> Si la persona trae el implemento prestado, registre la devolución desde el préstamo: la sanción se levanta automáticamente. Use la reposición solo si entrega un implemento nuevo igual.
+                        <i class="fas fa-info-circle mr-1"></i> Si la persona trae lo prestado, registra la devolución desde el préstamo (allí también se anota lo que se gastó): la sanción se levanta sola. Usa la reposición solo si entrega productos nuevos iguales.
                     </div>
                 @endif
 
@@ -71,15 +78,20 @@
                     @csrf
                     @method('PUT')
                     <h3 class="text-lg font-extrabold" style="color:var(--text-main);">Registrar reposición</h3>
-                    <p class="mb-4 text-xs" style="color:var(--text-muted);">
-                        La persona entrega {{ $prestamo->cantidad_prd }} {{ $prestamo->producto?->nombre_pdt }} igual(es). Entra al inventario de la sede {{ $prestamo->sede?->nombre_sed }} y la sanción queda levantada.
+                    <p class="mb-2 text-xs" style="color:var(--text-muted);">
+                        La persona entrega productos nuevos iguales a lo dañado o perdido. Entran al inventario de la sede {{ $prestamo->sede?->nombre_sed }} y la sanción queda levantada.
                     </p>
+                    <ul class="mb-4 list-disc pl-5 text-sm" style="color:var(--text-main);">
+                        @foreach ($porReponer as $linea)
+                            <li>{{ \App\Models\Deporte\DetallePrestamoDeportivo::numero($linea['cantidad']) }} × {{ $linea['nombre'] }}</li>
+                        @endforeach
+                    </ul>
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div>
                             <label for="lote" class="mb-1.5 block text-xs font-extrabold uppercase tracking-wider" style="color:var(--text-muted);">Lote de entrada</label>
                             <select id="lote" name="lote" class="{{ $claseInput }}" style="{{ $estiloInput }}">
                                 <option value="nuevo" @selected(old('lote', 'nuevo') === 'nuevo')>Lote nuevo de reposición</option>
-                                <option value="original" @selected(old('lote') === 'original')>Lote original del préstamo ({{ $prestamo->lote?->codigo_lote_lot }})</option>
+                                <option value="original" @selected(old('lote') === 'original')>Lote original de cada producto ({{ $porReponer->pluck('lote')->filter()->unique()->implode(', ') }})</option>
                             </select>
                         </div>
                         <div>
@@ -109,7 +121,7 @@
             formulario.addEventListener('submit', function (evento) {
                 if (formulario.dataset.confirmado === '1') return;
                 evento.preventDefault();
-                const texto = 'Se registrará la entrada del implemento repuesto al inventario y se levantará la sanción.';
+                const texto = 'Se registrará la entrada de lo repuesto al inventario y se levantará la sanción.';
                 const enviar = () => { formulario.dataset.confirmado = '1'; formulario.submit(); };
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({ title: '¿Registrar reposición?', text: texto, icon: 'question', showCancelButton: true, confirmButtonColor: 'var(--color-primary)', confirmButtonText: 'Sí, registrar', cancelButtonText: 'Cancelar' })

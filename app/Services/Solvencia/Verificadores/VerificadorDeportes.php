@@ -21,7 +21,7 @@ class VerificadorDeportes implements VerificadorSolvencia
 
     public function etiqueta(): string
     {
-        return 'Deportes';
+        return 'Deportes (préstamos de implementos y material de oficina)';
     }
 
     public function verificar(Persona $persona): array
@@ -29,14 +29,14 @@ class VerificadorDeportes implements VerificadorSolvencia
         $this->prestamos->marcarVencidos((int) $persona->id_per);
 
         $sanciones = SancionDeportiva::todasLasSedes()
-            ->with(['prestamo' => fn ($consulta) => $consulta->todasLasSedes(), 'prestamo.producto', 'prestamo.sede'])
+            ->with(['prestamo' => fn ($consulta) => $consulta->todasLasSedes(), 'prestamo.producto', 'prestamo.detalles.producto', 'prestamo.sede'])
             ->where('per_id', $persona->id_per)
             ->activas()
             ->orderBy('fecha_sancion_snd')
             ->get();
 
         $prestamos = PrestamoDeportivo::todasLasSedes()
-            ->with(['producto', 'sede'])
+            ->with(['producto', 'detalles.producto', 'sede'])
             ->where('per_id', $persona->id_per)
             ->pendientes()
             ->orderBy('fecha_prestamo_prd')
@@ -48,7 +48,7 @@ class VerificadorDeportes implements VerificadorSolvencia
             $pendientes[] = [
                 'tipo'    => 'sancion',
                 'titulo'  => 'Sanción activa #' . $sancion->id_snd,
-                'detalle' => trim($sancion->motivo_snd . ' Implemento: ' . ($sancion->prestamo?->producto?->nombre_pdt ?? '—') . '.'),
+                'detalle' => trim($sancion->motivo_snd . ' Préstamo: ' . ($sancion->prestamo?->resumenProductos() ?? '—') . '.'),
                 'fecha'   => $sancion->fecha_sancion_snd?->format('d/m/Y'),
             ];
         }
@@ -56,11 +56,10 @@ class VerificadorDeportes implements VerificadorSolvencia
         foreach ($prestamos as $prestamo) {
             $pendientes[] = [
                 'tipo'    => 'prestamo',
-                'titulo'  => 'Préstamo #' . $prestamo->id_prd . ' (' . PrestamoDeportivo::etiquetaEstado($prestamo->estado_prd) . ')',
+                'titulo'  => 'Préstamo #' . $prestamo->id_prd . ' de ' . mb_strtolower(PrestamoDeportivo::etiquetaTipo($prestamo->tipo_prd)) . ' (' . PrestamoDeportivo::etiquetaEstado($prestamo->estado_prd) . ')',
                 'detalle' => sprintf(
-                    '%s x%d, sede %s. Devolución esperada: %s.',
-                    $prestamo->producto?->nombre_pdt ?? 'Implemento',
-                    $prestamo->cantidad_prd,
+                    '%s, sede %s. Devolución esperada: %s.',
+                    $prestamo->resumenProductos(),
                     $prestamo->sede?->nombre_sed ?? '—',
                     $prestamo->fecha_devolucion_esperada_prd?->format('d/m/Y H:i') ?? '—'
                 ),

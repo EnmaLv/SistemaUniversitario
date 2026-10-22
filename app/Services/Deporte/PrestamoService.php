@@ -3,6 +3,7 @@
 namespace App\Services\Deporte;
 
 use App\Exceptions\Deporte\OperacionDeporteException;
+use App\Models\Deporte\DetallePrestamoDeportivo;
 use App\Models\Deporte\PrestamoDeportivo;
 use App\Models\Deporte\SancionDeportiva;
 use App\Models\Lote;
@@ -22,11 +23,15 @@ class PrestamoService
 
     public const REFERENCIA_SANCION = 'sancion_deportiva';
 
-    public const MOTIVO_VENCIDO = 'Préstamo vencido sin devolver el implemento.';
+    public const MOTIVO_VENCIDO = 'Préstamo vencido sin devolver lo prestado.';
 
-    public const MOTIVO_DANADO = 'Implemento devuelto dañado: debe reponerlo.';
+    public const MOTIVO_DANADO = 'Material devuelto dañado: debe reponerlo.';
 
-    public const MOTIVO_PERDIDO = 'Implemento perdido: debe reponerlo.';
+    public const MOTIVO_PERDIDO = 'Material perdido o no devuelto: debe reponerlo.';
+
+    public const MOTIVO_DANADO_PERDIDO = 'Material devuelto dañado y material perdido: debe reponerlo.';
+
+    private const TOLERANCIA = 0.0001;
 
     public function __construct(private ServicioInventario $inventario)
     {
@@ -56,19 +61,32 @@ class PrestamoService
         return $id === null ? null : (int) $id;
     }
 
+    public static function tipoDeProducto(int $productoId): ?string
+    {
+        foreach (PrestamoDeportivo::TIPOS_PRODUCTO as $tipo => $nombreTipo) {
+            if (TipoProducto::productoEsDeTipo($productoId, $nombreTipo)) {
+                return $tipo;
+            }
+        }
+
+        return null;
+    }
+
     public function situacionPersona(int $personaId): array
     {
         $this->marcarVencidos($personaId);
 
         return [
-            'prestamo_pendiente' => PrestamoDeportivo::todasLasSedes()
-                ->with(['producto', 'sede'])
+            'pendientes' => PrestamoDeportivo::todasLasSedes()
+                ->with(['detalles.producto', 'producto', 'sede'])
                 ->where('per_id', $personaId)
                 ->pendientes()
                 ->orderByDesc('id_prd')
-                ->first(),
+                ->get()
+                ->unique('tipo_prd')
+                ->keyBy('tipo_prd'),
             'sancion_activa' => SancionDeportiva::todasLasSedes()
-                ->with('prestamo.producto')
+                ->with('prestamo.detalles.producto')
                 ->where('per_id', $personaId)
                 ->activas()
                 ->orderByDesc('id_snd')
@@ -76,20 +94,30 @@ class PrestamoService
         ];
     }
 
-    public function implementosDisponibles(int $sedeId): Collection
+    public function productosDisponibles(int $sedeId): Collection
     {
-        $productos = TipoProducto::productosDeTipos([TipoProducto::IMPLEMENTO_DEPORTIVO])
+        $oficina = mb_strtolower(TipoProducto::MATERIAL_OFICINA);
+
+        return TipoProducto::productosDeTipos(array_values(PrestamoDeportivo::TIPOS_PRODUCTO))
             ->where('producto.status_id', 1)
             ->orderBy('producto.nombre_pdt')
-            ->get(['producto.id_pdt', 'producto.codigo_pdt', 'producto.nombre_pdt']);
+            ->get(['producto.id_pdt', 'producto.codigo_pdt', 'producto.nombre_pdt', 'tipo_producto.nombre_tpr'])
+            ->map(function ($producto) use ($sedeId, $oficina) {
+                $producto->tipo = mb_strtolower((string) $producto->nombre_tpr) === $oficina
+                    ? PrestamoDeportivo::TIPO_OFICINA
+                    : PrestamoDeportivo::TIPO_DEPORTIVO;
+                $producto->disponible = $this->disponible((int) $producto->id_pdt, $sedeId);
 
-        return $productos->map(function ($producto) use ($sedeId) {
-            $producto->lotes = $this->inventario->existenciasDisponibles((int) $producto->id_pdt, $sedeId)
-                ->filter(fn ($existencia) => (float) $existencia->cantidad_isl >= 1)
-                ->values();
+                return $producto;
+            })
+            ->filter(fn ($producto) => $producto->disponible >= 1)
+            ->values();
+    }
 
-            return $producto;
-        })->filter(fn ($producto) => $producto->lotes->isNotEmpty())->values();
+    public function disponible(int $productoId, int $sedeId): float
+    {
+        return (float) $this->inventario->existenciasDisponibles($productoId, $sedeId)
+            ->sum(fn ($existencia) => floor((float) $existencia->cantidad_convertida_isl + self::TOLERANCIA));
     }
 
     public function registrar(array $datos, int $sedeId): PrestamoDeportivo
@@ -102,55 +130,75 @@ class PrestamoService
 
         $this->marcarVencidos($persona->id_per);
 
-        $cantidad = max(1, (int) ($datos['cantidad'] ?? 1));
-        $loteId = (int) $datos['lot_id'];
-        $productoId = (int) ($datos['pdt_id'] ?? 0) ?: (int) Lote::where('id_lot', $loteId)->value('pdt_id');
-        $fechaPrestamo = isset($datos['fecha_prestamo']) ? Carbon::parse($datos['fecha_prestamo']) : now();
+        $items = $this->agrupar($datos['items'] ?? []);
+
+        if ($items === []) {
+            throw new OperacionDeporteException('Agregue al menos un producto con una cantidad mayor que cero.');
+        }
+
+        $tipo = $datos['tipo'] ?? static::tipoDeProducto((int) array_key_first($items));
+
+        if (! array_key_exists((string) $tipo, PrestamoDeportivo::TIPOS_PRODUCTO)) {
+            throw new OperacionDeporteException('Elija si presta implementos deportivos o material de oficina.');
+        }
+
+        foreach (array_keys($items) as $productoId) {
+            if (static::tipoDeProducto($productoId) !== $tipo) {
+                throw new OperacionDeporteException('Todos los productos de este préstamo deben ser de tipo ' . PrestamoDeportivo::etiquetaTipo($tipo) . '. Para el otro tipo registre un préstamo aparte.');
+            }
+        }
+
+        $fechaPrestamo = ! empty($datos['fecha_prestamo']) ? Carbon::parse($datos['fecha_prestamo']) : now();
         $fechaEsperada = Carbon::parse($datos['fecha_devolucion_esperada']);
 
         if ($fechaEsperada->lte($fechaPrestamo)) {
-            throw new OperacionDeporteException('La fecha de devolución esperada debe ser posterior a la fecha de entrega.');
-        }
-
-        if (! TipoProducto::productoEsDeTipo($productoId, TipoProducto::IMPLEMENTO_DEPORTIVO)) {
-            throw new OperacionDeporteException('Solo se pueden prestar productos de tipo Implemento deportivo.');
-        }
-
-        if (! Lote::where('id_lot', $loteId)->where('pdt_id', $productoId)->exists()) {
-            throw new OperacionDeporteException('El lote seleccionado no corresponde al implemento.');
+            throw new OperacionDeporteException('La fecha "hasta" debe ser posterior a la fecha "desde".');
         }
 
         if (empty($datos['epd_id']) && trim((string) ($datos['lugar'] ?? '')) === '') {
-            throw new OperacionDeporteException('Indique el espacio deportivo o el lugar donde se usará el implemento.');
+            throw new OperacionDeporteException('Indique dónde se usará lo prestado: un espacio deportivo o un lugar.');
         }
 
-        $prestamo = DB::transaction(function () use ($persona, $datos, $cantidad, $productoId, $loteId, $fechaPrestamo, $fechaEsperada, $sedeId) {
+        $nombres = DB::table('producto')->whereIn('id_pdt', array_keys($items))->pluck('nombre_pdt', 'id_pdt');
+
+        $prestamo = DB::transaction(function () use ($persona, $datos, $items, $tipo, $fechaPrestamo, $fechaEsperada, $sedeId, $nombres) {
             DB::table('persona')->where('id_per', $persona->id_per)->lockForUpdate()->first();
 
-            $this->exigirElegible($persona->id_per);
+            $this->exigirElegible($persona->id_per, $tipo);
+
+            $plan = $this->planificar($items, $sedeId, $nombres->all());
 
             $prestamo = PrestamoDeportivo::create([
                 'fecha_prestamo_prd'            => $fechaPrestamo,
                 'fecha_devolucion_esperada_prd' => $fechaEsperada,
                 'estado_prd'                    => PrestamoDeportivo::ESTADO_ACTIVO,
-                'cantidad_prd'                  => $cantidad,
+                'tipo_prd'                      => $tipo,
+                'cantidad_prd'                  => (int) round(array_sum($items)),
                 'motivo_prd'                    => trim((string) $datos['motivo']),
                 'lugar_prd'                     => trim((string) ($datos['lugar'] ?? '')) ?: null,
                 'observaciones_prd'             => $datos['observaciones'] ?? null,
-                'pdt_id'                        => $productoId,
-                'lot_id'                        => $loteId,
+                'pdt_id'                        => $plan[0]['pdt_id'],
+                'lot_id'                        => $plan[0]['lot_id'],
                 'per_id'                        => $persona->id_per,
                 'epd_id'                        => $datos['epd_id'] ?? null,
                 'sed_id'                        => $sedeId,
                 'registrado_por_use_id'         => Auth::id(),
             ]);
 
-            $this->inventario->salida($loteId, $sedeId, $cantidad, null, [
-                'mod_id'              => static::moduloDeporteId(),
-                'referencia_type_moi' => self::REFERENCIA_PRESTAMO,
-                'referencia_id_moi'   => $prestamo->id_prd,
-                'observacion_moi'     => 'Salida por préstamo deportivo #' . $prestamo->id_prd,
-            ]);
+            foreach ($plan as $linea) {
+                $this->inventario->salidaPorConvertida($linea['lot_id'], $sedeId, $linea['cantidad'], [
+                    'mod_id'              => static::moduloDeporteId(),
+                    'referencia_type_moi' => self::REFERENCIA_PRESTAMO,
+                    'referencia_id_moi'   => $prestamo->id_prd,
+                    'observacion_moi'     => 'Salida por préstamo #' . $prestamo->id_prd,
+                ]);
+
+                $prestamo->detalles()->create([
+                    'pdt_id'       => $linea['pdt_id'],
+                    'lot_id'       => $linea['lot_id'],
+                    'cantidad_dpd' => $linea['cantidad'],
+                ]);
+            }
 
             return $prestamo;
         });
@@ -161,34 +209,119 @@ class PrestamoService
             tablaAfectada: 'prestamo_deportivo',
             registroId: $prestamo->id_prd,
             datosModificados: [
-                'per_id'   => $prestamo->per_id,
-                'pdt_id'   => $prestamo->pdt_id,
-                'lot_id'   => $prestamo->lot_id,
-                'cantidad' => $prestamo->cantidad_prd,
-                'sed_id'   => $prestamo->sed_id,
+                'per_id'    => $prestamo->per_id,
+                'tipo'      => $tipo,
+                'productos' => $items,
+                'sed_id'    => $prestamo->sed_id,
             ],
         );
 
-        return $prestamo;
+        return $prestamo->fresh(['detalles']);
     }
 
-    public function devolver(int $prestamoId, string $estadoDevolucion, ?string $observaciones = null): PrestamoDeportivo
+    public function devolverConEstado(int $prestamoId, string $estadoDevolucion, ?string $observaciones = null): PrestamoDeportivo
     {
         if (! in_array($estadoDevolucion, PrestamoDeportivo::ESTADOS_DEVOLUCION, true)) {
             throw new OperacionDeporteException('El estado de la devolución no es válido.');
         }
 
-        [$prestamo, $sancionLevantada, $sancionAplicada] = DB::transaction(function () use ($prestamoId, $estadoDevolucion, $observaciones) {
+        $campo = match ($estadoDevolucion) {
+            PrestamoDeportivo::DEVOLUCION_BUENO  => 'devuelta',
+            PrestamoDeportivo::DEVOLUCION_DANADO => 'danada',
+            default                              => null,
+        };
+
+        $lineas = DetallePrestamoDeportivo::where('prd_id', $prestamoId)
+            ->get(['id_dpd', 'cantidad_dpd'])
+            ->mapWithKeys(fn ($detalle) => [$detalle->id_dpd => $campo ? [$campo => $detalle->cantidad_dpd] : []])
+            ->all();
+
+        return $this->devolver($prestamoId, $lineas, $observaciones);
+    }
+
+    public function devolver(int $prestamoId, array $lineas, ?string $observaciones = null): PrestamoDeportivo
+    {
+        [$prestamo, $sancionLevantada, $sancionAplicada, $resumen] = DB::transaction(function () use ($prestamoId, $lineas, $observaciones) {
             $prestamo = PrestamoDeportivo::todasLasSedes()->lockForUpdate()->findOrFail($prestamoId);
 
             if (! $prestamo->puedeDevolverse()) {
                 throw new OperacionDeporteException('Este préstamo ya fue cerrado y no admite otra devolución.');
             }
 
+            $detalles = DetallePrestamoDeportivo::with('producto')->where('prd_id', $prestamo->id_prd)->lockForUpdate()->orderBy('id_dpd')->get();
+
+            if ($detalles->isEmpty()) {
+                throw new OperacionDeporteException('El préstamo no tiene productos registrados.');
+            }
+
+            $resumen = [];
+            $faltantes = [];
+            $totalDanada = 0.0;
+            $totalPerdida = 0.0;
+
+            foreach ($detalles as $detalle) {
+                if (! array_key_exists($detalle->id_dpd, $lineas)) {
+                    throw new OperacionDeporteException('Indique qué pasó con cada producto prestado.');
+                }
+
+                $nombre = $detalle->producto?->nombre_pdt ?? 'el producto';
+                $dato = (array) $lineas[$detalle->id_dpd];
+                $devuelta = $this->unidades($dato['devuelta'] ?? 0, $nombre);
+                $danada = $this->unidades($dato['danada'] ?? 0, $nombre);
+                $consumida = $this->unidades($dato['consumida'] ?? 0, $nombre);
+                $prestada = (float) $detalle->cantidad_dpd;
+
+                if ($consumida > 0 && ! $prestamo->esDeOficina()) {
+                    throw new OperacionDeporteException('Los implementos deportivos no se gastan: indique si ' . $nombre . ' volvió bien, dañado o si se perdió.');
+                }
+
+                if ($devuelta + $danada + $consumida > $prestada + self::TOLERANCIA) {
+                    throw new OperacionDeporteException(sprintf(
+                        'En %s indicó %s unidades, pero solo se prestaron %s.',
+                        $nombre,
+                        DetallePrestamoDeportivo::numero($devuelta + $danada + $consumida),
+                        DetallePrestamoDeportivo::numero($prestada)
+                    ));
+                }
+
+                $perdida = round($prestada - $devuelta - $danada - $consumida, 2);
+
+                $detalle->fill([
+                    'cantidad_devuelta_dpd'  => $devuelta,
+                    'cantidad_danada_dpd'    => $danada,
+                    'cantidad_consumida_dpd' => $consumida,
+                    'cantidad_perdida_dpd'   => $perdida,
+                ]);
+                $detalle->save();
+
+                if ($devuelta > 0) {
+                    $this->inventario->entrada((int) $detalle->lot_id, (int) $prestamo->sed_id, $this->enPresentacion($prestamo, $detalle, $devuelta), $devuelta, [
+                        'mod_id'              => static::moduloDeporteId(),
+                        'referencia_type_moi' => self::REFERENCIA_PRESTAMO,
+                        'referencia_id_moi'   => $prestamo->id_prd,
+                        'observacion_moi'     => 'Devolución del préstamo #' . $prestamo->id_prd,
+                    ]);
+                }
+
+                $totalDanada += $danada;
+                $totalPerdida += $perdida;
+                $resumen[$detalle->id_dpd] = compact('devuelta', 'danada', 'consumida', 'perdida');
+
+                if ($danada > 0) {
+                    $faltantes[] = DetallePrestamoDeportivo::numero($danada) . ' ' . $nombre . ' dañado(s)';
+                }
+
+                if ($perdida > 0) {
+                    $faltantes[] = DetallePrestamoDeportivo::numero($perdida) . ' ' . $nombre . ' perdido(s)';
+                }
+            }
+
             $anterior = $prestamo->estado_prd;
             $prestamo->fill([
                 'fecha_devolucion_real_prd' => now(),
-                'estado_devolucion_prd'     => $estadoDevolucion,
+                'estado_devolucion_prd'     => $totalPerdida > 0
+                    ? PrestamoDeportivo::DEVOLUCION_PERDIDO
+                    : ($totalDanada > 0 ? PrestamoDeportivo::DEVOLUCION_DANADO : PrestamoDeportivo::DEVOLUCION_BUENO),
                 'recibido_por_use_id'       => Auth::id(),
                 'observaciones_prd'         => $this->anexarObservacion($prestamo->observaciones_prd, $observaciones),
             ]);
@@ -199,16 +332,9 @@ class PrestamoService
                 ->lockForUpdate()
                 ->first();
 
-            if ($estadoDevolucion === PrestamoDeportivo::DEVOLUCION_BUENO) {
+            if ($totalDanada + $totalPerdida <= self::TOLERANCIA) {
                 $prestamo->estado_prd = PrestamoDeportivo::ESTADO_DEVUELTO;
                 $prestamo->save();
-
-                $this->inventario->entrada((int) $prestamo->lot_id, (int) $prestamo->sed_id, (float) $prestamo->cantidad_prd, $this->convertidaDeSalida($prestamo), [
-                    'mod_id'              => static::moduloDeporteId(),
-                    'referencia_type_moi' => self::REFERENCIA_PRESTAMO,
-                    'referencia_id_moi'   => $prestamo->id_prd,
-                    'observacion_moi'     => 'Devolución del préstamo deportivo #' . $prestamo->id_prd,
-                ]);
 
                 if ($sancion) {
                     $sancion->fill([
@@ -219,26 +345,31 @@ class PrestamoService
                     ])->save();
                 }
 
-                return [$prestamo, $sancion, null];
+                return [$prestamo, $sancion, null, $resumen];
             }
 
             $prestamo->estado_prd = PrestamoDeportivo::ESTADO_SANCIONADO;
             $prestamo->save();
 
-            $motivo = $estadoDevolucion === PrestamoDeportivo::DEVOLUCION_DANADO ? self::MOTIVO_DANADO : self::MOTIVO_PERDIDO;
+            $motivo = match (true) {
+                $totalDanada > 0 && $totalPerdida > 0 => self::MOTIVO_DANADO_PERDIDO,
+                $totalDanada > 0                      => self::MOTIVO_DANADO,
+                default                               => self::MOTIVO_PERDIDO,
+            };
+            $porReponer = 'Por reponer: ' . implode(', ', $faltantes) . '.';
 
             if ($sancion) {
                 $sancion->fill([
                     'motivo_snd'      => $motivo,
-                    'descripcion_snd' => $this->anexarObservacion($sancion->descripcion_snd, 'Antes: ' . $sancion->motivo_snd . ' Estado anterior del préstamo: ' . $anterior . '.'),
+                    'descripcion_snd' => $this->anexarObservacion($sancion->descripcion_snd, $porReponer . ' Antes: ' . $sancion->motivo_snd . ' Estado anterior del préstamo: ' . $anterior . '.'),
                 ])->save();
 
-                return [$prestamo, null, $sancion];
+                return [$prestamo, null, $sancion, $resumen];
             }
 
             $sancion = SancionDeportiva::create([
                 'motivo_snd'          => $motivo,
-                'descripcion_snd'     => $observaciones,
+                'descripcion_snd'     => $this->anexarObservacion($porReponer, $observaciones),
                 'fecha_sancion_snd'   => now()->toDateString(),
                 'estado_snd'          => SancionDeportiva::ESTADO_ACTIVA,
                 'prd_id'              => $prestamo->id_prd,
@@ -246,7 +377,7 @@ class PrestamoService
                 'aplicada_por_use_id' => Auth::id(),
             ]);
 
-            return [$prestamo, null, $sancion];
+            return [$prestamo, null, $sancion, $resumen];
         });
 
         Bitacora::registrar(
@@ -254,7 +385,7 @@ class PrestamoService
             modulo: 'deporte',
             tablaAfectada: 'prestamo_deportivo',
             registroId: $prestamo->id_prd,
-            datosModificados: ['estado' => $prestamo->estado_prd, 'estado_devolucion' => $estadoDevolucion],
+            datosModificados: ['estado' => $prestamo->estado_prd, 'estado_devolucion' => $prestamo->estado_devolucion_prd, 'lineas' => $resumen],
         );
 
         if ($sancionLevantada) {
@@ -271,7 +402,7 @@ class PrestamoService
             );
         }
 
-        return $prestamo->fresh();
+        return $prestamo->fresh(['detalles']);
     }
 
     public function reponer(int $sancionId, array $datos = []): SancionDeportiva
@@ -289,22 +420,52 @@ class PrestamoService
                 throw new OperacionDeporteException('El préstamo asociado no está pendiente de reposición.');
             }
 
-            $loteId = $this->loteParaReposicion($prestamo, $datos);
-            $cantidad = (float) $prestamo->cantidad_prd;
+            $sinDevolver = $prestamo->fecha_devolucion_real_prd === null;
+            $detalles = DetallePrestamoDeportivo::where('prd_id', $prestamo->id_prd)->lockForUpdate()->orderBy('id_dpd')->get();
+            $usarOriginal = ($datos['lote'] ?? 'nuevo') === 'original';
+            $lotesNuevos = [];
+            $primerLote = null;
 
-            $this->inventario->entrada($loteId, (int) $prestamo->sed_id, $cantidad, null, [
-                'mod_id'              => static::moduloDeporteId(),
-                'referencia_type_moi' => self::REFERENCIA_SANCION,
-                'referencia_id_moi'   => $sancion->id_snd,
-                'observacion_moi'     => 'Reposición del implemento por la sanción deportiva #' . $sancion->id_snd,
-            ]);
+            foreach ($detalles as $detalle) {
+                if ($sinDevolver) {
+                    $detalle->fill([
+                        'cantidad_devuelta_dpd'  => 0,
+                        'cantidad_danada_dpd'    => 0,
+                        'cantidad_consumida_dpd' => 0,
+                        'cantidad_perdida_dpd'   => $detalle->cantidad_dpd,
+                    ])->save();
+                }
+
+                $cantidad = $detalle->porReponer();
+
+                if ($cantidad <= self::TOLERANCIA) {
+                    continue;
+                }
+
+                $loteId = $usarOriginal
+                    ? (int) $detalle->lot_id
+                    : ($lotesNuevos[$detalle->pdt_id] ??= $this->crearLoteReposicion((int) $detalle->pdt_id, $prestamo->id_prd, $datos['codigo_lote'] ?? null));
+
+                $this->inventario->entrada($loteId, (int) $prestamo->sed_id, $this->enPresentacion($prestamo, $detalle, $cantidad), $cantidad, [
+                    'mod_id'              => static::moduloDeporteId(),
+                    'referencia_type_moi' => self::REFERENCIA_SANCION,
+                    'referencia_id_moi'   => $sancion->id_snd,
+                    'observacion_moi'     => 'Reposición por la sanción #' . $sancion->id_snd,
+                ]);
+
+                $primerLote ??= $loteId;
+            }
+
+            if ($primerLote === null) {
+                throw new OperacionDeporteException('El préstamo no tiene nada pendiente de reponer.');
+            }
 
             $sancion->fill([
                 'estado_snd'              => SancionDeportiva::ESTADO_LEVANTADA,
                 'forma_levantamiento_snd' => SancionDeportiva::FORMA_REPOSICION,
                 'fecha_levantamiento_snd' => now()->toDateString(),
                 'levantada_por_use_id'    => Auth::id(),
-                'lot_id'                  => $loteId,
+                'lot_id'                  => $primerLote,
                 'descripcion_snd'         => $this->anexarObservacion($sancion->descripcion_snd, $datos['observaciones'] ?? null),
             ])->save();
 
@@ -376,29 +537,121 @@ class PrestamoService
         return $marcados;
     }
 
-    private function exigirElegible(int $personaId): void
+    private function exigirElegible(int $personaId, string $tipo): void
     {
         $sancion = SancionDeportiva::todasLasSedes()->where('per_id', $personaId)->activas()->first();
 
         if ($sancion) {
-            throw new OperacionDeporteException('La persona tiene una sanción activa (' . $sancion->motivo_snd . ') y no puede recibir préstamos hasta que se levante por devolución o reposición del implemento.');
+            throw new OperacionDeporteException('La persona tiene una sanción activa (' . $sancion->motivo_snd . ') y no puede recibir préstamos hasta que se levante por devolución o reposición de lo prestado.');
         }
 
-        $pendiente = PrestamoDeportivo::todasLasSedes()->where('per_id', $personaId)->pendientes()->first();
+        $pendiente = PrestamoDeportivo::todasLasSedes()
+            ->where('per_id', $personaId)
+            ->where('tipo_prd', $tipo)
+            ->pendientes()
+            ->first();
 
         if ($pendiente) {
-            throw new OperacionDeporteException('La persona ya tiene un préstamo pendiente (#' . $pendiente->id_prd . '). Solo se permite un préstamo a la vez: debe devolverlo antes de recibir otro.');
+            throw new OperacionDeporteException(sprintf(
+                'La persona ya tiene un préstamo de %s pendiente (#%d). Solo se permite uno de cada tipo a la vez (uno de implementos deportivos y uno de material de oficina): debe devolverlo antes de recibir otro.',
+                mb_strtolower(PrestamoDeportivo::etiquetaTipo($tipo)),
+                $pendiente->id_prd
+            ));
         }
     }
 
-    private function loteParaReposicion(PrestamoDeportivo $prestamo, array $datos): int
+    private function planificar(array $items, int $sedeId, array $nombres): array
     {
-        if (($datos['lote'] ?? 'nuevo') === 'original') {
-            return (int) $prestamo->lot_id;
+        $plan = [];
+
+        foreach ($items as $productoId => $cantidad) {
+            $existencias = $this->inventario->existenciasDisponibles($productoId, $sedeId);
+            $disponible = (float) $existencias->sum(fn ($existencia) => floor((float) $existencia->cantidad_convertida_isl + self::TOLERANCIA));
+
+            if ($disponible + self::TOLERANCIA < $cantidad) {
+                throw new OperacionDeporteException(sprintf(
+                    'No hay suficiente %s en esta sede: hay %s y pidió %s.',
+                    $nombres[$productoId] ?? 'producto',
+                    DetallePrestamoDeportivo::numero($disponible),
+                    DetallePrestamoDeportivo::numero($cantidad)
+                ));
+            }
+
+            $restante = $cantidad;
+
+            foreach ($existencias as $existencia) {
+                if ($restante <= self::TOLERANCIA) {
+                    break;
+                }
+
+                $tomar = min(floor((float) $existencia->cantidad_convertida_isl + self::TOLERANCIA), $restante);
+
+                if ($tomar <= 0) {
+                    continue;
+                }
+
+                $plan[] = ['pdt_id' => $productoId, 'lot_id' => (int) $existencia->lot_id, 'cantidad' => (float) $tomar];
+                $restante -= $tomar;
+            }
         }
 
-        $codigo = trim((string) ($datos['codigo_lote'] ?? '')) ?: 'REP-' . now()->format('Ymd') . '-' . $prestamo->id_prd;
-        $base = $codigo;
+        return $plan;
+    }
+
+    private function agrupar(array $items): array
+    {
+        $agrupados = [];
+
+        foreach ($items as $item) {
+            $productoId = (int) ($item['pdt_id'] ?? 0);
+            $cantidad = (float) ($item['cantidad'] ?? 0);
+
+            if ($productoId <= 0 || $cantidad <= 0) {
+                continue;
+            }
+
+            if (abs($cantidad - round($cantidad)) > self::TOLERANCIA) {
+                throw new OperacionDeporteException('Las cantidades se cuentan por unidad: use números enteros.');
+            }
+
+            $agrupados[$productoId] = ($agrupados[$productoId] ?? 0) + round($cantidad);
+        }
+
+        return $agrupados;
+    }
+
+    private function unidades(mixed $valor, string $nombre): float
+    {
+        $cantidad = (float) ($valor === null || $valor === '' ? 0 : $valor);
+
+        if ($cantidad < 0 || abs($cantidad - round($cantidad)) > self::TOLERANCIA) {
+            throw new OperacionDeporteException('Las cantidades de ' . $nombre . ' deben ser números enteros, cero o mayores.');
+        }
+
+        return round($cantidad);
+    }
+
+    private function enPresentacion(PrestamoDeportivo $prestamo, DetallePrestamoDeportivo $detalle, float $unidades): float
+    {
+        $salida = DB::table('movimiento_inventario')
+            ->where('referencia_type_moi', self::REFERENCIA_PRESTAMO)
+            ->where('referencia_id_moi', $prestamo->id_prd)
+            ->where('tipo_movimiento_moi', ServicioInventario::SALIDA)
+            ->where('lot_id', $detalle->lot_id)
+            ->orderBy('id_moi')
+            ->first(['cantidad_moi', 'cantidad_convertida_moi']);
+
+        if (! $salida || (float) $salida->cantidad_convertida_moi <= 0 || (float) $salida->cantidad_moi <= 0) {
+            return $unidades;
+        }
+
+        return $unidades * (float) $salida->cantidad_moi / (float) $salida->cantidad_convertida_moi;
+    }
+
+    private function crearLoteReposicion(int $productoId, int $prestamoId, ?string $codigo): int
+    {
+        $base = trim((string) $codigo) ?: 'REP-' . now()->format('Ymd') . '-' . $prestamoId;
+        $codigo = $base;
         $contador = 1;
 
         while (Lote::withTrashed()->where('codigo_lote_lot', $codigo)->exists()) {
@@ -410,21 +663,9 @@ class PrestamoService
             'fecha_entrada_lot'    => now()->toDateString(),
             'cantidad_inicial_lot' => 0,
             'cantidad_actual_lot'  => 0,
-            'pdt_id'               => $prestamo->pdt_id,
+            'pdt_id'               => $productoId,
             'status_id'            => Lote::STATUS_ACTIVO,
         ])->id_lot;
-    }
-
-    private function convertidaDeSalida(PrestamoDeportivo $prestamo): ?float
-    {
-        $convertida = DB::table('movimiento_inventario')
-            ->where('referencia_type_moi', self::REFERENCIA_PRESTAMO)
-            ->where('referencia_id_moi', $prestamo->id_prd)
-            ->where('tipo_movimiento_moi', ServicioInventario::SALIDA)
-            ->orderBy('id_moi')
-            ->value('cantidad_convertida_moi');
-
-        return $convertida === null ? null : (float) $convertida;
     }
 
     private function registrarLevantamiento(SancionDeportiva $sancion): void

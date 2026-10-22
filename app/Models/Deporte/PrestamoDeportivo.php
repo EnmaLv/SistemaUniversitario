@@ -6,6 +6,7 @@ use App\Models\Lote;
 use App\Models\Persona;
 use App\Models\Producto;
 use App\Models\Sede;
+use App\Models\TipoProducto;
 use App\Models\Usuario;
 use App\Traits\PerteneceASede;
 use App\Traits\RegistraAutoria;
@@ -38,6 +39,15 @@ class PrestamoDeportivo extends Model
 
     public const ESTADOS_DEVOLUCION = [self::DEVOLUCION_BUENO, self::DEVOLUCION_DANADO, self::DEVOLUCION_PERDIDO];
 
+    public const TIPO_DEPORTIVO = 'deportivo';
+
+    public const TIPO_OFICINA = 'oficina';
+
+    public const TIPOS_PRODUCTO = [
+        self::TIPO_DEPORTIVO => TipoProducto::IMPLEMENTO_DEPORTIVO,
+        self::TIPO_OFICINA   => TipoProducto::MATERIAL_OFICINA,
+    ];
+
     protected $table = 'prestamo_deportivo';
 
     protected $primaryKey = 'id_prd';
@@ -48,6 +58,7 @@ class PrestamoDeportivo extends Model
         'fecha_devolucion_real_prd',
         'estado_prd',
         'estado_devolucion_prd',
+        'tipo_prd',
         'cantidad_prd',
         'motivo_prd',
         'lugar_prd',
@@ -104,6 +115,11 @@ class PrestamoDeportivo extends Model
         return $this->belongsTo(Usuario::class, 'recibido_por_use_id', 'id_use');
     }
 
+    public function detalles()
+    {
+        return $this->hasMany(DetallePrestamoDeportivo::class, 'prd_id', 'id_prd')->orderBy('id_dpd');
+    }
+
     public function sanciones()
     {
         return $this->hasMany(SancionDeportiva::class, 'prd_id', 'id_prd');
@@ -112,6 +128,36 @@ class PrestamoDeportivo extends Model
     public function scopePendientes($consulta)
     {
         return $consulta->whereIn($this->qualifyColumn('estado_prd'), self::ESTADOS_PENDIENTES);
+    }
+
+    public function scopeDeTipo($consulta, ?string $tipo)
+    {
+        return array_key_exists((string) $tipo, self::TIPOS_PRODUCTO)
+            ? $consulta->where($this->qualifyColumn('tipo_prd'), $tipo)
+            : $consulta;
+    }
+
+    public function esDeOficina(): bool
+    {
+        return $this->tipo_prd === self::TIPO_OFICINA;
+    }
+
+    public function resumenProductos(): string
+    {
+        $porProducto = [];
+
+        foreach ($this->detalles as $detalle) {
+            $nombre = $detalle->producto?->nombre_pdt ?? 'Producto';
+            $porProducto[$nombre] = ($porProducto[$nombre] ?? 0) + (float) $detalle->cantidad_dpd;
+        }
+
+        if ($porProducto === []) {
+            return ($this->producto?->nombre_pdt ?? 'Producto') . ' x' . $this->cantidad_prd;
+        }
+
+        return collect($porProducto)
+            ->map(fn ($cantidad, $nombre) => $nombre . ' x' . DetallePrestamoDeportivo::numero($cantidad))
+            ->implode(', ');
     }
 
     public function estaPendiente(): bool
@@ -127,6 +173,14 @@ class PrestamoDeportivo extends Model
     public function lugarDescriptivo(): string
     {
         return $this->espacio?->nombre_epd ?? $this->lugar_prd ?? 'Sin especificar';
+    }
+
+    public static function etiquetaTipo(?string $tipo): string
+    {
+        return match ($tipo) {
+            self::TIPO_OFICINA => 'Material de oficina',
+            default            => 'Implemento deportivo',
+        };
     }
 
     public static function etiquetaEstado(?string $estado): string

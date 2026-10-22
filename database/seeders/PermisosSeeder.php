@@ -31,7 +31,7 @@ class PermisosSeeder extends Seeder
         'Coordinador de Deportes' => [
             'deportes_espacios', 'deportes_actividades', 'deportes_calendarios', 'deportes_horarios',
             'deportes_torneos', 'deportes_inscripciones', 'deportes_asistencia',
-            'deportes_prestamos', 'deportes_sanciones', 'deportes_solvencia', 'deportes_entregas',
+            'deportes_prestamos', 'deportes_sanciones', 'deportes_solvencia',
             'implementos_materiales',
             'categorias'             => ['ver'],
             'inventario_sedes_lotes' => ['ver'],

@@ -123,9 +123,8 @@ return [
     'deportes_torneos'       => ['admin.deportes.torneos.*'],
     'deportes_inscripciones' => ['admin.deportes.inscripciones.*'],
     'deportes_asistencia'    => ['admin.deportes.asistencia.*'],
-    'deportes_prestamos'     => ['admin.deportes.prestamos.*'],
+    'deportes_prestamos'     => ['admin.deportes.prestamos.*', 'admin.deportes.entregas.*'],
     'deportes_sanciones'     => ['admin.deportes.sanciones.*'],
     'deportes_solvencia'     => ['admin.deportes.solvencia.*'],
-    'deportes_entregas'      => ['admin.deportes.entregas.*'],
     'implementos_materiales' => ['admin.deportes.implementos.*', 'admin.maestros.material_oficina.*'],
 ];

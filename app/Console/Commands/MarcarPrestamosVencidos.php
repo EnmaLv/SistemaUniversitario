@@ -9,7 +9,7 @@ class MarcarPrestamosVencidos extends Command
 {
     protected $signature = 'deportes:marcar-vencidos';
 
-    protected $description = 'Marca como vencidos los préstamos deportivos activos cuya devolución esperada ya pasó y aplica la sanción correspondiente';
+    protected $description = 'Marca como vencidos los préstamos activos (implementos deportivos y material de oficina) cuya fecha de devolución ya pasó y aplica la sanción correspondiente';
 
     public function handle(PrestamoService $servicio): int
     {

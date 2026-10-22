@@ -45,7 +45,7 @@
             Se hace constar que el/la ciudadano(a) <strong>{{ mb_strtoupper(trim($persona->nombres_per . ' ' . $persona->apellidos_per)) }}</strong>,
             titular de la cédula de identidad <strong>{{ $persona->cedula_per }}</strong>,
             @if ($resultado['solvente'])
-                no posee préstamos de implementos deportivos pendientes ni sanciones activas en el área de deportes, por lo que se encuentra
+                no posee préstamos pendientes de implementos deportivos ni de material de oficina, ni sanciones activas en el área de deportes, por lo que se encuentra
             @else
                 registra los compromisos pendientes que se detallan a continuación en el área de deportes, por lo que se encuentra
             @endif
@@ -57,7 +57,7 @@
 
         @if ($resultado['bloquea_titulo'])
             <div class="alerta">
-                Tiene una sanción activa: NO se puede firmar la solvencia para el título hasta que la sanción se levante por devolución o reposición del implemento.
+                Tiene una sanción activa: NO se puede firmar la solvencia para el título hasta que la sanción se levante por devolución o reposición de lo prestado.
             </div>
         @endif
 

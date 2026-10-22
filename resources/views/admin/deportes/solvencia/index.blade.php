@@ -9,7 +9,7 @@
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Solvencia</h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         <i class="fas fa-file-signature mr-1" style="color:var(--color-primary)"></i>
-                        Verificación de préstamos y sanciones de deportes · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        Revisa si una persona debe algo prestado (implementos deportivos o material de oficina) o tiene sanciones · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
             </div>
@@ -61,7 +61,7 @@
                     @if ($resultado['bloquea_titulo'])
                         <div class="mt-5 rounded-xl border-2 border-rose-300 bg-rose-50 p-4 text-sm font-bold text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">
                             <i class="fas fa-exclamation-triangle mr-1"></i>
-                            La persona tiene una sanción activa en deportes: NO se puede firmar la solvencia para el título hasta que la sanción se levante por devolución o reposición del implemento.
+                            La persona tiene una sanción activa por préstamos: NO se puede firmar la solvencia para el título hasta que la sanción se levante por devolución o reposición de lo prestado.
                         </div>
                     @endif
 
@@ -75,7 +75,7 @@
                                     @foreach ($modulo['pendientes'] as $pendiente)
                                         <li class="rounded-xl border p-3" style="border-color:var(--border-color);">
                                             <p class="text-sm font-bold {{ $pendiente['tipo'] === 'sancion' ? 'text-rose-600' : 'text-amber-600' }}">
-                                                <i class="fas {{ $pendiente['tipo'] === 'sancion' ? 'fa-ban' : 'fa-basketball-ball' }} mr-1"></i>{{ $pendiente['titulo'] }}
+                                                <i class="fas {{ $pendiente['tipo'] === 'sancion' ? 'fa-ban' : 'fa-hand-holding' }} mr-1"></i>{{ $pendiente['titulo'] }}
                                             </p>
                                             <p class="text-sm" style="color:var(--text-main);">{{ $pendiente['detalle'] }}</p>
                                             @if ($pendiente['fecha'])

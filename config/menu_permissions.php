@@ -179,7 +179,7 @@ return [
     'deportes' => [
         'label'       => 'Deportes',
         'icon'        => 'fas fa-futbol',
-        'description' => 'Actividades, torneos, asistencia, préstamos de implementos y solvencia.',
+        'description' => 'Actividades, torneos, asistencia, préstamos de implementos y material de oficina, y solvencia.',
         'items' => [
             'deportes_espacios'      => 'Espacios deportivos',
             'deportes_actividades'   => 'Disciplinas',
@@ -188,10 +188,9 @@ return [
             'deportes_torneos'       => 'Torneos',
             'deportes_inscripciones' => 'Inscripciones deportivas',
             'deportes_asistencia'    => 'Asistencia deportiva',
-            'deportes_prestamos'     => 'Préstamos de implementos',
-            'deportes_sanciones'     => 'Sanciones deportivas',
+            'deportes_prestamos'     => 'Préstamos (implementos y material de oficina)',
+            'deportes_sanciones'     => 'Sanciones por préstamos',
             'deportes_solvencia'     => 'Solvencia',
-            'deportes_entregas'      => 'Entregas de material',
             'implementos_materiales' => 'Implementos y materiales',
         ],
     ],

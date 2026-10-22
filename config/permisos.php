@@ -77,5 +77,6 @@ return [
         'admin/modulos/seleccionar',
         'deportes_implementos',
         'material_oficina',
+        'deportes_entregas',
     ],
 ];
