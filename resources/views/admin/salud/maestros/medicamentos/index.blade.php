@@ -12,16 +12,20 @@
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
-                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        {{ \Carbon\Carbon::now()->format('d/m/Y') }} ·
+                        <i class="fas fa-warehouse text-[10px]"></i> Existencias de
+                        <span class="font-bold">{{ $sedeNombre ?? 'la sede' }}</span>
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.salud.maestros.medicamentos.create')
                     <a href="{{ url('admin/salud/maestros/medicamentos/create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-sm shadow-lg shadow-sky-600/30 hover:shadow-sky-600/40 active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nuevo Medicamento</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -126,7 +130,8 @@
                                 <th class="px-6 py-4 text-center">Código</th>
                                 <th class="px-6 py-4 text-center">Nombre</th>
                                 <th class="px-6 py-4 text-center">Categoría</th>
-                                <th class="px-6 py-4 text-center">Cantidad</th>
+                                <th class="px-6 py-4 text-center">Existencia en sede</th>
+                                <th class="px-6 py-4 text-center">Estado del stock</th>
                                 <th class="px-6 py-4 text-center">Unidad</th>
                                 <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
@@ -149,27 +154,47 @@
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         {{ $producto->categoria->nombre_cap }}
                                     </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($producto->existencia_convertida == null)
+                                    @php
+                                        $estadoStock = \App\Models\InventarioTotal::clasificar(
+                                            (float) $producto->total_presentacion,
+                                            $producto->stock_minimo_pdt,
+                                            $producto->stock_maximo_pdt,
+                                        );
+                                        $estilosStock = [
+                                            'agotado' => ['bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900', 'fa-circle-xmark', 'Agotado'],
+                                            'bajo_minimo' => ['bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900', 'fa-triangle-exclamation', 'Bajo el mínimo'],
+                                            'sobre_maximo' => ['bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-900', 'fa-arrow-up', 'Sobre el máximo'],
+                                            'normal' => ['bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900', 'fa-check', 'Normal'],
+                                        ][$estadoStock];
+                                        $formatoStock = fn($valor) => rtrim(rtrim(number_format((float) $valor, 2, ',', '.'), '0'), ',');
+                                    @endphp
+                                    <td class="px-6 py-4 text-center whitespace-nowrap" data-stock="{{ (float) $producto->existencia_convertida }}">
+                                        @if ($producto->existencia_convertida === null)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800">
-                                                <i class="fas fa-info-circle"></i> Sin compra
-                                            </span>
-                                        @elseif ($producto->existencia_convertida == 0)
-                                            <span
-                                                class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg border border-amber-300 dark:border-amber-900">
-                                                <i class="fas fa-exclamation-triangle"></i> Agotado
+                                                <i class="fas fa-info-circle"></i> Sin existencias registradas
                                             </span>
                                         @else
                                             <span
-                                                class="inline-flex items-center px-3 py-1 text-[10px] font-black rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-900">
-                                                {{ $producto->existencia_convertida }}
+                                                class="inline-flex items-center px-3 py-1 text-[11px] font-black rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-900">
+                                                {{ $formatoStock($producto->existencia_convertida) }}
+                                                {{ $producto->unidad->abreviatura_unm ?? '' }}
+                                            </span>
+                                            <span class="block mt-1 text-[10px] text-gray-500 dark:text-gray-400">
+                                                {{ $formatoStock($producto->total_presentacion) }}
+                                                {{ $producto->presentacion->nombre_enp ?? 'presentaciones' }}
                                             </span>
                                         @endif
                                     </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-black rounded-lg border {{ $estilosStock[0] }}"
+                                            title="Mínimo {{ $producto->stock_minimo_pdt ?? '—' }} · Máximo {{ $producto->stock_maximo_pdt ?? '—' }}">
+                                            <i class="fas {{ $estilosStock[1] }}"></i> {{ $estilosStock[2] }}
+                                        </span>
+                                    </td>
                                     <td
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $producto->unidad->nombre_unm }}
+                                        {{ $producto->unidad->nombre_unm ?? '—' }}
                                     </td>
 
                                     {{-- Componente de Acciones --}}
@@ -178,7 +203,7 @@
                                 </x-table-row>
                             @empty
                                 <tr>
-                                    <td colspan="6"
+                                    <td colspan="7"
                                         class="px-6 py-12 text-center text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider">
                                         <i
                                             class="fas fa-box-open text-3xl mb-3 block text-gray-300 dark:text-gray-700"></i>

@@ -29,7 +29,12 @@ class MedicamentoController extends Controller
             ->where('tpr_id', 2)
             ->get();
 
-        return view('admin.salud.maestros.medicamentos.index', compact('productos', 'categorias'));
+        $sedeId = \App\Support\Sedes\SedeActiva::id();
+        $sedeNombre = $sedeId === null
+            ? 'Todas las sedes'
+            : DB::table('sede')->where('id_sed', $sedeId)->value('nombre_sed');
+
+        return view('admin.salud.maestros.medicamentos.index', compact('productos', 'categorias', 'sedeNombre'));
     }
 
     public function create()

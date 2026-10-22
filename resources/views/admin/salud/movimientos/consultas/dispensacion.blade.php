@@ -76,24 +76,30 @@
                                             'codigo' => $l->codigo_lote_lot,
                                             'vence' => $vence?->format('d/m/Y'),
                                             'proximo' => $vence ? $vence->lte(now()->addDays(30)) : false,
-                                            'stock' => (float) ($l->inventarioSedeLotes->first()->cantidad_isl ?? 0),
+                                            'stock' => (float) ($l->inventarioSedeLotes->first()->cantidad_convertida_isl ?? 0),
                                         ];
                                     })->values();
                                     $stockTotalSede = $lotesJs->sum('stock');
                                     $sinStock = $stockTotalSede <= 0;
                                     $pendiente = (float) $detalle->cantidad_pendiente;
-                                    $unidadNombre = optional($detalle->unidad)->nombre_unm ?? '';
-                                    $unidadCorta = optional($detalle->unidad)->abreviatura_unm ?? $unidadNombre;
+                                    $unidadNombre = mb_strtolower($detalle->unidad_prescrita_drm ?: (optional($detalle->unidad)->nombre_unm ?? ''));
+                                    $unidadProducto = optional(optional($detalle->producto)->unidad);
+                                    $unidadBase = $unidadProducto->abreviatura_unm ?: ($unidadProducto->nombre_unm ?? '');
+                                    $factor = $factores[$detalle->id_drm] ?? null;
+                                    $maxDosis = $factor ? min($pendiente, $stockTotalSede / $factor) : $pendiente;
                                     $prescrita = $detalle->cantidad_prescrita_drm ?? null;
-                                    // Tras un error de validación se respeta lo que el usuario había marcado
                                     $oldDispensar = old("items.{$detalle->id_drm}.dispensar");
                                     $oldCantidad = old("items.{$detalle->id_drm}.cantidad");
+                                    $oldInventario = old("items.{$detalle->id_drm}.cantidad_inventario");
                                     $configDetalle = [
                                         'id' => $detalle->id_drm,
                                         'nombre' => optional($detalle->producto)->nombre_pdt ?? '—',
-                                        'unidad' => $unidadCorta,
+                                        'unidad' => $unidadNombre,
+                                        'unidadBase' => $unidadBase,
+                                        'factor' => $factor,
                                         'dispensar' => !$sinStock && ($oldDispensar === null || filter_var($oldDispensar, FILTER_VALIDATE_BOOLEAN)),
-                                        'cantidad' => $sinStock ? 0 : (float) ($oldCantidad ?? $fmt(min($pendiente, $stockTotalSede))),
+                                        'cantidad' => $sinStock ? 0 : (float) ($oldCantidad ?? $fmt($maxDosis)),
+                                        'cantidadInventario' => $oldInventario !== null && $oldInventario !== '' ? (float) $oldInventario : null,
                                         'pendiente' => $pendiente,
                                         'stock' => $stockTotalSede,
                                         'lotes' => $lotesJs,
@@ -133,6 +139,9 @@
 
                                             <span class="block text-xs mt-2 font-medium text-amber-700 dark:text-amber-400">
                                                 Falta entregar {{ $fmt($pendiente) }} {{ $unidadNombre }}
+                                                @if ($factor)
+                                                    <span class="cx-muted font-normal">({{ $fmt($pendiente * $factor) }} {{ $unidadBase }} de inventario)</span>
+                                                @endif
                                                 @if ($prescrita && (float) $prescrita > $pendiente)
                                                     <span class="cx-muted font-normal">de {{ $fmt($prescrita) }} recetadas</span>
                                                 @endif
@@ -153,7 +162,7 @@
 
                                                 {{-- Cantidad --}}
                                                 <div>
-                                                    <label for="cantidad_{{ $detalle->id_drm }}" class="cx-label">Cantidad a entregar</label>
+                                                    <label for="cantidad_{{ $detalle->id_drm }}" class="cx-label">Cantidad recetada que se entrega</label>
                                                     <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500/30 focus-within:border-sky-600"
                                                         style="border-color: var(--border-color);"
                                                         :style="excede ? 'border-color:#e11d48' : ''">
@@ -162,7 +171,7 @@
                                                             x-model.number="cantidad" :disabled="!dispensar"
                                                             min="0.01" :max="maxCantidad" step="0.01" inputmode="decimal"
                                                             class="w-full min-w-0 px-3.5 py-2.5 text-base font-bold tabular-nums bg-transparent border-0 focus:ring-0 cx-text">
-                                                        <span class="px-3 flex items-center text-xs font-semibold cx-muted cx-soft">{{ $unidadCorta }}</span>
+                                                        <span class="px-3 flex items-center text-xs font-semibold cx-muted cx-soft">{{ $unidadNombre }}</span>
                                                     </div>
                                                     <div class="flex items-center justify-between mt-1.5">
                                                         <span class="text-xs cx-muted">
@@ -173,7 +182,7 @@
                                                     </div>
                                                     <p x-show="excede" x-cloak class="cx-error">
                                                         <i class="fas fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
-                                                        <span x-text="cantidad > stock ? 'Supera las existencias de la sede.' : 'Supera lo pendiente.'"></span>
+                                                        <span x-text="baseADescontar > stock ? 'Supera las existencias de la sede.' : 'Supera lo pendiente.'"></span>
                                                     </p>
                                                     <p x-show="dispensar && !(cantidad > 0)" x-cloak class="cx-error">
                                                         <i class="fas fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
@@ -182,6 +191,38 @@
                                                     @error("items.{$detalle->id_drm}.cantidad")
                                                         <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5" aria-hidden="true"></i>{{ $message }}</p>
                                                     @enderror
+
+                                                    <div class="mt-4">
+                                                        <label for="inventario_{{ $detalle->id_drm }}" class="cx-label">
+                                                            Se descuenta del inventario
+                                                            @unless ($factor)
+                                                                <span class="cx-req" aria-hidden="true">*</span>
+                                                            @endunless
+                                                        </label>
+                                                        @if ($factor)
+                                                            <p class="text-sm font-bold tabular-nums cx-text px-3.5 py-2.5 rounded-xl cx-soft">
+                                                                <span x-text="fmt(baseADescontar)"></span> {{ $unidadBase }}
+                                                            </p>
+                                                            <p class="cx-hint">Conversión automática: 1 {{ $unidadNombre }} = {{ rtrim(rtrim(number_format((float) $factor, 4, '.', ''), '0'), '.') }} {{ $unidadBase }}.</p>
+                                                        @else
+                                                            <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500/30 focus-within:border-sky-600"
+                                                                style="border-color: var(--border-color);"
+                                                                :style="dispensar && !(cantidadInventario > 0) ? 'border-color:#e11d48' : ''">
+                                                                <input type="number" id="inventario_{{ $detalle->id_drm }}"
+                                                                    name="items[{{ $detalle->id_drm }}][cantidad_inventario]"
+                                                                    x-model.number="cantidadInventario" :disabled="!dispensar" :required="dispensar"
+                                                                    min="0.01" :max="stock" step="0.01" inputmode="decimal"
+                                                                    class="w-full min-w-0 px-3.5 py-2.5 text-base font-bold tabular-nums bg-transparent border-0 focus:ring-0 cx-text">
+                                                                <span class="px-3 flex items-center text-xs font-semibold cx-muted cx-soft">{{ $unidadBase }}</span>
+                                                            </div>
+                                                            <p class="cx-hint">
+                                                                "{{ ucfirst($unidadNombre) }}" no se convierte sola: indica cuánto sale del inventario.
+                                                            </p>
+                                                        @endif
+                                                        @error("items.{$detalle->id_drm}.cantidad_inventario")
+                                                            <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5" aria-hidden="true"></i>{{ $message }}</p>
+                                                        @enderror
+                                                    </div>
                                                 </div>
 
                                                 {{-- Lotes + observación --}}
@@ -193,7 +234,7 @@
                                                                 <li class="inline-flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg border text-xs"
                                                                     :class="i === 0 ? 'border-sky-200 dark:border-sky-900 bg-sky-50 dark:bg-sky-950/30' : ''"
                                                                     style="border-color: var(--border-color);">
-                                                                    <span class="font-bold tabular-nums text-sky-700 dark:text-sky-300" x-text="fmt(a.toma)"></span>
+                                                                    <span class="font-bold tabular-nums text-sky-700 dark:text-sky-300" x-text="`${fmt(a.toma)} ${unidadBase}`"></span>
                                                                     <span class="cx-faint">del lote</span>
                                                                     <span class="font-semibold cx-text" x-text="a.codigo"></span>
                                                                     <span x-show="a.vence" :class="a.proximo ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'cx-muted'"
@@ -205,7 +246,7 @@
 
                                                         <div x-data="{ verTodos: false }" class="mt-2">
                                                             <button type="button" class="cx-link !text-xs" @click="verTodos = !verTodos" :aria-expanded="verTodos">
-                                                                <span x-text="verTodos ? 'Ocultar existencias' : `Ver existencias (${fmt(stock)} ${unidad} en ${lotes.length} ${lotes.length === 1 ? 'lote' : 'lotes'})`"></span>
+                                                                <span x-text="verTodos ? 'Ocultar existencias' : `Ver existencias (${fmt(stock)} ${unidadBase} en ${lotes.length} ${lotes.length === 1 ? 'lote' : 'lotes'})`"></span>
                                                             </button>
                                                             <table x-show="verTodos" x-collapse class="mt-2 w-full text-xs">
                                                                 <thead>
@@ -449,14 +490,23 @@
             return {
                 ...cfg,
                 get maxCantidad() {
-                    return +Math.min(this.pendiente, this.stock).toFixed(2);
+                    const porStock = this.factor ? this.stock / this.factor : this.pendiente;
+                    return +Math.min(this.pendiente, porStock).toFixed(2);
+                },
+                get baseADescontar() {
+                    if (this.factor) {
+                        return +((Number(this.cantidad) || 0) * this.factor).toFixed(2);
+                    }
+                    return Number(this.cantidadInventario) || 0;
+                },
+                get faltaInventario() {
+                    return this.dispensar && !this.factor && !(this.cantidadInventario > 0);
                 },
                 get excede() {
-                    return this.dispensar && this.cantidad > this.maxCantidad;
+                    return this.dispensar && (this.cantidad > this.maxCantidad || this.baseADescontar > this.stock);
                 },
-                // Reparto FIFO solo para mostrar (el servidor hace el descuento real)
                 get asignacion() {
-                    let restante = Math.min(Number(this.cantidad) || 0, this.stock);
+                    let restante = Math.min(this.baseADescontar, this.stock);
                     const reparto = [];
                     for (const lote of this.lotes) {
                         if (restante <= 0) break;
@@ -488,7 +538,7 @@
                 },
 
                 get invalidos() {
-                    return this.seleccionados.filter(i => !(i.cantidad > 0) || i.cantidad > i.maxCantidad);
+                    return this.seleccionados.filter(i => !(i.cantidad > 0) || i.excede || i.faltaInventario);
                 },
 
                 get textoBoton() {
@@ -511,7 +561,7 @@
                     if (this.invalidos.length) {
                         this.modalType = 'warning';
                         this.modalTitle = 'Revisa las cantidades';
-                        this.modalMessage = 'Estos medicamentos tienen una cantidad vacía o mayor a la permitida:';
+                        this.modalMessage = 'Estos medicamentos tienen una cantidad vacía, mayor a la permitida o sin cantidad a descontar del inventario:';
                     } else if (n === 0) {
                         this.modalType = 'confirm';
                         this.modalTitle = '¿Cerrar la atención sin entregar?';

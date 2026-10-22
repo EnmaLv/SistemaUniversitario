@@ -60,12 +60,12 @@ class DetalleRecetasMedica extends Model
         return $this->hasMany(Dispensacion::class, 'drm_id', 'id_drm');
     }
 
+    /**
+     * Cantidad entregada en la unidad de dosis recetada (cantidad_dsm está en la unidad de inventario).
+     */
     public function getCantidadDispensadaAttribute(): float
     {
-        if ($this->relationLoaded('dispensaciones')) {
-            return (float) $this->dispensaciones->sum('cantidad_dsm');
-        }
-        return (float) $this->dispensaciones()->sum('cantidad_dsm');
+        return (float) $this->cantidad_drm;
     }
 
     public function getCantidadPendienteAttribute(): float

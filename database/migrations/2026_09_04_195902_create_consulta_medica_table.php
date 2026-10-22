@@ -14,6 +14,7 @@ return new class extends Migration
             $table->text('motivo_cme');
             $table->text('observaciones_cme');
             $table->text('diagnostico_cme');
+            $table->text('motivo_registro_tardio_cme')->nullable();
             $table->foreignId('paciente_per_id')->constrained('persona', 'id_per')->cascadeOnDelete();
             $table->foreignId('medico_per_id')->constrained('persona', 'id_per')->cascadeOnDelete();
             $table->foreignId('csr_id')->constrained('consultorio', 'id_csr')->cascadeOnDelete();

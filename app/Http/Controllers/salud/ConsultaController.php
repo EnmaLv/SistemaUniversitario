@@ -19,6 +19,7 @@ use App\Services\Salud\DispensacionService;
 use App\Services\Salud\EstadisticasExportService;
 use App\Services\Salud\RecetaService;
 use App\Services\Salud\SaludHomeService;
+use App\Support\Auditoria\Bitacora;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Throwable;
@@ -78,6 +79,8 @@ class ConsultaController extends Controller
             auth()->id()
         );
 
+        $this->registrarAtencionTardia($consulta);
+
         return redirect()
             ->route(self::RUTA . '.recetacion', $consulta)
             ->with('success', 'Consulta registrada exitosamente. Continúe con la recetación.');
@@ -89,10 +92,20 @@ class ConsultaController extends Controller
             return $this->bloqueadaPorEntregas($consulta);
         }
 
+        $anteriores = [
+            'fecha_cme'                  => optional($consulta->fecha_cme)->toDateString(),
+            'motivo_registro_tardio_cme' => $consulta->motivo_registro_tardio_cme,
+        ];
+
         $consulta->actualizarConEnfermedades(
             $request->datosConsulta(),
             $request->enfermedadesIds()
         );
+
+        if ($anteriores['fecha_cme'] !== optional($consulta->fecha_cme)->toDateString()
+            || $anteriores['motivo_registro_tardio_cme'] !== $consulta->motivo_registro_tardio_cme) {
+            $this->registrarAtencionTardia($consulta, $anteriores);
+        }
 
         return redirect()
             ->route(self::RUTA . '.recetacion', $consulta)
@@ -102,13 +115,16 @@ class ConsultaController extends Controller
     public function recetacion(Consulta $consulta)
     {
         $consulta->load(Consulta::CARGA_RECETACION);
+        $unidadesDosis = $this->recetas->unidadesDosis();
+        $permitidas = $this->recetas->unidadesDosisPermitidas($consulta);
 
         return view(self::VISTA . '.recetacion', [
             'consulta'         => $consulta,
             'estadoInicial'    => $this->recetas->estadoInicialFormulario($consulta->receta),
             'tieneDatosReales' => $consulta->receta !== null,
-            'productos'        => $this->recetas->productosSalud(),
-            'unidades'         => $this->recetas->unidades(),
+            'productos'        => $this->recetas->productosParaFormulario($unidadesDosis),
+            'unidadesDosis'    => $unidadesDosis,
+            'unidadesExtra'    => array_values(array_diff($permitidas, $unidadesDosis->pluck('nombre_udo')->all())),
         ]);
     }
 
@@ -144,6 +160,7 @@ class ConsultaController extends Controller
             'consulta'        => $consulta,
             'sedeId'          => $sedeId,
             'lotesPorDetalle' => $this->dispensaciones->lotesPorDetalle($consulta, $sedeId),
+            'factores'        => $this->dispensaciones->factoresPorDetalle($consulta),
         ]);
     }
 
@@ -268,6 +285,29 @@ class ConsultaController extends Controller
             'pdf'  => $exportador->pdf($data, $request->periodo(), $request->tipoReporte(), $filtros),
             'word' => $exportador->word($data, $request->periodo(), $request->tipoReporte(), $filtros),
         };
+    }
+
+    private function registrarAtencionTardia(Consulta $consulta, ?array $anteriores = null): void
+    {
+        if (! $consulta->esRegistroTardio()) {
+            return;
+        }
+
+        Bitacora::registrar(
+            accion: 'consulta_registro_tardio',
+            modulo: 'salud',
+            tablaAfectada: 'consulta_medica',
+            registroId: $consulta->id_cme,
+            datosAnteriores: $anteriores,
+            datosModificados: [
+                'fecha_cme'                  => $consulta->fecha_cme->toDateString(),
+                'fecha_registro'             => $consulta->fechaRegistro(),
+                'motivo_registro_tardio_cme' => $consulta->motivo_registro_tardio_cme,
+            ],
+            observacion: 'Atención del ' . $consulta->fecha_cme->format('d/m/Y')
+                . ' registrada el ' . \Carbon\Carbon::parse($consulta->fechaRegistro())->format('d/m/Y')
+                . '. Motivo: ' . $consulta->motivo_registro_tardio_cme,
+        );
     }
 
     private function consultoriosActivos()

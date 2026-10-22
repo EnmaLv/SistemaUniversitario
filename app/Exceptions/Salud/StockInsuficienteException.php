@@ -19,4 +19,9 @@ class StockInsuficienteException extends RuntimeException
     {
         return new self("Stock insuficiente en tu sede para: {$producto}. Faltaron {$faltante} unidades.");
     }
+
+    public static function sinCantidadInventario(string $producto): self
+    {
+        return new self("Indique la cantidad a descontar del inventario para: {$producto}.");
+    }
 }

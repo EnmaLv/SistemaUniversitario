@@ -42,7 +42,7 @@
                             <span class="text-gray-300 dark:text-gray-700">·</span>
                             <span>{{ $pacienteNombre }}</span>
                             <span class="text-gray-300 dark:text-gray-700">·</span>
-                            <span>{{ optional($consulta->fecha_cme)->translatedFormat('d \d\e F, Y') }}</span>
+                            <span>Atendida el {{ optional($consulta->fecha_cme)->translatedFormat('d \d\e F, Y') }}</span>
                         </p>
                     </div>
                 </div>
@@ -167,6 +167,50 @@
                                     </p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-calendar-check text-sky-600 dark:text-sky-400 text-sm"></i>
+                                </div>
+                                <div class="min-w-0 pt-0.5">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Fecha de
+                                        atención</p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ optional($consulta->fecha_cme)->format('d/m/Y') ?? '—' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-keyboard text-sky-600 dark:text-sky-400 text-sm"></i>
+                                </div>
+                                <div class="min-w-0 pt-0.5">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Fecha de registro</p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ optional($consulta->created_at)->format('d/m/Y h:i A') ?? '—' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if ($consulta->esRegistroTardio())
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-clock-rotate-left text-amber-600 dark:text-amber-400 text-sm"></i>
+                                    </div>
+                                    <div class="min-w-0 pt-0.5">
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Motivo del registro tardío</p>
+                                        <p class="text-sm font-medium" style="color: var(--text-main);">
+                                            {{ $consulta->motivo_registro_tardio_cme ?: 'No indicado' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <div>
@@ -321,9 +365,9 @@
                                                     </td>
                                                     <td class="px-5 py-4 text-sm font-mono font-medium"
                                                         style="color: var(--text-main);">
-                                                        {{ $detalle->cantidad_prescrita_drm }}
+                                                        {{ floatval($detalle->cantidad_prescrita_drm) }}
                                                         <span
-                                                            class="text-gray-400 text-xs font-sans ">{{ optional($detalle->unidad)->nombre_unm }}</span>
+                                                            class="text-gray-400 text-xs font-sans ">{{ $detalle->unidad_prescrita_drm ?: optional($detalle->unidad)->nombre_unm }}</span>
                                                     </td>
                                                     <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
                                                         {{ $detalle->frecuencia_drm }}

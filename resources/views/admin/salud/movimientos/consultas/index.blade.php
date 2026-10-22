@@ -16,11 +16,13 @@
                     </div>
 
                     <div class="flex items-center gap-3">
+                        @canRoute('admin.salud.movimientos.consultas.create')
                         <a href="{{ route('admin.salud.movimientos.consultas.create') }}"
                             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-sky-600 hover:bg-sky-700' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>Nueva Consulta</span>
                         </a>
+                        @endcanRoute
                     </div>
                 </div>
 

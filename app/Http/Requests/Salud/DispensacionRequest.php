@@ -26,6 +26,7 @@ class DispensacionRequest extends FormRequest
             'items.*'               => ['array'],
             'items.*.dispensar'     => ['nullable', 'in:' . self::VALORES_CHECKBOX],
             'items.*.cantidad'      => ['nullable', 'numeric', 'min:0', 'max:99999'],
+            'items.*.cantidad_inventario' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'items.*.observaciones' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -49,7 +50,8 @@ class DispensacionRequest extends FormRequest
                 return;
             }
 
-            $detalles = $receta->detalles()->with('producto')->get()->keyBy('id_drm');
+            $detalles = $receta->detalles()->with('producto.unidad')->get()->keyBy('id_drm');
+            $servicio = app(DispensacionService::class);
 
             foreach ($this->input('items', []) as $detalleId => $item) {
                 $detalle = $detalles->get((int) $detalleId);
@@ -91,6 +93,15 @@ class DispensacionRequest extends FormRequest
                         "items.{$detalleId}.cantidad",
                         "La cantidad de {$nombre} ({$cantidad}) supera lo pendiente ({$pendiente})."
                     );
+                    continue;
+                }
+
+                if ($servicio->cantidadInventario($detalle, $cantidad, $item['cantidad_inventario'] ?? null) === null) {
+                    $validator->errors()->add(
+                        "items.{$detalleId}.cantidad_inventario",
+                        "{$nombre} se recetó en " . mb_strtolower((string) $detalle->unidad_prescrita_drm)
+                            . ', que no se puede convertir automáticamente: indique la cantidad a descontar del inventario.'
+                    );
                 }
             }
         });
@@ -101,6 +112,7 @@ class DispensacionRequest extends FormRequest
         return [
             'items.*.dispensar'     => 'dispensar',
             'items.*.cantidad'      => 'cantidad',
+            'items.*.cantidad_inventario' => 'cantidad a descontar del inventario',
             'items.*.observaciones' => 'observaciones',
         ];
     }

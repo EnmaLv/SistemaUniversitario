@@ -100,14 +100,14 @@ class SaludEstadisticasWordExport
 
         if (!empty($filtros['perfil_academico'])) {
             $run = $section->addTextRun();
-            $run->addText('Rol institucional: ', $filterStyle);
+            $run->addText('Tipo de persona: ', $filterStyle);
             $run->addText($filtros['perfil_academico'], $filterValueStyle);
         }
 
         if (!empty($filtros['pnf'])) {
             $run = $section->addTextRun();
             $run->addText('PNF: ', $filterStyle);
-            $run->addText(str_replace('_', ' ', $filtros['pnf']), $filterValueStyle);
+            $run->addText($filtros['pnf'], $filterValueStyle);
         }
 
         $section->addTextBreak(1);
@@ -289,25 +289,22 @@ class SaludEstadisticasWordExport
             self::addSummaryRow($summaryTable, '- Mujeres:', (string) $resumen['genero']['femenino']);
             self::addSummaryRow($summaryTable, '- Otro:', (string) $resumen['genero']['otro']);
 
-            // Edades
-            self::addSummarySection($summaryTable, 'Rangos de Edad');
-            foreach ($resumen['edades']['rangos'] as $rango => $cantidad) {
-                self::addSummaryRow($summaryTable, '- ' . $rango . ' años:', (string) $cantidad);
+            self::addSummarySection($summaryTable, 'Consultas por edad del paciente al consultar');
+            foreach ($resumen['edad_consulta'] ?? [] as $rango => $cantidad) {
+                self::addSummaryRow($summaryTable, '- ' . $rango . ':', (string) $cantidad);
             }
             self::addSummaryRow($summaryTable, 'Promedio de Edad:', $resumen['edades']['promedio'] . ' años', 'F8FAFC');
             self::addSummaryRow($summaryTable, 'Mediana de Edad:', $resumen['edades']['mediana'] . ' años', 'F8FAFC');
             self::addSummaryRow($summaryTable, 'Moda de Edad:', $resumen['edades']['moda'] . ' años', 'F8FAFC');
 
-            // Perfil académico
-            self::addSummarySection($summaryTable, 'Perfil Institucional / Académico');
-            foreach ($resumen['perfil_academico'] as $rol => $cantidad) {
-                self::addSummaryRow($summaryTable, '- ' . $rol . ':', (string) $cantidad);
+            self::addSummarySection($summaryTable, 'Consultas por tipo de persona');
+            foreach ($resumen['tipo_persona_consulta'] ?? [] as $tipo => $cantidad) {
+                self::addSummaryRow($summaryTable, '- ' . $tipo . ':', (string) $cantidad);
             }
 
-            // PNF
-            self::addSummarySection($summaryTable, 'Pacientes de acuerdo al PNF');
-            foreach ($resumen['pnf'] as $pnfKey => $cantidad) {
-                self::addSummaryRow($summaryTable, '- ' . str_replace('_', ' ', $pnfKey) . ':', (string) $cantidad);
+            self::addSummarySection($summaryTable, 'Consultas por PNF');
+            foreach ($resumen['pnf_consulta'] ?? [] as $pnf => $cantidad) {
+                self::addSummaryRow($summaryTable, '- ' . $pnf . ':', (string) $cantidad);
             }
 
             // Métricas avanzadas

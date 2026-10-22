@@ -18,7 +18,8 @@ class UnidadSeeder extends Seeder
             ['nombre_unm' => 'Gramo', 'abreviatura_unm' => 'g', 'factor_conversion_unm' => 1, 'status_id' => 1],
             ['nombre_unm' => 'Kilo', 'abreviatura_unm' => 'Kg', 'factor_conversion_unm' => 1000, 'status_id' => 1],
             ['nombre_unm' => 'Mililitro', 'abreviatura_unm' => 'Ml', 'factor_conversion_unm' => 1, 'status_id' => 1],
-            ['nombre_unm' => 'Litro', 'abreviatura_unm' => 'Lt', 'factor_conversion_unm' => 1000, 'status_id' => 1]
+            ['nombre_unm' => 'Litro', 'abreviatura_unm' => 'Lt', 'factor_conversion_unm' => 1000, 'status_id' => 1],
+            ['nombre_unm' => 'Miligramo', 'abreviatura_unm' => 'mg', 'factor_conversion_unm' => 0.001, 'status_id' => 1],
         ]);
     }
 }

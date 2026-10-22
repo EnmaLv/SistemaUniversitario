@@ -550,7 +550,7 @@
         }
 
         if (!empty($perfil_academico)) {
-            $filtrosAplicados[] = ['Rol', $perfil_academico];
+            $filtrosAplicados[] = ['Tipo de persona', $perfil_academico];
         }
 
         if (!empty($pnf)) {
@@ -661,16 +661,16 @@
                         </div>
                     @endforeach
 
-                    <div class="subsection-title" style="margin-top: 18px;">Distribución por edad</div>
+                    <div class="subsection-title" style="margin-top: 18px;">Consultas por edad al consultar</div>
                     @php
-                        $rangos = $resumen['edades']['rangos'] ?? [];
+                        $rangos = $resumen['edad_consulta'] ?? [];
                         $maxEdad = max(1, count($rangos) ? max($rangos) : 1);
                     @endphp
                     @foreach ($rangos as $rango => $cantidad)
                         <div class="bar-row">
                             <table>
                                 <tr>
-                                    <td class="label">{{ $rango }} años</td>
+                                    <td class="label">{{ $rango }}</td>
                                     <td class="bar-cell">
                                         <div class="bar-bg">
                                             <div class="bar-fill"
@@ -690,9 +690,9 @@
                 </div>
 
                 <div class="col">
-                    <div class="subsection-title">Rol institucional</div>
+                    <div class="subsection-title">Consultas por tipo de persona</div>
                     @php
-                        $roles = $resumen['perfil_academico'] ?? [];
+                        $roles = $resumen['tipo_persona_consulta'] ?? [];
                         $maxRol = max(1, count($roles) ? max($roles) : 1);
                     @endphp
                     @foreach ($roles as $rol => $cantidad)
@@ -714,9 +714,9 @@
                         @endif
                     @endforeach
 
-                    <div class="subsection-title" style="margin-top: 18px;">PNF / Carrera</div>
+                    <div class="subsection-title" style="margin-top: 18px;">Consultas por PNF</div>
                     @php
-                        $pnfs = $resumen['pnf'] ?? [];
+                        $pnfs = $resumen['pnf_consulta'] ?? [];
                         $maxPnf = max(1, count($pnfs) ? max($pnfs) : 1);
                     @endphp
                     @foreach ($pnfs as $pnfNombre => $cantidad)
@@ -1073,7 +1073,12 @@
                 <tbody>
                     @foreach ($consultas as $c)
                         <tr>
-                            <td>{{ \Carbon\Carbon::parse($c->fecha_cme)->format('d/m/Y') }}</td>
+                            <td>
+                                {{ \Carbon\Carbon::parse($c->fecha_cme)->format('d/m/Y') }}
+                                @if ($c->created_at && $c->created_at->toDateString() !== \Carbon\Carbon::parse($c->fecha_cme)->toDateString())
+                                    <br><span style="font-size: 7px; color: #6b7280;">Reg. {{ $c->created_at->format('d/m/Y') }}</span>
+                                @endif
+                            </td>
                             <td class="strong">
                                 {{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—' }}
                             </td>

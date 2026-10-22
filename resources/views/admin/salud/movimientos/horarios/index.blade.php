@@ -24,11 +24,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.salud.movimientos.horarios.create')
                     <a href="{{ route('admin.salud.movimientos.horarios.create', ['consultorio_id' => $consultorioId]) }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white font-bold text-sm shadow-md shadow-sky-500/20 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Asignar Horario</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -61,6 +63,7 @@
 
                 {{-- Botón PDF --}}
                 <div class="flex items-center gap-3 w-full lg:w-auto justify-end">
+                    @canRoute('admin.salud.movimientos.horarios.pdf')
                     <a href="{{ route('admin.salud.movimientos.horarios.pdf', ['consultorio_id' => $consultorioSeleccionado ?? $consultorioId]) }}"
                         target="_blank"
                         class="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-center flex-shrink-0"
@@ -70,6 +73,7 @@
                                 d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
                     </a>
+                    @endcanRoute
                 </div>
 
             </form>
@@ -193,6 +197,7 @@
                                                                 </div> 
                                                             </div>
 
+                                                            @canRoute('admin.salud.movimientos.horarios.destroy')
                                                             <form id="form-delete-{{ $registro->id_hrc }}"
                                                                 action="{{ route('admin.salud.movimientos.horarios.destroy', $registro->id_hrc) }}"
                                                                 method="POST">
@@ -204,6 +209,7 @@
                                                                     <i class="fas fa-times text-[9px]"></i>
                                                                 </button>
                                                             </form>
+                                                            @endcanRoute
                                                         </div>
                                                     @endforeach
                                                 </div>

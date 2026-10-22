@@ -304,8 +304,10 @@
                     {{ $consulta->medico->apellidos_per }}</span><br>
                 <span class="field-name">Consultorio:</span>
                 <span class="field-value">{{ optional($consulta->consultorio)->nombre_csr ?? 'Centro Médico' }}</span><br>
-                <span class="field-name">Fecha:</span>
-                <span class="field-value">{{ optional($consulta->fecha_cme)->format('d/m/Y') }}</span>
+                <span class="field-name">Fecha de atención:</span>
+                <span class="field-value">{{ optional($consulta->fecha_cme)->format('d/m/Y') }}</span><br>
+                <span class="field-name">Fecha de registro:</span>
+                <span class="field-value">{{ optional($consulta->created_at)->format('d/m/Y') }}</span>
             </div>
         </div>
     </div>
@@ -325,7 +327,7 @@
                         <div class="med-name">
                             &mdash; {{ optional($detalle->producto)->nombre_pdt ?? 'Producto no especificado' }}
                             <span class="med-qty">- {{ floatval($detalle->cantidad_prescrita_drm) }}
-                                {{ optional($detalle->unidad)->nombre_unm ?? 'Und' }}</span>
+                                {{ mb_strtolower($detalle->unidad_prescrita_drm ?: (optional($detalle->unidad)->nombre_unm ?? 'unidad')) }}</span>
                         </div>
                         <div class="med-instructions">
                             <strong>Tomar / Aplicar:</strong> {{ $detalle->frecuencia_drm }}

@@ -57,7 +57,7 @@ class Consulta extends Model
         'medico',
         'consultorio',
         'enfermedades',
-        'receta.detalles.producto',
+        'receta.detalles.producto.unidad',
         'receta.detalles.unidad',
         'receta.detalles.dispensaciones.lote',
         'receta.detalles.dispensaciones.usuario.persona',
@@ -93,6 +93,7 @@ class Consulta extends Model
         'motivo_cme',
         'observaciones_cme',
         'diagnostico_cme',
+        'motivo_registro_tardio_cme',
         'use_id',
         'status_id',
     ];
@@ -130,6 +131,16 @@ class Consulta extends Model
     public function receta(): HasOne
     {
         return $this->hasOne(RecetasMedica::class, 'cme_id', 'id_cme');
+    }
+
+    public function fechaRegistro(): string
+    {
+        return ($this->created_at ?? now())->toDateString();
+    }
+
+    public function esRegistroTardio(): bool
+    {
+        return $this->fecha_cme !== null && $this->fecha_cme->toDateString() !== $this->fechaRegistro();
     }
 
     public function getPasoActualAttribute(): string
@@ -329,12 +340,7 @@ class Consulta extends Model
         }
 
         $detalleConPendiente = function ($d) {
-            $d->whereRaw(
-                '(SELECT COALESCE(SUM(dispensacion_medicamento.cantidad_dsm), 0) FROM dispensacion_medicamento
-                  WHERE dispensacion_medicamento.drm_id = detalle_receta_medica.id_drm
-                    AND dispensacion_medicamento.deleted_at IS NULL)
-                 < detalle_receta_medica.cantidad_prescrita_drm'
-            );
+            $d->whereColumn('detalle_receta_medica.cantidad_drm', '<', 'detalle_receta_medica.cantidad_prescrita_drm');
         };
 
         return match ($estado) {

@@ -4,6 +4,7 @@ namespace Tests\Feature\Seguridad;
 
 use App\Models\InventarioTotal;
 use App\Models\salud\Consulta;
+use App\Models\salud\UnidadDosis;
 use App\Services\Salud\RecetaService;
 use App\Support\Inventario\ServicioInventario;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class FlujoSaludTest extends SeguridadTestCase
         ], 'id_lot');
 
         app(ServicioInventario::class)->entrada($lote, $sede, 20, 20);
+        UnidadDosis::firstOrCreate(['nombre_udo' => 'Tableta'], ['abreviatura_udo' => 'tab']);
 
         return [$producto, $unidad];
     }
@@ -59,12 +61,14 @@ class FlujoSaludTest extends SeguridadTestCase
             'vigencia'    => now()->addWeek()->toDateString(),
             'descripcion' => 'Tratamiento',
             'detalles'    => [[
-                'producto_id' => $producto, 'cantidad' => 6, 'unidad_id' => $unidad, 'frecuencia' => 'Cada 8 horas',
+                'producto_id' => $producto, 'cantidad' => 6, 'unidad_dosis' => 'Tableta', 'frecuencia' => 'Cada 8 horas',
             ]],
         ])->assertSessionHasNoErrors();
 
         $detalle = $consulta->fresh()->receta->detalles->first();
         $this->assertEquals(6, (float) $detalle->cantidad_prescrita_drm);
+        $this->assertSame('Tableta', $detalle->unidad_prescrita_drm);
+        $this->assertSame($unidad, (int) $detalle->unm_id);
 
         $this->post(route('admin.salud.movimientos.consultas.dispensacion.store', $consulta), [
             'items' => [$detalle->id_drm => ['dispensar' => '1', 'cantidad' => 6]],

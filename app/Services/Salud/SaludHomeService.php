@@ -7,9 +7,23 @@ use App\Models\salud\Consultorio;
 use App\Models\salud\HorarioConsultorio;
 use App\Models\salud\RecetasMedica;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SaludHomeService
 {
+    public const RANGOS_EDAD = [
+        'Menos de 18' => [0, 17],
+        '18 a 24'     => [18, 24],
+        '25 a 34'     => [25, 34],
+        '35 a 44'     => [35, 44],
+        '45 a 59'     => [45, 59],
+        '60 o más'    => [60, null],
+    ];
+
+    public const SIN_FECHA_NACIMIENTO = 'Sin fecha de nacimiento';
+    public const SIN_PNF = 'Sin PNF';
+    public const SIN_TIPO_PERSONA = 'Sin tipo de persona';
+
     /**
      * Devuelve todos los datos iniciales del panel estadístico de Salud.
      */
@@ -29,6 +43,8 @@ class SaludHomeService
             'resumen'      => $resumen,
             'consultorios' => Consultorio::where('status_id', 1)->orderBy('nombre_csr')->get(),
             'medicos'      => HorarioConsultorio::usuariosElegibles(),
+            'tiposPersona' => DB::table('perfil')->whereNull('deleted_at')->where('status_id', 1)->orderBy('nombre_perfil')->pluck('nombre_perfil'),
+            'programas'    => DB::table('programa')->whereNull('deleted_at')->orderBy('nombre_prg')->pluck('nombre_prg'),
         ];
     }
 
@@ -68,22 +84,10 @@ class SaludHomeService
             'total_recetas'     => 0,
             'total_dispensados' => 0,
             'genero'            => ['masculino' => 0, 'femenino' => 0, 'otro' => 0],
-            'edades'            => ['rangos' => ['0-17' => 0, '18-25' => 0, '26-35' => 0, '36-50' => 0, '51+' => 0], 'promedio' => 0, 'mediana' => 0, 'moda' => 0],
-            'perfil_academico'  => ['Estudiante' => 0, 'Profesor' => 0, 'Obrero' => 0, 'Administrativo' => 0, 'Pre-escolar' => 0, 'Otros' => 0, 'No especificado' => 0],
-            'pnf' => [
-                'ADMINISTRACION' => 0,
-                'MECANICA' => 0,
-                'MANTENIMIENTO' => 0,
-                'ELECTRICIDAD' => 0,
-                'VETERINARIA' => 0,
-                'INFORMATICA' => 0,
-                'PROC. Y DIST. DE ALIMENTOS' => 0,
-                'DISTRIBUCIÓN LOGÍSTICA' => 0,
-                'AGROALIMENTACION' => 0,
-                'SEGURIDAD ALIMENTARIA' => 0,
-                'No especificado' => 0,
-                'No aplica' => 0,
-            ],
+            'edades'            => ['promedio' => 0, 'mediana' => 0, 'moda' => 0],
+            'edad_consulta'     => array_fill_keys(array_merge(array_keys(self::RANGOS_EDAD), [self::SIN_FECHA_NACIMIENTO]), 0),
+            'pnf_consulta'      => [],
+            'tipo_persona_consulta' => [],
             'enfermedades'      => [],
             'productos_top'     => [],
             'medicos'           => [],
@@ -100,6 +104,8 @@ class SaludHomeService
         $recetasDispensadas = 0;
 
         foreach ($consultas as $c) {
+            $this->acumularDemografia($resumen, $c, $edadesList);
+
             // Semana
             if ($c->fecha_cme) {
                 $semanaKey = Carbon::parse($c->fecha_cme)->format('W-Y');
@@ -141,7 +147,7 @@ class SaludHomeService
                     $prodNombre = $det->producto->nombre_pdt ?? 'Producto #' . $det->pdt_id;
                     $resumen['productos_top'][$prodNombre] = ($resumen['productos_top'][$prodNombre] ?? 0) + $disp;
 
-                    if ($disp < (float) $det->cantidad_prescrita_drm) $estaCompleta = false;
+                    if ((float) $det->cantidad_drm < (float) $det->cantidad_prescrita_drm) $estaCompleta = false;
                 }
 
                 if ((int) $c->receta->status_id === RecetasMedica::STATUS_INACTIVO) {
@@ -167,36 +173,6 @@ class SaludHomeService
                 if (in_array($genero, ['masculino', 'hombre', 'm'])) $resumen['genero']['masculino']++;
                 elseif (in_array($genero, ['femenino', 'mujer', 'f'])) $resumen['genero']['femenino']++;
                 else $resumen['genero']['otro']++;
-
-                // Edad
-                if ($paciente->fecha_nacimiento_per) {
-                    $edad = Carbon::parse($paciente->fecha_nacimiento_per)->age;
-                    $edadesList[] = $edad;
-                    if ($edad <= 17) $resumen['edades']['rangos']['0-17']++;
-                    elseif ($edad <= 25) $resumen['edades']['rangos']['18-25']++;
-                    elseif ($edad <= 35) $resumen['edades']['rangos']['26-35']++;
-                    elseif ($edad <= 50) $resumen['edades']['rangos']['36-50']++;
-                    else $resumen['edades']['rangos']['51+']++;
-                }
-
-                // Perfil académico
-                $perfil = $paciente->perfil->nombre_perfil ?? 'No especificado';
-                if (!array_key_exists($perfil, $resumen['perfil_academico'])) $perfil = 'No especificado';
-                $resumen['perfil_academico'][$perfil]++;
-
-                // PNF
-                $pnfVal = 'No especificado';
-                $personaPnf = $paciente->personaPnf;
-                if ($personaPnf instanceof \Illuminate\Support\Collection) $personaPnf = $personaPnf->first();
-                if ($personaPnf && $personaPnf->pnf) {
-                    $pnfVal = $personaPnf->pnf->nombre_prg ?? 'No especificado';
-                }
-                if ($pnfVal === 'Agroalimentaria') $pnfVal = 'AGROALIMENTACION';
-                if ($pnfVal === 'Electrica') $pnfVal = 'ELECTRICIDAD';
-                if (!array_key_exists($pnfVal, $resumen['pnf'])) {
-                    $pnfVal = ($perfil === 'Estudiante') ? 'No especificado' : 'No aplica';
-                }
-                $resumen['pnf'][$pnfVal] = ($resumen['pnf'][$pnfVal] ?? 0) + 1;
             }
         }
 
@@ -240,6 +216,8 @@ class SaludHomeService
         arsort($resumen['productos_top']);
         arsort($resumen['medicos']);
         arsort($resumen['consultorios']);
+        arsort($resumen['pnf_consulta']);
+        arsort($resumen['tipo_persona_consulta']);
 
         // Comparativa vs período anterior
         $resumen['comparativa_consultas'] = 0;
@@ -264,5 +242,59 @@ class SaludHomeService
         }
 
         return $resumen;
+    }
+
+    protected function acumularDemografia(array &$resumen, Consulta $consulta, array &$edades): void
+    {
+        $paciente = $consulta->paciente;
+        $edad = static::edadAlConsultar($paciente?->fecha_nacimiento_per, $consulta->fecha_cme ?? $consulta->created_at);
+
+        if ($edad === null) {
+            $resumen['edad_consulta'][self::SIN_FECHA_NACIMIENTO]++;
+        } else {
+            $edades[] = $edad;
+            $resumen['edad_consulta'][static::rangoEdad($edad)]++;
+        }
+
+        $pnf = $paciente?->personaPnf?->first()?->pnf?->nombre_prg;
+        $pnf = filled($pnf) ? trim($pnf) : self::SIN_PNF;
+        $resumen['pnf_consulta'][$pnf] = ($resumen['pnf_consulta'][$pnf] ?? 0) + 1;
+
+        $tipo = $paciente?->perfil?->nombre_perfil;
+        $tipo = filled($tipo) ? trim($tipo) : self::SIN_TIPO_PERSONA;
+        $resumen['tipo_persona_consulta'][$tipo] = ($resumen['tipo_persona_consulta'][$tipo] ?? 0) + 1;
+    }
+
+    public static function edadAlConsultar($fechaNacimiento, $fechaConsulta): ?int
+    {
+        if (blank($fechaNacimiento) || blank($fechaConsulta)) {
+            return null;
+        }
+
+        $nacimiento = Carbon::parse($fechaNacimiento)->startOfDay();
+        $consulta = Carbon::parse($fechaConsulta)->startOfDay();
+
+        if ($nacimiento->gt($consulta)) {
+            return null;
+        }
+
+        $edad = $consulta->year - $nacimiento->year;
+
+        if ($consulta->month < $nacimiento->month || ($consulta->month === $nacimiento->month && $consulta->day < $nacimiento->day)) {
+            $edad--;
+        }
+
+        return $edad;
+    }
+
+    public static function rangoEdad(int $edad): string
+    {
+        foreach (self::RANGOS_EDAD as $etiqueta => [$desde, $hasta]) {
+            if ($edad >= $desde && ($hasta === null || $edad <= $hasta)) {
+                return $etiqueta;
+            }
+        }
+
+        return array_key_last(self::RANGOS_EDAD);
     }
 }

@@ -21,8 +21,7 @@
                 ? \Carbon\Carbon::parse($consulta->fecha_cme)->format('Y-m-d')
                 : now()->format('Y-m-d');
         }
-        $fechaCarbon = \Carbon\Carbon::parse($fechaValue);
-        $fechaTexto = $fechaCarbon->format('d/m/Y') . ($fechaCarbon->isToday() ? ' (hoy)' : '');
+        $fechaRegistro = $esEdicion ? $consulta->fechaRegistro() : now()->toDateString();
 
         // ── Enfermedades seleccionadas ──────────────────────────
         if (!isset($enfermedadesSeleccionadas)) {
@@ -60,6 +59,9 @@
             'pacienteNombre' => (string) $pacienteNombreInicial,
             'medicoId' => (string) old('medico_id', $consulta->medico_per_id ?? ''),
             'motivo' => (string) old('motivo', $consulta->motivo_cme ?? ''),
+            'fecha' => (string) $fechaValue,
+            'fechaRegistro' => $fechaRegistro,
+            'motivoTardio' => (string) old('motivo_registro_tardio', $consulta->motivo_registro_tardio_cme ?? ''),
             'diagnostico' => (string) old('diagnostico', $consulta->diagnostico_cme ?? ''),
             'enfermedades' => collect($enfermedadesSeleccionadas)->values(),
             'medicos' => collect($medicos)
@@ -168,7 +170,6 @@
                 <input type="hidden" name="per_id" id="per_id" :value="pacienteId">
                 <input type="hidden" name="paciente_nombre" id="paciente_nombre" :value="pacienteNombre">
                 <input type="hidden" name="consultorio_id" id="consultorio_id" :value="consultorioId">
-                <input type="hidden" name="fecha" value="{{ $fechaValue }}">
 
                 <div class="cx-card">
 
@@ -270,6 +271,47 @@
                                             aria-hidden="true"></i>{{ $message }}</p>
                                 @enderror
                                 @error('consultorio_id')
+                                    <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
+                                            aria-hidden="true"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="cx-divider p-4 sm:p-5" aria-labelledby="sec-fecha">
+                        <h2 id="sec-fecha" class="cx-title">¿Cuándo se atendió?</h2>
+                        <p class="text-xs cx-muted mt-0.5 mb-3">
+                            Fecha real de la atención. Se registra el
+                            {{ \Carbon\Carbon::parse($fechaRegistro)->format('d/m/Y') }}.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3">
+                            <div>
+                                <label for="fecha" class="cx-label">
+                                    Fecha de atención<span class="cx-req" aria-hidden="true">*</span>
+                                </label>
+                                <input type="date" id="fecha" name="fecha" x-model="fecha" required
+                                    max="{{ now()->toDateString() }}"
+                                    class="cx-input @error('fecha') is-invalid @enderror">
+                                <p x-show="esTardio" x-cloak class="cx-hint !opacity-100 text-amber-600 dark:text-amber-400">
+                                    <i class="fas fa-clock-rotate-left text-[10px] mr-1" aria-hidden="true"></i>
+                                    Distinta a la fecha de registro: indica el motivo.
+                                </p>
+                                @error('fecha')
+                                    <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
+                                            aria-hidden="true"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div x-show="esTardio" x-cloak>
+                                <label for="motivo_registro_tardio" class="cx-label">
+                                    Motivo del registro tardío<span class="cx-req" aria-hidden="true">*</span>
+                                </label>
+                                <textarea id="motivo_registro_tardio" name="motivo_registro_tardio" rows="2" maxlength="1000"
+                                    x-model="motivoTardio" :required="esTardio" :disabled="!esTardio"
+                                    placeholder="Ej.: la atención se hizo en jornada sin conexión y se cargó al día siguiente"
+                                    class="cx-input @error('motivo_registro_tardio') is-invalid @enderror"></textarea>
+                                @error('motivo_registro_tardio')
                                     <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
                                             aria-hidden="true"></i>{{ $message }}</p>
                                 @enderror
@@ -431,10 +473,12 @@
                         <p class="hidden md:block text-xs cx-muted" x-show="completos < checklist.length">
                             Faltan <span x-text="checklist.length - completos"></span> datos obligatorios.
                         </p>
+                        @canRoute($esEdicion ? 'admin.salud.movimientos.consultas.update' : 'admin.salud.movimientos.consultas.store')
                         <button type="submit" class="rd-submit-btn cx-btn cx-btn-primary">
                             {{ $esEdicion ? 'Guardar cambios y continuar' : 'Guardar y continuar a la receta' }}
                             <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
                         </button>
+                        @endcanRoute
                     </div>
                 </div>
             </form>
@@ -463,6 +507,9 @@
 
                 // Clínico
                 motivo: cfg.motivo || '',
+                fecha: cfg.fecha || '',
+                fechaRegistro: cfg.fechaRegistro || '',
+                motivoTardio: cfg.motivoTardio || '',
                 diagnostico: cfg.diagnostico || '',
 
                 // Enfermedades
@@ -490,11 +537,25 @@
                     return this.medicoActual ? this.medicoActual.consultorio_nombre : '';
                 },
 
+                get esTardio() {
+                    return !!this.fecha && this.fecha !== this.fechaRegistro;
+                },
+
                 get checklist() {
+                    const tardio = this.esTardio ? [{
+                        label: 'Motivo del registro tardío',
+                        ok: this.motivoTardio.trim().length >= 5
+                    }] : [];
+
                     return [{
                             label: 'Paciente',
                             ok: !!this.pacienteId
                         },
+                        {
+                            label: 'Fecha de atención',
+                            ok: !!this.fecha && this.fecha <= '{{ now()->toDateString() }}'
+                        },
+                        ...tardio,
                         {
                             label: 'Médico tratante',
                             ok: !!this.medicoId
