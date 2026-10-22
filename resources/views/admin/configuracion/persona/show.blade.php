@@ -4,7 +4,7 @@
             @include('components.alert')
             <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">Datos del estudiante</h1>
+                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">Datos de la persona</h1>
                     <p class="mt-1 text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
                         Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>

@@ -4,6 +4,7 @@ namespace App\Http\Requests\beca;
 
 use App\Models\Becas\BecaPregunta;
 use App\Models\Becas\JornadaBeca;
+use App\Services\becas\SolicitudBecasService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 
@@ -12,6 +13,15 @@ class GuardarSolicitudRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $usuario = $this->user();
+
+        if ($usuario && ! $usuario->puedeAlguna(['solicitud', 'solicitudes_becas'], 'crear')) {
+            $this->merge(['per_id' => $usuario->per_id]);
+        }
     }
 
     public function rules(): array
@@ -34,6 +44,12 @@ class GuardarSolicitudRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
+            $personaId = $this->input('per_id');
+
+            if ($personaId && ! $validator->errors()->has('per_id') && ! SolicitudBecasService::esEstudiante($personaId)) {
+                $validator->errors()->add('per_id', SolicitudBecasService::MENSAJE_SOLO_ESTUDIANTES);
+            }
+
             $jornadaId = $this->input('jornada_id');
             if (!$jornadaId) return;
 

@@ -2,26 +2,29 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Perfil;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 
 class PerfilSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        
-        DB::table('perfil')->insert([   
-            'nombre_perfil' => 'Usuario',
-            'status_id' => 1,
-        ]);
-        
-        DB::table('perfil')->insert([   
-            'nombre_perfil' => 'Estudiante',
-            'status_id' => 1,
-        ]);
+        $ahora = now();
+
+        foreach (Perfil::NOMBRES as $nombre) {
+            if (DB::table('perfil')->where('nombre_perfil', $nombre)->exists()) {
+                continue;
+            }
+
+            DB::table('perfil')->insert([
+                'nombre_perfil' => $nombre,
+                'status_id'     => 1,
+                'created_at'    => $ahora,
+                'updated_at'    => $ahora,
+            ]);
+        }
+
+        Perfil::limpiarCache();
     }
 }

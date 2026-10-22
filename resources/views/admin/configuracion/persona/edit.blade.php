@@ -4,7 +4,7 @@
             @include('components.alert')
             <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">Editar estudiante</h1>
+                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color: var(--text-main);">Editar persona</h1>
                     <p class="mt-1 text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
                         Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
@@ -15,7 +15,7 @@
             </div>
             <div class="rounded-2xl border p-5 shadow-sm sm:p-6" style="background-color: var(--bg-card); border-color: var(--border-color);">
                 <div class="mb-6 border-b pb-4" style="border-color: var(--border-color);">
-                    <h2 class="text-lg font-extrabold" style="color: var(--text-main);">Datos del estudiante</h2>
+                    <h2 class="text-lg font-extrabold" style="color: var(--text-main);">Datos de la persona</h2>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Modifica la información necesaria.</p>
                 </div>
                 <livewire:registro-persona :isEdit="true" :personaId="$id" />

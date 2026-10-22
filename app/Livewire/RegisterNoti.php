@@ -233,7 +233,7 @@ class RegisterNoti extends Component
 
         $persona = Persona::deSedeActiva()->where('cedula_per', $this->cedula)
             ->where('status_id', 1)
-            ->where('id_perfil', 2)
+            ->estudiantes()
             ->first();
 
         if ($persona) {

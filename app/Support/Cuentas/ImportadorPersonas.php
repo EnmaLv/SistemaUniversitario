@@ -2,6 +2,7 @@
 
 namespace App\Support\Cuentas;
 
+use App\Models\Perfil;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -15,12 +16,23 @@ class ImportadorPersonas
 
     public const MAX_ERRORES_GUARDADOS = 200;
 
-    private const PERFIL_ESTUDIANTE = 2;
+    public const PERFILES_ACEPTADOS = [
+        'estudiante'              => Perfil::ESTUDIANTE,
+        'docente'                 => Perfil::DOCENTE,
+        'obrero'                  => Perfil::OBRERO,
+        'administrativo'          => Perfil::ADMINISTRATIVO,
+        'comunidad universitaria' => Perfil::COMUNIDAD,
+        'comunidad'               => Perfil::COMUNIDAD,
+    ];
 
     private ?array $pnfs = null;
 
     public function importar(string $rutaAbsoluta, int $idSede): array
     {
+        if (Perfil::idEstudiante() === null) {
+            throw new RuntimeException('El perfil Estudiante no está registrado; ejecuta el PerfilSeeder.');
+        }
+
         $filas = $this->leerFilas($rutaAbsoluta);
 
         $resumen = [
@@ -28,6 +40,7 @@ class ImportadorPersonas
             'personas_creadas'      => 0,
             'personas_actualizadas' => 0,
             'filas_con_error'       => 0,
+            'perfiles_cambiados'    => 0,
             'errores'               => [],
             'ids_persona'           => [],
         ];
@@ -52,11 +65,17 @@ class ImportadorPersonas
                 $motivo = 'Nombre o apellido vacío';
             }
 
+            $perfil = null;
+            if ($motivo === null) {
+                [$perfil, $motivo] = $this->perfil($fila['perfil'] ?? null);
+            }
+
             if ($motivo !== null) {
                 $this->agregarError($resumen, $numero, $motivo);
                 continue;
             }
 
+            $fila['_id_perfil'] = $perfil;
             $vistas[$cedula] = $numero;
             $validas[$cedula] = $fila;
         }
@@ -80,10 +99,21 @@ class ImportadorPersonas
 
         $ahora = now();
         $registros = [];
+        $perfilFinal = [];
+        $perfilesAnteriores = [];
+        $idEstudiante = Perfil::idEstudiante();
 
         foreach ($lote as $cedula => $fila) {
             $cedula = (string) $cedula;
             $previa = $existentes->get($cedula);
+            $idPerfil = (int) ($fila['_id_perfil'] ?? $previa->id_perfil ?? $idEstudiante);
+            $esEstudiante = $idEstudiante !== null && $idPerfil === $idEstudiante;
+            $perfilFinal[$cedula] = $idPerfil;
+
+            if ($previa && (int) $previa->id_perfil !== $idPerfil) {
+                $perfilesAnteriores[(int) $previa->id_per] = (int) $previa->id_perfil;
+            }
+
             $fechaNacimiento = $this->fechaNacimiento($fila['fecha_nacimiento'] ?? null);
             $correo = trim((string) ($fila['email'] ?? ''));
 
@@ -96,7 +126,7 @@ class ImportadorPersonas
                 'genero_per'           => $this->genero($fila['genero'] ?? ''),
                 'fecha_nacimiento_per' => $fechaNacimiento,
                 'correo_per'            => filter_var($correo, FILTER_VALIDATE_EMAIL) ? mb_strtolower($correo) : '',
-                'semestre_per'         => trim((string) ($fila['semestre'] ?? '')) ?: null,
+                'semestre_per'         => $esEstudiante ? (trim((string) ($fila['semestre'] ?? '')) ?: null) : null,
             ];
 
             if ($previa) {
@@ -109,7 +139,7 @@ class ImportadorPersonas
 
             $registros[] = array_merge($nuevos, [
                 'cedula_per' => $cedula,
-                'id_perfil'      => $previa->id_perfil ?? self::PERFIL_ESTUDIANTE,
+                'id_perfil'      => $idPerfil,
                 'sed_id'        => $previa->sed_id ?? $idSede,
                 'status_id'      => 1,
                 'created_at'     => $previa->created_at ?? $ahora,
@@ -125,18 +155,28 @@ class ImportadorPersonas
             [
                 'nombres_per', 'segundo_nombre_per', 'apellidos_per', 'segundo_apellido_per',
                 'telefono_per', 'genero_per', 'fecha_nacimiento_per',
-                'correo_per', 'semestre_per', 'status_id', 'updated_at',
+                'correo_per', 'semestre_per', 'id_perfil', 'status_id', 'updated_at',
             ]
         );
 
         $ids = DB::table('persona')->whereIn('cedula_per', $cedulas)->pluck('id_per', 'cedula_per');
         $resumen['ids_persona'] = array_merge($resumen['ids_persona'], $ids->values()->all());
 
-        $this->guardarPnf($lote, $ids->all());
+        $estudiantes = array_filter($lote, fn ($cedula) => $idEstudiante !== null && $perfilFinal[(string) $cedula] === $idEstudiante, ARRAY_FILTER_USE_KEY);
+        $this->guardarPnf($estudiantes, $ids->all());
+
+        if ($perfilesAnteriores !== []) {
+            $resumen['perfiles_cambiados'] += count($perfilesAnteriores);
+            CuentasComunidad::sincronizarRolBecario(array_keys($perfilesAnteriores), 'importacion', $perfilesAnteriores);
+        }
     }
 
     private function guardarPnf(array $lote, array $idsPorCedula): void
     {
+        if ($lote === []) {
+            return;
+        }
+
         $conPnf = DB::table('persona_programa')
             ->whereIn('per_id', array_values($idsPorCedula))
             ->pluck('prg_id', 'per_id');
@@ -239,6 +279,7 @@ class ImportadorPersonas
             $clave = preg_replace('/_+/', '_', trim($clave, '_'));
 
             $campo = match (true) {
+                (bool) preg_match('/^(perfil|tipo|tipo_de_persona)$/', $clave) => 'perfil',
                 (bool) preg_match('/cedula|c_i|dni|identificacion/', $clave) => 'cedula',
                 (bool) preg_match('/segundo_nombre|nombre_2|nombre2/', $clave) => 'segundo_nombre',
                 (bool) preg_match('/nombre/', $clave) => 'nombre',
@@ -293,6 +334,27 @@ class ImportadorPersonas
         }
 
         return $similitudMejor >= 70 ? $mejor : $porDefecto;
+    }
+
+    private function perfil(mixed $valor): array
+    {
+        $texto = trim((string) ($valor ?? ''));
+
+        if ($texto === '') {
+            return [null, null];
+        }
+
+        $nombre = self::PERFILES_ACEPTADOS[Perfil::normalizar($texto)] ?? null;
+
+        if ($nombre === null) {
+            return [null, "Perfil no válido: «{$texto}» (valores aceptados: estudiante, docente, obrero, administrativo, comunidad universitaria)"];
+        }
+
+        $id = Perfil::idPorNombre($nombre);
+
+        return $id === null
+            ? [null, "El perfil {$nombre} no está registrado en el sistema"]
+            : [$id, null];
     }
 
     private function fechaNacimiento(mixed $valor): ?string

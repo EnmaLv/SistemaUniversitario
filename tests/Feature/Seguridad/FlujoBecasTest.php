@@ -3,6 +3,7 @@
 namespace Tests\Feature\Seguridad;
 
 use App\Models\Becas\SolicitudBeca;
+use App\Models\Perfil;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,8 +15,8 @@ class FlujoBecasTest extends SeguridadTestCase
         Storage::fake('local');
 
         $admin = $this->crearUsuario('Administrador');
-        $estudiante = $this->crearUsuario(['Becario'], 'Secreta123', [], $this->sedeA());
-        $otro = $this->crearUsuario(['Becario'], 'Secreta123', [], $this->sedeA());
+        $estudiante = $this->crearUsuario(['Becario'], 'Secreta123', [], $this->sedeA(), Perfil::ESTUDIANTE);
+        $otro = $this->crearUsuario(['Becario'], 'Secreta123', [], $this->sedeA(), Perfil::ESTUDIANTE);
 
         $beneficio = DB::table('beneficio_estudiantil')->insertGetId([
             'nombre_beneficio_bes' => 'Beca de prueba ' . random_int(1, 99999), 'slug_bes' => 'beca-prueba-' . random_int(1, 99999),

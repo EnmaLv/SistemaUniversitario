@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Seguridad;
 
+use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\Rol;
 use App\Models\Usuario;
@@ -30,6 +31,7 @@ abstract class SeguridadTestCase extends TestCase
         static::prepararBaseDatos();
         Cache::flush();
         MapaRutas::limpiar();
+        Perfil::limpiarCache();
         \App\Support\Sedes\SedeActiva::olvidar();
         \Illuminate\Database\Eloquent\Model::preventAccessingMissingAttributes();
 
@@ -68,12 +70,13 @@ abstract class SeguridadTestCase extends TestCase
             Artisan::call('migrate', ['--force' => true]);
         }
 
-        if (! DB::table('perfil')->exists()) {
-            DB::table('perfil')->insert([
-                ['nombre_perfil' => 'Usuario', 'status_id' => 1],
-                ['nombre_perfil' => 'Estudiante', 'status_id' => 1],
-            ]);
+        foreach (Perfil::NOMBRES as $nombrePerfil) {
+            if (! DB::table('perfil')->where('nombre_perfil', $nombrePerfil)->exists()) {
+                DB::table('perfil')->insert(['nombre_perfil' => $nombrePerfil, 'status_id' => 1]);
+            }
         }
+
+        Perfil::limpiarCache();
 
         foreach (['Sede de pruebas', 'Sede B de pruebas'] as $nombreSede) {
             if (! DB::table('sede')->where('nombre_sed', $nombreSede)->exists()) {
@@ -120,9 +123,10 @@ abstract class SeguridadTestCase extends TestCase
         return (int) DB::table('sede')->where('nombre_sed', 'Sede B de pruebas')->value('id_sed');
     }
 
-    protected function crearUsuario(array|string $roles = [], string $password = 'Secreta123', array $extra = [], ?int $sedeId = null): Usuario
+    protected function crearUsuario(array|string $roles = [], string $password = 'Secreta123', array $extra = [], ?int $sedeId = null, ?string $perfil = null): Usuario
     {
         $n = ++static::$consecutivo . '_' . bin2hex(random_bytes(3));
+        $idPerfil = $perfil !== null ? Perfil::idPorNombre($perfil) : DB::table('perfil')->orderBy('id_perfil')->value('id_perfil');
 
         $persona = Persona::create([
             'nombres_per'   => 'Prueba',
@@ -131,13 +135,13 @@ abstract class SeguridadTestCase extends TestCase
             'telefono_per' => '0424-0000000',
             'genero_per'   => 'Otro',
             'correo_per'    => "persona{$n}@prueba.test",
-            'id_perfil'        => DB::table('perfil')->value('id_perfil'),
+            'id_perfil'        => $idPerfil,
             'sed_id'          => $sedeId ?? $this->sedeA(),
         ]);
 
         $usuario = new Usuario([
             'per_id' => $persona->id_per,
-            'id_perfil'  => DB::table('perfil')->value('id_perfil'),
+            'id_perfil'  => $idPerfil,
             'username_use' => "usuario{$n}@prueba.test",
         ]);
         $usuario->password_use = $password;

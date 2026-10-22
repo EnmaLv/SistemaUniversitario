@@ -141,13 +141,13 @@
         </a>
         @endcanMenu
 
-        {{-- Estudiantes --}}
+        {{-- Personas --}}
         @canMenu('persona')
         <a href="{{ url('admin/persona') }}"
             class="flex items-center gap-2 py-1.5 px-2 text-xs rounded-lg text-white/80 hover:text-white hover:bg-[#623739] truncate"
-            title="Estudiantes">
-            <i class="fas fa-user-graduate w-4 text-center flex-shrink-0"></i>
-            <span class="truncate">Estudiantes</span>
+            title="Personas">
+            <i class="fas fa-users w-4 text-center flex-shrink-0"></i>
+            <span class="truncate">Personas</span>
         </a>
         @endcanMenu
 

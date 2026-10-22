@@ -3,6 +3,7 @@
 namespace Tests\Feature\Seguridad;
 
 use App\Models\Compra;
+use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\salud\Consultorio;
 use App\Support\Sedes\SedeActiva;
@@ -19,7 +20,7 @@ class MultisedeTest extends SeguridadTestCase
             'telefono_per' => '04140000000',
             'genero_per'   => 'FEMENINO',
             'correo_per'    => strtolower($apellido) . '@prueba.test',
-            'id_perfil'        => 2,
+            'id_perfil'        => Perfil::idEstudiante(),
             'sed_id'          => $sede,
         ]);
     }

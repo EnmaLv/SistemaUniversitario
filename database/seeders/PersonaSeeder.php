@@ -125,7 +125,7 @@ class PersonaSeeder extends Seeder
             'fecha_nacimiento_per' => now()->toDateString(),
             'correo_per' => 'argenisdoctor@gmail.com',
             'semestre_per' => null,
-            'id_perfil' => 2,
+            'id_perfil' => 5,
             'sed_id' => 1,
         ]);
 
@@ -156,7 +156,7 @@ class PersonaSeeder extends Seeder
             'fecha_nacimiento_per' => now()->toDateString(),
             'correo_per' => 'genesisdoctor@gmail.com',
             'semestre_per' => null,
-            'id_perfil' => 2,
+            'id_perfil' => 5,
             'sed_id' => 2,
         ]);
 
@@ -187,7 +187,7 @@ class PersonaSeeder extends Seeder
             'fecha_nacimiento_per' => now()->toDateString(),
             'correo_per' => 'denisenfermero@gmail.com',
             'semestre_per' => null,
-            'id_perfil' => 2,
+            'id_perfil' => 5,
             'sed_id' => 1,
         ]);
 
@@ -218,7 +218,7 @@ class PersonaSeeder extends Seeder
             'fecha_nacimiento_per' => now()->toDateString(),
             'correo_per' => 'carmenenfermero@gmail.com',
             'semestre_per' => null,
-            'id_perfil' => 2,
+            'id_perfil' => 5,
             'sed_id' => 2,
         ]);
 
@@ -263,11 +263,9 @@ class PersonaSeeder extends Seeder
             'security_questions_use' => null,
         ]);
 
-        // Se le asigna Paciente (7) y Becario (9)
-        DB::table('usuario_rol')->insert([
-            ['rol_id' => 7, 'use_id' => 8], // Paciente
-            ['rol_id' => 9, 'use_id' => 8], // Becario
-        ]);
+        foreach (DB::table('rol')->whereIn('slug_rol', ['paciente', 'becario'])->pluck('id_rol') as $idRol) {
+            DB::table('usuario_rol')->insert(['rol_id' => $idRol, 'use_id' => 8]);
+        }
 
         $rolPsicologo = DB::table('rol')->where('slug_rol', 'psicologo')->value('id_rol');
 
@@ -315,7 +313,10 @@ class PersonaSeeder extends Seeder
             'sed_id' => 2,
         ], 'id_per');
 
-        \App\Support\Cuentas\CuentasComunidad::procesarLote([$estudianteGuanare], 'seeder');
+        \App\Support\Cuentas\CuentasComunidad::procesarLote(
+            DB::table('persona')->where('id_perfil', '!=', 1)->pluck('id_per')->all(),
+            'seeder'
+        );
 
         $programas = DB::table('programa')->orderBy('id_prg')->pluck('id_prg')->values();
 

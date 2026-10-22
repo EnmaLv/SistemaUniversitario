@@ -5,6 +5,7 @@ namespace Tests\Feature\Seguridad;
 use App\Livewire\Archivos;
 use App\Models\Archivo;
 use App\Models\Bitacora as BitacoraModelo;
+use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\Usuario;
 use App\Support\Cuentas\Cedula;
@@ -17,7 +18,7 @@ use Livewire\Livewire;
 
 class CuentasComunidadTest extends SeguridadTestCase
 {
-    private function crearPersona(?string $cedula = null): Persona
+    private function crearPersona(?string $cedula = null, string $perfil = Perfil::ESTUDIANTE): Persona
     {
         return Persona::create([
             'nombres_per'   => 'ESTUDIANTE',
@@ -26,7 +27,7 @@ class CuentasComunidadTest extends SeguridadTestCase
             'telefono_per' => '04140000000',
             'genero_per'   => 'FEMENINO',
             'correo_per'    => 'estudiante' . random_int(1, 999999) . '@prueba.test',
-            'id_perfil'        => DB::table('perfil')->value('id_perfil'),
+            'id_perfil'        => Perfil::idPorNombre($perfil),
             'sed_id'          => DB::table('sede')->value('id_sed'),
         ]);
     }
@@ -69,7 +70,7 @@ class CuentasComunidadTest extends SeguridadTestCase
         CuentasComunidad::asegurarCuenta($usuario->persona);
 
         $this->assertSame($antes, Usuario::count());
-        $this->assertSame(['becario', 'obrero', 'paciente'], $this->slugsDe($usuario->fresh()));
+        $this->assertSame(['obrero', 'paciente'], $this->slugsDe($usuario->fresh()));
         $this->assertFalse((bool) $usuario->fresh()->debe_cambiar_password_use);
     }
 

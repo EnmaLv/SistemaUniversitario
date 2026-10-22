@@ -1,0 +1,21 @@
+Cedula,Nombre,Segundo nombre,Apellido,Segundo apellido,Telefono,Genero,Fecha de nacimiento,Correo,Semestre,PNF,Perfil
+V-30.111.001,María,José,González,Pérez,0414-1110001,F,12/03/2004,maria.gonzalez@ejemplo.edu.ve,1,Informática,Estudiante
+30111002,Luis,,Ramírez,,0424-1110002,M,05/07/2003,luis.ramirez@ejemplo.edu.ve,2,Administración,estudiante
+30.111.003,Ana,Carolina,Torres,Silva,0412-1110003,F,21/11/2002,ana.torres@ejemplo.edu.ve,3,Agroalimentación,
+V30111004,Pedro,,Mendoza,,0416-1110004,M,30/01/2005,,1,Mecánica,Docente
+30111005,Carla,,Rojas,Díaz,,F,14/08/2001,carla.rojas@ejemplo.edu.ve,4,Electricidad,ESTUDIANTE
+E-81.111.006,Jean,Pierre,Dubois,,0414-1110006,M,09/09/2000,jean.dubois@ejemplo.edu.ve,2,Veterinaria,Administrativo
+30111007,Sofía,,Herrera,,0424-1110007,F,02/02/2004,correo-invalido,1,Informática,estudiante
+30111008,Diego,Andrés,Castillo,Mora,0412-1110008,M,17/06/2003,diego.castillo@ejemplo.edu.ve,3,Mantenimiento,Obrero
+30111009,Valeria,,Suárez,,0414-1110009,F,25/12/2002,valeria.suarez@ejemplo.edu.ve,2,Informática,Comunidad universitaria
+30111010,Andrés,,Pineda,,0424-1110010,M,11/04/2004,andres.pineda@ejemplo.edu.ve,1,Administración,docente
+,Fila,,Sin cédula,,0414-0000000,M,01/01/2000,sin.cedula@ejemplo.edu.ve,1,Informática,Estudiante
+ABC123,Cédula,,Con letras,,0414-0000000,F,01/01/2000,letras@ejemplo.edu.ve,1,Informática,Estudiante
+12.345,Cédula,,Muy corta,,0414-0000000,M,01/01/2000,corta@ejemplo.edu.ve,1,Informática,Estudiante
+V-30.111.001,María,,Repetida,,0414-1110001,F,12/03/2004,repetida@ejemplo.edu.ve,1,Informática,Estudiante
+30111015,,,Sin nombre,,0414-0000000,F,01/01/2000,sin.nombre@ejemplo.edu.ve,1,Informática,Estudiante
+30111016,Sin apellido,,,,0414-0000000,M,01/01/2000,sin.apellido@ejemplo.edu.ve,1,Informática,Estudiante
+30111017,Gabriela,,Medina,,0412-1110017,F,fecha mal,gabriela.medina@ejemplo.edu.ve,2,Agroalimentación,Comunidad
+30111018,Ricardo,,Salas,,0416-1110018,X,19/10/1999,ricardo.salas@ejemplo.edu.ve,4,Carrera desconocida,Estudiante
+30111019,Daniela,,Guerra,,0414-1110019,F,08/05/2003,daniela.guerra@ejemplo.edu.ve,3,Mecánica,Estudiánte
+30111020,Javier,,León,,0424-1110020,M,23/09/2002,javier.leon@ejemplo.edu.ve,2,Electricidad,Visitante

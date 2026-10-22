@@ -10,12 +10,27 @@ use App\Models\Becas\JornadaCriterio;
 use App\Models\Becas\SolicitudRespuesta;
 use App\Models\Becas\Lapso;
 use App\Models\Becas\SolicitudDocumento;
+use App\Models\Persona;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
 use Exception;
 
 class SolicitudBecasService
 {
+    public const MENSAJE_SOLO_ESTUDIANTES = 'Solo las personas con perfil Estudiante pueden solicitar becas.';
+
+    public static function esEstudiante(int|string|null $personaId): bool
+    {
+        return $personaId !== null && $personaId !== ''
+            && Persona::whereKey((int) $personaId)->estudiantes()->exists();
+    }
+
+    private function asegurarEstudiante(int|string|null $personaId): void
+    {
+        if (! self::esEstudiante($personaId)) {
+            throw new Exception(self::MENSAJE_SOLO_ESTUDIANTES);
+        }
+    }
 
     public function listarSolicitudes(array $filtros = [])
     {
@@ -46,6 +61,8 @@ class SolicitudBecasService
         return DB::transaction(function () use ($data) {
             $personaId = $data['per_id'];
             $jornadaId = $data['jornada_id'];
+
+            $this->asegurarEstudiante($personaId);
 
             $jornada = JornadaBeca::findOrFail($jornadaId);
             if ((int) $jornada->status_id !== 1) {
@@ -273,6 +290,8 @@ class SolicitudBecasService
     public function renovarSolicitudSimplificada(int $personaId, int $jornadaId, UploadedFile $archivoNotas): SolicitudBeca
     {
         return DB::transaction(function () use ($personaId, $jornadaId, $archivoNotas) {
+            $this->asegurarEstudiante($personaId);
+
             $jornada = JornadaBeca::findOrFail($jornadaId);
 
             if ((int) $jornada->status_id !== 1) {

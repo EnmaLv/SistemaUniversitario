@@ -10,7 +10,7 @@ class GenerarUsuariosFaltantes extends Command
 {
     protected $signature = 'usuarios:generar-faltantes {--simular : Solo cuenta las personas sin usuario}';
 
-    protected $description = 'Crea la cuenta (usuario = cédula, contraseña inicial = cédula, roles Becario y Paciente) a cada persona que no tenga usuario';
+    protected $description = 'Crea la cuenta (usuario = cédula, contraseña inicial = cédula, rol Paciente para todas y Becario solo para estudiantes) a cada persona que no tenga usuario';
 
     public function handle(): int
     {

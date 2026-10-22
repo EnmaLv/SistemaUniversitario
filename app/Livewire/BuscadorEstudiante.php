@@ -37,7 +37,7 @@ class BuscadorEstudiante extends Component
 
     public function getEstudiantesProperty()
     {
-        $query = Persona::where('id_perfil', 2);
+        $query = Persona::estudiantes();
 
         if (strlen($this->search) >= 1) {
             $s = $this->search;

@@ -36,7 +36,7 @@ class SolicitudBecaController extends Controller
         foreach($jornadasActivas as $jornada) {
             $ids = $this->solicitudService->obtenerPendientesPorRenovar($jornada->id_jnb);
             if($ids->isNotEmpty()) {
-                $personas = Persona::deSedeActiva()->whereIn('id_per', $ids)->get();
+                $personas = Persona::deSedeActiva()->estudiantes()->whereIn('id_per', $ids)->get();
                 $pendientesRenovacion->put($jornada->id_jnb, [
                     'jornada' => $jornada,
                     'personas' => $personas
@@ -60,7 +60,7 @@ class SolicitudBecaController extends Controller
             ->with(['beneficio', 'lapso'])
             ->get();
 
-        $estudiantes = Persona::deSedeActiva()->where('id_perfil', 2)
+        $estudiantes = Persona::deSedeActiva()->estudiantes()
             ->orderBy('nombres_per')
             ->orderBy('apellidos_per')
             ->get();
@@ -73,6 +73,13 @@ class SolicitudBecaController extends Controller
 
     public function solicitarEstudiante()
     {
+        /** @var Usuario|null $usuario */
+        $usuario = Auth::user();
+
+        if (! $usuario?->persona?->esEstudiante()) {
+            return response()->view('admin.becas.solicitudes.create_estudiante', ['soloEstudiantes' => true], 403);
+        }
+
         $hoy = now()->toDateString();
 
         $jornadas = JornadaBeca::where('status_id', 1)
@@ -188,6 +195,10 @@ class SolicitudBecaController extends Controller
         $user = Auth::user();
         if (!$user || !$user->per_id) {
             return redirect()->back()->with('error', 'No se pudo identificar al estudiante.');
+        }
+
+        if (! $user->persona?->esEstudiante()) {
+            return redirect()->back()->with('error', SolicitudBecasService::MENSAJE_SOLO_ESTUDIANTES);
         }
 
         try {

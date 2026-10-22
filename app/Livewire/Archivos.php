@@ -59,7 +59,7 @@ class Archivos extends Component
             $resumen['cuentas'] = ['usuarios_creados' => 0, 'usuarios_existentes' => 0, 'roles_agregados' => 0, 'errores' => 0];
 
             $registro = Archivo::create([
-                'info_estudiantes' => 'Estudiantes UPTP - ' . now()->format('Y-m-d H:i:s'),
+                'info_estudiantes' => 'Personas UPTP - ' . now()->format('Y-m-d H:i:s'),
                 'ruta_archivo'     => $ruta,
                 'nombre_original'  => $this->archivo->getClientOriginalName(),
                 'resumen'          => $resumen,

@@ -5,7 +5,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
-                        Importación de estudiantes
+                        Importación de personas
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·

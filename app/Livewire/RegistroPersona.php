@@ -4,8 +4,10 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\PersonaPnf;
+use App\Support\Cuentas\CuentasComunidad;
 use Livewire\Attributes\Validate;
 use Exception;
 use Illuminate\Validation\Rule;
@@ -35,6 +37,8 @@ class RegistroPersona extends Component
     public $telefono;
     public $email;
 
+    public $perfilId;
+    public $perfiles = [];
     public $pnfId;
     public $sedeId;
     public $semestreId;
@@ -75,8 +79,9 @@ class RegistroPersona extends Component
             'municipiosId' => 'required|numeric',
             'parroquiaId' => 'required|numeric',
             'sedeId' => 'required|numeric',
-            'pnfId' => 'required|numeric',
-            'semestreId' => 'required',
+            'perfilId' => ['required', 'integer', Rule::in(array_column($this->perfiles, 'id'))],
+            'pnfId' => $this->esEstudiante ? 'required|numeric' : 'nullable',
+            'semestreId' => $this->esEstudiante ? 'required' : 'nullable',
         ];
 
         if ($this->isEdit) {
@@ -102,7 +107,38 @@ class RegistroPersona extends Component
         'pnfId.required' => 'El PNF es obligatorio',
         'sedeId.required' => 'La Sede es obligatoria',
         'semestreId.required' => 'El Semestre es obligatorio',
+        'perfilId.required' => 'Debe seleccionar un perfil',
+        'perfilId.in' => 'El perfil seleccionado no es válido',
     ];
+
+    public function getEsEstudianteProperty(): bool
+    {
+        return Perfil::esEstudiante($this->perfilId);
+    }
+
+    public function updatedPerfilId(): void
+    {
+        if (! $this->esEstudiante) {
+            $this->resetValidation(['pnfId', 'semestreId']);
+        }
+    }
+
+    private function cargarPerfiles(?int $perfilActual = null): void
+    {
+        $this->perfiles = Perfil::comunidad()
+            ->orderBy('id_perfil')
+            ->get(['id_perfil', 'nombre_perfil'])
+            ->map(fn ($perfil) => ['id' => (int) $perfil->id_perfil, 'nombre' => $perfil->nombre_perfil])
+            ->all();
+
+        if ($perfilActual && ! in_array($perfilActual, array_column($this->perfiles, 'id'), true)) {
+            $nombre = DB::table('perfil')->where('id_perfil', $perfilActual)->value('nombre_perfil');
+
+            if ($nombre) {
+                $this->perfiles[] = ['id' => $perfilActual, 'nombre' => $nombre];
+            }
+        }
+    }
 
 
     public function updatedCedula($value)
@@ -120,13 +156,13 @@ class RegistroPersona extends Component
                 $this->dispatch('confirm-reactivate', cedula: $value);
                 $this->formHabilitado = false;
                 return;
-            } elseif ($persona->estado === 1) {
+            } elseif (! $this->isEdit && (int) $persona->status_id === 1) {
                 $this->formHabilitado = false;
                 $this->dispatch(
                     'alert',
                     type: 'info',
-                    title: 'Estudiante ya activo',
-                    text: 'El estudiante ya está activo en el sistema.'
+                    title: 'Persona ya activa',
+                    text: 'La persona ya está activa en el sistema.'
                 );
                 return;
             }
@@ -165,7 +201,7 @@ class RegistroPersona extends Component
         $this->enabledParroquia = ($value && $this->formHabilitado);
     }
 
-    public function reactivarEstudiante($cedula)
+    public function reactivarPersona($cedula)
     {
         try {
             $persona = Persona::where('cedula_per', $cedula)->first();
@@ -175,13 +211,12 @@ class RegistroPersona extends Component
                     'alert',
                     type: 'error',
                     title: 'Error',
-                    text: 'Estudiante no encontrado.'
+                    text: 'Persona no encontrada.'
                 );
                 return;
             }
 
             if ((int) $persona->status_id === 2) {
-                // Reactivamos el estudiante
                 $persona->update([
                     'status_id' => 1,
                     'updated_at' => now(),
@@ -199,8 +234,9 @@ class RegistroPersona extends Component
                 $this->email = $persona->correo_per;
                 $this->semestreId = $persona->semestre_per;
                 $this->sedeId = $persona->sed_id;
+                $this->perfilId = $persona->id_perfil;
+                $this->cargarPerfiles((int) $persona->id_perfil);
 
-                // Cargamos datos de dirección si existen
                 $direccion = DB::table('direccion')
                     ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
                     ->join('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
@@ -244,15 +280,15 @@ class RegistroPersona extends Component
                 $this->dispatch(
                     'alert',
                     type: 'success',
-                    title: 'Estudiante reactivado',
-                    text: 'El estudiante ha sido reactivado correctamente. Puede editar los datos si es necesario.'
+                    title: 'Persona reactivada',
+                    text: 'La persona ha sido reactivada correctamente. Puede editar los datos si es necesario.'
                 );
             } else {
                 $this->dispatch(
                     'alert',
                     type: 'info',
-                    title: 'Estudiante ya activo',
-                    text: 'El estudiante ya está activo en el sistema.'
+                    title: 'Persona ya activa',
+                    text: 'La persona ya está activa en el sistema.'
                 );
             }
         } catch (Exception $e) {
@@ -260,7 +296,7 @@ class RegistroPersona extends Component
                 'alert',
                 type: 'error',
                 title: 'Error',
-                text: 'Ocurrió un error al reactivar el estudiante: ' . \App\Support\Seguridad\MensajeError::de($e)
+                text: 'Ocurrió un error al reactivar la persona: ' . \App\Support\Seguridad\MensajeError::de($e)
             );
         }
     }
@@ -278,16 +314,17 @@ class RegistroPersona extends Component
                     'nombres_per' => $data['nombre'],
                     'apellidos_per' => $data['apellido'],
                     'fecha_nacimiento_per' => $data['fecha_nacimiento'],
+                    'id_perfil' => $data['perfilId'],
                     'updated_at' => now(),
                 ]);
 
-                \App\Support\Cuentas\CuentasComunidad::asegurarCuenta($persona);
+                CuentasComunidad::asegurarCuenta($persona);
 
                 $this->dispatch(
                     'alert',
                     type: 'success',
-                    title: 'Estudiante activado',
-                    text: 'El estudiante estaba inactivo y ahora ha sido activado.'
+                    title: 'Persona activada',
+                    text: 'La persona estaba inactiva y ahora ha sido activada.'
                 );
 
                 return;
@@ -295,8 +332,8 @@ class RegistroPersona extends Component
                 $this->dispatch(
                     'alert',
                     type: 'info',
-                    title: 'Estudiante ya activo',
-                    text: 'El estudiante ya está activo en el sistema.'
+                    title: 'Persona ya activa',
+                    text: 'La persona ya está activa en el sistema.'
                 );
                 return;
             }
@@ -306,16 +343,16 @@ class RegistroPersona extends Component
             if ($finish) {
                 $nueva = Persona::where('cedula_per', $data['cedula'])->first();
                 if ($nueva) {
-                    \App\Support\Cuentas\CuentasComunidad::asegurarCuenta($nueva);
+                    CuentasComunidad::asegurarCuenta($nueva);
                 }
 
-                redirect()->route('admin.configuracion.persona.index')->with('success', 'Estudiante creado exitosamente.');
+                redirect()->route('admin.configuracion.persona.index')->with('success', 'Persona registrada exitosamente.');
             } else {
                 $this->dispatch(
                     'alert',
                     type: 'error',
                     title: 'Error',
-                    text: 'Error al crear el estudiante. Revisa los datos'
+                    text: 'Error al registrar la persona. Revisa los datos'
                 );
             }
         }
@@ -331,13 +368,13 @@ class RegistroPersona extends Component
 
             if ($finish) {
 
-                redirect()->route('admin.configuracion.persona.index')->with('success', 'Estudiante actualizado exitosamente.');
+                redirect()->route('admin.configuracion.persona.index')->with('success', 'Persona actualizada exitosamente.');
             } else {
                 $this->dispatch(
                     'alert',
                     type: 'error',
                     title: 'Error',
-                    text: $error ?? 'Error al actualizar el estudiante. Revisa los datos'
+                    text: $error ?? 'Error al actualizar la persona. Revisa los datos'
                 );
             }
         } catch (Exception $e) {
@@ -350,7 +387,6 @@ class RegistroPersona extends Component
         }
     }
 
-    public $perfil = [];
     public $pnfs = [];
     public $estadosVE = [];
     public $sede = [];
@@ -376,7 +412,8 @@ class RegistroPersona extends Component
                 ->first();
 
             $this->cedula = $persona->cedula_per;
-            $this->perfil = DB::table('perfil')->get();
+            $this->perfilId = $persona->id_perfil;
+            $this->cargarPerfiles((int) $persona->id_perfil);
             $this->fecha_nacimiento = $persona->fecha_nacimiento_per;
             $this->nombre = $persona->nombres_per;
             $this->segundo_nombre = $persona->segundo_nombre_per;
@@ -388,7 +425,7 @@ class RegistroPersona extends Component
             $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
             $this->sede = DB::table('sede')->get();
             $this->semestreId = $persona->semestre_per;
-            $this->showPnf = true;
+            $this->showPnf = Perfil::esEstudiante($persona->id_perfil);
             $this->pnfId = $personaPnf?->prg_id;
             $this->sedeId = $persona->sed_id;
 
@@ -419,6 +456,11 @@ class RegistroPersona extends Component
             $this->parroquiaId = $direccion->par_id;
             $this->calle = $direccion->calle_dir;
             $this->sector = $direccion->sector_dir;
+        }
+
+        if (! $this->isEdit) {
+            $this->perfilId = Perfil::idEstudiante();
+            $this->cargarPerfiles();
         }
 
         $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
