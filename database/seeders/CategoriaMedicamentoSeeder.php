@@ -3,15 +3,13 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Models\TipoProducto;
 
 class CategoriaMedicamentoSeeder extends Seeder
 {
     public function run(): void
     {
         $categorias = [
-
             'ANALGÉSICOS',
             'ANTIINFLAMATORIOS',
             'ANTIBIÓTICOS',
@@ -62,19 +60,9 @@ class CategoriaMedicamentoSeeder extends Seeder
             'UROLÓGICOS',
             'GINECOLÓGICOS',
             'PEDIÁTRICOS',
-            'MEDICAMENTOS BIOLÓGICOS'
-
+            'MEDICAMENTOS BIOLÓGICOS',
         ];
 
-        foreach ($categorias as $categoria) {
-            DB::table('categorias')->insert([
-                'nombre' => $categoria,
-                'descripcion' => null,
-                'tipo_producto_id' => 2,
-                'activo' => 1,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
-        }
+        (new CategoriaSeeder())->sembrar([TipoProducto::MEDICAMENTO => $categorias]);
     }
 }

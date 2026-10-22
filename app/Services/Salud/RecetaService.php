@@ -3,9 +3,9 @@
 namespace App\Services\Salud;
 
 use App\Models\Producto;
-use App\Models\Unidad;
 use App\Models\salud\Consulta;
 use App\Models\salud\RecetasMedica;
+use App\Models\salud\UnidadDosis;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,24 +18,52 @@ class RecetaService
 {
     public const TIPO_PRODUCTO_SALUD = 2;
 
-    /* ──────────────────────────────────────────────────────────────
-     |  Catálogos del formulario
-     ────────────────────────────────────────────────────────────── */
-
     public function productosSaludQuery(): Builder
     {
-        return Producto::where('estado', true)
-            ->whereHas('categoria', fn($q) => $q->where('tipo_producto_id', self::TIPO_PRODUCTO_SALUD));
+        return Producto::where('status_id', Producto::STATUS_ACTIVO)
+            ->whereHas('categoria', fn($q) => $q->where('tpr_id', self::TIPO_PRODUCTO_SALUD));
     }
+
+    public function __construct(private readonly ConversorDosis $conversor) {}
 
     public function productosSalud(): Collection
     {
-        return $this->productosSaludQuery()->orderBy('nombre')->get();
+        return $this->productosSaludQuery()->with('unidad')->orderBy('nombre_pdt')->get();
     }
 
-    public function unidades(): Collection
+    public function unidadesDosis(): Collection
     {
-        return Unidad::all();
+        return UnidadDosis::catalogo();
+    }
+
+    /**
+     * Medicamentos con la unidad de dosis sugerida y el factor de conversión a su unidad de inventario.
+     */
+    public function productosParaFormulario(?Collection $unidadesDosis = null): array
+    {
+        $unidadesDosis ??= $this->unidadesDosis();
+
+        return $this->productosSalud()->map(fn (Producto $producto) => [
+            'id'           => (string) $producto->id_pdt,
+            'nombre'       => $producto->nombre_pdt,
+            'unidad_dosis' => $this->conversor->unidadDosisSugerida($producto) ?? '',
+            'unidad_base'  => $producto->unidad?->abreviatura_unm ?: ($producto->unidad?->nombre_unm ?? ''),
+            'factores'     => $unidadesDosis->mapWithKeys(fn ($unidad) => [
+                $unidad->nombre_udo => $this->conversor->factor($producto, $unidad->nombre_udo),
+            ])->all(),
+        ])->values()->all();
+    }
+
+    /**
+     * Unidades de dosis aceptadas: el catálogo activo más las ya guardadas en la receta.
+     */
+    public function unidadesDosisPermitidas(?Consulta $consulta = null): array
+    {
+        $existentes = $consulta?->receta
+            ? $consulta->receta->detalles()->pluck('unidad_prescrita_drm')->filter()->all()
+            : [];
+
+        return array_values(array_unique(array_merge($this->unidadesDosis()->pluck('nombre_udo')->all(), $existentes)));
     }
 
     /**
@@ -44,9 +72,9 @@ class RecetaService
     public function estadoInicialFormulario(?RecetasMedica $receta): array
     {
         return [
-            'fecha'       => old('fecha', optional($receta?->fecha)->format('Y-m-d') ?? now()->format('Y-m-d')),
-            'vigencia'    => old('vigencia', optional($receta?->vigencia)->format('Y-m-d') ?? ''),
-            'descripcion' => old('descripcion', $receta?->descripcion ?? ''),
+            'fecha'       => old('fecha', optional($receta?->fecha_emision_rme)->format('Y-m-d') ?? now()->format('Y-m-d')),
+            'vigencia'    => old('vigencia', optional($receta?->fecha_vigencia_rme)->format('Y-m-d') ?? ''),
+            'descripcion' => old('descripcion', $receta?->descripcion_rme ?? ''),
             'detalles'    => old('detalles', $receta ? $this->detallesParaFormulario($receta) : []),
         ];
     }
@@ -54,14 +82,14 @@ class RecetaService
     private function detallesParaFormulario(RecetasMedica $receta): array
     {
         return $receta->detalles->map(fn($det) => [
-            'producto_id'     => $det->producto_id,
-            'producto_nombre' => optional($det->producto)->nombre ?? '',
-            'cantidad'        => $det->cantidad,
-            'unidad_id'       => $det->unidad_id,
-            'frecuencia'      => $det->frecuencia,
-            'fecha_inicio'    => $this->formatearFecha($det->fecha_inicio),
-            'fecha_fin'       => $this->formatearFecha($det->fecha_fin),
-            'observaciones'   => $det->observaciones ?? '',
+            'producto_id'     => $det->pdt_id,
+            'producto_nombre' => optional($det->producto)->nombre_pdt ?? '',
+            'cantidad'        => $det->cantidad_prescrita_drm,
+            'unidad_dosis'    => $det->unidad_prescrita_drm,
+            'frecuencia'      => $det->frecuencia_drm,
+            'fecha_inicio'    => $this->formatearFecha($det->fecha_inicio_drm),
+            'fecha_fin'       => $this->formatearFecha($det->fecha_fin_drm),
+            'observaciones'   => $det->instrucciones_drm ?? '',
         ])->toArray();
     }
 
@@ -69,10 +97,6 @@ class RecetaService
     {
         return $fecha ? Carbon::parse($fecha)->format('Y-m-d') : '';
     }
-
-    /* ──────────────────────────────────────────────────────────────
-     |  Persistencia
-     ────────────────────────────────────────────────────────────── */
 
     /**
      * Crea o actualiza la cabecera de la receta y reemplaza sus detalles.
@@ -94,14 +118,14 @@ class RecetaService
     private function guardarCabecera(Consulta $consulta, array $datos, ?int $usuarioId): RecetasMedica
     {
         return $consulta->receta()->updateOrCreate(
-            ['consulta_id' => $consulta->id],
+            ['cme_id' => $consulta->id_cme],
             [
-                'id_persona'  => $consulta->pacienteIdParaReceta(),
-                'medico_id'   => $consulta->medicoIdParaReceta($usuarioId),
-                'fecha'       => $datos['fecha'],
-                'vigencia'    => $datos['vigencia'] ?? null,
-                'descripcion' => $datos['descripcion'] ?? null,
-                'estado'      => Consulta::RECETA_ABIERTA,
+                'paciente_per_id'    => $consulta->pacienteIdParaReceta(),
+                'medico_per_id'      => $consulta->medicoIdParaReceta($usuarioId),
+                'fecha_emision_rme'  => $datos['fecha'],
+                'fecha_vigencia_rme' => $datos['vigencia'] ?? null,
+                'descripcion_rme'    => $datos['descripcion'] ?? null,
+                'estado_rme'         => Consulta::RECETA_ABIERTA,
             ]
         );
     }
@@ -120,24 +144,24 @@ class RecetaService
 
     private function crearDetalles(RecetasMedica $receta, array $datos): void
     {
-        $unidades = Unidad::whereIn('id', collect($datos['detalles'])->pluck('unidad_id'))
+        $productos = Producto::whereIn('id_pdt', collect($datos['detalles'])->pluck('producto_id'))
             ->get()
-            ->keyBy('id');
+            ->keyBy('id_pdt');
 
         foreach ($datos['detalles'] as $item) {
-            $unidad = $unidades->get((int) $item['unidad_id']);
+            $producto = $productos->get((int) $item['producto_id']);
 
             $receta->detalles()->create([
-                'producto_id'        => $item['producto_id'],
-                'unidad_id'          => $item['unidad_id'],
-                'cantidad'           => 0,
-                'cantidad_prescrita' => $item['cantidad'],
-                'unidad_prescrita'   => $unidad->nombre ?? 'Unidad',
-                'equivalencia_ml'    => $item['equivalencia_ml'] ?? 0,
-                'frecuencia'         => $item['frecuencia'],
-                'fecha_inicio'       => $item['fecha_inicio'] ?? $datos['fecha'],
-                'fecha_fin'          => $item['fecha_fin'] ?? $datos['vigencia'] ?? $datos['fecha'],
-                'observaciones'      => $item['observaciones'] ?? null,
+                'pdt_id'                 => $item['producto_id'],
+                'unm_id'                 => $producto->unm_id,
+                'cantidad_drm'           => 0,
+                'cantidad_prescrita_drm' => $item['cantidad'],
+                'unidad_prescrita_drm'   => $item['unidad_dosis'],
+                'equivalencia_ml_drm'    => $item['equivalencia_ml_drm'] ?? 0,
+                'frecuencia_drm'         => $item['frecuencia'],
+                'fecha_inicio_drm'       => $item['fecha_inicio'] ?? $datos['fecha'],
+                'fecha_fin_drm'          => $item['fecha_fin'] ?? $datos['vigencia'] ?? $datos['fecha'],
+                'instrucciones_drm'      => $item['observaciones'] ?? null,
             ]);
         }
     }

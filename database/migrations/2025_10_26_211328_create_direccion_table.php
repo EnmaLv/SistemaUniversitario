@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('direccion', function (Blueprint $table) {
-            $table->id('id_direccion');
-            $table->string('sector');
-            $table->string('calle');
-            $table->foreignId('id_persona')->references('id_persona')->on('persona')->onDelete('cascade');
-            $table->foreignId('id_localidad')->constrained('localidads')->cascadeOnDelete();
-
+            $table->id('id_dir');
+            $table->string('sector_dir');
+            $table->string('calle_dir');
+            $table->foreignId('per_id')->references('id_per')->on('persona')->onDelete('cascade');
+            $table->foreignId('par_id')->constrained('parroquia', 'id_par')->cascadeOnDelete();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 

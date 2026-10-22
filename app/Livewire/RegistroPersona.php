@@ -4,8 +4,10 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\PersonaPnf;
+use App\Support\Cuentas\CuentasComunidad;
 use Livewire\Attributes\Validate;
 use Exception;
 use Illuminate\Validation\Rule;
@@ -35,6 +37,8 @@ class RegistroPersona extends Component
     public $telefono;
     public $email;
 
+    public $perfilId;
+    public $perfiles = [];
     public $pnfId;
     public $sedeId;
     public $semestreId;
@@ -54,8 +58,8 @@ class RegistroPersona extends Component
                 'required',
                 'numeric',
                 'min:1000000',
-                Rule::unique('persona', 'cedula_persona')
-                    ->where(fn($q) => $q->where('estado', 1)),
+                Rule::unique('persona', 'cedula_per')
+                    ->where(fn($q) => $q->where('status_id', 1)),
             ],
             'nombre' => 'required|min:3|max:50',
             'segundo_nombre' => 'nullable',
@@ -75,8 +79,9 @@ class RegistroPersona extends Component
             'municipiosId' => 'required|numeric',
             'parroquiaId' => 'required|numeric',
             'sedeId' => 'required|numeric',
-            'pnfId' => 'required|numeric',
-            'semestreId' => 'required',
+            'perfilId' => ['required', 'integer', Rule::in(array_column($this->perfiles, 'id'))],
+            'pnfId' => $this->esEstudiante ? 'required|numeric' : 'nullable',
+            'semestreId' => $this->esEstudiante ? 'required' : 'nullable',
         ];
 
         if ($this->isEdit) {
@@ -102,7 +107,38 @@ class RegistroPersona extends Component
         'pnfId.required' => 'El PNF es obligatorio',
         'sedeId.required' => 'La Sede es obligatoria',
         'semestreId.required' => 'El Semestre es obligatorio',
+        'perfilId.required' => 'Debe seleccionar un perfil',
+        'perfilId.in' => 'El perfil seleccionado no es válido',
     ];
+
+    public function getEsEstudianteProperty(): bool
+    {
+        return Perfil::esEstudiante($this->perfilId);
+    }
+
+    public function updatedPerfilId(): void
+    {
+        if (! $this->esEstudiante) {
+            $this->resetValidation(['pnfId', 'semestreId']);
+        }
+    }
+
+    private function cargarPerfiles(?int $perfilActual = null): void
+    {
+        $this->perfiles = Perfil::comunidad()
+            ->orderBy('id_perfil')
+            ->get(['id_perfil', 'nombre_perfil'])
+            ->map(fn ($perfil) => ['id' => (int) $perfil->id_perfil, 'nombre' => $perfil->nombre_perfil])
+            ->all();
+
+        if ($perfilActual && ! in_array($perfilActual, array_column($this->perfiles, 'id'), true)) {
+            $nombre = DB::table('perfil')->where('id_perfil', $perfilActual)->value('nombre_perfil');
+
+            if ($nombre) {
+                $this->perfiles[] = ['id' => $perfilActual, 'nombre' => $nombre];
+            }
+        }
+    }
 
 
     public function updatedCedula($value)
@@ -112,21 +148,21 @@ class RegistroPersona extends Component
             return;
         }
 
-        $persona = Persona::where('cedula_persona', $value)->first();
+        $persona = Persona::where('cedula_per', $value)->first();
 
         if ($persona) {
-            if ($persona->estado === 0) {
+            if ((int) $persona->status_id === 2) {
                 // Disparamos el evento con Livewire 3
                 $this->dispatch('confirm-reactivate', cedula: $value);
                 $this->formHabilitado = false;
                 return;
-            } elseif ($persona->estado === 1) {
+            } elseif (! $this->isEdit && (int) $persona->status_id === 1) {
                 $this->formHabilitado = false;
                 $this->dispatch(
                     'alert',
                     type: 'info',
-                    title: 'Estudiante ya activo',
-                    text: 'El estudiante ya está activo en el sistema.'
+                    title: 'Persona ya activa',
+                    text: 'La persona ya está activa en el sistema.'
                 );
                 return;
             }
@@ -148,9 +184,9 @@ class RegistroPersona extends Component
     {
         $this->validateOnly('estadosVeId');
 
-        $this->municipiosVE = DB::table('municipios')
-            ->where('estado_id', $value)
-            ->where('status', 1)
+        $this->municipiosVE = DB::table('municipio')
+            ->where('esd_id', $value)
+            ->where('status_id', 1)
             ->get();
 
         $this->enabledMunicipio = ($value && $this->formHabilitado);
@@ -160,70 +196,70 @@ class RegistroPersona extends Component
     {
         $this->validateOnly('municipiosId');
 
-        $this->parroquiasVE = DB::table('localidads')->where('municipio_id', $value)->where('status', 1)->get();
+        $this->parroquiasVE = DB::table('parroquia')->where('mun_id', $value)->where('status_id', 1)->get();
 
         $this->enabledParroquia = ($value && $this->formHabilitado);
     }
 
-    public function reactivarEstudiante($cedula)
+    public function reactivarPersona($cedula)
     {
         try {
-            $persona = Persona::where('cedula_persona', $cedula)->first();
+            $persona = Persona::where('cedula_per', $cedula)->first();
 
             if (!$persona) {
                 $this->dispatch(
                     'alert',
                     type: 'error',
                     title: 'Error',
-                    text: 'Estudiante no encontrado.'
+                    text: 'Persona no encontrada.'
                 );
                 return;
             }
 
-            if ($persona->estado === 0) {
-                // Reactivamos el estudiante
+            if ((int) $persona->status_id === 2) {
                 $persona->update([
-                    'estado' => 1,
+                    'status_id' => 1,
                     'updated_at' => now(),
                 ]);
 
                 // Cargamos los datos en el formulario
-                $this->cedula = $persona->cedula_persona;
-                $this->nombre = $persona->nombre_persona;
-                $this->segundo_nombre = $persona->segundo_nombre_persona;
-                $this->apellido = $persona->apellido_persona;
-                $this->segundo_apellido = $persona->segundo_apellido_persona;
-                $this->fecha_nacimiento = $persona->fecha_nacimiento_persona;
-                $this->genero = $persona->genero_persona;
-                $this->telefono = $persona->telefono_persona;
-                $this->email = $persona->email_persona;
-                $this->semestreId = $persona->semestre_persona;
-                $this->sedeId = $persona->id_sede;
+                $this->cedula = $persona->cedula_per;
+                $this->nombre = $persona->nombres_per;
+                $this->segundo_nombre = $persona->segundo_nombre_per;
+                $this->apellido = $persona->apellidos_per;
+                $this->segundo_apellido = $persona->segundo_apellido_per;
+                $this->fecha_nacimiento = $persona->fecha_nacimiento_per;
+                $this->genero = $persona->genero_per;
+                $this->telefono = $persona->telefono_per;
+                $this->email = $persona->correo_per;
+                $this->semestreId = $persona->semestre_per;
+                $this->sedeId = $persona->sed_id;
+                $this->perfilId = $persona->id_perfil;
+                $this->cargarPerfiles((int) $persona->id_perfil);
 
-                // Cargamos datos de dirección si existen
                 $direccion = DB::table('direccion')
-                    ->join('localidads', 'direccion.id_localidad', '=', 'localidads.id')
-                    ->join('municipios', 'localidads.municipio_id', '=', 'municipios.id')
-                    ->where('direccion.id_persona', $persona->id_persona)
-                    ->select('direccion.*', 'localidads.municipio_id', 'municipios.estado_id')
+                    ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
+                    ->join('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
+                    ->where('direccion.per_id', $persona->id_per)
+                    ->select('direccion.*', 'parroquia.mun_id', 'municipio.esd_id')
                     ->first();
 
                 if ($direccion) {
-                    $this->estadosVeId = $direccion->estado_id;
-                    $this->municipiosId = $direccion->municipio_id;
-                    $this->parroquiaId = $direccion->id_localidad;
-                    $this->calle = $direccion->calle;
-                    $this->sector = $direccion->sector;
+                    $this->estadosVeId = $direccion->esd_id;
+                    $this->municipiosId = $direccion->mun_id;
+                    $this->parroquiaId = $direccion->par_id;
+                    $this->calle = $direccion->calle_dir;
+                    $this->sector = $direccion->sector_dir;
 
                     // Cargamos municipios y parroquias
-                    $this->municipiosVE = DB::table('municipios')
-                        ->where('estado_id', $this->estadosVeId)
-                        ->where('status', 1)
+                    $this->municipiosVE = DB::table('municipio')
+                        ->where('esd_id', $this->estadosVeId)
+                        ->where('status_id', 1)
                         ->get();
 
-                    $this->parroquiasVE = DB::table('localidads')
-                        ->where('municipio_id', $this->municipiosId)
-                        ->where('status', 1)
+                    $this->parroquiasVE = DB::table('parroquia')
+                        ->where('mun_id', $this->municipiosId)
+                        ->where('status_id', 1)
                         ->get();
 
                     $this->enabledMunicipio = true;
@@ -231,9 +267,9 @@ class RegistroPersona extends Component
                 }
 
                 // Cargamos PNF
-                $personaPnf = PersonaPnf::where('id_persona', $persona->id_persona)->first();
+                $personaPnf = PersonaPnf::where('per_id', $persona->id_per)->first();
                 if ($personaPnf) {
-                    $this->pnfId = $personaPnf->id_pnf;
+                    $this->pnfId = $personaPnf->prg_id;
                     $this->showPnf = true;
                 }
 
@@ -244,15 +280,15 @@ class RegistroPersona extends Component
                 $this->dispatch(
                     'alert',
                     type: 'success',
-                    title: 'Estudiante reactivado',
-                    text: 'El estudiante ha sido reactivado correctamente. Puede editar los datos si es necesario.'
+                    title: 'Persona reactivada',
+                    text: 'La persona ha sido reactivada correctamente. Puede editar los datos si es necesario.'
                 );
             } else {
                 $this->dispatch(
                     'alert',
                     type: 'info',
-                    title: 'Estudiante ya activo',
-                    text: 'El estudiante ya está activo en el sistema.'
+                    title: 'Persona ya activa',
+                    text: 'La persona ya está activa en el sistema.'
                 );
             }
         } catch (Exception $e) {
@@ -260,7 +296,7 @@ class RegistroPersona extends Component
                 'alert',
                 type: 'error',
                 title: 'Error',
-                text: 'Ocurrió un error al reactivar el estudiante: ' . $e->getMessage()
+                text: 'Ocurrió un error al reactivar la persona: ' . \App\Support\Seguridad\MensajeError::de($e)
             );
         }
     }
@@ -269,23 +305,26 @@ class RegistroPersona extends Component
     public function create()
     {
         $data = $this->validate();
-        $persona = Persona::where('cedula_persona', $data['cedula'])->first();
+        $persona = Persona::where('cedula_per', $data['cedula'])->first();
 
         if ($persona) {
-            if ($persona->estado === 0) {
+            if ((int) $persona->status_id === 2) {
                 $persona->update([
-                    'estado' => 1,
-                    'nombre_persona' => $data['nombre'],
-                    'apellido_persona' => $data['apellido'],
-                    'fecha_nacimiento_persona' => $data['fecha_nacimiento'],
+                    'status_id' => 1,
+                    'nombres_per' => $data['nombre'],
+                    'apellidos_per' => $data['apellido'],
+                    'fecha_nacimiento_per' => $data['fecha_nacimiento'],
+                    'id_perfil' => $data['perfilId'],
                     'updated_at' => now(),
                 ]);
+
+                CuentasComunidad::asegurarCuenta($persona);
 
                 $this->dispatch(
                     'alert',
                     type: 'success',
-                    title: 'Estudiante activado',
-                    text: 'El estudiante estaba inactivo y ahora ha sido activado.'
+                    title: 'Persona activada',
+                    text: 'La persona estaba inactiva y ahora ha sido activada.'
                 );
 
                 return;
@@ -293,8 +332,8 @@ class RegistroPersona extends Component
                 $this->dispatch(
                     'alert',
                     type: 'info',
-                    title: 'Estudiante ya activo',
-                    text: 'El estudiante ya está activo en el sistema.'
+                    title: 'Persona ya activa',
+                    text: 'La persona ya está activa en el sistema.'
                 );
                 return;
             }
@@ -302,13 +341,18 @@ class RegistroPersona extends Component
             $finish = Persona::crearPersona($data);
 
             if ($finish) {
-                redirect()->route('admin.configuracion.persona.index')->with('success', 'Estudiante creado exitosamente.');
+                $nueva = Persona::where('cedula_per', $data['cedula'])->first();
+                if ($nueva) {
+                    CuentasComunidad::asegurarCuenta($nueva);
+                }
+
+                redirect()->route('admin.configuracion.persona.index')->with('success', 'Persona registrada exitosamente.');
             } else {
                 $this->dispatch(
                     'alert',
                     type: 'error',
                     title: 'Error',
-                    text: 'Error al crear el estudiante. Revisa los datos'
+                    text: 'Error al registrar la persona. Revisa los datos'
                 );
             }
         }
@@ -324,13 +368,13 @@ class RegistroPersona extends Component
 
             if ($finish) {
 
-                redirect()->route('admin.configuracion.persona.index')->with('success', 'Estudiante actualizado exitosamente.');
+                redirect()->route('admin.configuracion.persona.index')->with('success', 'Persona actualizada exitosamente.');
             } else {
                 $this->dispatch(
                     'alert',
                     type: 'error',
                     title: 'Error',
-                    text: $error ?? 'Error al actualizar el estudiante. Revisa los datos'
+                    text: $error ?? 'Error al actualizar la persona. Revisa los datos'
                 );
             }
         } catch (Exception $e) {
@@ -338,12 +382,11 @@ class RegistroPersona extends Component
                 'alert',
                 type: 'error',
                 title: 'Error',
-                text: $e->getMessage() ?: 'Ocurrió un error al procesar la solicitud'
+                text: \App\Support\Seguridad\MensajeError::de($e) ?: 'Ocurrió un error al procesar la solicitud'
             );
         }
     }
 
-    public $perfil = [];
     public $pnfs = [];
     public $estadosVE = [];
     public $sede = [];
@@ -358,37 +401,38 @@ class RegistroPersona extends Component
 
             $id = request("id");
             $this->personaId = $id;
-            $persona = Persona::where('id_persona', $id)->where('estado', true)->first();
-            $personaPnf = PersonaPnf::with('pnf')->where('id_persona', $id)->first();
+            $persona = Persona::where('id_per', $id)->where('status_id', 1)->first();
+            $personaPnf = PersonaPnf::with('pnf')->where('per_id', $id)->first();
             $direccion = DB::table('direccion')
-                ->join('localidads', 'direccion.id_localidad', '=', 'localidads.id')
-                ->join('municipios', 'localidads.municipio_id', '=', 'municipios.id')
-                ->join('estados', 'municipios.estado_id', '=', 'estados.id')
-                ->where('direccion.id_persona', $id)
-                ->select('direccion.*', 'localidads.*', 'municipios.*', 'estados.*')
+                ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
+                ->join('municipio', 'parroquia.mun_id', '=', 'municipio.id_mun')
+                ->join('estado', 'municipio.esd_id', '=', 'estado.id_esd')
+                ->where('direccion.per_id', $id)
+                ->select('direccion.*', 'parroquia.*', 'municipio.*', 'estado.*')
                 ->first();
 
-            $this->cedula = $persona->cedula_persona;
-            $this->perfil = DB::table('perfil')->get();
-            $this->fecha_nacimiento = $persona->fecha_nacimiento_persona;
-            $this->nombre = $persona->nombre_persona;
-            $this->segundo_nombre = $persona->segundo_nombre_persona;
-            $this->apellido = $persona->apellido_persona;
-            $this->segundo_apellido = $persona->segundo_apellido_persona;
-            $this->genero = $persona->genero_persona;
-            $this->telefono = $persona->telefono_persona;
-            $this->email = $persona->email_persona;
-            $this->pnfs = DB::table('pnf')->where('id_estatus', 1)->get();
+            $this->cedula = $persona->cedula_per;
+            $this->perfilId = $persona->id_perfil;
+            $this->cargarPerfiles((int) $persona->id_perfil);
+            $this->fecha_nacimiento = $persona->fecha_nacimiento_per;
+            $this->nombre = $persona->nombres_per;
+            $this->segundo_nombre = $persona->segundo_nombre_per;
+            $this->apellido = $persona->apellidos_per;
+            $this->segundo_apellido = $persona->segundo_apellido_per;
+            $this->genero = $persona->genero_per;
+            $this->telefono = $persona->telefono_per;
+            $this->email = $persona->correo_per;
+            $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
             $this->sede = DB::table('sede')->get();
-            $this->semestreId = $persona->semestre_persona;
-            $this->showPnf = true;
-            $this->pnfId = $personaPnf->id_pnf;
-            $this->sedeId = $persona->id_sede;
+            $this->semestreId = $persona->semestre_per;
+            $this->showPnf = Perfil::esEstudiante($persona->id_perfil);
+            $this->pnfId = $personaPnf?->prg_id;
+            $this->sedeId = $persona->sed_id;
 
             if (!$direccion) {
                 $this->enabledMunicipio = false;
                 $this->enabledParroquia = false;
-                $this->estadosVE = DB::table('estados')->get();
+                $this->estadosVE = DB::table('estado')->get();
 
                 $this->dispatch(
                     'alert',
@@ -398,25 +442,30 @@ class RegistroPersona extends Component
                 );
                 return;
             }
-            $this->estadosVeId = $direccion->estado_id;
-            $this->municipiosVE = DB::table('municipios')
-                ->where('estado_id', $this->estadosVeId)
+            $this->estadosVeId = $direccion->esd_id;
+            $this->municipiosVE = DB::table('municipio')
+                ->where('esd_id', $this->estadosVeId)
                 ->get();
 
-            $this->municipiosId = $direccion->municipio_id;
+            $this->municipiosId = $direccion->mun_id;
 
-            $this->parroquiasVE = DB::table('localidads')
-                ->where('municipio_id', $this->municipiosId)
+            $this->parroquiasVE = DB::table('parroquia')
+                ->where('mun_id', $this->municipiosId)
                 ->get();
 
-            $this->parroquiaId = $direccion->id_localidad;
-            $this->calle = $direccion->calle;
-            $this->sector = $direccion->sector;
+            $this->parroquiaId = $direccion->par_id;
+            $this->calle = $direccion->calle_dir;
+            $this->sector = $direccion->sector_dir;
         }
 
-        $this->pnfs = DB::table('pnf')->where('id_estatus', 1)->get();
-        $this->estadosVE = DB::table('estados')->where('status', 1)->get();
-        $this->sede = DB::table('sede')->where('activo', 1)->get();
+        if (! $this->isEdit) {
+            $this->perfilId = Perfil::idEstudiante();
+            $this->cargarPerfiles();
+        }
+
+        $this->pnfs = DB::table('programa')->where('status_id', 1)->get();
+        $this->estadosVE = DB::table('estado')->where('status_id', 1)->get();
+        $this->sede = DB::table('sede')->where('status_id', 1)->get();
     }
 
     public function render()

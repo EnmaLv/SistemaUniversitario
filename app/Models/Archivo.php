@@ -14,8 +14,16 @@ class Archivo extends Model
 
     protected $fillable = [
         'info_estudiantes',
+        'ruta_archivo',
+        'nombre_original',
+        'resumen',
+        'usuario_id',
         'fecha',
         'estado',
+    ];
+
+    protected $casts = [
+        'resumen' => 'array',
     ];
 
     protected $mayusculas = [

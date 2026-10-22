@@ -43,7 +43,7 @@
                         <i class="fas fa-info-circle text-lg"></i>
                     </div>
                     <div class="sm:hidden">
-                        @if (($plantilla?->status ?? null) == 1)
+                        @if (($plantilla?->estado_phc ?? null) == 1)
                             <span
                                 class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -69,7 +69,7 @@
                     </p>
                 </div>
                 <div class="hidden sm:flex shrink-0 items-center pt-1">
-                    @if (($plantilla?->status ?? null) == 1)
+                    @if (($plantilla?->estado_phc ?? null) == 1)
                         <span
                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -110,7 +110,7 @@
             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                 class="rounded-2xl border shadow-sm p-6 sm:p-8 pb-24" x-data="{
                     secciones: @js($seccionesAlpine),
-                    isEditing: {{ ($plantilla?->status ?? 2) == 2 ? 'true' : 'false' }},
+                    isEditing: {{ ($plantilla?->estado_phc ?? 2) == 2 && auth()->user()->puedeRuta('admin.psicologia.maestros.plantillas_globales.update') ? 'true' : 'false' }},
                     showModal: false,
                     search: '',
                 
@@ -171,7 +171,7 @@
                     },
                 
                     guardar() {
-                        if ('{{ $plantilla?->status ?? 2 }}' == '1') {
+                        if ('{{ $plantilla?->estado_phc ?? 2 }}' == '1') {
                             this.showModal = true;
                         } else {
                             document.getElementById('formPlantilla').submit();
@@ -185,7 +185,7 @@
                 }">
 
                 <form id="formPlantilla"
-                    action="{{ route('admin.psicologia.maestros.plantillas_globales.update', $plantilla->id) }}"
+                    action="{{ route('admin.psicologia.maestros.plantillas_globales.update', $plantilla->id_phc) }}"
                     method="POST">
                     @csrf
                     @method('PUT')
@@ -201,7 +201,7 @@
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-bold transition-all"
                                 :class="!isEditing ? 'border-transparent bg-transparent px-0 focus:ring-0' : ''"
                                 placeholder="Ej: Evaluación Psicológica Integral"
-                                value="{{ old('titulo', $plantilla?->titulo ?? '') }}">
+                                value="{{ old('titulo', $plantilla?->titulo_phc ?? '') }}">
                             @error('titulo')
                                 <p class="mt-2 text-xs text-rose-500 font-bold flex items-center gap-1">
                                     <i class="fas fa-circle-exclamation"></i> {{ $message }}
@@ -219,7 +219,7 @@
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all"
                                 :class="!isEditing ? 'border-transparent bg-transparent px-0 focus:ring-0' : ''"
                                 placeholder="Ej: Plantilla estándar para evaluación inicial"
-                                value="{{ old('descripcion', $plantilla?->descripcion ?? '') }}">
+                                value="{{ old('descripcion', $plantilla?->descripcion_phc ?? '') }}">
                         </div>
 
                         <div class="pt-4 border-t border-gray-100 dark:border-gray-800/80">
@@ -415,6 +415,7 @@
                     </div>
 
                     {{-- Floating Action Buttons --}}
+                    @canRoute('admin.psicologia.maestros.plantillas_globales.update')
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                         class="fixed bottom-8 right-8 z-30 flex items-center gap-3 p-2 rounded-full shadow-2xl border">
                         <template x-if="isEditing">
@@ -426,14 +427,14 @@
                                 </button>
                                 <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
                                 <button type="button"
-                                    @click="isEditing = false; if('{{ $plantilla?->status ?? 2 }}' == '2') isEditing = true;"
+                                    @click="isEditing = false; if('{{ $plantilla?->estado_phc ?? 2 }}' == '2') isEditing = true;"
                                     title="Cancelar"
                                     class="w-11 h-11 flex items-center justify-center rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm text-xs font-bold"
-                                    x-show="'{{ $plantilla?->status ?? 2 }}' == '1'">
+                                    x-show="'{{ $plantilla?->estado_phc ?? 2 }}' == '1'">
                                     <i class="fas fa-times"></i>
                                 </button>
                                 <button type="button" @click="guardar()"
-                                    title="{{ ($plantilla?->status ?? 2) == 1 ? 'Guardar' : 'Guardar y Activar' }}"
+                                    title="{{ ($plantilla?->estado_phc ?? 2) == 1 ? 'Guardar' : 'Guardar y Activar' }}"
                                     class="w-11 h-11 flex items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all shadow-sm text-xs font-bold">
                                     <i class="fas fa-check"></i>
                                 </button>
@@ -446,6 +447,7 @@
                             </button>
                         </template>
                     </div>
+                    @endcanRoute
 
                 </form>
             </div>

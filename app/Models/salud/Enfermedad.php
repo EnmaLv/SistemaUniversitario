@@ -2,20 +2,28 @@
 
 namespace App\Models\salud;
 
+use App\Traits\RegistraAutoria;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Enfermedad extends Model
 {
-    protected $table = 'enfermedades';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'enfermedad';
+
+    protected $primaryKey = 'id_efm';
 
     protected $fillable = [
-        'codigo',
-        'nombre',
-        'categoria',
-        'nivel',
-        'activo',
+        'codigo_efm',
+        'nombre_efm',
+        'categoria_efm',
+        'nivel_gravedad_efm',
+        'status_id',
     ];
 
     const TIPO_MENTAL = 'mental';
@@ -24,52 +32,53 @@ class Enfermedad extends Model
 
     public static function obtenerEnfermedades($cantidad = 8, $search = null, $categoria = null, $activo = 1)
     {
-        $query = DB::table('enfermedades');
+        $query = DB::table('enfermedad')->whereNull('deleted_at');
 
-        // Filtrar dinámicamente por estado
         if ($activo !== null && $activo !== '') {
-            $query->where('activo', (int)$activo);
+            $query->where('status_id', (int) $activo === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO);
         }
 
         if ($search) {
             $searchNormalized = mb_strtolower(trim($search), 'UTF-8');
             $query->where(function ($q) use ($searchNormalized) {
-                $q->whereRaw("LOWER(nombre) LIKE ?", ["%{$searchNormalized}%"])
-                    ->orWhereRaw("LOWER(codigo) LIKE ?", ["%{$searchNormalized}%"]);
+                $q->whereRaw("LOWER(nombre_efm) LIKE ?", ["%{$searchNormalized}%"])
+                    ->orWhereRaw("LOWER(codigo_efm) LIKE ?", ["%{$searchNormalized}%"]);
             });
         }
 
         if ($categoria) {
-            $query->where('categoria', $categoria);
+            $query->where('categoria_efm', $categoria);
         }
 
-        return $query->orderBy('codigo', 'asc')
-            ->orderBy('nombre', 'asc')
+        return $query->orderBy('codigo_efm', 'asc')
+            ->orderBy('nombre_efm', 'asc')
             ->paginate($cantidad);
     }
 
     public static function obtenerPorId($id)
     {
-        return DB::table('enfermedades')
-            ->where('id', $id)
+        return DB::table('enfermedad')
+            ->where('id_efm', $id)
+            ->whereNull('deleted_at')
             ->first();
     }
 
     public static function existeEnfermedad($nombre, $codigo = null, $categoria = null, $excludeId = null)
     {
-        $query = DB::table('enfermedades')
-            ->where('nombre', $nombre);
+        $query = DB::table('enfermedad')
+            ->whereNull('deleted_at')
+            ->where('nombre_efm', $nombre);
 
         if ($codigo) {
-            $query->where('codigo', $codigo);
+            $query->where('codigo_efm', $codigo);
         }
 
         if ($categoria) {
-            $query->where('categoria', $categoria);
+            $query->where('categoria_efm', $categoria);
         }
 
         if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
+            $query->where('id_efm', '!=', $excludeId);
         }
 
         return $query->exists();
@@ -79,15 +88,16 @@ class Enfermedad extends Model
     {
         try {
             DB::beginTransaction();
-            $res = DB::table('enfermedades')->insertGetId([
-                'codigo' => $data['codigo'] ?? $data['tipo'] ?? null,
-                'nombre' => $data['nombre'],
-                'categoria' => $data['categoria'] ?? 'fisica',
-                'nivel' => $data['nivel'] ?? 0,
-                'activo' => 1,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
+            $res = DB::table('enfermedad')->insertGetId([
+                'codigo_efm'         => $data['codigo'] ?? $data['tipo'] ?? null,
+                'nombre_efm'         => $data['nombre'],
+                'categoria_efm'      => $data['categoria'] ?? self::TIPO_FISICA,
+                'nivel_gravedad_efm' => $data['nivel'] ?? 0,
+                'status_id'          => self::STATUS_ACTIVO,
+                'created_id'         => Auth::id(),
+                'created_at'         => Carbon::now(),
+                'updated_at'         => Carbon::now(),
+            ], 'id_efm');
             DB::commit();
             return $res;
         } catch (\Exception $e) {
@@ -100,12 +110,13 @@ class Enfermedad extends Model
     {
         try {
             DB::beginTransaction();
-            $res = DB::table('enfermedades')->where('id', $id)->update([
-                'codigo' => $data['codigo'] ?? $data['tipo'] ?? null,
-                'nombre' => $data['nombre'],
-                'categoria' => $data['categoria'] ?? 'fisica',
-                'nivel'     => $data['nivel'] ?? 0,
-                'updated_at' => Carbon::now(),
+            $res = DB::table('enfermedad')->where('id_efm', $id)->update([
+                'codigo_efm'         => $data['codigo'] ?? $data['tipo'] ?? null,
+                'nombre_efm'         => $data['nombre'],
+                'categoria_efm'      => $data['categoria'] ?? self::TIPO_FISICA,
+                'nivel_gravedad_efm' => $data['nivel'] ?? 0,
+                'updated_id'         => Auth::id(),
+                'updated_at'         => Carbon::now(),
             ]);
             DB::commit();
             return $res;
@@ -119,8 +130,9 @@ class Enfermedad extends Model
     {
         try {
             DB::beginTransaction();
-            $res = DB::table('enfermedades')->where('id', $id)->update([
-                'activo' => 0,
+            $res = DB::table('enfermedad')->where('id_efm', $id)->update([
+                'status_id'  => self::STATUS_INACTIVO,
+                'updated_id' => Auth::id(),
                 'updated_at' => Carbon::now(),
             ]);
             DB::commit();
@@ -135,8 +147,9 @@ class Enfermedad extends Model
     {
         try {
             DB::beginTransaction();
-            $res = DB::table('enfermedades')->where('id', $id)->update([
-                'activo' => 1,
+            $res = DB::table('enfermedad')->where('id_efm', $id)->update([
+                'status_id'  => self::STATUS_ACTIVO,
+                'updated_id' => Auth::id(),
                 'updated_at' => Carbon::now(),
             ]);
             DB::commit();
@@ -149,30 +162,33 @@ class Enfermedad extends Model
 
     public static function mental()
     {
-        return DB::table('enfermedades')
-            ->where('categoria', self::TIPO_MENTAL)
-            ->where('activo', 1);
+        return DB::table('enfermedad')
+            ->where('categoria_efm', self::TIPO_MENTAL)
+            ->where('status_id', self::STATUS_ACTIVO)
+            ->whereNull('deleted_at');
     }
 
     public static function fisica()
     {
-        return DB::table('enfermedades')
-            ->where('categoria', self::TIPO_FISICA)
-            ->where('activo', 1);
+        return DB::table('enfermedad')
+            ->where('categoria_efm', self::TIPO_FISICA)
+            ->where('status_id', self::STATUS_ACTIVO)
+            ->whereNull('deleted_at');
     }
 
     public static function obtenerTodasActivas()
     {
-        return DB::table('enfermedades')
-            ->where('activo', 1)
-            ->orderBy('nombre')
+        return DB::table('enfermedad')
+            ->where('status_id', self::STATUS_ACTIVO)
+            ->whereNull('deleted_at')
+            ->orderBy('nombre_efm')
             ->get();
     }
 
     public static function obtenerNombrePorId($id)
     {
-        return DB::table('enfermedades')
-            ->where('id', $id)
-            ->value('nombre');
+        return DB::table('enfermedad')
+            ->where('id_efm', $id)
+            ->value('nombre_efm');
     }
 }

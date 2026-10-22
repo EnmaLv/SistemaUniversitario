@@ -20,12 +20,10 @@
 @php
     $base = $baseUrl ? rtrim($baseUrl, '/') : null;
 
-    // Detectar si el módulo actual pertenece a Salud o Psicología
     $moduloActual = strtolower(session('modulo_activo') ?? (request()->segment(2) ?? ''));
     $esSaludOPsicologia =
         in_array($moduloActual, ['salud', 'psicologia', 'psicología']) || request()->is('*salud*', '*psicologia*');
 
-    // Clases dinámicas según módulo (Azul para Salud/Psicología, Rojo para el resto)
     $triggerHoverClass = $esSaludOPsicologia
         ? 'hover:bg-sky-50 dark:hover:bg-sky-950/50 hover:text-sky-600'
         : 'hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-600';
@@ -33,22 +31,36 @@
     $showHoverClass = $esSaludOPsicologia
         ? 'hover:text-sky-600 hover:bg-sky-100 dark:hover:bg-sky-950/50'
         : 'hover:text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-950/50';
+
+    $permite = fn (string $url, string $metodo = 'GET') => \App\Support\Permisos\PermisoUrl::puede($url, $metodo);
+    $permiteEdicion = fn () => $base && ($permite($base . '/' . $id, 'PUT') || $permite($base . '/' . $id, 'PATCH'));
+
+    $verVisible = $base && $show && ($onShow ? true : $permite($base . '/' . $id));
+    $editarVisible = $base && $edit && ($onEdit ? $permiteEdicion() : $permite($base . '/' . $id . '/edit'));
+    $toggleVisible = $base && $toggle && !is_null($status)
+        && ($status ? $permite($base . '/' . $id, 'DELETE') : $permite($base . '/' . $id . '/activar', 'PUT'));
+    $pendienteVisible = $onPending || ($pendingUrl && $permite($pendingUrl));
+    $pdfVisible = $onPdf || ($pdfUrl && $permite($pdfUrl));
+    $hayExtras = trim((string) $slot) !== '';
+    $hayAcciones = $verVisible || $editarVisible || $toggleVisible || $pendienteVisible || $pdfVisible || $hayExtras;
 @endphp
 
+@if (! $hayAcciones)
+<td {{ $attributes->merge(['class' => 'px-6 py-4 text-center text-gray-300 dark:text-gray-600']) }} title="Solo lectura">
+    <i class="fas fa-lock text-xs"></i>
+</td>
+@else
 <td {{ $attributes->merge(['class' => 'px-6 py-4 whitespace-nowrap']) }}>
     <div class="acciones-wrap relative flex items-center justify-center h-8">
 
-        {{-- Indicador de tres puntos dinámico --}}
         <div id="trigger-{{ $id }}"
             class="acciones-trigger w-8 h-8 flex items-center justify-center rounded-xl border dark:border-gray-600/50 text-gray-500 dark:text-gray-400 shadow-sm {{ $triggerHoverClass }} transition-all">
             <i class="fas fa-ellipsis-vertical text-xs"></i>
         </div>
 
-        {{-- Botonera desplegada --}}
         <div id="panel-{{ $id }}" class="acciones-panel">
 
-            {{-- Botón Pendiente / Continuar --}}
-            @if ($pendingUrl || $onPending)
+            @if ($pendienteVisible)
                 @if ($onPending)
                     <button type="button" onclick='{!! $onPending !!}'
                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors"
@@ -65,8 +77,7 @@
             @endif
 
             @if ($base)
-                {{-- Ver detalles --}}
-                @if ($show)
+                @if ($verVisible)
                     @if ($onShow)
                         <button type="button" onclick='{!! $onShow !!}'
                             class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-500 hover:bg-sky-100 dark:hover:bg-sky-950/50 transition-colors"
@@ -82,8 +93,7 @@
                     @endif
                 @endif
 
-                {{-- Editar --}}
-                @if ($edit)
+                @if ($editarVisible)
                     @if ($onEdit)
                         <button type="button" onclick='{!! $onEdit !!}'
                             class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
@@ -99,8 +109,7 @@
                     @endif
                 @endif
 
-                {{-- Inactivar / Activar --}}
-                @if ($toggle && !is_null($status))
+                @if ($toggleVisible)
                     @if ($status)
                         <form id="form-toggle-{{ $id }}" action="{{ url($base . '/' . $id) }}" method="POST"
                             class="inline">
@@ -129,8 +138,7 @@
                 @endif
             @endif
 
-            {{-- Imprimir PDF / Récipe --}}
-            @if ($pdfUrl || $onPdf)
+            @if ($pdfVisible)
                 @if ($onPdf)
                     <button type="button" onclick='{!! $onPdf !!}'
                         class="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-center flex-shrink-0"
@@ -152,8 +160,8 @@
                 @endif
             @endif
 
-            {{-- Botones extra opcionales vía slot --}}
             {{ $slot }}
         </div>
     </div>
 </td>
+@endif

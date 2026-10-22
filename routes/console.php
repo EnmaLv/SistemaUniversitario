@@ -10,5 +10,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::call(function () {
-    BusGpsLog::where('created_at', '<', now()->subDays(30))->delete();
+    BusGpsLog::withTrashed()->where('created_at', '<', now()->subDays(30))->forceDelete();
 })->daily();
+
+Schedule::command('deportes:marcar-vencidos')->hourly()->withoutOverlapping();

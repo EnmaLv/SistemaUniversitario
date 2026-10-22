@@ -19,19 +19,19 @@ class AvanceSesionSeeder extends Seeder
         ];
 
         foreach ($avancesPredeterminados as $avance) {
-            $existe = DB::table('avances_sesion')
-                ->where('nombre', $avance['nombre'])
-                ->where('es_sistema', true)
+            $existe = DB::table('avance_sesion')
+                ->where('nombre_avs', $avance['nombre'])
+                ->where('es_sistema_avs', true)
                 ->exists();
 
             if (!$existe) {
-                DB::table('avances_sesion')->insert([
-                    'psicologo_id' => null,
-                    'nombre' => $avance['nombre'],
-                    'descripcion' => $avance['descripcion'],
-                    'valor' => $avance['valor'],
-                    'estado' => true,
-                    'es_sistema' => true,
+                DB::table('avance_sesion')->insert([
+                    'psicologo_use_id' => null,
+                    'nombre_avs' => $avance['nombre'],
+                    'descripcion_avs' => $avance['descripcion'],
+                    'valor_avs' => $avance['valor'],
+                    'activo_avs' => true,
+                    'es_sistema_avs' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

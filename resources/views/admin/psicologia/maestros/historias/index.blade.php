@@ -15,6 +15,7 @@
                         class="flex flex-col sm:flex-row sm:items-center gap-3 w-full" id="search-form">
                         
                         <div class="flex items-center gap-2 w-full sm:w-auto">
+                            @if (auth()->user()->puedeRuta('admin.psicologia.maestros.historias.exportar.pdf') || auth()->user()->puedeRuta('admin.psicologia.maestros.historias.exportar.excel'))
                             <div x-data="{ open: false }" class="relative flex-1 sm:flex-initial">
                                 <button @click="open = !open" @click.away="open = false" type="button"
                                     class="w-full sm:w-auto justify-center group flex items-center gap-2 px-4 h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-bold shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 transition-all">
@@ -31,7 +32,8 @@
                                 <div x-show="open" x-transition x-cloak
                                     style="background-color: var(--bg-card); border-color: var(--border-color);"
                                     class="absolute left-0 sm:right-0 sm:left-auto mt-2 w-48 rounded-2xl shadow-xl border overflow-hidden z-20">
-                                    <a href="{{ route('admin.psicologia.maestros.historias.exportar.pdf', ['search' => request('search'), 'pnf' => request('pnf'), 'edad' => request('edad'), 'fecha_desde' => request('fecha_desde'), 'fecha_hasta' => request('fecha_hasta'), 'enfermedad_id' => request('enfermedad_id'), 'prioridad' => request('prioridad'), 'avance_id' => request('avance_id'), 'estado_animo_id' => request('estado_animo_id')]) }}"
+                                    @canRoute('admin.psicologia.maestros.historias.exportar.pdf')
+                                    <a href="{{ route('admin.psicologia.maestros.historias.exportar.pdf', ['search' => request('search'), 'pnf' => request('pnf'), 'edad' => request('edad'), 'fecha_desde' => request('fecha_desde'), 'fecha_hasta' => request('fecha_hasta'), 'enfermedad_id' => request('enfermedad_id'), 'prioridad' => request('prioridad'), 'avance_id' => request('avance_id'), 'esa_id' => request('esa_id')]) }}"
                                         target="_blank"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                         <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-500">
@@ -43,7 +45,9 @@
                                         </div>
                                         <span class="text-sm font-bold" style="color: var(--text-main);">PDF</span>
                                     </a>
-                                    <a href="{{ route('admin.psicologia.maestros.historias.exportar.excel', ['search' => request('search'), 'pnf' => request('pnf'), 'edad' => request('edad'), 'fecha_desde' => request('fecha_desde'), 'fecha_hasta' => request('fecha_hasta'), 'enfermedad_id' => request('enfermedad_id'), 'prioridad' => request('prioridad'), 'avance_id' => request('avance_id'), 'estado_animo_id' => request('estado_animo_id')]) }}"
+                                    @endcanRoute
+                                    @canRoute('admin.psicologia.maestros.historias.exportar.excel')
+                                    <a href="{{ route('admin.psicologia.maestros.historias.exportar.excel', ['search' => request('search'), 'pnf' => request('pnf'), 'edad' => request('edad'), 'fecha_desde' => request('fecha_desde'), 'fecha_hasta' => request('fecha_hasta'), 'enfermedad_id' => request('enfermedad_id'), 'prioridad' => request('prioridad'), 'avance_id' => request('avance_id'), 'esa_id' => request('esa_id')]) }}"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                         <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,8 +58,10 @@
                                         </div>
                                         <span class="text-sm font-bold" style="color: var(--text-main);">Excel</span>
                                     </a>
+                                    @endcanRoute
                                 </div>
                             </div>
+                            @endif
 
                             <button type="button" @click="openModal = true"
                                 class="flex-1 sm:flex-initial justify-center px-4 h-11 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 font-bold text-sm rounded-2xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-2">
@@ -186,7 +192,7 @@
                                                 class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1">Enfermedad
                                                 (Buscar)</label>
                                             <div x-data="{
-                                                query: '{{ $enfermedadSeleccionada ? $enfermedadSeleccionada->nombre : '' }}',
+                                                query: '{{ $enfermedadSeleccionada ? $enfermedadSeleccionada->nombre_efm : '' }}',
                                                 enfermedad_id: '{{ request('enfermedad_id') }}',
                                                 results: [],
                                                 loading: false,
@@ -200,8 +206,8 @@
                                                             this.isOpen = true; });
                                                 },
                                                 select(item) {
-                                                    this.query = item.nombre;
-                                                    this.enfermedad_id = item.id;
+                                                    this.query = item.nombre_efm;
+                                                    this.enfermedad_id = item.id_efm;
                                                     this.isOpen = false;
                                                 },
                                                 clear() {
@@ -235,15 +241,15 @@
                                                             <div class="p-2 text-xs text-slate-400 text-center">
                                                                 Buscando...</div>
                                                         </template>
-                                                        <template x-for="item in results" :key="item.id">
+                                                        <template x-for="item in results" :key="item.id_efm">
                                                             <button type="button" @click="select(item)"
                                                                 class="w-full text-left p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors group flex items-center gap-2">
                                                                 <div class="w-1.5 h-1.5 rounded-full"
-                                                                    :class="item.categoria === 'mental' ? 'bg-indigo-400' :
+                                                                    :class="item.categoria_efm === 'mental' ? 'bg-indigo-400' :
                                                                         'bg-indigo-400'">
                                                                 </div>
                                                                 <div class="text-xs font-bold text-slate-700 dark:text-gray-300 group-hover:text-indigo-600"
-                                                                    x-text="item.nombre"></div>
+                                                                    x-text="item.nombre_efm"></div>
                                                             </button>
                                                         </template>
                                                         <template x-if="results.length === 0 && !loading">
@@ -262,9 +268,9 @@
                                                 class="w-full py-2.5 px-4 bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-gray-900 dark:text-white">
                                                 <option value="">Todas</option>
                                                 @foreach ($prioridades as $prioridad)
-                                                    <option value="{{ $prioridad->nombre }}"
-                                                        {{ request('prioridad') == $prioridad->nombre ? 'selected' : '' }}>
-                                                        {{ $prioridad->nombre }}</option>
+                                                    <option value="{{ $prioridad->nombre_pat }}"
+                                                        {{ request('prioridad') == $prioridad->nombre_pat ? 'selected' : '' }}>
+                                                        {{ $prioridad->nombre_pat }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -276,9 +282,9 @@
                                                 class="w-full py-2.5 px-4 bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-gray-900 dark:text-white">
                                                 <option value="">Todos</option>
                                                 @foreach ($avances as $avance)
-                                                    <option value="{{ $avance->id }}"
-                                                        {{ request('avance_id') == $avance->id ? 'selected' : '' }}>
-                                                        {{ $avance->nombre }}</option>
+                                                    <option value="{{ $avance->id_avs }}"
+                                                        {{ request('avance_id') == $avance->id_avs ? 'selected' : '' }}>
+                                                        {{ $avance->nombre_avs }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -286,13 +292,13 @@
                                             <label
                                                 class="block text-xs font-bold text-slate-500 dark:text-gray-400 mb-1">Estado
                                                 de Ánimo</label>
-                                            <select name="estado_animo_id"
+                                            <select name="esa_id"
                                                 class="w-full py-2.5 px-4 bg-slate-50 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-gray-900 dark:text-white">
                                                 <option value="">Todos</option>
                                                 @foreach ($estadosAnimo as $estado)
-                                                    <option value="{{ $estado->id }}"
-                                                        {{ request('estado_animo_id') == $estado->id ? 'selected' : '' }}>
-                                                        {{ $estado->nombre }}</option>
+                                                    <option value="{{ $estado->id_esa }}"
+                                                        {{ request('esa_id') == $estado->id_esa ? 'selected' : '' }}>
+                                                        {{ $estado->nombre_esa }}</option>
                                                 @endforeach
                                             </select>
                                             <div class="mt-6 flex justify-end gap-3">

@@ -2,38 +2,94 @@
 
 namespace App\Models\salud;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\DB;
 use App\Traits\ConvierteAMayusculasNoEloquent;
-
+use App\Traits\RegistraAutoria;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class EnvasePrimario extends Model
 {
     use HasFactory;
     use ConvierteAMayusculasNoEloquent;
-    protected $table = 'envase_primarios';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'envase_primario';
+
+    protected $primaryKey = 'id_enp';
 
     protected $fillable = [
-        'nombre',
-        'estado',
+        'nombre_enp',
+        'status_id',
     ];
-    
 
-    public static function listar($buscar = null, $estado = null)
+    public static function deTipos(array $tipoIds)
     {
-        $query = DB::table('envase_primarios')
-            ->select('envase_primarios.*');
+        return DB::table('envase_primario')
+            ->select('envase_primario.id_enp', 'envase_primario.nombre_enp')
+            ->where('envase_primario.status_id', self::STATUS_ACTIVO)
+            ->whereNull('envase_primario.deleted_at')
+            ->whereIn('envase_primario.id_enp', fn ($consulta) => $consulta->select('enp_id')
+                ->from('envase_tipo_producto')
+                ->whereIn('tpr_id', array_map('intval', $tipoIds))
+                ->whereNull('deleted_at'))
+            ->orderBy('envase_primario.nombre_enp');
+    }
+
+    public static function reglaDeTipos(array $tipoIds): Exists
+    {
+        return Rule::exists('envase_tipo_producto', 'enp_id')
+            ->whereIn('tpr_id', array_map('intval', $tipoIds))
+            ->whereNull('deleted_at');
+    }
+
+    public static function vincular(int $envaseId, int $tipoId): void
+    {
+        $existe = DB::table('envase_tipo_producto')->where('enp_id', $envaseId)->where('tpr_id', $tipoId)->first();
+
+        if ($existe && $existe->deleted_at === null) {
+            return;
+        }
+
+        if ($existe) {
+            DB::table('envase_tipo_producto')->where('id_etp', $existe->id_etp)->update(['deleted_at' => null, 'updated_id' => Auth::id(), 'updated_at' => now()]);
+
+            return;
+        }
+
+        DB::table('envase_tipo_producto')->insert([
+            'enp_id'     => $envaseId,
+            'tpr_id'     => $tipoId,
+            'created_id' => Auth::id(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function listar($buscar = null, $estado = null, ?int $tipoId = null)
+    {
+        $query = DB::table('envase_primario')
+            ->select('envase_primario.*')
+            ->whereNull('deleted_at')
+            ->when($tipoId !== null, fn ($consulta) => $consulta->whereIn('id_enp', fn ($sub) => $sub->select('enp_id')
+                ->from('envase_tipo_producto')
+                ->where('tpr_id', $tipoId)
+                ->whereNull('deleted_at')));
 
         if ($buscar) {
-            $query->where('nombre', 'like', "%{$buscar}%");
+            $query->where('nombre_enp', 'like', "%{$buscar}%");
         }
 
         if ($estado !== null && $estado !== '') {
-            $query->where('estado', (int)$estado);
+            $query->where('status_id', (int) $estado === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO);
         }
 
-        return $query->orderBy('nombre', 'asc')->paginate(10);
+        return $query->orderBy('nombre_enp', 'asc')->paginate(10);
     }
 
     public static function crear(array $data)
@@ -42,18 +98,19 @@ class EnvasePrimario extends Model
 
         $data = $helper->convertirCamposAMayusculas($data, ['nombre']);
 
-        return DB::table('envase_primarios')->insertGetId([
-            'nombre'      => $data['nombre'],
-            'estado'      => true,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
+        return DB::table('envase_primario')->insertGetId([
+            'nombre_enp' => $data['nombre'],
+            'status_id'  => self::STATUS_ACTIVO,
+            'created_id' => Auth::id(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], 'id_enp');
     }
 
     public static function obtenerDatos($id)
     {
-        return DB::table('envase_primarios')
-            ->where('id', $id)
+        return DB::table('envase_primario')
+            ->where('id_enp', $id)
             ->first();
     }
 
@@ -63,31 +120,34 @@ class EnvasePrimario extends Model
 
         $data = $helper->convertirCamposAMayusculas($data, ['nombre']);
 
-        return DB::table('envase_primarios')
-            ->where('id', $id)
+        return DB::table('envase_primario')
+            ->where('id_enp', $id)
             ->update([
-                'nombre'      => $data['nombre'],
-                'updated_at'  => now(),
+                'nombre_enp' => $data['nombre'],
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 
     public static function eliminar($id)
     {
-        return DB::table('envase_primarios')
-            ->where('id', $id)
+        return DB::table('envase_primario')
+            ->where('id_enp', $id)
             ->update([
-                'estado' => 0,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_INACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 
     public static function activar($id)
     {
-        return DB::table('envase_primarios')
-            ->where('id', $id)
+        return DB::table('envase_primario')
+            ->where('id_enp', $id)
             ->update([
-                'estado' => 1,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_ACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 }

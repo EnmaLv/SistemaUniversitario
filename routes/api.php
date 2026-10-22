@@ -18,44 +18,43 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthApiController::class, 'logout'])->middleware('auth:sanctum');
 });
 
-Route::get('viajes/{viaje}/posicion', [BusViajeApiController::class, 'obtenerPosicion']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me',      [AuthApiController::class, 'me']);
     Route::get('/modulos', [AuthApiController::class, 'modulos']);
 
     Route::prefix('/')->group(function () {
-        Route::get('marcas',               [BusMarcaApiController::class, 'index']);
-        Route::post('marcas',               [BusMarcaApiController::class, 'store']);
-        Route::get('marcas/{marca}',       [BusMarcaApiController::class, 'show']);
-        Route::put('marcas/{marca}',       [BusMarcaApiController::class, 'update']);
-        Route::patch('marcas/{marca}/toggle', [BusMarcaApiController::class, 'toggle']);
-        Route::delete('marcas/{marca}',       [BusMarcaApiController::class, 'destroy']);
+        Route::get('marcas',               [BusMarcaApiController::class, 'index'])->middleware('permiso.api:bus_marcas');
+        Route::post('marcas',               [BusMarcaApiController::class, 'store'])->middleware('permiso.api:bus_marcas');
+        Route::get('marcas/{marca}',       [BusMarcaApiController::class, 'show'])->middleware('permiso.api:bus_marcas');
+        Route::put('marcas/{marca}',       [BusMarcaApiController::class, 'update'])->middleware('permiso.api:bus_marcas');
+        Route::patch('marcas/{marca}/toggle', [BusMarcaApiController::class, 'toggle'])->middleware('permiso.api:bus_marcas');
 
-        Route::get('modelos',               [BusModeloApiController::class, 'index']);
-        Route::post('modelos',               [BusModeloApiController::class, 'store']);
-        Route::get('modelos/{modelo}',      [BusModeloApiController::class, 'show']);
-        Route::put('modelos/{modelo}',      [BusModeloApiController::class, 'update']);
-        Route::patch('modelos/{modelo}/toggle', [BusModeloApiController::class, 'toggle']);
-        Route::delete('modelos/{modelo}',      [BusModeloApiController::class, 'destroy']);
+        Route::get('modelos',               [BusModeloApiController::class, 'index'])->middleware('permiso.api:bus_modelos');
+        Route::post('modelos',               [BusModeloApiController::class, 'store'])->middleware('permiso.api:bus_modelos');
+        Route::get('modelos/{modelo}',      [BusModeloApiController::class, 'show'])->middleware('permiso.api:bus_modelos');
+        Route::put('modelos/{modelo}',      [BusModeloApiController::class, 'update'])->middleware('permiso.api:bus_modelos');
+        Route::patch('modelos/{modelo}/toggle', [BusModeloApiController::class, 'toggle'])->middleware('permiso.api:bus_modelos');
+        Route::delete('modelos/{modelo}',      [BusModeloApiController::class, 'destroy'])->middleware('permiso.api:bus_modelos');
 
-        Route::get('combustibles',                  [BusTipoCombustibleApiController::class, 'index']);
-        Route::post('combustibles',                 [BusTipoCombustibleApiController::class, 'store']);
-        Route::get('combustibles/{combustible}',    [BusTipoCombustibleApiController::class, 'show']);
-        Route::put('combustibles/{combustible}',    [BusTipoCombustibleApiController::class, 'update']);
-        Route::patch('combustibles/{combustible}/toggle', [BusTipoCombustibleApiController::class, 'toggle']);
-        Route::delete('combustibles/{combustible}', [BusTipoCombustibleApiController::class, 'destroy']);
+        Route::get('combustibles',                  [BusTipoCombustibleApiController::class, 'index'])->middleware('permiso.api:bus_tipo_combustibles');
+        Route::post('combustibles',                 [BusTipoCombustibleApiController::class, 'store'])->middleware('permiso.api:bus_tipo_combustibles');
+        Route::get('combustibles/{combustible}',    [BusTipoCombustibleApiController::class, 'show'])->middleware('permiso.api:bus_tipo_combustibles');
+        Route::put('combustibles/{combustible}',    [BusTipoCombustibleApiController::class, 'update'])->middleware('permiso.api:bus_tipo_combustibles');
+        Route::patch('combustibles/{combustible}/toggle', [BusTipoCombustibleApiController::class, 'toggle'])->middleware('permiso.api:bus_tipo_combustibles');
+        Route::delete('combustibles/{combustible}', [BusTipoCombustibleApiController::class, 'destroy'])->middleware('permiso.api:bus_tipo_combustibles');
 
-        Route::get('vehiculos',               [BusVehiculoApiController::class, 'index']);
-        Route::post('vehiculos',              [BusVehiculoApiController::class, 'store']);
-        Route::get('vehiculos/{vehiculo}',    [BusVehiculoApiController::class, 'show']);
-        Route::put('vehiculos/{vehiculo}',    [BusVehiculoApiController::class, 'update']);
-        Route::patch('vehiculos/{vehiculo}/toggle', [BusVehiculoApiController::class, 'toggle']);
-        Route::delete('vehiculos/{vehiculo}', [BusVehiculoApiController::class, 'destroy']);
+        Route::get('vehiculos',               [BusVehiculoApiController::class, 'index'])->middleware('permiso.api:bus_vehiculos');
+        Route::post('vehiculos',              [BusVehiculoApiController::class, 'store'])->middleware('permiso.api:bus_vehiculos');
+        Route::get('vehiculos/{vehiculo}',    [BusVehiculoApiController::class, 'show'])->middleware('permiso.api:bus_vehiculos');
+        Route::put('vehiculos/{vehiculo}',    [BusVehiculoApiController::class, 'update'])->middleware('permiso.api:bus_vehiculos');
+        Route::patch('vehiculos/{vehiculo}/toggle', [BusVehiculoApiController::class, 'toggle'])->middleware('permiso.api:bus_vehiculos');
+        Route::delete('vehiculos/{vehiculo}', [BusVehiculoApiController::class, 'destroy'])->middleware('permiso.api:bus_vehiculos');
 
         Route::get('paradas', [BusParadaApiController::class, 'index']);
         Route::get('sedes', [SedeController::class, 'index']);
 
+        Route::get('viajes/{viaje}/posicion', [BusViajeApiController::class, 'obtenerPosicion'])->middleware('throttle:120,1');
         Route::post('viajes/{viaje}/pasajeros', [BusViajePasajeroApiController::class, 'registrar']);
         Route::get('viajes/hoy', [BusViajeApiController::class, 'cartelera']);
         Route::get('mi-viaje-activo', [BusViajeApiController::class, 'miViajeActivo']);

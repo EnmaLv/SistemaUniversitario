@@ -26,6 +26,7 @@
         'psicologia' => ['icon' => 'fas fa-brain'],
         'beca' => ['icon' => 'fas fa-graduation-cap'],
         'transporte' => ['icon' => 'fas fa-bus'],
+        'deporte' => ['icon' => 'fas fa-futbol'],
     ];
     $fallback = ['icon' => 'fas fa-cubes'];
 @endphp
@@ -77,19 +78,19 @@
 
             @foreach ($modulos as $m)
                 {{-- Si el usuario es paciente o becado y el módulo no está permitido, lo salta --}}
-                @if ($esEstudiante && !in_array($m->key, $modulosEstudiante))
+                @if ($esEstudiante && !in_array($m->key_mod, $modulosEstudiante))
                     @continue
                 @endif
 
                 @php
-                    $conf = $moduloConfig[$m->key] ?? $fallback;
-                    $esActivo = $moduloActivo == $m->key;
+                    $conf = $moduloConfig[$m->key_mod] ?? $fallback;
+                    $esActivo = $moduloActivo == $m->key_mod;
 
                     $activeBorderColor = $esActivo ? $primaryColor : 'var(--border-color)';
                     $ringClass = $esActivo ? $ringActive : '';
                 @endphp
 
-                <button type="submit" name="modulo" value="{{ $m->key }}"
+                <button type="submit" name="modulo" value="{{ $m->key_mod }}"
                     style="background-color: var(--bg-card); border-color: {{ $activeBorderColor }}; color: var(--text-main);"
                     class="relative p-6 rounded-2xl border shadow-sm hover:shadow-lg {{ $hoverBorder }} transition-all text-center flex flex-col items-center justify-center gap-3 group w-full cursor-pointer {{ $ringClass }}">
 
@@ -107,7 +108,7 @@
 
                     <div>
                         <h5 class="font-bold text-base mb-1" style="color: var(--text-main);">
-                            {{ $m->nombre }}
+                            {{ $m->nombre_mod }}
                         </h5>
                         <span
                             class="text-xs font-semibold {{ $textAccent }} flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all">

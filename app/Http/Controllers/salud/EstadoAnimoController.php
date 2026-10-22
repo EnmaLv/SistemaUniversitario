@@ -55,10 +55,10 @@ class EstadoAnimoController extends Controller
             abort(404);
         }
 
-        $valoresDisponibles = EstadoAnimo::valoresDisponibles($estado->id);
+        $valoresDisponibles = EstadoAnimo::valoresDisponibles($estado->id_esa);
         
-        if (!in_array($estado->valor, $valoresDisponibles)) {
-            $valoresDisponibles[] = $estado->valor;
+        if (!in_array($estado->valor_esa, $valoresDisponibles)) {
+            $valoresDisponibles[] = $estado->valor_esa;
         }
         sort($valoresDisponibles);
 
@@ -73,10 +73,10 @@ class EstadoAnimoController extends Controller
             return back()->with('error', 'Estado de ánimo no encontrado.');
         }
 
-        $valoresDisponibles = EstadoAnimo::valoresDisponibles($estado->id);
+        $valoresDisponibles = EstadoAnimo::valoresDisponibles($estado->id_esa);
         
-        if (!in_array($estado->valor, $valoresDisponibles)) {
-            $valoresDisponibles[] = $estado->valor;
+        if (!in_array($estado->valor_esa, $valoresDisponibles)) {
+            $valoresDisponibles[] = $estado->valor_esa;
         }
 
         $validated = $request->validate([
@@ -88,13 +88,7 @@ class EstadoAnimoController extends Controller
 
         $nombreNormalizado = trim($validated['nombre']);
 
-        $nombreExiste = \Illuminate\Support\Facades\DB::table('estado_animos')
-            ->where('status', 1)
-            ->where('id', '!=', $id)
-            ->whereRaw('LOWER(nombre) = ?', [strtolower($nombreNormalizado)])
-            ->exists();
-
-        if ($nombreExiste) {
+        if (EstadoAnimo::nombreExiste($nombreNormalizado, $estado->id_esa)) {
             return back()->with('error', 'El nombre de este estado de ánimo ya está en uso.')->withInput();
         }
 
@@ -106,7 +100,7 @@ class EstadoAnimoController extends Controller
 
             return redirect()->route('admin.psicologia.maestros.estado_animos.index')->with('success', 'Estado de ánimo actualizado correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage())->withInput();
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e))->withInput();
         }
     }
 
@@ -122,7 +116,7 @@ class EstadoAnimoController extends Controller
             EstadoAnimo::eliminar($id);
             return redirect()->route('admin.psicologia.maestros.estado_animos.index')->with('success', 'Estado de ánimo eliminado. El valor ha sido liberado.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 }

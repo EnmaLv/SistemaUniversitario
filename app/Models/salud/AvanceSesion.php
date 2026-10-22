@@ -2,6 +2,7 @@
 
 namespace App\Models\salud;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AvanceSesion
@@ -11,13 +12,13 @@ class AvanceSesion
      */
     public static function obtenerPorPsicologo($psicologoId)
     {
-        return DB::table('avances_sesion')
+        return DB::table('avance_sesion')
             ->where(function ($query) use ($psicologoId) {
-                $query->where('psicologo_id', $psicologoId)
-                    ->orWhere('es_sistema', true);
+                $query->where('psicologo_use_id', $psicologoId)
+                    ->orWhere('es_sistema_avs', true);
             })
-            ->where('status', 1)
-            ->orderBy('nombre', 'asc')
+            ->whereNull('avance_sesion.deleted_at')
+            ->orderBy('nombre_avs', 'asc')
             ->get();
     }
 
@@ -26,22 +27,37 @@ class AvanceSesion
      */
     public static function obtenerPaginadoPorPsicologo($psicologoId, $search = null, $perPage = 10)
     {
-        $query = DB::table('avances_sesion')
+        $query = DB::table('avance_sesion')
             ->where(function ($q) use ($psicologoId) {
-                $q->where('psicologo_id', $psicologoId)
-                    ->orWhere('es_sistema', true);
+                $q->where('psicologo_use_id', $psicologoId)
+                    ->orWhere('es_sistema_avs', true);
             })
-            ->where('status', 1);
+            ->whereNull('avance_sesion.deleted_at');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('nombre', 'like', '%' . $search . '%')
-                    ->orWhere('valor', 'like', '%' . $search . '%');
+                $q->where('nombre_avs', 'like', '%' . $search . '%')
+                    ->when(ctype_digit((string) $search), fn ($s) => $s->orWhere('valor_avs', (int) $search));
             });
         }
-        return $query->orderBy('es_sistema', 'desc')
-            ->orderBy('nombre', 'asc')
+        return $query->orderBy('es_sistema_avs', 'desc')
+            ->orderBy('nombre_avs', 'asc')
             ->paginate($perPage);
+    }
+
+    /**
+     * Avance visible para el psicólogo: propio o del sistema, no eliminado.
+     */
+    public static function obtenerVisible($id, $psicologoId)
+    {
+        return DB::table('avance_sesion')
+            ->where('id_avs', $id)
+            ->where(function ($q) use ($psicologoId) {
+                $q->where('psicologo_use_id', $psicologoId)
+                    ->orWhere('es_sistema_avs', true);
+            })
+            ->whereNull('deleted_at')
+            ->first();
     }
 
     /**
@@ -49,39 +65,39 @@ class AvanceSesion
      */
     public static function crear($psicologoId, $datos)
     {
-        // Verificar si ya existe un avance con ese nombre para este psicólogo
-        $existe = DB::table('avances_sesion')
-            ->where('psicologo_id', $psicologoId)
-            ->where('nombre', $datos['nombre'])
-            ->where('status', 1)
+        $existe = DB::table('avance_sesion')
+            ->where('psicologo_use_id', $psicologoId)
+            ->where('nombre_avs', $datos['nombre'])
+            ->whereNull('deleted_at')
             ->exists();
 
         if ($existe) {
             throw new \Exception('Ya existe un avance con este nombre.');
         }
 
-        // Verificar si ya existe un avance con el mismo valor para este psicologo
-        $existeValor = DB::table('avances_sesion')
+        $existeValor = DB::table('avance_sesion')
             ->where(function ($q) use ($psicologoId) {
-                $q->where('psicologo_id', $psicologoId)
-                    ->orWhere('es_sistema', true);
+                $q->where('psicologo_use_id', $psicologoId)
+                    ->orWhere('es_sistema_avs', true);
             })
-            ->where('valor', $datos['valor'])
-            ->where('status', 1)
+            ->where('valor_avs', $datos['valor'])
+            ->whereNull('deleted_at')
             ->exists();
 
         if ($existeValor) {
             throw new \Exception('Ya existe un avance con este valor numérico.');
         }
 
-        return DB::table('avances_sesion')->insertGetId([
-            'psicologo_id' => $psicologoId,
-            'nombre' => $datos['nombre'],
-            'valor' => $datos['valor'],
-            'descripcion' => $datos['descripcion'] ?? null,
-            'estado' => $datos['estado'] ?? true,
+        return DB::table('avance_sesion')->insertGetId([
+            'psicologo_use_id' => $psicologoId,
+            'nombre_avs' => $datos['nombre'],
+            'valor_avs' => $datos['valor'],
+            'descripcion_avs' => $datos['descripcion'] ?? null,
+            'activo_avs' => $datos['estado'] ?? true,
+            'created_id' => Auth::id(),
             'created_at' => now(),
-        ]);
+            'updated_at' => now(),
+        ], 'id_avs');
     }
 
     /**
@@ -89,10 +105,9 @@ class AvanceSesion
      */
     public static function actualizar($id, $psicologoId, $datos)
     {
-        // Verificar si es sistema
-        $avance = DB::table('avances_sesion')->where('id', $id)->first();
+        $avance = DB::table('avance_sesion')->where('id_avs', $id)->whereNull('deleted_at')->first();
         if (!$avance) throw new \Exception('Avance no encontrado.');
-        if ($avance->es_sistema) {
+        if ($avance->es_sistema_avs) {
             throw new \Exception('No se puede modificar un avance del sistema.');
         }
 
@@ -100,44 +115,44 @@ class AvanceSesion
             throw new \Exception('No se puede editar este avance de sesión porque está registrado en la última nota de evolución de un paciente.');
         }
 
-        // Verificar si otro avance tiene el mismo nombre
-        $existe = DB::table('avances_sesion')
+        $existe = DB::table('avance_sesion')
             ->where(function ($q) use ($psicologoId) {
-                $q->where('psicologo_id', $psicologoId)
-                    ->orWhere('es_sistema', true);
+                $q->where('psicologo_use_id', $psicologoId)
+                    ->orWhere('es_sistema_avs', true);
             })
-            ->where('nombre', $datos['nombre'])
-            ->where('id', '!=', $id)
-            ->where('status', 1)
+            ->where('nombre_avs', $datos['nombre'])
+            ->where('id_avs', '!=', $id)
+            ->whereNull('deleted_at')
             ->exists();
 
         if ($existe) {
             throw new \Exception('Ya existe otro avance con este nombre.');
         }
 
-        // Verificar si otro avance tiene el mismo valor
-        $existeValor = DB::table('avances_sesion')
+        $existeValor = DB::table('avance_sesion')
             ->where(function ($q) use ($psicologoId) {
-                $q->where('psicologo_id', $psicologoId)
-                    ->orWhere('es_sistema', true);
+                $q->where('psicologo_use_id', $psicologoId)
+                    ->orWhere('es_sistema_avs', true);
             })
-            ->where('valor', $datos['valor'])
-            ->where('id', '!=', $id)
-            ->where('status', 1)
+            ->where('valor_avs', $datos['valor'])
+            ->where('id_avs', '!=', $id)
+            ->whereNull('deleted_at')
             ->exists();
 
         if ($existeValor) {
             throw new \Exception('Ya existe otro avance con este valor numérico.');
         }
 
-        return DB::table('avances_sesion')
-            ->where('id', $id)
-            ->where('psicologo_id', $psicologoId)
+        return DB::table('avance_sesion')
+            ->where('id_avs', $id)
+            ->where('psicologo_use_id', $psicologoId)
+            ->whereNull('deleted_at')
             ->update([
-                'nombre' => $datos['nombre'],
-                'valor' => $datos['valor'],
-                'descripcion' => $datos['descripcion'] ?? null,
-                'estado' => $datos['estado'] ?? true,
+                'nombre_avs' => $datos['nombre'],
+                'valor_avs' => $datos['valor'],
+                'descripcion_avs' => $datos['descripcion'] ?? null,
+                'activo_avs' => $datos['estado'] ?? true,
+                'updated_id' => Auth::id(),
                 'updated_at' => now(),
             ]);
     }
@@ -147,9 +162,9 @@ class AvanceSesion
      */
     public static function eliminar($id, $psicologoId)
     {
-        $avance = DB::table('avances_sesion')->where('id', $id)->first();
+        $avance = DB::table('avance_sesion')->where('id_avs', $id)->whereNull('deleted_at')->first();
         if (!$avance) throw new \Exception('Avance no encontrado.');
-        if ($avance->es_sistema) {
+        if ($avance->es_sistema_avs) {
             throw new \Exception('No se puede eliminar un avance del sistema.');
         }
 
@@ -157,44 +172,48 @@ class AvanceSesion
             throw new \Exception('No se puede eliminar este avance de sesión porque está registrado en la última nota de evolución de un paciente.');
         }
 
-        return DB::table('avances_sesion')
-            ->where('id', $id)
-            ->where('psicologo_id', $psicologoId)
+        return DB::table('avance_sesion')
+            ->where('id_avs', $id)
+            ->where('psicologo_use_id', $psicologoId)
+            ->whereNull('deleted_at')
             ->update([
-                'status' => 0,
+                'deleted_at' => now(),
+                'updated_id' => Auth::id(),
                 'updated_at' => now(),
             ]);
     }
 
     public static function enUsoUltimaNota($id, $psicologoId = null)
     {
-        $query = DB::table('citas')
-            ->where('estado', 'realizada')
-            ->where('status', 1)
-            ->where('notas', 'like', '%"avance_estado":"' . $id . '"%');
+        $query = DB::table('cita_psicologica')
+            ->where('estado_cita_cps', 'realizada')
+            ->where('status_id', 1)
+            ->whereNull('cita_psicologica.deleted_at')
+            ->where('notas_cps', 'like', '%"avance_estado":"' . $id . '"%');
 
         if ($psicologoId) {
-            $query->where('psicologo_id', $psicologoId);
+            $query->where('psicologo_use_id', $psicologoId);
         }
 
-        $userIds = $query->pluck('user_id')->unique();
+        $userIds = $query->pluck('paciente_use_id')->unique();
 
         foreach ($userIds as $userId) {
-            $latestQuery = DB::table('citas')
-                ->where('user_id', $userId)
-                ->where('estado', 'realizada')
-                ->where('status', 1)
-                ->orderBy('fecha', 'desc')
-                ->orderBy('hora', 'desc');
+            $latestQuery = DB::table('cita_psicologica')
+                ->where('paciente_use_id', $userId)
+                ->where('estado_cita_cps', 'realizada')
+                ->where('status_id', 1)
+                ->whereNull('cita_psicologica.deleted_at')
+                ->orderBy('fecha_cps', 'desc')
+                ->orderBy('hora_cps', 'desc');
 
             if ($psicologoId) {
-                $latestQuery->where('psicologo_id', $psicologoId);
+                $latestQuery->where('psicologo_use_id', $psicologoId);
             }
 
             $latestCita = $latestQuery->first();
 
-            if ($latestCita && $latestCita->notas) {
-                $notas = json_decode($latestCita->notas, true);
+            if ($latestCita && $latestCita->notas_cps) {
+                $notas = json_decode($latestCita->notas_cps, true);
                 if (isset($notas['avance_estado']) && $notas['avance_estado'] == $id) {
                     return true;
                 }
@@ -205,8 +224,8 @@ class AvanceSesion
 
     public static function obtenerNombrePorId($id)
     {
-        return DB::table('avances_sesion')
-            ->where('id', $id)
-            ->value('nombre');
+        return DB::table('avance_sesion')
+            ->where('id_avs', $id)
+            ->value('nombre_avs');
     }
 }

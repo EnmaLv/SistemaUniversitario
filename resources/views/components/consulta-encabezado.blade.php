@@ -27,7 +27,7 @@
                 <h1 class="text-xl sm:text-2xl font-bold tracking-tight" style="color: var(--text-main);">
                     {{ $titulo }}
                     @if ($consulta && $consulta->exists)
-                        <span class="text-base font-semibold text-gray-400 dark:text-gray-500">#{{ $consulta->id }}</span>
+                        <span class="text-base font-semibold text-gray-400 dark:text-gray-500">#{{ $consulta->id_cme }}</span>
                     @endif
                 </h1>
                 @if ($descripcion)

@@ -38,7 +38,7 @@
             <tbody>
                 @foreach ($compra->detalleCompras as $detalle)
                     @php
-                        $esMedicina = (bool) ($detalle->producto->presentacion_id ?? false);
+                        $esMedicina = (bool) ($detalle->producto->enp_id ?? false);
                     @endphp
                     <tr class="border-b last:border-b-0 transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                         style="border-color: var(--border-color);">
@@ -50,11 +50,11 @@
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-xs font-bold truncate" style="color: var(--text-main);">
-                                        {{ $detalle->producto->nombre }}
+                                        {{ $detalle->producto->nombre_pdt }}
                                     </p>
-                                    @if ($detalle->producto->codigo ?? false)
+                                    @if ($detalle->producto->codigo_pdt ?? false)
                                         <p class="text-[10px] text-gray-400 mt-0.5">
-                                            {{ $detalle->producto->codigo }}
+                                            {{ $detalle->producto->codigo_pdt }}
                                         </p>
                                     @endif
                                 </div>
@@ -64,16 +64,22 @@
                             <span
                                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-[10px] font-mono font-semibold text-gray-600 dark:text-gray-300">
                                 <i class="fas fa-barcode text-[9px] text-gray-400"></i>
-                                {{ $detalle->lote->codigo_lote }}
+                                {{ $detalle->lote->codigo_lote_lot }}
                             </span>
                         </td>
                         <td class="px-4 py-4">
+                            @if (in_array((int) $detalle->pdt_id, $sinVencimiento, true))
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                                    <i class="fas fa-infinity text-[9px]"></i>
+                                    No aplica (producto sin vencimiento)
+                                </span>
+                            @else
                             <div class="max-w-xs">
                                 <div class="relative">
                                     <i
                                         class="fas fa-calendar-day absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">
                                     </i>
-                                    <input type="date" wire:model="fechas.{{ $detalle->id }}.fecha_vencimiento"
+                                    <input type="date" wire:model="fechas.{{ $detalle->id_dcm }}.fecha_vencimiento_lot"
                                         min="{{ now()->addDay()->format('Y-m-d') }}"
                                         class="w-full pl-10 pr-3.5 py-2.5 text-sm font-medium rounded-xl border focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 transition-all"
                                         style="
@@ -83,13 +89,14 @@
                                         ">
                                 </div>
 
-                                @error("fechas.$detalle->id.fecha_vencimiento")
+                                @error("fechas.$detalle->id_dcm.fecha_vencimiento_lot")
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500 flex items-center gap-1">
                                         <i class="fas fa-exclamation-circle text-[10px]"></i>
                                         {{ $message }}
                                     </p>
                                 @enderror
                             </div>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -107,16 +114,18 @@
             </span>
         </div>
 
-        <button type="button" wire:click="guardar" wire:loading.attr="disabled"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            <span wire:loading.remove wire:target="guardar">
-                <i class="fas fa-save text-xs mr-1"></i>
-                Guardar fechas
-            </span>
-            <span wire:loading wire:target="guardar">
-                <i class="fas fa-spinner fa-spin text-xs mr-1"></i>
-                Guardando...
-            </span>
-        </button>
+        @canAction('compras', 'editar')
+            <button type="button" wire:click="guardar" wire:loading.attr="disabled"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <span wire:loading.remove wire:target="guardar">
+                    <i class="fas fa-save text-xs mr-1"></i>
+                    Guardar fechas
+                </span>
+                <span wire:loading wire:target="guardar">
+                    <i class="fas fa-spinner fa-spin text-xs mr-1"></i>
+                    Guardando...
+                </span>
+            </button>
+        @endcanAction
     </div>
 </div>

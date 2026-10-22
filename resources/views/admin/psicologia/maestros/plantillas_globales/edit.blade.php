@@ -13,7 +13,7 @@
                     Editar Esquema General
                 </h1>
                 <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Modificando el esquema: <strong class="text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $plantilla->titulo }}</strong>
+                    Modificando el esquema: <strong class="text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $plantilla->titulo_phc }}</strong>
                 </p>
             </div>
 
@@ -81,7 +81,7 @@
                     }
                 }">
 
-                <form action="{{ route('admin.psicologia.maestros.plantillas_globales.update', $plantilla->id) }}" method="POST">
+                <form action="{{ route('admin.psicologia.maestros.plantillas_globales.update', $plantilla->id_phc) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -93,7 +93,7 @@
                                 class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">
                                 Nombre de la Plantilla <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="titulo" id="titulo" value="{{ old('titulo', $plantilla->titulo) }}" required
+                            <input type="text" name="titulo" id="titulo" value="{{ old('titulo', $plantilla->titulo_phc) }}" required
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all"
                                 placeholder="Ej: Evaluación Psicológica Integral">
@@ -110,7 +110,7 @@
                                 class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">
                                 Descripción General (Opcional)
                             </label>
-                            <input type="text" name="descripcion" id="descripcion" value="{{ old('descripcion', $plantilla->descripcion) }}"
+                            <input type="text" name="descripcion" id="descripcion" value="{{ old('descripcion', $plantilla->descripcion_phc) }}"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all"
                                 placeholder="Ej: Plantilla estándar para evaluación inicial">

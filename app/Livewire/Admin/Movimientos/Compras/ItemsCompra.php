@@ -6,8 +6,14 @@ use App\Models\Compra;
 use App\Models\DetalleCompra;
 use App\Models\Lote;
 use App\Models\Producto;
-use Livewire\Component;
+use App\Models\TipoProducto;
+use App\Models\Usuario;
+use App\Support\Inventario\PrecioVigente;
+use App\Support\Inventario\UnidadCompra;
+use App\Support\Sedes\SedeCompradora;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class ItemsCompra extends Component
 {
@@ -15,19 +21,19 @@ class ItemsCompra extends Component
 
     public ?int $productoId = null;
 
-    public int $cantidad = 1;
+    public $cantidad = null;
 
-    public ?float $precioUnitario = null;
-
-    public ?float $precioCompra = null;
+    public $precioCompra = null;
 
     public $codigoLote;
-
-    public $fechaVencimiento;
 
     public $productos;
 
     public $totalCompra;
+
+    public array $unidad = [];
+
+    public array $precio = [];
 
     public function mount(Compra $compra)
     {
@@ -38,48 +44,45 @@ class ItemsCompra extends Component
 
     public function obtenerProductosPorModulo()
     {
-        $moduloId = $this->compra->modulo_id;
+        $tipos = TipoProducto::idsParaModulo($this->compra->mod_id === null ? null : (int) $this->compra->mod_id);
 
-        $this->productos = Producto::where('estado', 1)
-            ->whereHas('categoria.tipoProducto', function ($q) use ($moduloId) {
-                $q->where('modulo_id', $moduloId);
+        $this->productos = Producto::where('status_id', Producto::STATUS_ACTIVO)
+            ->whereHas('categoria', function ($q) use ($tipos) {
+                $q->whereIn('tpr_id', $tipos);
             })
-            ->orderBy('nombre')
+            ->orderBy('nombre_pdt')
             ->get();
     }
 
     public function cargarDatos()
     {
         $this->compra->load('detalleCompras.producto', 'detalleCompras.lote');
-        $this->totalCompra = $this->compra->detalleCompras->sum('subtotal');
+        $this->totalCompra = $this->compra->detalleCompras->sum('subtotal_dcm');
 
-        $this->reset(['productoId', 'codigoLote', 'cantidad', 'precioUnitario', 'precioCompra', 'fechaVencimiento']);
-        $this->cantidad = 1;
+        $this->reset(['productoId', 'codigoLote', 'cantidad', 'precioCompra', 'unidad', 'precio']);
     }
-
-    protected $rules = [
-        'productoId' => 'required|exists:productos,id',
-        'codigoLote' => 'nullable|string|max:50',
-        'cantidad' => 'required|integer|min:1',
-        'precioCompra' => 'required|numeric|min:0',
-        'fechaVencimiento' => 'nullable|date|after:today',
-    ];
 
     public function updatedProductoId($value)
     {
-        $producto = Producto::with('categoria')->find($value);
-        if ($producto) {
-            $this->precioCompra = $producto->precio_compra;
-            $this->codigoLote = $this->generateCodigoLote($producto);
-        } else {
-            $this->precioCompra = 0;
-            $this->codigoLote = null;
+        $this->resetErrorBag();
+        $producto = $value ? Producto::find($value) : null;
+
+        if (! $producto) {
+            $this->reset(['codigoLote', 'precioCompra', 'unidad', 'precio', 'cantidad']);
+
+            return;
         }
+
+        $this->unidad = UnidadCompra::de($producto)->aArreglo();
+        $this->precio = PrecioVigente::de((int) $producto->id_pdt);
+        $this->precioCompra = $this->precio['bs'];
+        $this->cantidad = null;
+        $this->codigoLote = $this->generateCodigoLote($producto);
     }
 
     protected function generateCodigoLote(Producto $producto): string
     {
-        $prod = $producto->nombre ?? 'PROD';
+        $prod = $producto->nombre_pdt ?? 'PROD';
         $prodPart = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $prod), 0, 3));
         $year = now()->format('Y');
         $julianDay = now()->format('z') + 1;
@@ -88,7 +91,7 @@ class ItemsCompra extends Component
         $contador = 1;
         $codigoFinal = $codigo;
 
-        while (Lote::where('codigo_lote', $codigoFinal)->exists()) {
+        while (Lote::where('codigo_lote_lot', $codigoFinal)->exists()) {
             $codigoFinal = "{$codigo}-{$contador}";
             $contador++;
         }
@@ -98,55 +101,115 @@ class ItemsCompra extends Component
 
     public function confirmarEnvio()
     {
-        $this->dispatch('confirmar-envio', compraId: $this->compra->id);
+        $this->dispatch('confirmar-envio', compraId: $this->compra->id_cmp);
+    }
+
+    private function motivoParaNoEditar(): ?string
+    {
+        $usuario = Auth::user();
+
+        if (! $usuario instanceof Usuario || ! $usuario->puede('compras', 'editar')) {
+            return 'No tienes permiso para cambiar los productos de las compras.';
+        }
+
+        if ($this->compra->estado_compra_cmp !== Compra::ESTADO_PENDIENTE) {
+            return 'Esta requisición ya fue enviada al proveedor; ya no se pueden cambiar sus productos.';
+        }
+
+        return SedeCompradora::motivoParaNoComprar();
+    }
+
+    private function numero($valor): ?float
+    {
+        if ($valor === null || $valor === '') {
+            return null;
+        }
+
+        $texto = str_replace(',', '.', trim((string) $valor));
+
+        return is_numeric($texto) ? (float) $texto : null;
     }
 
     public function agregarItems()
     {
-        $producto = Producto::find($this->productoId);
-        if (!$producto) {
-            $this->dispatch('mostrar-alerta', icono: 'error', mensaje: 'Seleccione un producto válido.');
+        if ($motivo = $this->motivoParaNoEditar()) {
+            $this->dispatch('mostrar-alerta', icono: 'error', mensaje: $motivo);
+
             return;
         }
+
+        $producto = $this->productoId ? Producto::find($this->productoId) : null;
+
+        if (! $producto) {
+            $this->addError('productoId', 'Elige el producto que vas a comprar.');
+
+            return;
+        }
+
+        $unidad = UnidadCompra::de($producto);
+        $this->cantidad = $this->numero($this->cantidad) ?? $this->cantidad;
+        $this->precioCompra = $this->numero($this->precioCompra) ?? $this->precioCompra;
+
         if (empty($this->codigoLote)) {
             $this->codigoLote = $this->generateCodigoLote($producto);
         }
 
-        $this->validate();
+        $reglaCantidad = $unidad->fraccionable()
+            ? ['required', 'numeric', 'min:0.01', 'regex:/^\d+(\.\d{1,2})?$/']
+            : ['required', 'integer', 'min:1'];
+
+        $this->validate([
+            'productoId'   => 'required|exists:producto,id_pdt',
+            'codigoLote'   => 'nullable|string|max:50',
+            'cantidad'     => $reglaCantidad,
+            'precioCompra' => 'required|numeric|min:0',
+        ], [
+            'productoId.required'   => 'Elige el producto que vas a comprar.',
+            'cantidad.required'     => 'Escribe cuánto vas a comprar.',
+            'cantidad.numeric'      => 'La cantidad debe ser un número, por ejemplo 7.5.',
+            'cantidad.integer'      => 'Este producto se compra por ' . $unidad->unidadPlural . ': escribe un número entero, sin decimales.',
+            'cantidad.min'          => $unidad->fraccionable() ? 'La cantidad debe ser mayor que cero.' : 'Compra al menos 1 ' . $unidad->unidad . '.',
+            'cantidad.regex'        => 'Usa como máximo dos decimales, por ejemplo 7.25.',
+            'precioCompra.required' => 'Escribe el precio ' . $unidad->precioPor() . ' en bolívares.',
+            'precioCompra.numeric'  => 'El precio debe ser un número.',
+            'precioCompra.min'      => 'El precio no puede ser negativo.',
+        ]);
+
+        if ($producto->unm_id === null) {
+            $this->addError('productoId', 'Este producto no tiene unidad de medida. Edítalo, elige su unidad y vuelve a intentarlo.');
+
+            return;
+        }
+
+        $cantidad = round((float) $this->cantidad, 2);
+        $precio = round((float) $this->precioCompra, 2);
+        $cantidadConvertida = $unidad->convertir($cantidad);
 
         DB::beginTransaction();
         try {
-            $unidadId = $producto->unidad_id;
-
-            $factor = $producto->presentacion_id
-                ? ($producto->unidades_por_presentacion ?? 1)
-                : ($producto->peso_contenido ?? 1);
-
-            $cantidadConvertida = $this->cantidad * $factor;
-
             $lote = Lote::create([
-                'producto_id'        => $this->productoId,
-                'proveedor_id'       => $this->compra->proveedor_id,
-                'codigo_lote'        => $this->codigoLote,
-                'fecha_entrada'      => now()->toDateString(),
-                'fecha_vencimiento'  => null,
-                'cantidad_inicial'   => $cantidadConvertida,
-                'cantidad_actual'    => $cantidadConvertida,
-                'precio_compra'      => $this->precioCompra,
-                'estado'             => true,
+                'pdt_id'                => $producto->id_pdt,
+                'prv_id'                => $this->compra->prv_id,
+                'codigo_lote_lot'       => $this->codigoLote,
+                'fecha_entrada_lot'     => now()->toDateString(),
+                'fecha_vencimiento_lot' => null,
+                'cantidad_inicial_lot'  => $cantidadConvertida,
+                'cantidad_actual_lot'   => $cantidadConvertida,
+                'precio_compra_lot'     => $precio,
+                'status_id'             => Lote::STATUS_ACTIVO,
             ]);
 
             $this->compra->detalleCompras()->create([
-                'producto_id'         => $producto->id,
-                'lote_id'             => $lote->id,
-                'cantidad'            => $this->cantidad,
-                'cantidad_convertida' => $cantidadConvertida,
-                'precio_unitario'     => $this->precioCompra,
-                'subtotal'            => $this->cantidad * $this->precioCompra,
-                'unidad_id'           => $unidadId,
+                'pdt_id'                  => $producto->id_pdt,
+                'lot_id'                  => $lote->id_lot,
+                'cantidad_dcm'            => $cantidad,
+                'cantidad_convertida_dcm' => $cantidadConvertida,
+                'precio_unitario_dcm'     => $precio,
+                'subtotal_dcm'            => round($cantidad * $precio, 2),
+                'unm_id'                  => $producto->unm_id,
             ]);
             $this->compra->load('detalleCompras');
-            $this->compra->total = $this->compra->detalleCompras->sum('subtotal');
+            $this->compra->total_cmp = $this->compra->detalleCompras->sum('subtotal_dcm');
             $this->compra->save();
 
             DB::commit();
@@ -158,14 +221,36 @@ class ItemsCompra extends Component
             $this->dispatch(
                 'mostrar-alerta',
                 icono: 'error',
-                mensaje: 'Error: ' . $e->getMessage()
+                mensaje: 'No se pudo agregar el producto: ' . \App\Support\Seguridad\MensajeError::de($e)
             );
         }
     }
 
     public function render()
     {
-        return view('livewire.admin.movimientos.compras.items-compra');
+        $unidadesDetalle = [];
+
+        foreach ($this->compra->detalleCompras as $detalle) {
+            $unidadesDetalle[$detalle->id_dcm] = UnidadCompra::de((int) $detalle->pdt_id);
+        }
+
+        $cantidad = $this->numero($this->cantidad);
+        $precio = $this->numero($this->precioCompra);
+        $resumen = null;
+
+        if ($this->unidad !== [] && $this->productoId && $cantidad !== null && $cantidad > 0) {
+            $unidad = UnidadCompra::de((int) $this->productoId);
+            $resumen = [
+                'texto'    => $unidad->resumen($cantidad),
+                'subtotal' => $precio !== null ? round($cantidad * $precio, 2) : null,
+            ];
+        }
+
+        return view('livewire.admin.movimientos.compras.items-compra', [
+            'unidadesDetalle' => $unidadesDetalle,
+            'resumen'         => $resumen,
+            'editable'        => $this->compra->estado_compra_cmp === Compra::ESTADO_PENDIENTE,
+        ]);
     }
 
     public function aggItems()
@@ -173,24 +258,33 @@ class ItemsCompra extends Component
         $this->dispatch(
             'mostrar-alerta',
             icono: 'success',
-            mensaje: 'Producto agregado exitosamente'
+            mensaje: 'Producto agregado a la requisición.'
         );
     }
 
     public function eliminarItem($detalleId)
     {
+        if ($motivo = $this->motivoParaNoEditar()) {
+            $this->dispatch('mostrar-alerta', icono: 'error', mensaje: $motivo);
+
+            return;
+        }
+
         DB::beginTransaction();
         try {
-            $detalle = DetalleCompra::find($detalleId);
+            $detalle = DetalleCompra::where('cmp_id', $this->compra->id_cmp)->find($detalleId);
 
-            $lote_id = $detalle->lote_id;
-            $lote = Lote::find($lote_id);
+            if (! $detalle) {
+                throw new \RuntimeException('Ese producto ya no está en la requisición.');
+            }
+
+            $lote = Lote::find($detalle->lot_id);
             if ($lote) {
                 $lote->delete();
             }
             $detalle->delete();
 
-            $this->compra->total = $this->compra->detalleCompras->sum('subtotal');
+            $this->compra->total_cmp = $this->compra->detalleCompras()->sum('subtotal_dcm');
             $this->compra->save();
 
             DB::commit();
@@ -198,14 +292,14 @@ class ItemsCompra extends Component
             $this->dispatch(
                 'mostrar-alerta',
                 icono: 'success',
-                mensaje: 'Producto eliminado exitosamente'
+                mensaje: 'Producto quitado de la requisición.'
             );
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch(
                 'mostrar-alerta',
                 icono: 'error',
-                mensaje: 'Error: ' . $e->getMessage()
+                mensaje: 'No se pudo quitar el producto: ' . \App\Support\Seguridad\MensajeError::de($e)
             );
         }
     }

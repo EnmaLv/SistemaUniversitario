@@ -40,6 +40,9 @@ return [
             'proveedores'       => 'Proveedores',
             'pnf'               => 'PNF',
             'persona'           => 'Personas',
+            'ubicaciones_estados'     => 'Estados',
+            'ubicaciones_municipios'  => 'Municipios',
+            'ubicaciones_localidades' => 'Localidades',
             'envases_primarios' => 'Envases primarios',
 
             // Operaciones
@@ -56,6 +59,8 @@ return [
             'permisos'          => 'Permisos por usuario',
             'archivos'          => 'Archivos',
             'configuracion'     => 'Configuración general',
+            'bitacora'          => 'Bitácora de auditoría',
+            'seguridad_bloqueos' => 'Bloqueos de seguridad',
         ],
     ],
 
@@ -73,7 +78,6 @@ return [
             'comedor_productos'        => 'Productos del comedor',
             'comedor_lotes'            => 'Lotes y vencimientos',
             'comedor_stock'            => 'Stock del comedor',
-            'comedor_compras'          => 'Compras',
             'comedor_movimientos'      => 'Historial de movimientos',
         ],
     ],
@@ -169,6 +173,25 @@ return [
             'bus_viajes'             => 'Viajes',
             'bus_mantenimientos'     => 'Mantenimientos',
             'bus_carga_combustibles' => 'Cargas de combustible',
+        ],
+    ],
+
+    'deportes' => [
+        'label'       => 'Deportes',
+        'icon'        => 'fas fa-futbol',
+        'description' => 'Actividades, torneos, asistencia, préstamos de implementos y material de oficina, y solvencia.',
+        'items' => [
+            'deportes_espacios'      => 'Espacios deportivos',
+            'deportes_actividades'   => 'Disciplinas',
+            'deportes_calendarios'   => 'Actividades y jornadas',
+            'deportes_horarios'      => 'Horarios de los espacios',
+            'deportes_torneos'       => 'Torneos',
+            'deportes_inscripciones' => 'Inscripciones deportivas',
+            'deportes_asistencia'    => 'Asistencia deportiva',
+            'deportes_prestamos'     => 'Préstamos (implementos y material de oficina)',
+            'deportes_sanciones'     => 'Sanciones por préstamos',
+            'deportes_solvencia'     => 'Solvencia',
+            'implementos_materiales' => 'Implementos y materiales',
         ],
     ],
 ];

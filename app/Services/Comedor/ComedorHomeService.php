@@ -39,29 +39,30 @@ class ComedorHomeService
      */
     protected function consultarRegistros(array $f, string $inicio, string $fin)
     {
-        $query = DB::table('registro_diario_c as r')
-            ->join('persona as p', 'r.id_persona', '=', 'p.id_persona')
-            ->leftJoin('persona_pnf as pp', 'r.id_persona_pnf', '=', 'pp.id_persona_pnf')
-            ->leftJoin('pnf as n', 'pp.id_pnf', '=', 'n.id_pnf')
-            ->whereBetween('r.fecha_regis_diario_c', [$inicio, $fin])
+        $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_comedor as r'), 'r.sed_id')
+            ->join('persona as p', 'r.per_id', '=', 'p.id_per')
+            ->leftJoin('persona_programa as pp', 'r.pep_id', '=', 'pp.id_pep')
+            ->leftJoin('programa as n', 'pp.prg_id', '=', 'n.id_prg')
+            ->whereNull('r.deleted_at')
+            ->whereBetween('r.fecha_comedor_rgc', [$inicio, $fin])
             ->select(
-                'r.id',
-                'r.fecha_regis_diario_c',
-                'r.hora',
-                'r.id_persona',
-                'r.id_persona_pnf',
-                'p.nombre_persona',
-                'p.apellido_persona',
-                'p.genero_persona',
-                'n.id_pnf',
-                'n.nombre_pnf'
+                'r.id_rgc',
+                'r.fecha_comedor_rgc',
+                'r.hora_comedor_rgc',
+                'r.per_id',
+                'r.pep_id',
+                'p.nombres_per',
+                'p.apellidos_per',
+                'p.genero_per',
+                'n.id_prg',
+                'n.nombre_prg'
             );
 
         if (!empty($f['pnf_id'])) {
-            $query->where('n.id_pnf', $f['pnf_id']);
+            $query->where('n.id_prg', $f['pnf_id']);
         }
 
-        return $query->orderBy('r.fecha_regis_diario_c', 'desc')->get();
+        return $query->orderBy('r.fecha_comedor_rgc', 'desc')->get();
     }
 
     /**
@@ -69,7 +70,7 @@ class ComedorHomeService
      */
     protected function pnfsDisponibles()
     {
-        return DB::table('pnf')->orderBy('nombre_pnf')->get(['id_pnf', 'nombre_pnf']);
+        return DB::table('programa')->orderBy('nombre_prg')->get(['id_prg', 'nombre_prg']);
     }
 
     /**
@@ -77,16 +78,16 @@ class ComedorHomeService
      */
     protected function productosDelComedor(): array
     {
-        $comedor = Modulo::where('key', 'comedor')->first();
+        $comedor = Modulo::where('key_mod', 'comedor')->first();
         if (!$comedor) {
             return [];
         }
 
         return Producto::whereHas('categoria', function ($q) use ($comedor) {
             $q->whereHas('tipoProducto', function ($t) use ($comedor) {
-                $t->where('modulo_id', $comedor->id);
+                $t->where('mod_id', $comedor->id_mod);
             });
-        })->pluck('id')->toArray();
+        })->pluck('id_pdt')->toArray();
     }
 
     /**
@@ -101,15 +102,15 @@ class ComedorHomeService
         $productosIds = $this->productosDelComedor();
 
         // ── Porciones servidas (detalle_registro_diarios) ──
-        $totalPorciones = (float) DetalleRegistroDiario::whereBetween('fecha', [$fechaInicio, $fechaFin])
-            ->sum('cantidad_servido');
+        $totalPorciones = (float) DetalleRegistroDiario::whereBetween('fecha_drc', [$fechaInicio, $fechaFin])
+            ->sum('cantidad_servida_drc');
 
         // ── Sobrantes ──
-        $sobrantes       = SobranteComedor::whereBetween('fecha', [$fechaInicio, $fechaFin])->get();
-        $totalSobrantes  = (float) $sobrantes->sum('cantidad_sobrante');
+        $sobrantes       = SobranteComedor::whereBetween('fecha_sbc', [$fechaInicio, $fechaFin])->get();
+        $totalSobrantes  = (float) $sobrantes->sum('cantidad_sobrante_sbc');
 
         // ── Recetas ──
-        $totalRecetas = Receta::where('estado', 1)->count();
+        $totalRecetas = Receta::where('status_id', Receta::STATUS_ACTIVO)->count();
 
         // ── Lotes del comedor ──
         $lotesVencidos  = 0;
@@ -117,16 +118,16 @@ class ComedorHomeService
         $lotesVigentes  = 0;
 
         if (!empty($productosIds)) {
-            $lotes = Lote::whereIn('producto_id', $productosIds)
-                ->where('estado', 1)
-                ->get(['id', 'fecha_vencimiento']);
+            $lotes = Lote::whereIn('pdt_id', $productosIds)
+                ->where('status_id', 1)
+                ->get(['id_lot', 'fecha_vencimiento_lot']);
 
             foreach ($lotes as $lote) {
-                if (!$lote->fecha_vencimiento) {
+                if (!$lote->fecha_vencimiento_lot) {
                     $lotesVigentes++;
                     continue;
                 }
-                $fecha = Carbon::parse($lote->fecha_vencimiento);
+                $fecha = Carbon::parse($lote->fecha_vencimiento_lot);
                 if ($fecha->lte($hoy)) {
                     $lotesVencidos++;
                 } elseif ($fecha->lte($limite)) {
@@ -140,28 +141,28 @@ class ComedorHomeService
         // ── Top ingredientes (productos del comedor) por gramos usados en recetas ──
         $topProductos = [];
         if (!empty($productosIds)) {
-            $topProductos = RecetaIngrediente::whereIn('producto_id', $productosIds)
-                ->where('estado', 1)
-                ->select('producto_id', DB::raw('SUM(cantidad_gramos) as total_gramos'))
-                ->groupBy('producto_id')
+            $topProductos = RecetaIngrediente::whereIn('pdt_id', $productosIds)
+                ->where('status_id', RecetaIngrediente::STATUS_ACTIVO)
+                ->select('pdt_id', DB::raw('SUM(cantidad_convertida_rci) as total_gramos'))
+                ->groupBy('pdt_id')
                 ->orderByDesc('total_gramos')
                 ->take(8)
-                ->with('producto:id,nombre')
+                ->with('producto:id_pdt,nombre_pdt')
                 ->get()
                 ->mapWithKeys(function ($item) {
-                    $nombre = $item->producto->nombre ?? ('Producto #' . $item->producto_id);
+                    $nombre = $item->producto->nombre_pdt ?? ('Producto #' . $item->pdt_id);
                     return [$nombre => (float) $item->total_gramos];
                 })
                 ->toArray();
         }
 
         // ── Top recetas por número de ingredientes ──
-        $topRecetas = Receta::where('estado', 1)
+        $topRecetas = Receta::where('status_id', Receta::STATUS_ACTIVO)
             ->withCount('recetaIngredientes')
             ->orderByDesc('receta_ingredientes_count')
             ->take(8)
             ->get()
-            ->mapWithKeys(fn ($r) => [$r->nombre => $r->receta_ingredientes_count])
+            ->mapWithKeys(fn ($r) => [$r->nombre_rct => $r->receta_ingredientes_count])
             ->toArray();
 
         // ── Agrupaciones ──
@@ -195,10 +196,10 @@ class ComedorHomeService
         $semanaBloques  = [];
 
         foreach ($registros as $r) {
-            $personas[$r->id_persona] = true;
+            $personas[$r->per_id] = true;
 
             // Género
-            $genero = strtolower(trim($r->genero_persona ?? ''));
+            $genero = strtolower(trim($r->genero_per ?? ''));
             if (in_array($genero, ['masculino', 'hombre', 'm'])) {
                 $resumen['genero']['masculino']++;
             } elseif (in_array($genero, ['femenino', 'mujer', 'f'])) {
@@ -208,9 +209,9 @@ class ComedorHomeService
             }
 
             // Hora
-            if ($r->hora) {
+            if ($r->hora_comedor_rgc) {
                 try {
-                    $bloque = Carbon::parse($r->hora)->format('h:00 A');
+                    $bloque = Carbon::parse($r->hora_comedor_rgc)->format('h:00 A');
                     $horasBloques[$bloque] = ($horasBloques[$bloque] ?? 0) + 1;
                 } catch (\Exception $e) {
                     // ignorar hora inválida
@@ -218,12 +219,12 @@ class ComedorHomeService
             }
 
             // PNF
-            $pnfNombre = $r->nombre_pnf ?: 'Sin PNF';
+            $pnfNombre = $r->nombre_prg ?: 'Sin PNF';
             $pnfBloques[$pnfNombre] = ($pnfBloques[$pnfNombre] ?? 0) + 1;
 
             // Fecha
-            if ($r->fecha_regis_diario_c) {
-                $fecha = Carbon::parse($r->fecha_regis_diario_c);
+            if ($r->fecha_comedor_rgc) {
+                $fecha = Carbon::parse($r->fecha_comedor_rgc);
 
                 $diaKey = $fecha->format('Y-m-d');
                 $diaBloques[$diaKey] = ($diaBloques[$diaKey] ?? 0) + 1;
@@ -256,8 +257,8 @@ class ComedorHomeService
         // Sobrantes por motivo
         $sobrantesMotivos = [];
         foreach ($sobrantes as $s) {
-            $motivo = $s->motivo ?: 'Sin motivo';
-            $sobrantesMotivos[$motivo] = ($sobrantesMotivos[$motivo] ?? 0) + (float) $s->cantidad_sobrante;
+            $motivo = $s->motivo_sbc ?: 'Sin motivo';
+            $sobrantesMotivos[$motivo] = ($sobrantesMotivos[$motivo] ?? 0) + (float) $s->cantidad_sobrante_sbc;
         }
         arsort($sobrantesMotivos);
         $resumen['sobrantes_por_motivo'] = $sobrantesMotivos;
@@ -270,8 +271,9 @@ class ComedorHomeService
             $prevFin    = $inicio->copy()->subDay();
             $prevInicio = $prevFin->copy()->subDays($dias);
 
-            $prev = DB::table('registro_diario_c')
-                ->whereBetween('fecha_regis_diario_c', [
+            $prev = \App\Support\Sedes\SedeActiva::filtrar(DB::table('registro_comedor'), 'sed_id')
+                ->whereNull('deleted_at')
+                ->whereBetween('fecha_comedor_rgc', [
                     $prevInicio->toDateString(),
                     $prevFin->toDateString(),
                 ])->count();

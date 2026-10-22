@@ -40,13 +40,13 @@
                             <select name="id_be_beneficio" id="id_be_beneficio"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
-                                <option value="" disabled {{ old('id_be_beneficio', $modelo?->id_be_beneficio) ? '' : 'selected' }}>
+                                <option value="" disabled {{ old('id_be_beneficio', $modelo?->bes_id) ? '' : 'selected' }}>
                                     Seleccione un beneficio...
                                 </option>
                                 @foreach ($beneficios as $ben)
-                                    <option value="{{ $ben->id }}"
-                                        @selected(old('id_be_beneficio', $modelo?->id_be_beneficio) == $ben->id)>
-                                        {{ $ben->nombre_beneficio }}
+                                    <option value="{{ $ben->id_bes }}"
+                                        @selected(old('id_be_beneficio', $modelo?->bes_id) == $ben->id_bes)>
+                                        {{ $ben->nombre_beneficio_bes }}
                                     </option>
                                 @endforeach
                             </select>
@@ -69,14 +69,14 @@
                             <select name="id_pregunta" id="id_pregunta"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
-                                <option value="" disabled {{ old('id_pregunta', $modelo?->id_pregunta) ? '' : 'selected' }}>
+                                <option value="" disabled {{ old('id_pregunta', $modelo?->pgb_id) ? '' : 'selected' }}>
                                     Seleccione una pregunta...
                                 </option>
                                 @foreach ($preguntas as $p)
-                                    <option value="{{ $p->id }}"
-                                        data-beneficio="{{ $p->id_be_beneficio }}"
-                                        @selected(old('id_pregunta', $modelo?->id_pregunta) == $p->id)>
-                                        {{ $p->etiqueta }} · {{ $p->codigo }}
+                                    <option value="{{ $p->id_pgb }}"
+                                        data-beneficio="{{ $p->bes_id }}"
+                                        @selected(old('id_pregunta', $modelo?->pgb_id) == $p->id_pgb)>
+                                        {{ $p->etiqueta_pgb }} · {{ $p->codigo_pgb }}
                                     </option>
                                 @endforeach
                             </select>
@@ -100,13 +100,13 @@
                         <div class="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border"
                             style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02);">
                             <span id="labelEliminatoria" class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                {{ old('es_eliminatoria', $modelo?->es_eliminatoria ?? false) ? 'Eliminatorio' : 'Informativo' }}
+                                {{ old('es_eliminatoria', $modelo?->es_eliminatoria_crb ?? false) ? 'Eliminatorio' : 'Informativo' }}
                             </span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="hidden" name="es_eliminatoria" value="0">
                                 <input type="checkbox" name="es_eliminatoria" value="1" id="es_eliminatoria"
                                     class="sr-only peer"
-                                    {{ old('es_eliminatoria', $modelo?->es_eliminatoria ?? false) ? 'checked' : '' }}>
+                                    {{ old('es_eliminatoria', $modelo?->es_eliminatoria_crb ?? false) ? 'checked' : '' }}>
                                 <div class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-checked:bg-red-700 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4"></div>
                             </label>
                         </div>
@@ -131,11 +131,11 @@
                             <select name="operador" id="operador"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none font-mono">
-                                <option value="" {{ old('operador', $modelo?->operador) ? '' : 'selected' }}>
+                                <option value="" {{ old('operador', $modelo?->operador_crb) ? '' : 'selected' }}>
                                     Sin regla
                                 </option>
                                 @foreach ($operadores as $op => $label)
-                                    <option value="{{ $op }}" @selected(old('operador', $modelo?->operador) === $op)>
+                                    <option value="{{ $op }}" @selected(old('operador', $modelo?->operador_crb) === $op)>
                                         {{ $op }} — {{ $label }}
                                     </option>
                                 @endforeach
@@ -157,7 +157,7 @@
                                 <i class="fas fa-equals text-sm"></i>
                             </span>
                             <input type="text" name="valor_esperado" id="valor_esperado"
-                                value="{{ old('valor_esperado', $modelo?->valor_esperado) }}"
+                                value="{{ old('valor_esperado', $modelo?->valor_esperado_crb) }}"
                                 placeholder="Ej: 12"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none font-mono">
@@ -183,7 +183,7 @@
                                 <i class="fas fa-weight-hanging text-sm"></i>
                             </span>
                             <input type="number" name="peso" step="0.01" min="0"
-                                value="{{ old('peso', $modelo?->peso ?? 0) }}"
+                                value="{{ old('peso', $modelo?->peso_crb ?? 0) }}"
                                 placeholder="0"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">

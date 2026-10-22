@@ -6,7 +6,7 @@
             @php
                 $user = auth()->user();
                 $isAdmin = $user && (strtolower($user->role ?? '') === 'administrador' ||
-                    ($user->roles && $user->roles->pluck('nombre')->contains('Administrador')));
+                    ($user->roles && $user->roles->pluck('nombre_rol')->contains('Administrador')));
             @endphp
 
             <div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -45,7 +45,7 @@
                             <option value="">Todos los roles</option>
                             @foreach ($roles as $r)
                                 <option value="{{ $r->id_rol }}" {{ request('rol') == $r->id_rol ? 'selected' : '' }}>
-                                    {{ $r->nombre }}
+                                    {{ $r->nombre_rol }}
                                 </option>
                             @endforeach
                         </select>
@@ -81,9 +81,9 @@
                         <tbody class="text-xs font-medium">
                             @forelse ($usuarios as $usuario)
                                 @php
-                                    $isSelf = auth()->id() == $usuario->id_usuario;
+                                    $isSelf = auth()->id() == $usuario->id_use;
                                 @endphp
-                                <x-table-row :id="$usuario->id_usuario" class="border-b"
+                                <x-table-row :id="$usuario->id_use" class="border-b"
                                     style="border-color: var(--border-color);">
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
@@ -97,33 +97,36 @@
                                                 <i class="fas fa-user text-sm"></i>
                                             </span>
                                             <span class="font-bold" style="color: var(--text-main);">
-                                                {{ optional($usuario->persona)->nombre_persona ?? 'N/A' }}
-                                                {{ optional($usuario->persona)->apellido_persona ?? '' }}
+                                                {{ optional($usuario->persona)->nombres_per ?? 'N/A' }}
+                                                {{ optional($usuario->persona)->apellidos_per ?? '' }}
                                             </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span class="rounded-lg border px-3 py-1 text-xs font-bold"
                                             style="border-color: var(--border-color); color: var(--text-main);">
-                                            {{ $usuario->username }}
+                                            {{ $usuario->username_use }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $usuario->roles->pluck('nombre')->first() ?: ($usuario->perfil->nombre_perfil ?? 'Sin perfil') }}
+                                        {{ $usuario->roles->pluck('nombre_rol')->first() ?: ($usuario->perfil->nombre_perfil ?? 'Sin perfil') }}
                                     </td>
-                                    <x-table-actions :id="$usuario->id_usuario"
+                                    <x-table-actions :id="$usuario->id_use"
                                         baseUrl="admin/configuracion/empleados" :show="false" :edit="false"
                                         :toggle="false">
-                                        <a href="{{ route('admin.configuracion.empleados.show', $usuario->id_usuario) }}"
+                                        <a href="{{ route('admin.configuracion.empleados.show', $usuario->id_use) }}"
                                             onclick="event.stopPropagation()"
                                             class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-sky-100 hover:text-sky-500 dark:hover:bg-sky-950/50"
                                             title="Ver perfil"><i class="fas fa-eye text-xs"></i></a>
-                                        <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_usuario) }}"
+                                        @canRoute('admin.configuracion.empleados.edit')
+                                        <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_use) }}"
                                             onclick="event.stopPropagation()"
                                             class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50"
                                             title="Editar"><i class="fas fa-edit text-xs"></i></a>
+                                        @endcanRoute
+                                        @canRoute('admin.configuracion.empleados.destroy')
                                             @if (!$isSelf)
-                                                <form action="{{ route('admin.configuracion.empleados.destroy', $usuario->id_usuario) }}"
+                                                <form action="{{ route('admin.configuracion.empleados.destroy', $usuario->id_use) }}"
                                                     method="POST" class="inline" onclick="event.stopPropagation()">
                                                     @csrf @method('DELETE')
                                                     <button type="submit"
@@ -137,6 +140,7 @@
                                                     <i class="fas fa-ban text-xs"></i>
                                                 </span>
                                             @endif
+                                        @endcanRoute
                                     </x-table-actions>
                                 </x-table-row>
                             @empty

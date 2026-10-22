@@ -24,7 +24,7 @@ class CompraProveedorMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Orden de compra Nro: ' . $this->compra->id,
+            subject: 'Orden de compra Nro: ' . $this->compra->id_cmp,
         );
     }
 

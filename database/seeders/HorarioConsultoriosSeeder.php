@@ -18,29 +18,29 @@ class HorarioConsultoriosSeeder extends Seeder
         $asignaciones = [
             //Por jornada Matutina, Dc. Argenis y enfermera Denis
             [
-                'consultorio_id' => 1,
-                'id_rol_usuario' => 4,
+                'csr_id'         => 1,
+                'usr_id'         => 4,
                 'dias'           => ['lunes', 'martes', 'miercoles'],
                 'jornada'        => 'Matutino',
             ],
             [
-                'consultorio_id' => 1,
-                'id_rol_usuario' => 6,
+                'csr_id'         => 1,
+                'usr_id'         => 6,
                 'dias'           => ['lunes', 'martes', 'miercoles'],
                 'jornada'        => 'Matutino',
             ],
 
             //Rango especifico de horas Dc. Genesis y enfermera Carmen
             [
-                'consultorio_id' => 1,
-                'id_rol_usuario' => 5,
+                'csr_id'         => 1,
+                'usr_id'         => 5,
                 'dias'           => ['martes', 'miercoles', 'jueves'],
                 'desde'          => '15:05',
                 'hasta'          => '20:20',
             ],
             [
-                'consultorio_id' => 1,
-                'id_rol_usuario' => 7,
+                'csr_id'         => 1,
+                'usr_id'         => 7,
                 'dias'           => ['martes', 'miercoles', 'jueves'],
                 'desde'          => '15:05',
                 'hasta'          => '20:20',
@@ -69,15 +69,15 @@ class HorarioConsultoriosSeeder extends Seeder
                     // Generar un registro por cada día configurado
                     foreach ($dias as $dia) {
                         $horarios[] = [
-                            'consultorio_id' => $asig['consultorio_id'],
-                            'id_rol_usuario' => $asig['id_rol_usuario'],
-                            'dia'            => strtolower($dia),
-                            'hora_inicio'    => $bloque['inicio'],
-                            'hora_fin'       => $bloque['fin'],
-                            'descripcion'    => null,
-                            'activo'         => 1,
-                            'created_at'     => now(),
-                            'updated_at'     => now(),
+                            'csr_id'          => $asig['csr_id'],
+                            'usr_id'          => $asig['usr_id'],
+                            'dia_hrc'         => strtolower($dia),
+                            'hora_inicio_hrc' => $bloque['inicio'],
+                            'hora_fin_hrc'    => $bloque['fin'],
+                            'descripcion_hrc' => null,
+                            'status_id'       => 1,
+                            'created_at'      => now(),
+                            'updated_at'      => now(),
                         ];
                     }
                 }
@@ -85,6 +85,6 @@ class HorarioConsultoriosSeeder extends Seeder
         }
 
         // 3. Inserción masiva en una sola consulta
-        DB::table('horario_consultorios')->insert($horarios);
+        DB::table('horario_consultorio')->insert($horarios);
     }
 }

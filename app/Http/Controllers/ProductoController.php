@@ -4,40 +4,64 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use App\Models\Categoria;
+use App\Models\TipoProducto;
 use Illuminate\Http\Request;
 use App\Models\ExchangeRates;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ProductoRequest;
+use App\Support\Inventario\FiltroTipoProducto;
 use Illuminate\Support\Facades\Log;
 
 class ProductoController extends Controller
 {
 
+    private const PANTALLA_POR_TIPO = [
+        TipoProducto::IMPLEMENTO_DEPORTIVO => 'admin.deportes.implementos.edit',
+        TipoProducto::MATERIAL_OFICINA     => 'admin.deportes.implementos.edit',
+    ];
+
     public function index(Request $request)
     {
         $activo = $request->input('activo', 1);
         $categoria = $request->input('categoria', null);
+        $tipoProducto = FiltroTipoProducto::resolver($request);
+        $tiposProducto = FiltroTipoProducto::opciones();
+        $permitidos = $this->tiposPermitidos();
 
-        $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, 1);
+        if ($permitidos !== null) {
+            $tiposProducto = $tiposProducto->filter(fn ($tipo) => in_array((int) $tipo->id_tpr, $permitidos, true))->values();
 
-        $categorias = Categoria::select('id', 'nombre')
-            ->where('activo', 1)
-            ->where('tipo_producto_id', 1)
+            if (! in_array($tipoProducto, $permitidos, true)) {
+                $tipoProducto = $permitidos[0];
+            }
+        }
+
+        $categorias = Categoria::select('id_cap', 'nombre_cap')
+            ->where('status_id', Categoria::STATUS_ACTIVO)
+            ->when($tipoProducto !== null, fn ($consulta) => $consulta->where('tpr_id', $tipoProducto))
             ->get();
 
-        return view('admin.maestros.productos.index', compact('productos', 'categorias'));
+        if ($categoria !== null && $categoria !== '' && ! $categorias->contains('id_cap', (int) $categoria)) {
+            $categoria = null;
+        }
+
+        $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, $tipoProducto)
+            ->appends(FiltroTipoProducto::PARAMETRO, FiltroTipoProducto::valorUrl($tipoProducto));
+
+        return view('admin.maestros.productos.index', compact('productos', 'categorias', 'tipoProducto', 'tiposProducto'));
     }
 
     public function create(Request $request)
     {
-        $tipo = $request->input('tipo', 'alimento');
-        $esMedicamento = ($tipo === 'medicamento');
+        $tipoProductoId = ProductoRequest::tipoFormulario($request->input('tipo'));
 
-        $tipoProductoId = $esMedicamento ? 2 : 1;
+        if (! in_array($tipoProductoId, ProductoRequest::tiposFormulario($request->user()), true)) {
+            $tipoProductoId = TipoProducto::idPorNombre(TipoProducto::ALIMENTO);
+        }
 
         $datos = Producto::getDatosFormulario($tipoProductoId);
-        $datos['esMedicamento'] = $esMedicamento;
+        $datos['esMedicamento'] = $tipoProductoId === TipoProducto::idPorNombre(TipoProducto::MEDICAMENTO);
 
         return view('admin.maestros.productos.create', $datos);
     }
@@ -79,7 +103,7 @@ class ProductoController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al crear el producto: ' . $e->getMessage());
+                ->with('error', 'Error al crear el producto: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -87,22 +111,23 @@ class ProductoController extends Controller
 
     public function show($id)
     {
-        $producto = Producto::with(['categoria', 'unidad'])->findOrFail($id);
+        $producto = Producto::with(['categoria', 'unidad'])->findOrFail($this->buscarPermitido($id)->id_pdt);
 
         return view('admin.maestros.productos.show', compact('producto'));
     }
 
     public function edit(Request $request, $id)
     {
-        $producto = Producto::findOrFail($id);
+        $producto = $this->buscarPermitido($id);
+        $tipoProductoId = TipoProducto::idDeProducto((int) $producto->id_pdt);
+        $nombreTipo = $tipoProductoId === null ? null : TipoProducto::whereKey($tipoProductoId)->value('nombre_tpr');
 
-        $tipo = $request->input('tipo', 'alimento');
-        $esMedicamento = ($tipo === 'medicamento') || ($producto->presentacion_id !== null);
-
-        $tipoProductoId = $esMedicamento ? 2 : 1;
+        if ($nombreTipo !== null && isset(self::PANTALLA_POR_TIPO[$nombreTipo])) {
+            return redirect()->route(self::PANTALLA_POR_TIPO[$nombreTipo], $producto->id_pdt);
+        }
 
         $datos = Producto::getDatosFormulario($tipoProductoId);
-        $datos['esMedicamento'] = $esMedicamento;
+        $datos['esMedicamento'] = $nombreTipo === TipoProducto::MEDICAMENTO;
 
         return view('admin.maestros.productos.edit', array_merge($datos, [
             'producto' => $producto,
@@ -111,6 +136,8 @@ class ProductoController extends Controller
 
     public function update(ProductoRequest $request, $id)
     {
+        $id = $this->buscarPermitido($id)->id_pdt;
+
         DB::beginTransaction();
 
         try {
@@ -137,12 +164,14 @@ class ProductoController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al actualizar el producto: ' . $e->getMessage());
+                ->with('error', 'Error al actualizar el producto: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
     public function destroy($id)
     {
+        $id = $this->buscarPermitido($id)->id_pdt;
+
         if (Producto::tieneInventarioEnAcarigua($id)) {
 
             $cantidad = Producto::cantidadEnAcarigua($id);
@@ -166,7 +195,7 @@ class ProductoController extends Controller
 
     public function activar($id)
     {
-        Producto::activarProducto($id);
+        Producto::activarProducto($this->buscarPermitido($id)->id_pdt);
         return redirect()->route('admin.maestros.productos.index')->with('success', 'Producto activado exitosamente.');
     }
 
@@ -189,12 +218,12 @@ class ProductoController extends Controller
 
             $tasa = ExchangeRates::updateOrCreate(
                 [
-                    'nombre'         => 'Oficial',
-                    'fecha_vigencia' => $fechaVigencia
+                    'nombre_tca'         => 'Oficial',
+                    'fecha_vigencia_tca' => $fechaVigencia
                 ],
                 [
-                    'fuente'   => $data['fuente'],
-                    'promedio' => $data['promedio'],
+                    'fuente_tca'   => $data['fuente'],
+                    'promedio_tca' => $data['promedio'],
                 ]
             );
 
@@ -205,24 +234,24 @@ class ProductoController extends Controller
                     continue;
                 }
 
-                $precioUSD = $producto->precioProducto->precio_usd
-                    ?? $producto->precioProducto->costo_usd;
+                $precioUSD = $producto->precioProducto->precio_usd_ppr
+                    ?? $producto->precioProducto->costo_usd_ppr;
 
                 if (!$precioUSD || $precioUSD <= 0) {
                     continue;
                 }
 
-                $margen = $producto->precioProducto->margen ?? 0;
+                $margen = $producto->precioProducto->margen_ppr ?? 0;
 
                 $precioBs = round(
-                    $precioUSD * (1 + $margen / 100) * $tasa->promedio,
+                    $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                     2
                 );
 
-                DB::table('productos')
-                    ->where('id', $producto->id)
+                DB::table('producto')
+                    ->where('id_pdt', $producto->id_pdt)
                     ->update([
-                        'precio_compra' => $precioBs,
+                        'precio_compra_pdt' => $precioBs,
                         'updated_at'    => now()
                     ]);
             }
@@ -239,7 +268,7 @@ class ProductoController extends Controller
             DB::rollBack();
 
             Log::error('Error al actualizar la tasa', [
-                'error' => $e->getMessage()
+                'error' => \App\Support\Seguridad\MensajeError::de($e)
             ]);
 
             return redirect()->back()->with(
@@ -250,18 +279,37 @@ class ProductoController extends Controller
     }
 
 
+    private function tiposPermitidos(): ?array
+    {
+        $permitidos = TipoProducto::idsVisiblesEnProductos(auth()->user());
+
+        abort_if($permitidos === [], 404, 'El tipo de producto "' . TipoProducto::ALIMENTO . '" no está registrado.');
+
+        return $permitidos;
+    }
+
+    private function buscarPermitido($id): Producto
+    {
+        $producto = Producto::findOrFail((int) $id);
+        $permitidos = $this->tiposPermitidos();
+
+        abort_if($permitidos !== null && ! in_array(TipoProducto::idDeProducto((int) $producto->id_pdt), $permitidos, true), 404);
+
+        return $producto;
+    }
+
     private function procesarTasaYPrecios(?int $productoId = null)
     {
-        $tasa = ExchangeRates::orderByDesc('fecha_vigencia')->first();
+        $tasa = ExchangeRates::orderByDesc('fecha_vigencia_tca')->first();
 
         if (!$tasa) {
-            throw new \Exception('No existe una tasa registrada');
+            return;
         }
 
         $query = Producto::with('precioProducto');
 
         if ($productoId) {
-            $query->where('id', $productoId);
+            $query->where('id_pdt', $productoId);
         }
 
         $productos = $query->get();
@@ -273,25 +321,25 @@ class ProductoController extends Controller
             }
 
             $precioUSD =
-                $producto->precioProducto->costo_usd ??
-                $producto->precioProducto->precio_usd ??
+                $producto->precioProducto->costo_usd_ppr ??
+                $producto->precioProducto->precio_usd_ppr ??
                 0;
 
             if ($precioUSD <= 0) {
                 continue;
             }
 
-            $margen = $producto->precioProducto->margen ?? 0;
+            $margen = $producto->precioProducto->margen_ppr ?? 0;
 
             $precioBs = round(
-                $precioUSD * (1 + $margen / 100) * $tasa->promedio,
+                $precioUSD * (1 + $margen / 100) * $tasa->promedio_tca,
                 2
             );
 
-            DB::table('productos')
-                ->where('id', $producto->id)
+            DB::table('producto')
+                ->where('id_pdt', $producto->id_pdt)
                 ->update([
-                    'precio_compra' => $precioBs,
+                    'precio_compra_pdt' => $precioBs,
                     'updated_at'    => now()
                 ]);
         }

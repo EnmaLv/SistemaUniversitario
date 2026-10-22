@@ -22,19 +22,19 @@ class BecaPreguntaController extends Controller
         $preguntas = BecaPregunta::with('beca')
             ->when($buscar, function ($q) use ($buscar) {
                 $q->where(function ($q) use ($buscar) {
-                    $q->where('etiqueta', 'like', "%{$buscar}%")
-                    ->orWhere('codigo', 'like', "%{$buscar}%");
+                    $q->where('etiqueta_pgb', 'like', "%{$buscar}%")
+                    ->orWhere('codigo_pgb', 'like', "%{$buscar}%");
                 });
             })
-            ->when($beneficio, fn ($q) => $q->where('id_be_beneficio', $beneficio))
-            ->when($tipo, fn ($q) => $q->where('tipo', $tipo))
-            ->where('activo', $activo)
-            ->orderBy('id_be_beneficio')
-            ->orderBy('orden')
+            ->when($beneficio, fn ($q) => $q->where('bes_id', $beneficio))
+            ->when($tipo, fn ($q) => $q->where('tipo_campo_pgb', $tipo))
+            ->where('status_id', (int) $activo === 1 ? BecaPregunta::STATUS_ACTIVO : BecaPregunta::STATUS_INACTIVO)
+            ->orderBy('bes_id')
+            ->orderBy('orden_pgb')
             ->paginate(10)
             ->appends($request->query());
 
-        $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
+        $beneficios = Beneficio::orderBy('nombre_beneficio_bes')->get();
 
         $tipos = [
             'text'     => 'Texto',
@@ -54,7 +54,7 @@ class BecaPreguntaController extends Controller
 
     public function create()
     {
-        $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
+        $beneficios = Beneficio::orderBy('nombre_beneficio_bes')->get();
 
         $tipos = [
             'text'     => 'Texto corto',
@@ -78,7 +78,7 @@ class BecaPreguntaController extends Controller
         $tiposConOpciones = ['select', 'radio', 'checkbox'];
 
         $data = $request->validate([
-            'id_be_beneficio'      => 'required|exists:be_beneficios,id',
+            'id_be_beneficio'      => 'required|exists:beneficio_estudiantil,id_bes',
             'codigo'               => 'required|string|max:60|regex:/^[a-z0-9_]+$/',
             'etiqueta'             => 'required|string|max:255',
             'placeholder'          => 'nullable|string|max:255',
@@ -100,8 +100,9 @@ class BecaPreguntaController extends Controller
             'max_length.gte' => 'El largo máximo debe ser mayor o igual al mínimo.',
         ]);
 
-        $existe = BecaPregunta::where('id_be_beneficio', $data['id_be_beneficio'])
-            ->where('codigo', $data['codigo'])
+        $existe = BecaPregunta::withTrashed()
+            ->where('bes_id', $data['id_be_beneficio'])
+            ->where('codigo_pgb', $data['codigo'])
             ->exists();
 
         if ($existe) {
@@ -111,19 +112,19 @@ class BecaPreguntaController extends Controller
 
         DB::transaction(function () use ($data, $request, $tiposConOpciones) {
             $pregunta = BecaPregunta::create([
-                'id_be_beneficio' => $data['id_be_beneficio'],
-                'codigo'          => $data['codigo'],
-                'etiqueta'        => $data['etiqueta'],
-                'placeholder'     => $data['placeholder'] ?? null,
-                'tipo'            => $data['tipo'],
-                'obligatoria'     => $request->boolean('obligatoria'),
-                'valor_min'       => $data['valor_min'] ?? null,
-                'valor_max'       => $data['valor_max'] ?? null,
-                'min_length'      => $data['min_length'] ?? null,
-                'max_length'      => $data['max_length'] ?? null,
-                'regex'           => $data['regex'] ?? null,
-                'orden'           => $data['orden'] ?? 0,
-                'activo'          => $request->boolean('activo', true),
+                'bes_id'          => $data['id_be_beneficio'],
+                'codigo_pgb'      => $data['codigo'],
+                'etiqueta_pgb'    => $data['etiqueta'],
+                'placeholder_pgb' => $data['placeholder'] ?? null,
+                'tipo_campo_pgb'  => $data['tipo'],
+                'obligatoria_pgb' => $request->boolean('obligatoria'),
+                'valor_min_pgb'   => $data['valor_min'] ?? null,
+                'valor_max_pgb'   => $data['valor_max'] ?? null,
+                'min_length_pgb'  => $data['min_length'] ?? null,
+                'max_length_pgb'  => $data['max_length'] ?? null,
+                'regex_pgb'       => $data['regex'] ?? null,
+                'orden_pgb'       => $data['orden'] ?? 0,
+                'status_id'       => $request->boolean('activo', true) ? BecaPregunta::STATUS_ACTIVO : BecaPregunta::STATUS_INACTIVO,
             ]);
 
             if (in_array($data['tipo'], $tiposConOpciones) && !empty($data['opciones'])) {
@@ -132,10 +133,10 @@ class BecaPreguntaController extends Controller
                         continue;
                     }
                     $pregunta->opciones()->create([
-                        'etiqueta' => $op['etiqueta'],
-                        'valor'    => $op['valor'],
-                        'orden'    => $i,
-                        'activo'   => true,
+                        'etiqueta_opb' => $op['etiqueta'],
+                        'valor_opb'    => $op['valor'],
+                        'orden_opb'    => $i,
+                        'status_id'    => BecaPreguntaOpciones::STATUS_ACTIVO,
                     ]);
                 }
             }
@@ -150,7 +151,7 @@ class BecaPreguntaController extends Controller
     {
         $pregunta = BecaPregunta::with('opciones')->findOrFail($id);
 
-        $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
+        $beneficios = Beneficio::orderBy('nombre_beneficio_bes')->get();
 
         $tipos = [
             'text'     => 'Texto corto',
@@ -176,7 +177,7 @@ class BecaPreguntaController extends Controller
         $tiposConOpciones = ['select', 'radio', 'checkbox'];
 
         $data = $request->validate([
-            'id_be_beneficio'      => 'required|exists:be_beneficios,id',
+            'id_be_beneficio'      => 'required|exists:beneficio_estudiantil,id_bes',
             'codigo'               => 'required|string|max:60|regex:/^[a-z0-9_]+$/',
             'etiqueta'             => 'required|string|max:255',
             'placeholder'          => 'nullable|string|max:255',
@@ -198,9 +199,10 @@ class BecaPreguntaController extends Controller
             'max_length.gte' => 'El largo máximo debe ser mayor o igual al mínimo.',
         ]);
 
-        $duplicado = BecaPregunta::where('id_be_beneficio', $data['id_be_beneficio'])
-            ->where('codigo', $data['codigo'])
-            ->where('id', '!=', $id)
+        $duplicado = BecaPregunta::withTrashed()
+            ->where('bes_id', $data['id_be_beneficio'])
+            ->where('codigo_pgb', $data['codigo'])
+            ->where('id_pgb', '!=', $id)
             ->exists();
 
         if ($duplicado) {
@@ -221,22 +223,22 @@ class BecaPreguntaController extends Controller
 
         DB::transaction(function () use ($pregunta, $data, $request, $tiposConOpciones) {
             $pregunta->update([
-                'id_be_beneficio' => $data['id_be_beneficio'],
-                'codigo'          => $data['codigo'],
-                'etiqueta'        => $data['etiqueta'],
-                'placeholder'     => $data['placeholder'] ?? null,
-                'tipo'            => $data['tipo'],
-                'obligatoria'     => $request->boolean('obligatoria'),
-                'valor_min'       => $data['valor_min'] ?? null,
-                'valor_max'       => $data['valor_max'] ?? null,
-                'min_length'      => $data['min_length'] ?? null,
-                'max_length'      => $data['max_length'] ?? null,
-                'regex'           => $data['regex'] ?? null,
-                'orden'           => $data['orden'] ?? 0,
-                'activo'          => $request->boolean('activo', true),
+                'bes_id'          => $data['id_be_beneficio'],
+                'codigo_pgb'      => $data['codigo'],
+                'etiqueta_pgb'    => $data['etiqueta'],
+                'placeholder_pgb' => $data['placeholder'] ?? null,
+                'tipo_campo_pgb'  => $data['tipo'],
+                'obligatoria_pgb' => $request->boolean('obligatoria'),
+                'valor_min_pgb'   => $data['valor_min'] ?? null,
+                'valor_max_pgb'   => $data['valor_max'] ?? null,
+                'min_length_pgb'  => $data['min_length'] ?? null,
+                'max_length_pgb'  => $data['max_length'] ?? null,
+                'regex_pgb'       => $data['regex'] ?? null,
+                'orden_pgb'       => $data['orden'] ?? 0,
+                'status_id'       => $request->boolean('activo', true) ? BecaPregunta::STATUS_ACTIVO : BecaPregunta::STATUS_INACTIVO,
             ]);
 
-            $pregunta->opciones()->delete();
+            $pregunta->opciones()->forceDelete();
 
             if (in_array($data['tipo'], $tiposConOpciones) && !empty($data['opciones'])) {
                 foreach ($data['opciones'] as $i => $op) {
@@ -244,10 +246,10 @@ class BecaPreguntaController extends Controller
                         continue;
                     }
                     $pregunta->opciones()->create([
-                        'etiqueta' => $op['etiqueta'],
-                        'valor'    => $op['valor'],
-                        'orden'    => $i,
-                        'activo'   => true,
+                        'etiqueta_opb' => $op['etiqueta'],
+                        'valor_opb'    => $op['valor'],
+                        'orden_opb'    => $i,
+                        'status_id'    => BecaPreguntaOpciones::STATUS_ACTIVO,
                     ]);
                 }
             }

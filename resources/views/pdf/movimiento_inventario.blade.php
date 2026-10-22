@@ -282,7 +282,8 @@
             <div class="info-cell">
                 <strong>RANGO DE BÚSQUEDA:</strong>
                 Desde: {{ $filtro['fecha_desde'] ?? 'Hoy' }}<br>
-                Hasta: {{ $filtro['fecha_hasta'] ?? 'N/A' }}
+                Hasta: {{ $filtro['fecha_hasta'] ?? 'N/A' }}<br>
+                Tipo de producto: {{ $filtro['tipo_producto_nombre'] ?? 'Todos' }}
             </div>
             <div class="info-cell">
                 <strong>GENERADO EL:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}<br>
@@ -308,17 +309,17 @@
             @foreach ($movimiento as $index => $item)
                 <tr>
                     <td class="center">{{ $index + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($item->fecha)->format('d/m/Y') }}</td>
-                    <td><strong>{{ $item->lote->codigo_lote ?? 'N/A' }}</strong></td>
-                    <td><strong>{{ $item->producto->nombre ?? 'N/A' }}</strong></td>
+                    <td>{{ \Carbon\Carbon::parse($item->fecha_movimiento_moi)->format('d/m/Y') }}</td>
+                    <td><strong>{{ $item->lote->codigo_lote_lot ?? 'N/A' }}</strong></td>
+                    <td><strong>{{ $item->producto->nombre_pdt ?? 'N/A' }}</strong></td>
                     <td>
                         <span
-                            class="badge {{ strtoupper($item->tipo_movimiento) == 'ENTRADA' ? 'badge-ingreso' : 'badge-egreso' }}">
-                            {{ $item->tipo_movimiento }}
+                            class="badge {{ strtoupper($item->tipo_movimiento_moi) == 'ENTRADA' ? 'badge-ingreso' : 'badge-egreso' }}">
+                            {{ $item->tipo_movimiento_moi }}
                         </span>
                     </td>
-                    <td class="right">{{ number_format($item->cantidad_convertida, 2, ',', '.') }}</td>
-                    <td>{{ $item->sede->nombre ?? 'N/A' }}</td>
+                    <td class="right">{{ number_format($item->cantidad_convertida_moi, 2, ',', '.') }}</td>
+                    <td>{{ $item->sede->nombre_sed ?? 'N/A' }}</td>
                 </tr>
             @endforeach
         </tbody>

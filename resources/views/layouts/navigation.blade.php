@@ -77,6 +77,7 @@
                 @endif
             </div>
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
+                <x-selector-sede />
                 <div class="relative" x-data="{ openNotif: false, optionsOpen: false, filter: 'all' }" @click.away="openNotif = false; optionsOpen = false">
                     <button @click="openNotif = !openNotif"
                         class="relative p-2 text-gray-200 hover:text-white bg-white/10 {{ $btnHover }} rounded-full transition-all duration-200 focus:outline-none focus:ring-2 {{ $focusRing }}"
@@ -323,10 +324,10 @@
                             class="group flex items-center gap-3 px-3 py-1.5 rounded-full {{ $navHoverBg }} transition-all border border-white/10 focus:outline-none">
                             <div class="text-right">
                                 <div class="text-sm font-semibold text-white leading-tight">
-                                    {{ Auth::user()?->persona?->nombre_persona ?? (Auth::user()?->nombres ?? (Auth::user()?->name ?? 'Usuario')) }}
+                                    {{ Auth::user()?->persona?->nombres_per ?? (Auth::user()?->nombres ?? (Auth::user()?->name ?? 'Usuario')) }}
                                 </div>
                                 <div class="text-xs text-gray-300 leading-tight">
-                                    {{ Auth::user()?->roles?->pluck('nombre')->filter()->join(', ') ?: 'Usuario' }}
+                                    {{ Auth::user()?->roles?->pluck('nombre_rol')->filter()->join(', ') ?: 'Usuario' }}
                                 </div>
                             </div>
 

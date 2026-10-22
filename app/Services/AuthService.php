@@ -14,35 +14,39 @@ class AuthService
     public function register(array $personaData, array $userData): Usuario
     {
         return DB::transaction(function () use ($personaData, $userData) {
-            $estatusId = $this->ensureEstatus();
             $sedeId = $this->ensureSede(); 
 
             $isFirstUser = Usuario::count() === 0;
             $perfilNombre = $isFirstUser ? 'Administrador' : 'Usuario';
 
-            $perfilObj = $this->ensurePerfil($perfilNombre, $estatusId);
+            $perfilObj = $this->ensurePerfil($perfilNombre);
             $perfilId = $perfilObj->id_perfil;
 
             if (empty($personaData['id_perfil'])) {
                 $personaData['id_perfil'] = $perfilId;
             }
-            if (empty($personaData['sede_id']) && empty($personaData['id_sede'])) {
-                $personaData['sede_id'] = $sedeId;
-                $personaData['id_sede'] = $sedeId;
+            if (empty($personaData['sed_id']) && empty($personaData['sed_id'])) {
+                $personaData['sed_id'] = $sedeId;
+                $personaData['sed_id'] = $sedeId;
             }
 
             $persona = Persona::create($personaData);
 
-            $usuario = Usuario::create([
-                'id_persona' => $persona->id_persona,
+            $usuario = new Usuario([
+                'per_id' => $persona->id_per,
                 'id_perfil'  => $perfilId,
-                'username'   => $userData['username'],
-                'password'   => $userData['password'],
-                'master_key' => $isFirstUser ? bcrypt('admin123') : null,
+                'username_use' => $userData['username'],
             ]);
+            $usuario->password_use = $userData['password'];
 
             if ($isFirstUser) {
-                $this->assignRol($usuario->id_usuario, $perfilNombre);
+                $usuario->master_key_use = ! empty($userData['master_key_use']) ? $userData['master_key_use'] : 'admin123';
+            }
+
+            $usuario->save();
+
+            if ($isFirstUser) {
+                $this->assignRol($usuario->id_use, $perfilNombre);
             }
 
             return $usuario;
@@ -51,66 +55,54 @@ class AuthService
 
     private function assignRol(int $usuarioId, string $rolNombre): void
     {
-        $rol = DB::table('rol')->where('nombre', $rolNombre)->first();
+        $rol = DB::table('rol')->where('nombre_rol', $rolNombre)->first();
         
         if (!$rol) {
             return;
         }
 
-        DB::table('rol_usuario')->updateOrInsert(
-            ['id_usuario' => $usuarioId, 'id_rol' => $rol->id_rol],
+        DB::table('usuario_rol')->updateOrInsert(
+            ['use_id' => $usuarioId, 'rol_id' => $rol->id_rol],
             ['created_at' => now(), 'updated_at' => now()]
         );
     }
 
-    private function ensureEstatus(): int
-    {
-        $row = DB::table('estatus')->orderBy('id_estatus')->first();
-        if ($row) return $row->id_estatus;
-
-        return DB::table('estatus')->insertGetId([
-            'nombre_estatus' => 'Activo',
-            'created_at'     => now(),
-            'updated_at'     => now()
-        ]);
-    }
-
     private function ensureSede(): int
     {
-        $row = DB::table('sede')->orderBy('id')->first();
-        if ($row) return $row->id;
+        $row = DB::table('sede')->orderBy('id_sed')->first();
+        if ($row) return $row->id_sed;
 
         return DB::table('sede')->insertGetId([
-            'nombre'    => 'Acarigua',
-            'direccion' => 'Avenida Circunvalacion Sur, Sector Bellas Artes',
-            'telefono'  => '0424-5556666',
+            'nombre_sed'    => 'Acarigua',
+            'direccion_sed' => 'Avenida Circunvalacion Sur, Sector Bellas Artes',
+            'telefono_sed'  => '0424-5556666',
             'created_at' => now(),
             'updated_at' => now()
-        ]);
+        ], 'id_sed');
     }
 
-    private function ensurePerfil(string $nombre, int $estatusId)
+    private function ensurePerfil(string $nombre)
     {
         $row = DB::table('perfil')->where('nombre_perfil', $nombre)->first();
         if ($row) return (object)['id_perfil' => $row->id_perfil];
 
         $id = DB::table('perfil')->insertGetId([
             'nombre_perfil' => $nombre, 
-            'estado'        => true, 
+            'status_id'     => 1, 
             'created_at'    => now(), 
             'updated_at'    => now()
-        ]);
+        ], 'id_perfil');
         return (object)['id_perfil' => $id];
     }
 
     public function validateCredentials(string $username, string $password): ?Usuario
     {
-        $usuario = Usuario::where('username', $username)->first();
+        $usuario = Usuario::where('username_use', $username)->first();
         if (!$usuario) {
             return null;
         }
 
-        if (!Hash::check($password, $usuario->getOriginal('password'))) {
+        if (!Hash::check($password, $usuario->getOriginal('password_use'))) {
             return null;
         }
 
@@ -120,7 +112,7 @@ class AuthService
     public function verifyMasterKeyForUsuario(Usuario $usuario, string $masterKey): bool
     {
         try {
-            $isAdmin = $usuario->roles()->where('nombre', 'Administrador')->exists();
+            $isAdmin = $usuario->roles()->where('nombre_rol', 'Administrador')->exists();
         } catch (\Throwable $e) {
             $perfil = $usuario->perfil()->first();
             $isAdmin = $perfil && $perfil->nombre_perfil === 'Administrador';
@@ -141,7 +133,7 @@ class AuthService
         }
 
         try {
-            $isAdmin = $usuario->roles()->where('nombre', 'Administrador')->exists();
+            $isAdmin = $usuario->roles()->where('nombre_rol', 'Administrador')->exists();
         } catch (\Throwable $e) {
             $perfil = $usuario->perfil()->first();
             $isAdmin = $perfil && $perfil->nombre_perfil === 'Administrador';

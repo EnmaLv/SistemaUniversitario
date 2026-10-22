@@ -1,16 +1,16 @@
 @php
     $isEdicion    = isset($rol) && $rol !== null;
     $isProtected  = $isProtected ?? false;
-    $isAdminRole  = $isEdicion && (strtolower($rol->nombre ?? '') === 'administrador');
+    $isAdminRole  = $isEdicion && (strtolower($rol->nombre_rol ?? '') === 'administrador');
     $isDisabled   = $isAdminRole || $isProtected;
 
-    $nombreValue      = old('nombre', $rol->nombre ?? '');
-    $descripcionValue = old('descripcion', $rol->descripcion ?? '');
+    $nombreValue      = old('nombre', $rol->nombre_rol ?? '');
+    $descripcionValue = old('descripcion', $rol->descripcion_rol ?? '');
 
-    $permisosValue = old('permisos', $isEdicion ? $rol->permisos->pluck('id')->all() : []);
+    $permisosValue = old('permisos', $isEdicion ? $rol->permisos->pluck('id_pmi')->all() : []);
     if (!is_array($permisosValue)) $permisosValue = [];
 
-    $modulosValue = old('modulos', $isEdicion ? $rol->modulos->pluck('id')->toArray() : []);
+    $modulosValue = old('modulos', $isEdicion ? $rol->modulos->pluck('id_mod')->toArray() : []);
     if (!is_array($modulosValue)) $modulosValue = [];
 
 @endphp
@@ -122,9 +122,9 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         @foreach ($modulos as $modulo)
                             @php
-                                $checked  = in_array($modulo->id, $modulosValue) || $isAdminRole;
+                                $checked  = in_array($modulo->id_mod, $modulosValue) || $isAdminRole;
                                 $disabled = $isDisabled ? 'disabled' : '';
-                                $id       = 'modulo_' . $modulo->id;
+                                $id       = 'modulo_' . $modulo->id_mod;
                             @endphp
                             <label for="{{ $id }}"
                                 class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all group
@@ -132,16 +132,16 @@
                                         ? 'opacity-60 cursor-not-allowed'
                                         : 'hover:border-red-300 hover:bg-red-50/40 dark:hover:bg-red-950/20' }}"
                                 style="border-color: var(--border-color);">
-                                <input type="checkbox" name="modulos[]" value="{{ $modulo->id }}"
+                                <input type="checkbox" name="modulos[]" value="{{ $modulo->id_mod }}"
                                     id="{{ $id }}"
                                     class="modulo-check w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-red-600 focus:ring-2 focus:ring-red-500/30 cursor-pointer"
                                     {{ $checked ? 'checked' : '' }} {{ $disabled }}>
                                 <div class="min-w-0">
                                     <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                        {{ $modulo->nombre }}
+                                        {{ $modulo->nombre_mod }}
                                     </p>
                                     <p class="text-[10px] text-gray-400 font-mono truncate">
-                                        {{ $modulo->key }}
+                                        {{ $modulo->key_mod }}
                                     </p>
                                 </div>
                             </label>
@@ -199,7 +199,7 @@
             <div class="mb-6 p-4 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 flex items-start gap-3">
                 <i class="fas fa-lock text-amber-600 dark:text-amber-400 mt-0.5"></i>
                 <div class="text-sm text-amber-800 dark:text-amber-300">
-                    El rol <strong>{{ $rol->nombre }}</strong> es un rol de sistema protegido y no puede ser alterado desde la interfaz web.
+                    El rol <strong>{{ $rol->nombre_rol }}</strong> es un rol de sistema protegido y no puede ser alterado desde la interfaz web.
                 </div>
             </div>
         @endif

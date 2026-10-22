@@ -642,6 +642,16 @@ return [
             'icon' => 'fas fa-calendar-check',
             'active' => ['admin/psicologia/maestros/estado_animo_diario*'],
         ],
+        
+        // Deportes - Maestros - Horarios
+        [
+            'text' => 'Horarios',
+            'key' => 'deportes_horarios',
+            'module' => 'deporte',
+            'url' => 'admin/deportes/maestros/horarios',
+            'icon' => 'fas fa-calendar-check',
+            'active' => ['admin/deportes/maestros/horarios*'],
+        ],
 
         [
             'text' => 'Modulos del Sistema',

@@ -21,10 +21,10 @@
                 <div class="mb-6">
                     <h2 class="text-lg font-extrabold flex items-center gap-2" style="color: var(--text-main);">
                         <i class="fas fa-file-import text-red-700 dark:text-red-500"></i>
-                        Importar archivo de estudiantes
+                        Importar archivo de personas
                     </h2>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Carga un archivo Excel (.xlsx o .xls) para registrar o actualizar la información académica.
+                        Carga un archivo Excel (.xlsx o .xls) para registrar o actualizar a las personas de la comunidad universitaria.
                     </p>
                 </div>
 
@@ -247,6 +247,18 @@
                                     <span class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                                         <i class="fas fa-check text-[10px]"></i>
                                     </span>
+                                    <span>Columnas obligatorias: cédula, nombre y apellido. Opcionales: segundo nombre, segundo apellido, teléfono, género, fecha de nacimiento, correo y perfil (encabezado «Perfil», «Tipo» o «Tipo de persona»: estudiante, docente, obrero, administrativo o comunidad universitaria; si está vacío se usa estudiante). PNF y semestre solo se toman en cuenta para estudiantes.</span>
+                                </li>
+                                <li class="flex items-start gap-2.5">
+                                    <span class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                                        <i class="fas fa-check text-[10px]"></i>
+                                    </span>
+                                    <span>Cada persona recibe una cuenta con el rol Paciente; las de perfil estudiante reciben además el rol Becario.</span>
+                                </li>
+                                <li class="flex items-start gap-2.5">
+                                    <span class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                                        <i class="fas fa-check text-[10px]"></i>
+                                    </span>
                                     <span>Todo se ejecuta dentro de una transacción. Si algo falla, no se guarda nada.</span>
                                 </li>
                             </ul>
@@ -265,28 +277,30 @@
                                 </div>
 
                                 <div x-show="fileName" x-cloak>
-                                    <button type="button"
-                                        x-on:click="procesar()"
-                                        x-bind:disabled="isProcessing || isUploading"
-                                        class="w-full inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold text-white shadow-lg transition
-                                            bg-red-800 hover:bg-red-900 active:scale-[0.98]
-                                            disabled:opacity-70 disabled:cursor-not-allowed">
+                                    @canAction('archivos', 'crear')
+                                        <button type="button"
+                                            x-on:click="procesar()"
+                                            x-bind:disabled="isProcessing || isUploading"
+                                            class="w-full inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold text-white shadow-lg transition
+                                                bg-red-800 hover:bg-red-900 active:scale-[0.98]
+                                                disabled:opacity-70 disabled:cursor-not-allowed">
 
-                                        <span x-show="!isProcessing && !isUploading" class="inline-flex items-center gap-2">
-                                            <i class="fas fa-cloud-upload-alt text-xs"></i>
-                                            Procesar archivo
-                                        </span>
+                                            <span x-show="!isProcessing && !isUploading" class="inline-flex items-center gap-2">
+                                                <i class="fas fa-cloud-upload-alt text-xs"></i>
+                                                Procesar archivo
+                                            </span>
 
-                                        <span x-show="isProcessing" x-cloak class="inline-flex items-center gap-2">
-                                            <i class="fas fa-circle-notch fa-spin text-xs"></i>
-                                            Procesando…
-                                        </span>
+                                            <span x-show="isProcessing" x-cloak class="inline-flex items-center gap-2">
+                                                <i class="fas fa-circle-notch fa-spin text-xs"></i>
+                                                Procesando…
+                                            </span>
 
-                                        <span x-show="!isProcessing && isUploading" x-cloak class="inline-flex items-center gap-2">
-                                            <i class="fas fa-circle-notch fa-spin text-xs"></i>
-                                            Subiendo…
-                                        </span>
-                                    </button>
+                                            <span x-show="!isProcessing && isUploading" x-cloak class="inline-flex items-center gap-2">
+                                                <i class="fas fa-circle-notch fa-spin text-xs"></i>
+                                                Subiendo…
+                                            </span>
+                                        </button>
+                                    @endcanAction
 
                                     <p class="mt-3 text-[11px] text-center text-gray-400 dark:text-gray-500">
                                         <i class="fas fa-shield-alt mr-1"></i>
@@ -300,8 +314,52 @@
             </div>
         </div>
 
+        @if ($ultimoResumen)
+            <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                class="rounded-2xl border shadow-sm p-5 sm:p-6">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider mb-4" style="color: var(--text-main);">
+                    <i class="fas fa-clipboard-check mr-2 text-red-800"></i>Resumen de la última importación
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 text-center">
+                    @foreach ([
+                        'Filas leídas' => $ultimoResumen['total_filas'] ?? 0,
+                        'Personas nuevas' => $ultimoResumen['personas_creadas'] ?? 0,
+                        'Personas actualizadas' => $ultimoResumen['personas_actualizadas'] ?? 0,
+                        'Perfiles cambiados' => $ultimoResumen['perfiles_cambiados'] ?? 0,
+                        'Usuarios creados' => $ultimoResumen['cuentas']['usuarios_creados'] ?? 0,
+                        'Filas con error' => $ultimoResumen['filas_con_error'] ?? 0,
+                    ] as $etiqueta => $valor)
+                        <div class="rounded-xl border p-3" style="border-color: var(--border-color);">
+                            <p class="text-2xl font-black" style="color: var(--text-main);">{{ $valor }}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted);">{{ $etiqueta }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                @if (! empty($ultimoResumen['errores']))
+                    <div class="mt-4 max-h-60 overflow-y-auto rounded-xl border" style="border-color: var(--border-color);">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr style="color: var(--text-muted);">
+                                    <th class="px-4 py-2 w-24">Fila</th>
+                                    <th class="px-4 py-2">Motivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($ultimoResumen['errores'] as $error)
+                                    <tr class="border-t" style="border-color: var(--border-color); color: var(--text-main);">
+                                        <td class="px-4 py-2 font-bold">{{ $error['fila'] }}</td>
+                                        <td class="px-4 py-2">{{ $error['motivo'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <div style="background-color: var(--bg-card); border-color: var(--border-color);"
-            class="rounded-2xl border shadow-sm overflow-hidden">
+            class="rounded-2xl border shadow-sm overflow-hidden" @if ($hayPendientes) wire:poll.10s @endif>
 
             <div class="p-5 sm:p-6 border-b" style="border-color: var(--border-color);">
                 <div class="flex flex-col lg:flex-row lg:items-center gap-4">
@@ -362,19 +420,29 @@
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
-                                        <i class="fas fa-check-circle"></i>
+                                        <i class="fas {{ $archivo->estado === 'Procesado' ? 'fa-check-circle' : 'fa-spinner fa-spin' }}"></i>
                                         {{ $archivo->estado }}
                                     </span>
+                                    @if ($archivo->resumen)
+                                        <p class="mt-1 text-[10px]" style="color: var(--text-muted);">
+                                            {{ $archivo->resumen['personas_creadas'] ?? 0 }} nuevas ·
+                                            {{ $archivo->resumen['personas_actualizadas'] ?? 0 }} actualizadas ·
+                                            {{ $archivo->resumen['filas_con_error'] ?? 0 }} con error ·
+                                            {{ $archivo->resumen['cuentas']['usuarios_creados'] ?? 0 }} usuarios
+                                        </p>
+                                    @endif
                                 </td>
 
                                 <x-table-actions :id="$archivo->id" baseUrl="admin/configuracion/archivos"
                                     :show="false" :edit="false" :toggle="false">
-                                    <a href="{{ url('/admin/configuracion/archivos/ver/' . $archivo->info_estudiantes) }}"
-                                        target="_blank" onclick="event.stopPropagation()"
-                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors"
-                                        title="Ver archivo">
-                                        <i class="fas fa-download text-xs"></i>
-                                    </a>
+                                    @if ($archivo->ruta_archivo && auth()->user()->puedeRuta('admin.configuracion.archivos.ver'))
+                                        <a href="{{ route('admin.configuracion.archivos.ver', $archivo->id) }}"
+                                            onclick="event.stopPropagation()"
+                                            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors"
+                                            title="Descargar archivo">
+                                            <i class="fas fa-download text-xs"></i>
+                                        </a>
+                                    @endif
                                 </x-table-actions>
                             </x-table-row>
                         @empty

@@ -1,13 +1,16 @@
 <x-app-layout>
     @php
         $paciente = $consulta->paciente;
-        $pacienteNombre = trim(($paciente->nombre_persona ?? '') . ' ' . ($paciente->apellido_persona ?? ''));
+        $pacienteNombre = trim(($paciente->nombres_per ?? '') . ' ' . ($paciente->apellidos_per ?? ''));
         $medicoNombre = trim(
-            ($consulta->medico->nombre_persona ?? '') . ' ' . ($consulta->medico->apellido_persona ?? ''),
+            ($consulta->medico->nombres_per ?? '') . ' ' . ($consulta->medico->apellidos_per ?? ''),
         );
 
-        $productosJs = $productos->map(fn($p) => ['id' => (string) $p->id, 'nombre' => $p->nombre])->values();
-        $unidadesJs = $unidades->map(fn($u) => ['id' => (string) $u->id, 'nombre' => $u->nombre])->values();
+        $productosJs = $productos;
+        $unidadesJs = $unidadesDosis
+            ->map(fn($u) => ['nombre' => $u->nombre_udo, 'abreviatura' => $u->abreviatura_udo])
+            ->concat(collect($unidadesExtra)->map(fn($nombre) => ['nombre' => $nombre, 'abreviatura' => $nombre]))
+            ->values();
 
         $frecuenciasSugeridas = [
             'Cada 4 horas',
@@ -34,7 +37,7 @@
             @include('components.alert')
 
             <form action="{{ route('admin.salud.movimientos.consultas.receta.store', $consulta) }}" method="POST"
-                class="rd-prevent-double-submit" x-data="recetadorForm(@js($estadoInicial), @js($tieneDatosReales), {{ $consulta->id }}, @js($productosJs), @js($unidadesJs))" @submit="limpiarBorrador()">
+                class="rd-prevent-double-submit" x-data="recetadorForm(@js($estadoInicial), @js($tieneDatosReales), {{ $consulta->id_cme }}, @js($productosJs), @js($unidadesJs))" @submit="limpiarBorrador()">
                 @csrf
                 <input type="hidden" name="fecha" :value="fecha">
 
@@ -179,6 +182,7 @@
                                     elegir(p) {
                                         item.producto_id = p.id;
                                         item.producto_nombre = p.nombre;
+                                        if (p.unidad_dosis) item.unidad_dosis = p.unidad_dosis;
                                         this.texto = p.nombre;
                                         this.abierto = false;
                                     },
@@ -267,18 +271,22 @@
                                             class="cx-input text-center font-semibold tabular-nums">
                                     </div>
 
-                                    {{-- Unidad --}}
                                     <div class="col-span-3 sm:col-span-4">
                                         <label :for="`unidad_${index}`" class="cx-label">
-                                            Unidad<span class="cx-req" aria-hidden="true">*</span>
+                                            Unidad de dosis<span class="cx-req" aria-hidden="true">*</span>
                                         </label>
-                                        <select :id="`unidad_${index}`" :name="`detalles[${index}][unidad_id]`"
-                                            x-model="item.unidad_id" required class="cx-input">
+                                        <select :id="`unidad_${index}`" :name="`detalles[${index}][unidad_dosis]`"
+                                            x-model="item.unidad_dosis" required class="cx-input">
                                             <option value="" disabled>Elige</option>
-                                            @foreach ($unidades as $u)
-                                                <option value="{{ $u->id }}">{{ $u->nombre }}</option>
+                                            @foreach ($unidadesDosis as $u)
+                                                <option value="{{ $u->nombre_udo }}">{{ $u->nombre_udo }}</option>
+                                            @endforeach
+                                            @foreach ($unidadesExtra as $extra)
+                                                <option value="{{ $extra }}">{{ $extra }}</option>
                                             @endforeach
                                         </select>
+                                        <p class="cx-hint" x-show="item.producto_id && item.unidad_dosis" x-cloak
+                                            x-text="textoConversion(item)"></p>
                                     </div>
 
                                     {{-- Frecuencia --}}
@@ -455,7 +463,7 @@
                     ...d,
                     producto_id: d.producto_id ? String(d.producto_id) : '',
                     producto_nombre: d.producto_nombre || nombreProducto(d.producto_id),
-                    unidad_id: d.unidad_id ? String(d.unidad_id) : '',
+                    unidad_dosis: d.unidad_dosis || '',
                 })),
 
                 init() {
@@ -492,7 +500,7 @@
                     this.detalles.push({
                         producto_id: '',
                         producto_nombre: '',
-                        unidad_id: '',
+                        unidad_dosis: '',
                         cantidad: '',
                         frecuencia: '',
                         fecha_inicio: '{{ now()->toDateString() }}',
@@ -512,7 +520,7 @@
                 // ── Progreso del formulario ─────────────────────
                 get checklist() {
                     const detallesCompletos = this.detalles.length > 0 && this.detalles.every(d =>
-                        d.producto_id && d.cantidad && d.unidad_id && d.frecuencia &&
+                        d.producto_id && d.cantidad && d.unidad_dosis && d.frecuencia &&
                         d.fecha_inicio && d.fecha_fin && this.dias(d) >= 0
                     );
 
@@ -557,16 +565,26 @@
                     item.fecha_fin = aTexto(new Date(base.getTime() + n * DIA));
                 },
 
-                nombreUnidad(id) {
-                    return (this.unidades.find(u => u.id === String(id)) || {}).nombre || '';
+                textoConversion(item) {
+                    const producto = this.productos.find(p => p.id === String(item.producto_id));
+                    if (!producto) return '';
+                    const factor = (producto.factores || {})[item.unidad_dosis];
+                    if (factor === null || factor === undefined) {
+                        return 'Sin conversión automática: farmacia indicará cuánto descontar del inventario.';
+                    }
+                    const cantidad = Number(item.cantidad) || 0;
+                    const base = producto.unidad_base || 'unidad de inventario';
+                    return cantidad > 0 ?
+                        `Equivale a ${+(cantidad * factor).toFixed(2)} ${base} del inventario.` :
+                        `1 ${item.unidad_dosis.toLowerCase()} = ${+Number(factor).toFixed(4)} ${base} del inventario.`;
                 },
 
                 resumen(item) {
-                    if (!item.cantidad || !item.unidad_id || !item.frecuencia) return '';
+                    if (!item.cantidad || !item.unidad_dosis || !item.frecuencia) return '';
                     const d = this.dias(item);
                     const duracion = d > 0 ? `, durante ${d} ${d === 1 ? 'día' : 'días'}` : '';
                     const nota = item.observaciones ? `. ${item.observaciones}` : '';
-                    return `${item.cantidad} ${this.nombreUnidad(item.unidad_id).toLowerCase()} ${item.frecuencia.toLowerCase()}${duracion}${nota}`;
+                    return `${item.cantidad} ${item.unidad_dosis.toLowerCase()} ${item.frecuencia.toLowerCase()}${duracion}${nota}`;
                 },
 
                 formatearFecha(s) {

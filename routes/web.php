@@ -7,9 +7,11 @@ use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\Admin\Configuracion\BitacoraController;
 use App\Http\Controllers\Admin\Configuracion\EmpleosController;
 use App\Http\Controllers\Admin\Configuracion\PermisosController;
 use App\Http\Controllers\Admin\Configuracion\RolesController;
+use App\Http\Controllers\Admin\Configuracion\SeguridadBloqueosController;
 use App\Http\Controllers\RegistroDiarioController;
 use App\Http\Controllers\DetalleRegistroDiarioController;
 use App\Http\Controllers\PnfController;
@@ -82,16 +84,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/maestros/categorias', [CategoriaController::class, 'index'])->name('admin.maestros.categorias.index');
 
         //Crear una nueva categoría
-        Route::get('/maestros/categorias/create', [CategoriaController::class, 'create'])->name('admin.maestros.categorias.create');
 
         //Almacenar una nueva categoría
         Route::post('/maestros/categorias/store', [CategoriaController::class, 'store'])->name('admin.maestros.categorias.store');
 
         //Mostrar una categoría específica
-        Route::get('/maestros/categorias/{categoria}', [CategoriaController::class, 'show'])->name('admin.maestros.categorias.show');
 
         //Editar una categoría específica
-        Route::get('/maestros/categorias/{categoria}/edit', [CategoriaController::class, 'edit'])->name('admin.maestros.categorias.edit');
 
         //Actualizar una categoría específica
         Route::put('/maestros/categorias/{categoria}', [CategoriaController::class, 'update'])->name('admin.maestros.categorias.update');
@@ -100,7 +99,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/maestros/categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('admin.maestros.categorias.destroy');
 
         //Activar una categoria especifica
-        Route::put('/maestros/categorias/{categoria}/activar', [CategoriaController::class, 'activar'])->name('admin.maestros.productos.activar');
+        Route::put('/maestros/categorias/{categoria}/activar', [CategoriaController::class, 'activar'])->name('admin.maestros.categorias.activar');
 
         /* Sedes */
         Route::get('/maestros/sedes', [SedeController::class, 'index'])->name('admin.maestros.sedes.index');
@@ -129,6 +128,12 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/maestros/productos/{producto}', [ProductoController::class, 'destroy'])->name('admin.maestros.productos.destroy');
 
         Route::put('/maestros/productos/{producto}/activar', [ProductoController::class, 'activar'])->name('admin.maestros.productos.activar');
+
+        Route::prefix('/maestros/material-oficina')->name('admin.maestros.material_oficina.')->controller(\App\Http\Controllers\ImplementoMaterialController::class)->group(function () {
+            Route::get('/', 'redirigirMaterialOficina')->name('index');
+            Route::get('/create', 'redirigirMaterialOficina')->name('create');
+            Route::get('/{producto}/edit', 'redirigirMaterialOficina')->whereNumber('producto')->name('edit');
+        });
 
         /* Proveedores */
 
@@ -174,17 +179,11 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/movimientos/lotes', [LoteController::class, 'index'])->name('admin.movimientos.lotes.index');
 
-        Route::get('/movimientos/lotes/create', [LoteController::class, 'create'])->name('admin.movimientos.lotes.create');
 
-        Route::post('/movimientos/lotes/store', [LoteController::class, 'store'])->name('admin.movimientos.lotes.store');
 
-        Route::get('/movimientos/lotes/{id}', [LoteController::class, 'show'])->name('admin.movimientos.lotes.show');
 
-        Route::get('/movimientos/lotes/{id}/edit', [LoteController::class, 'edit'])->name('admin.movimientos.lotes.edit');
 
-        Route::put('/movimientos/lotes/{id}', [LoteController::class, 'update'])->name('admin.movimientos.lotes.update');
 
-        Route::delete('/movimientos/lotes/{id}', [LoteController::class, 'destroy'])->name('admin.movimientos.lotes.destroy');
 
         Route::post('/movimientos/lotes/mermar-vencidos', [LoteController::class, 'mermarVencidos'])->name('admin.movimientos.lotes.mermar');
 
@@ -229,7 +228,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::delete('/maestros/receta_ingredientes/{id}', [RecetaIngredienteController::class, 'destroy'])->name('admin.maestros.receta_ingredientes.destroy');
 
-        Route::put('/maestros/receta_ingredientes/{id}/activar', [RecetaIngredienteController::class, 'activar'])->name('admin.maestros.receta_ingredientes.activar');
 
         /* Historial de Movimientos */
 
@@ -238,8 +236,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/movimientos/historial_movimientos/export-pdf', [MovimientoInventarioController::class, 'generarPdf'])->name('admin.movimientos.historial_movimientos.export_pdf');
 
         /* Registro Diario */
-
-        Route::get('/movimientos/registro_diario', [RegistroDiarioController::class, 'index'])->name('admin.movimientos.registro_diario.index');
 
         Route::get('/movimientos/registro_diario/export-pdf', [RegistroDiarioController::class, 'exportPdf'])->name('admin.movimientos.registro_diario.export_pdf');
 
@@ -297,15 +293,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('localidad/verificar', [LocalidadController::class, 'verificarExistencia'])->name('localidad.verificar');
 
         Route::get('/configuracion/archivos', [ArchivoController::class, 'index'])->name('admin.configuracion.archivos.index');
-        Route::get('/configuracion/archivos/ver/{archivo}', function ($archivo) {
-            $path = storage_path('app/public/' . $archivo);
-
-            abort_unless(file_exists($path), 404);
-
-            return response()->file($path, [
-                'Content-Disposition' => 'inline'
-            ]);
-        })->where('archivo', '.*');
+        Route::get('/configuracion/archivos/ver/{archivo}', [ArchivoController::class, 'ver'])->whereNumber('archivo')->name('admin.configuracion.archivos.ver');
 
         // SALUD        
 
@@ -386,6 +374,9 @@ Route::middleware(['auth'])->group(function () {
         // PSICOLOGIA
         require __DIR__ . '/psicologia.php';
 
+        // DEPORTES
+        require __DIR__ . '/deportes.php';
+
         // BECA
         require __DIR__ . '/beca.php';
 
@@ -410,6 +401,14 @@ Route::middleware(['auth'])->group(function () {
                 Route::put('/roles/{id}', [RolesController::class, 'update'])->name('admin.configuracion.roles.update');
                 Route::delete('/roles/{id}', [RolesController::class, 'destroy'])->name('admin.configuracion.roles.destroy');
 
+                Route::get('/bitacora', [BitacoraController::class, 'index'])->name('admin.configuracion.bitacora.index');
+                Route::get('/bitacora/exportar/csv', [BitacoraController::class, 'exportarCsv'])->name('admin.configuracion.bitacora.exportar_csv');
+                Route::get('/bitacora/exportar/pdf', [BitacoraController::class, 'exportarPdf'])->name('admin.configuracion.bitacora.exportar_pdf');
+                Route::get('/bitacora/{id}', [BitacoraController::class, 'show'])->whereNumber('id')->name('admin.configuracion.bitacora.show');
+
+                Route::get('/seguridad/bloqueos', [SeguridadBloqueosController::class, 'index'])->name('admin.configuracion.seguridad.bloqueos.index');
+                Route::put('/seguridad/bloqueos/{id}/desbloquear', [SeguridadBloqueosController::class, 'desbloquear'])->whereNumber('id')->name('admin.configuracion.seguridad.bloqueos.desbloquear');
+
                 Route::get('/master-key', [EmpleosController::class, 'masterKeyForm'])->name('admin.configuracion.master_key.form');
                 Route::post('/master-key/verify', [EmpleosController::class, 'verifyMasterKey'])->name('admin.configuracion.master_key.verify');
             });
@@ -420,7 +419,9 @@ Route::post('/tasa/ignorar-hoy', function (\Illuminate\Http\Request $request) {
     session()->put('tasa_ignorada_hasta', now()->toDateString());
     return response()->json(['ok' => true]);
 })->middleware('auth')->name('tasa.ignorar');
-Route::post('/admin/maestros/productos/actualizar-tasa', [ProductoController::class, 'actualizarTasaDolar'])->name('productos.actualizar.tasa');
+Route::post('/admin/maestros/productos/actualizar-tasa', [ProductoController::class, 'actualizarTasaDolar'])
+    ->middleware(['auth', \App\Http\Middleware\CheckMenuPermission::class])
+    ->name('productos.actualizar.tasa');
 
 Route::prefix('/admin')->group(function () {
 
@@ -440,8 +441,17 @@ Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'sh
 Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
 
 Route::middleware('auth')->group(function () {
-    Route::get('security-questions', [App\Http\Controllers\Auth\RegisterController::class, 'showSecurityQuestionsForm'])->name('security.questions');
-    Route::post('security-questions', [App\Http\Controllers\Auth\RegisterController::class, 'saveSecurityQuestions'])->name('security.questions.save');
+    Route::get('/seguridad/cambiar-password', [\App\Http\Controllers\Auth\CambioPasswordController::class, 'mostrar'])->name('password.cambiar');
+    Route::post('/seguridad/sede-activa', [\App\Http\Controllers\SedeActivaController::class, 'cambiar'])->name('sede.activa.cambiar');
+    Route::post('/seguridad/cambiar-password', [\App\Http\Controllers\Auth\CambioPasswordController::class, 'guardar'])->middleware('throttle:10,1')->name('password.cambiar.guardar');
+});
+
+Route::middleware('auth')->prefix('seguridad/sesion')->group(function () {
+    Route::get('/estado', [App\Http\Controllers\SesionController::class, 'estado'])->name('seguridad.sesion.estado');
+    Route::post('/mantener', [App\Http\Controllers\SesionController::class, 'mantener'])->name('seguridad.sesion.mantener');
+});
+
+Route::middleware('auth')->group(function () {
 });
 
 Route::get('admin/master-key', [AdminMasterKeyController::class, 'showForm'])->name('admin.master_key.form');
@@ -463,8 +473,4 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/mensajes', [\App\Http\Controllers\salud\ChatController::class, 'index'])->name('chat.index');
-    Route::get('/mensajes/contactos/lista', [\App\Http\Controllers\salud\ChatController::class, 'fetchContacts'])->name('chat.contacts');
-    Route::post('/mensajes/ping', [\App\Http\Controllers\salud\ChatController::class, 'ping'])->name('chat.ping');
-    Route::get('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'fetchMessages'])->name('chat.fetch');
-    Route::post('/mensajes/{user}', [\App\Http\Controllers\salud\ChatController::class, 'sendMessage'])->name('chat.store');
 });

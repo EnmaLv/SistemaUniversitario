@@ -30,7 +30,7 @@ class Publicacion extends Model
 
     public function psicologo()
     {
-        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'psicologo_id', 'id_use');
     }
 
     public function scopeActivas($query)
@@ -57,7 +57,7 @@ class Publicacion extends Model
     public static function forPacientes()
     {
         return self::activas()
-            ->join('usuario', 'publicaciones.psicologo_id', '=', 'usuario.id_usuario')
+            ->join('user', 'publicaciones.psicologo_id', '=', 'user.id_use')
             ->select(
                 'publicaciones.*',
             )

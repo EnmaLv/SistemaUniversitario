@@ -9,22 +9,25 @@
                         Historial de movimientos
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
 
-                <button type="button" id="pdfBtn"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                    <i class="fas fa-file-pdf text-xs"></i>
-                    <span>Exportar PDF</span>
-                </button>
+                @canRoute('admin.movimientos.historial_movimientos.export_pdf')
+                    <button type="button" id="pdfBtn"
+                        data-url="{{ route('admin.movimientos.historial_movimientos.export_pdf', array_merge(request()->query(), [\App\Support\Inventario\FiltroTipoProducto::PARAMETRO => \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto)])) }}"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                        <i class="fas fa-file-pdf text-xs"></i>
+                        <span>Exportar PDF</span>
+                    </button>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm mb-3 p-3">
                 <form action="{{ route('admin.movimientos.historial_movimientos.index') }}" method="GET"
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 items-end gap-3">
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 items-end gap-3">
                     <div class="lg:col-span-2">
                         <label for="buscar"
                             class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -62,24 +65,32 @@
                     </div>
 
                     <div>
-                        <label for="tipo_movimiento"
+                        <label for="tipo_movimiento_moi"
                             class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             Tipo de movimiento
                         </label>
-                        <select name="tipo_movimiento" id="tipo_movimiento"
+                        <select name="tipo_movimiento_moi" id="tipo_movimiento_moi"
                             style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main);"
                             class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all">
                             <option value="">Todos</option>
-                            <option value="ENTRADA" {{ request('tipo_movimiento') === 'ENTRADA' ? 'selected' : '' }}>
+                            <option value="ENTRADA" {{ request('tipo_movimiento_moi') === 'ENTRADA' ? 'selected' : '' }}>
                                 Entrada
                             </option>
-                            <option value="SALIDA" {{ request('tipo_movimiento') === 'SALIDA' ? 'selected' : '' }}>
+                            <option value="SALIDA" {{ request('tipo_movimiento_moi') === 'SALIDA' ? 'selected' : '' }}>
                                 Salida
                             </option>
                         </select>
                     </div>
 
-                    <div class="sm:col-span-2 lg:col-span-5 flex justify-end gap-2">
+                    <div>
+                        <label for="filtro-tipo-producto"
+                            class="block mb-1.5 text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Tipo de producto
+                        </label>
+                        <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" :etiqueta="false" :enviarAlCambiar="false" />
+                    </div>
+
+                    <div class="sm:col-span-2 lg:col-span-6 flex justify-end gap-2">
                         <a href="{{ route('admin.movimientos.historial_movimientos.index') }}"
                             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             style="border-color: var(--border-color);">
@@ -124,7 +135,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($movimientos->tipo_movimiento === 'ENTRADA')
+                                        @if ($movimientos->tipo_movimiento_moi === 'ENTRADA')
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-arrow-down"></i> Entrada
@@ -138,25 +149,25 @@
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $movimientos->producto->nombre ?? 'N/A' }}
+                                        {{ $movimientos->producto->nombre_pdt ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
-                                        {{ $movimientos->lote->codigo_lote ?? 'N/A' }}
+                                        {{ $movimientos->lote->codigo_lote_lot ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->cantidad_convertida }}
+                                        {{ $movimientos->cantidad_convertida_moi }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->unidad->nombre ?? 'N/A' }}
+                                        {{ $movimientos->unidad->nombre_unm ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->sede->nombre ?? 'N/A' }}
+                                        {{ $movimientos->sede->nombre_sed ?? 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->fecha }}
+                                        {{ $movimientos->fecha_movimiento_moi }}
                                     </td>
                                     <td class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                        {{ $movimientos->observacion ?: 'Sin observación' }}
+                                        {{ $movimientos->observacion_moi ?: 'Sin observación' }}
                                     </td>
                                 </tr>
                             @empty
@@ -182,9 +193,7 @@
     @push('js')
         <script>
             document.getElementById('pdfBtn')?.addEventListener('click', function() {
-                const params = new URLSearchParams(window.location.search);
-                const url = `{{ route('admin.movimientos.historial_movimientos.export_pdf') }}?${params.toString()}`;
-                window.open(url, '_blank');
+                window.open(this.dataset.url, '_blank');
             });
         </script>
     @endpush

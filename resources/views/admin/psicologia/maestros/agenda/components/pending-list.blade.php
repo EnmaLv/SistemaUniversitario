@@ -17,7 +17,7 @@
             <ul id="pendingList" class="space-y-2 mb-3">
                 @foreach ($citasPendientes as $cita)
                     @php
-                        $prioridadClase = match (strtolower($cita->prioridad ?? 'media')) {
+                        $prioridadClase = match (strtolower($cita->prioridad_texto_cps ?? 'media')) {
                             'baja'
                                 => 'border-emerald-200/80 dark:border-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700 bg-emerald-50/20 dark:bg-emerald-950/10',
                             'media'
@@ -29,7 +29,7 @@
                             default
                                 => 'border-indigo-200/80 dark:border-indigo-900/50 hover:border-indigo-300 dark:hover:border-indigo-700 bg-indigo-50/20 dark:bg-indigo-950/10',
                         };
-                        $puntoClase = match (strtolower($cita->prioridad ?? 'media')) {
+                        $puntoClase = match (strtolower($cita->prioridad_texto_cps ?? 'media')) {
                             'baja' => 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950',
                             'media' => 'bg-sky-500 ring-sky-100 dark:ring-sky-950',
                             'alta' => 'bg-amber-500 ring-amber-100 dark:ring-amber-950',
@@ -37,22 +37,22 @@
                             default => 'bg-indigo-500 ring-indigo-100 dark:ring-indigo-950',
                         };
                         $isManual =
-                            in_array($cita->motivo, [
+                            in_array($cita->motivo_cps, [
                                 'Asignado manualmente por psicólogo',
                                 'Gestionada por psicólogo',
                             ]) ||
-                            str_contains($cita->motivo, 'anualmente') ||
-                            str_contains($cita->motivo, 'estionada');
+                            str_contains($cita->motivo_cps, 'anualmente') ||
+                            str_contains($cita->motivo_cps, 'estionada');
                     @endphp
 
                     <li class="pending-item {{ $prioridadClase }} rounded-2xl p-3 border bg-white dark:bg-slate-900 shadow-sm hover:shadow transition-all group flex items-center justify-between cursor-grab active:cursor-grabbing draggable-patient"
                         data-patient-name="{{ trim(($cita->user_nombres ?? '') . ' ' . ($cita->user_apellidos ?? '')) ?: ($cita->paciente_short_name ?: 'Paciente') }}"
-                        data-patient-cedula="{{ $cita->paciente_cedula ?? '' }}" data-cita-id="{{ $cita->id }}"
-                        data-prioridad="{{ $cita->prioridad ?? 'media' }}"
-                        data-bloques-sugeridos="{{ preg_replace('/(\d{1,2}:\d{2}):\d{2}/', '$1', $cita->bloques_sugeridos ?? '') }}"
-                        data-bloques-propuestos="{{ preg_replace('/(\d{1,2}:\d{2}):\d{2}/', '$1', $cita->bloques_propuestos ?? '') }}"
-                        data-bloque-propuesto="{{ $cita->bloque_propuesto }}"
-                        data-propuesta-estado="{{ $cita->propuesta_estado ?? '' }}"
+                        data-patient-cedula="{{ $cita->paciente_cedula ?? '' }}" data-cita-id="{{ $cita->id_cps }}"
+                        data-prioridad="{{ $cita->prioridad_texto_cps ?? 'media' }}"
+                        data-bloques-sugeridos="{{ preg_replace('/(\d{1,2}:\d{2}):\d{2}/', '$1', $cita->bloques_sugeridos_cps ?? '') }}"
+                        data-bloques-propuestos="{{ preg_replace('/(\d{1,2}:\d{2}):\d{2}/', '$1', $cita->bloques_propuestos_cps ?? '') }}"
+                        data-bloque-propuesto="{{ $cita->bloque_propuesto_cps }}"
+                        data-propuesta-estado="{{ $cita->propuesta_estado_cps ?? '' }}"
                         data-is-manual="{{ $isManual ? '1' : '0' }}" draggable="true">
 
                         <div class="flex items-center gap-2.5 min-w-0">
@@ -70,7 +70,7 @@
                         </div>
 
                         @php
-                            $isContrapropuesta = !empty($cita->propuesta_estado);
+                            $isContrapropuesta = !empty($cita->propuesta_estado_cps);
 
                             if ($isManual) {
                                 $btnClasses =
@@ -86,9 +86,9 @@
 
                         <button type="button"
                             class="ml-2 shrink-0 detail-btn text-[11px] font-semibold rounded-xl px-2.5 py-1 border transition-all active:scale-95 shadow-2xs {{ $btnClasses }}"
-                            data-cita-id="{{ $cita->id }}"
-                            data-cita-json-url="{{ route('admin.psicologia.maestros.citas.show.json', $cita->id) }}"
-                            data-cita-prioridad-url="{{ route('admin.psicologia.maestros.citas.update.prioridad', $cita->id) }}">
+                            data-cita-id="{{ $cita->id_cps }}"
+                            data-cita-json-url="{{ route('admin.psicologia.maestros.citas.show.json', $cita->id_cps) }}"
+                            data-cita-prioridad-url="{{ route('admin.psicologia.maestros.citas.update.prioridad', $cita->id_cps) }}">
                             Detalles
                         </button>
                     </li>
@@ -104,8 +104,8 @@
                 <ul id="patientsWithoutAppointmentList" class="space-y-2">
                     @foreach ($pacientesSinCita as $pacienteSinCita)
                         @php
-                            $nombresArr = array_filter(explode(' ', $pacienteSinCita->persona->nombre_persona  ?? ''));
-                            $apellidosArr = array_filter(explode(' ', $pacienteSinCita->persona->apellido_persona  ?? ''));
+                            $nombresArr = array_filter(explode(' ', $pacienteSinCita->persona->nombres_per  ?? ''));
+                            $apellidosArr = array_filter(explode(' ', $pacienteSinCita->persona->apellidos_per  ?? ''));
                             $primerNombre = !empty($nombresArr) ? array_values($nombresArr)[0] : '';
                             $primerApellido = !empty($apellidosArr) ? array_values($apellidosArr)[0] : '';
                             $shortName = trim($primerNombre . ' ' . $primerApellido) ?: 'Paciente';
@@ -120,12 +120,14 @@
                                 <span
                                     class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{{ $shortName }}</span>
                             </div>
+                            @canRoute('admin.psicologia.maestros.agenda.crear_cita_manual')
                             <button type="button"
                                 class="ml-2 shrink-0 agregar-manual-btn text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 rounded-xl px-2.5 py-1 border border-amber-200 dark:border-amber-800/80 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all active:scale-95 shadow-2xs"
-                                data-paciente-id="{{ $pacienteSinCita->id_usuario ?? ($pacienteSinCita->id ?? $pacienteSinCita->getKey()) }}"
+                                data-paciente-id="{{ $pacienteSinCita->id_use ?? ($pacienteSinCita->id ?? $pacienteSinCita->getKey()) }}"
                                 data-paciente-name="{{ trim($pacienteSinCita->name ?? '') ?: $shortName }}">
                                 Agregar
                             </button>
+                            @endcanRoute
                         </li>
                     @endforeach
                 </ul>

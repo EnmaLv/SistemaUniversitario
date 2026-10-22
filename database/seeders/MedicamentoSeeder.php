@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\TipoProducto;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -11,87 +12,111 @@ class MedicamentoSeeder extends Seeder
     {
         $productos = [
             [
-                'categoria_id'               => 22,
-                'codigo'                     => 'ANT-ACE-001',
-                'nombre'                     => 'ACETAMINOFEN 500 MG',
-                'descripcion'                => 'ANALGÉSICO Y ANTIPIRÉTICO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
-                'imagen'                     => null,
-                'precio_compra'              => 800,
-                'stock_minimo'               => 15,
-                'stock_maximo'               => 60,
-                'peso_contenido'             => 10, 
-                'unidad_id'                  => 1,
-                'unidades_por_presentacion'  => 10,
-                'presentacion_id'            => 1,
-                'estado'                     => 1,
+                'categoria'                  => 'ANTIPIRÉTICOS',
+                'codigo_pdt'                 => 'ANT-ACE-001',
+                'nombre_pdt'                 => 'ACETAMINOFEN 500 MG',
+                'descripcion_pdt'            => 'ANALGÉSICO Y ANTIPIRÉTICO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
+                'imagen_pdt'                 => null,
+                'precio_compra_pdt'          => 800,
+                'stock_minimo_pdt'           => 15,
+                'stock_maximo_pdt'           => 60,
+                'peso_contenido_pdt'         => 10,
+                'unidad'                     => 'Unidad',
+                'unidades_presentacion_pdt'  => 10,
+                'envase'                     => 'BLISTER',
+                'status_id'                  => 1,
             ],
             [
-                'categoria_id'               => 21,
-                'codigo'                     => 'ANT-LOR-006',
-                'nombre'                     => 'LORATADINA 10 MG',
-                'descripcion'                => 'ANTIHISTAMÍNICO UTILIZADO PARA ALIVIAR LOS SÍNTOMAS ALÉRGICOS.',
-                'imagen'                     => null,
-                'precio_compra'              => 800,
-                'stock_minimo'               => 10,
-                'stock_maximo'               => 40,
-                'peso_contenido'             => 8,
-                'unidad_id'                  => 1,
-                'unidades_por_presentacion'  => 10,
-                'presentacion_id'            => 1,
-                'estado'                     => 1,
+                'categoria'                  => 'ANTIHISTAMÍNICOS',
+                'codigo_pdt'                 => 'ANT-LOR-006',
+                'nombre_pdt'                 => 'LORATADINA 10 MG',
+                'descripcion_pdt'            => 'ANTIHISTAMÍNICO UTILIZADO PARA ALIVIAR LOS SÍNTOMAS ALÉRGICOS.',
+                'imagen_pdt'                 => null,
+                'precio_compra_pdt'          => 800,
+                'stock_minimo_pdt'           => 10,
+                'stock_maximo_pdt'           => 40,
+                'peso_contenido_pdt'         => 8,
+                'unidad'                     => 'Unidad',
+                'unidades_presentacion_pdt'  => 10,
+                'envase'                     => 'BLISTER',
+                'status_id'                  => 1,
             ],
             [
-                'categoria_id'               => 15,
-                'codigo'                     => 'ANT-IBU-008',
-                'nombre'                     => 'IBUPROFENO 800 MG',
-                'descripcion'                => 'ANTIINFLAMATORIO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
-                'imagen'                     => null,
-                'precio_compra'              => 800,
-                'stock_minimo'               => 10,
-                'stock_maximo'               => 50,
-                'peso_contenido'             => 15,
-                'unidad_id'                  => 1,
-                'unidades_por_presentacion'  => 10,
-                'presentacion_id'            => 1,
-                'estado'                     => 1,
+                'categoria'                  => 'ANTIINFLAMATORIOS',
+                'codigo_pdt'                 => 'ANT-IBU-008',
+                'nombre_pdt'                 => 'IBUPROFENO 800 MG',
+                'descripcion_pdt'            => 'ANTIINFLAMATORIO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
+                'imagen_pdt'                 => null,
+                'precio_compra_pdt'          => 800,
+                'stock_minimo_pdt'           => 10,
+                'stock_maximo_pdt'           => 50,
+                'peso_contenido_pdt'         => 15,
+                'unidad'                     => 'Unidad',
+                'unidades_presentacion_pdt'  => 10,
+                'envase'                     => 'BLISTER',
+                'status_id'                  => 1,
             ],
             [
-                'categoria_id'               => 14,
-                'codigo'                     => 'ANA-ATA-001',
-                'nombre'                     => 'ATAMEL 500 MG',
-                'descripcion'                => 'ANALGÉSICO Y ANTIPIRÉTICO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
-                'imagen'                     => null,
-                'precio_compra'              => 800,
-                'stock_minimo'               => 10,
-                'stock_maximo'               => 50,
-                'peso_contenido'             => 10,
-                'unidad_id'                  => 1,
-                'unidades_por_presentacion'  => 10,
-                'presentacion_id'            => 1,
-                'estado'                     => 1,
+                'categoria'                  => 'ANALGÉSICOS',
+                'codigo_pdt'                 => 'ANA-ATA-001',
+                'nombre_pdt'                 => 'ATAMEL 500 MG',
+                'descripcion_pdt'            => 'ANALGÉSICO Y ANTIPIRÉTICO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
+                'imagen_pdt'                 => null,
+                'precio_compra_pdt'          => 800,
+                'stock_minimo_pdt'           => 10,
+                'stock_maximo_pdt'           => 50,
+                'peso_contenido_pdt'         => 10,
+                'unidad'                     => 'Unidad',
+                'unidades_presentacion_pdt'  => 10,
+                'envase'                     => 'BLISTER',
+                'status_id'                  => 1,
             ],
             [
-                'categoria_id'               => 15,
-                'codigo'                     => 'ANT-BRU-002',
-                'nombre'                     => 'BRUGESIC 400 MG',
-                'descripcion'                => 'ANTIINFLAMATORIO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
-                'imagen'                     => null,
-                'precio_compra'              => 800,
-                'stock_minimo'               => 10,
-                'stock_maximo'               => 50,
-                'peso_contenido'             => 12,
-                'unidad_id'                  => 1,
-                'unidades_por_presentacion'  => 10,
-                'presentacion_id'            => 1,
-                'estado'                     => 1,
+                'categoria'                  => 'ANTIINFLAMATORIOS',
+                'codigo_pdt'                 => 'ANT-BRU-002',
+                'nombre_pdt'                 => 'BRUGESIC 400 MG',
+                'descripcion_pdt'            => 'ANTIINFLAMATORIO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
+                'imagen_pdt'                 => null,
+                'precio_compra_pdt'          => 800,
+                'stock_minimo_pdt'           => 10,
+                'stock_maximo_pdt'           => 50,
+                'peso_contenido_pdt'         => 12,
+                'unidad'                     => 'Unidad',
+                'unidades_presentacion_pdt'  => 10,
+                'envase'                     => 'BLISTER',
+                'status_id'                  => 1,
             ],
         ];
 
+        $costos = [
+            'ANT-ACE-001' => 2.00,
+            'ANT-LOR-006' => 1.80,
+            'ANT-IBU-008' => 2.50,
+            'ANA-ATA-001' => 1.90,
+            'ANT-BRU-002' => 2.20,
+        ];
+
         foreach ($productos as $p) {
+            if (DB::table('producto')->where('codigo_pdt', $p['codigo_pdt'])->exists()) {
+                continue;
+            }
+
+            $p['cap_id'] = ProductoSeeder::categoria(TipoProducto::MEDICAMENTO, $p['categoria']);
+            $p['unm_id'] = ProductoSeeder::unidad($p['unidad']);
+            $p['enp_id'] = DB::table('envase_primario')->where('nombre_enp', $p['envase'])->value('id_enp');
             $p['created_at'] = now();
             $p['updated_at'] = now();
+            unset($p['categoria'], $p['unidad'], $p['envase']);
 
-            DB::table('productos')->insert($p);
+            $id = DB::table('producto')->insertGetId($p, 'id_pdt');
+
+            DB::table('precio_producto')->insert([
+                'pdt_id'        => $id,
+                'costo_usd_ppr' => $costos[$p['codigo_pdt']],
+                'margen_ppr'    => 20,
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]);
         }
     }
 }

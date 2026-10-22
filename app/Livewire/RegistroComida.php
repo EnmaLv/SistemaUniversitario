@@ -5,8 +5,9 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Receta;
 use App\Models\DetalleRegistroDiario;
+use App\Models\ConsumoDiario;
+use App\Models\ConsumoDiarioDetalle;
 use App\Models\InventarioSedeLote;
-use App\Models\MovimientoInventario;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -93,7 +94,7 @@ class RegistroComida extends Component
     {
         $rules = [];
         foreach ($this->desayunos_agregados as $i => $item) {
-            $rules["desayunos_agregados.$i.receta_id"] = 'required|exists:recetas,id';
+            $rules["desayunos_agregados.$i.receta_id"] = 'required|exists:receta,id_rct';
             $rules["desayunos_agregados.$i.cantidad"]  = 'required|numeric|min:1';
         }
         return $rules;
@@ -134,18 +135,18 @@ class RegistroComida extends Component
 
         if ($tipo) {
             $registroActual = DetalleRegistroDiario::whereDate('created_at', $hoy)
-                ->where('tipo_comida', $tipo)
+                ->where('tipo_comida_drc', $tipo)
                 ->exists();
 
             $this->desayuno_registrado = $registroActual;
 
             if ($registroActual) {
                 $detalles = DetalleRegistroDiario::whereDate('created_at', $hoy)
-                    ->where('tipo_comida', $tipo)
-                    ->get(['receta_id', 'cantidad_servido']);
+                    ->where('tipo_comida_drc', $tipo)
+                    ->get(['rct_id', 'cantidad_servida_drc']);
 
                 $this->desayunos_agregados = $detalles->map(function ($item) {
-                    return ['receta_id' => $item->receta_id, 'cantidad' => $item->cantidad_servido];
+                    return ['receta_id' => $item->rct_id, 'cantidad' => $item->cantidad_servida_drc];
                 })->toArray();
             }
         }
@@ -180,7 +181,7 @@ class RegistroComida extends Component
     protected function resolverCantidadPorUnidad($ingrediente): float
     {
         $candidatos = [
-            'cantidad_gramos',
+            'cantidad_convertida_rci',
             'cantidad_convertida',
             'cantidad_convertida_base',
             'cantidad',
@@ -195,9 +196,9 @@ class RegistroComida extends Component
             }
         }
 
-        if (isset($ingrediente->cantidad_porcion)) {
-            $cantidadPorcion = (float) $ingrediente->cantidad_porcion;
-            $factorAGramo = (float) ($ingrediente->unidad?->factor_a_gramo ?? 0);
+        if (isset($ingrediente->cantidad_porcion_rci)) {
+            $cantidadPorcion = (float) $ingrediente->cantidad_porcion_rci;
+            $factorAGramo = (float) ($ingrediente->unidad?->factor_conversion_unm ?? 0);
 
             if ($cantidadPorcion > 0 && $factorAGramo > 0) {
                 return $cantidadPorcion * $factorAGramo;
@@ -217,7 +218,7 @@ class RegistroComida extends Component
 
         if ($receta->recetaIngredientes->isEmpty()) {
             throw new Exception(
-                "La receta «{$receta->nombre}» no tiene ingredientes registrados. " .
+                "La receta «{$receta->nombre_rct}» no tiene ingredientes registrados. " .
                     "Agrega sus ingredientes antes de poder registrarla."
             );
         }
@@ -230,31 +231,34 @@ class RegistroComida extends Component
             $producto = $ingrediente->producto;
 
             if (!$producto) {
-                $advertencias[] = "Un ingrediente de «{$receta->nombre}» no tiene producto asociado y fue omitido.";
+                $advertencias[] = "Un ingrediente de «{$receta->nombre_rct}» no tiene producto asociado y fue omitido.";
                 continue;
             }
 
             $cantidadPorUnidad = $this->resolverCantidadPorUnidad($ingrediente);
 
             if ($cantidadPorUnidad <= 0) {
-                $advertencias[] = "El ingrediente «{$producto->nombre}» no tiene cantidad configurada en la receta y no se descontará del inventario. Edita la receta para corregirlo.";
+                $advertencias[] = "El ingrediente «{$producto->nombre_pdt}» no tiene cantidad configurada en la receta y no se descontará del inventario. Edita la receta para corregirlo.";
                 continue;
             }
 
             $totalNecesario = $cantidadPorUnidad * $cantidadServido;
 
-            $disponibleTotal = (float) InventarioSedeLote::where('sede_id', $sedeId)
+            $disponibleTotal = (float) InventarioSedeLote::where('sed_id', $sedeId)
                 ->whereHas('lote', function ($q) use ($ingrediente) {
-                    $q->where('producto_id', $ingrediente->producto_id)
-                        ->whereDate('fecha_vencimiento', '>=', now()->toDateString())
-                        ->where('estado', 1);
+                    $q->where('pdt_id', $ingrediente->pdt_id)
+                        ->where(function ($vencimiento) {
+                            $vencimiento->whereNull('fecha_vencimiento_lot')
+                                ->orWhereDate('fecha_vencimiento_lot', '>=', now()->toDateString());
+                        })
+                        ->where('status_id', 1);
                 })
-                ->where('cantidad_convertida', '>', 0)
-                ->sum('cantidad_convertida');
+                ->where('cantidad_convertida_isl', '>', 0)
+                ->sum('cantidad_convertida_isl');
 
             if ($disponibleTotal < $totalNecesario) {
                 $faltantes[] = [
-                    'producto'   => $producto->nombre,
+                    'producto'   => $producto->nombre_pdt,
                     'necesario'  => round($totalNecesario, 2),
                     'disponible' => round($disponibleTotal, 2),
                     'faltante'   => round($totalNecesario - $disponibleTotal, 2),
@@ -271,7 +275,7 @@ class RegistroComida extends Component
             }
 
             throw new Exception(
-                "Inventario insuficiente para la receta «{$receta->nombre}»:"
+                "Inventario insuficiente para la receta «{$receta->nombre_rct}»:"
                     . PHP_EOL . PHP_EOL
                     . implode(PHP_EOL, $lineas)
             );
@@ -297,7 +301,7 @@ class RegistroComida extends Component
         $this->tipoComidaLabel  = $this->getVentanas()[$tipo]['label'];
 
         $yaRegistrado = DetalleRegistroDiario::whereDate('created_at', now()->toDateString())
-            ->where('tipo_comida', $tipo)
+            ->where('tipo_comida_drc', $tipo)
             ->exists();
 
         if ($yaRegistrado) {
@@ -314,7 +318,7 @@ class RegistroComida extends Component
         $messages = [];
 
         foreach ($this->desayunos_agregados as $i => $registro) {
-            $rules['desayunos_agregados.' . $i . '.receta_id'] = 'required|numeric|exists:recetas,id';
+            $rules['desayunos_agregados.' . $i . '.receta_id'] = 'required|numeric|exists:receta,id_rct';
             $rules['desayunos_agregados.' . $i . '.cantidad']  = 'required|numeric|min:1';
 
             $messages['desayunos_agregados.' . $i . '.receta_id.required'] = "Seleccione una opción para el registro #" . ($i + 1);
@@ -331,7 +335,7 @@ class RegistroComida extends Component
 
         $this->validate($rules, $messages);
 
-        $sedeId = 1;
+        $sedeId = \App\Support\Sedes\SedeActiva::idParaCrear();
         $advertencias = [];
 
         try {
@@ -344,9 +348,9 @@ class RegistroComida extends Component
                 $advertencias = array_merge($advertencias, $adv);
             }
         } catch (Exception $e) {
-            $this->inventarioError = $e->getMessage();
-            $this->alertInventario = $e->getMessage();
-            $this->dispatch('notify-inventario', message: $e->getMessage());
+            $this->inventarioError = \App\Support\Seguridad\MensajeError::de($e);
+            $this->alertInventario = \App\Support\Seguridad\MensajeError::de($e);
+            $this->dispatch('notify-inventario', message: \App\Support\Seguridad\MensajeError::de($e));
             return;
         }
 
@@ -359,13 +363,20 @@ class RegistroComida extends Component
                 $cantidadServido = $registro['cantidad'];
 
                 DetalleRegistroDiario::create([
-                    'receta_id'        => $recetaId,
-                    'tipo_comida'      => $tipo,
-                    'cantidad_servido' => $cantidadServido,
-                    'fecha'            => now(),
+                    'rct_id'               => $recetaId,
+                    'tipo_comida_drc'      => $tipo,
+                    'cantidad_servida_drc' => $cantidadServido,
+                    'fecha_drc'            => now()->toDateString(),
                 ]);
 
                 $receta = Receta::with('recetaIngredientes.producto')->find($recetaId);
+
+                $consumo = ConsumoDiario::create([
+                    'rct_id'                 => $recetaId,
+                    'sed_id'                 => $sedeId,
+                    'fecha_consumo_cnd'      => now()->toDateString(),
+                    'porciones_servidas_cnd' => $cantidadServido,
+                ]);
 
                 foreach ($receta->recetaIngredientes as $ingrediente) {
 
@@ -375,64 +386,37 @@ class RegistroComida extends Component
                         continue;
                     }
 
-                    $totalDescontarGramos = $cantidadPorUnidad * $cantidadServido;
-                    $pesoUnidad = (float) $ingrediente->producto->peso_contenido;
+                    $pendiente = $cantidadPorUnidad * $cantidadServido;
+                    $totalIngrediente = $pendiente;
 
-                    if ($pesoUnidad <= 0) {
-                        $pesoUnidad = 1;
-                    }
+                    $servicio = app(\App\Support\Inventario\ServicioInventario::class);
 
-                    $lotes = InventarioSedeLote::where('sede_id', $sedeId)
-                        ->whereHas('lote', function ($q) use ($ingrediente) {
-                            $q->where('producto_id', $ingrediente->producto_id)
-                                ->whereDate('fecha_vencimiento', '>=', now()->toDateString())
-                                ->where('estado', 1);
-                        })
-                        ->where('cantidad_convertida', '>', 0)
-                        ->orderBy('lote_id', 'asc')
-                        ->get();
-
-                    $pendiente = $totalDescontarGramos;
-
-                    foreach ($lotes as $inv) {
+                    foreach ($servicio->existenciasDisponibles((int) $ingrediente->pdt_id, (int) $sedeId) as $inv) {
 
                         if ($pendiente <= 0) break;
 
-                        $dispGramos  = $inv->cantidad_convertida;
-                        $tomarGramos = min($pendiente, $dispGramos);
+                        $tomarGramos = min($pendiente, (float) $inv->cantidad_convertida_isl);
 
-                        $inv->cantidad_convertida -= $tomarGramos;
-                        $inv->cantidad = max(0, (int) floor($inv->cantidad_convertida / $pesoUnidad));
-                        $inv->save();
-
-                        $lote = $inv->lote;
-                        $lote->cantidad_actual = (float) InventarioSedeLote::where('lote_id', $lote->id)
-                            ->sum('cantidad_convertida');
-                        $lote->save();
-
-                        $factorUnidad = (float) ($ingrediente->unidad?->factor_a_gramo ?? 0);
-                        $cantidadEnUnidad = $factorUnidad > 0
-                            ? $tomarGramos / $factorUnidad
-                            : $tomarGramos;
-
-                        MovimientoInventario::create([
-                            'producto_id'         => $ingrediente->producto_id,
-                            'lote_id'             => $lote->id,
-                            'sede_id'             => $sedeId,
-                            'tipo_movimiento'     => 'SALIDA',
-                            'unidad_id'           => $ingrediente->unidad_id,
-                            'cantidad'            => $cantidadEnUnidad,
-                            'cantidad_convertida' => $tomarGramos,
-                            'fecha'               => now(),
-                            'observaciones'       => "Consumo por receta {$receta->nombre} ({$cantidadServido} raciones) · " . ucfirst($tipo),
+                        $servicio->salidaPorConvertida((int) $inv->lot_id, (int) $sedeId, $tomarGramos, [
+                            'unm_id'              => $ingrediente->unm_id,
+                            'referencia_type_moi' => 'consumo_diario',
+                            'referencia_id_moi'   => $consumo->id_cnd,
+                            'observacion_moi'     => "Consumo por receta {$receta->nombre_rct} ({$cantidadServido} raciones) · " . ucfirst($tipo),
                         ]);
 
                         $pendiente -= $tomarGramos;
                     }
 
                     if ($pendiente > 0) {
-                        throw new Exception("No hay suficiente inventario para el ingrediente: {$ingrediente->producto->nombre}. Faltan " . round($pendiente, 2) . " gramos.");
+                        throw new Exception("No hay suficiente inventario para el ingrediente: {$ingrediente->producto->nombre_pdt}. Faltan " . round($pendiente, 2) . " gramos.");
                     }
+
+                    ConsumoDiarioDetalle::create([
+                        'cnd_id'             => $consumo->id_cnd,
+                        'pdt_id'             => $ingrediente->pdt_id,
+                        'cantidad_total_cdd' => round($totalIngrediente, 2),
+                        'unm_id'            => $ingrediente->unm_id ?? $ingrediente->producto->unm_id,
+                    ]);
                 }
             }
 
@@ -455,11 +439,11 @@ class RegistroComida extends Component
         } catch (Exception $e) {
             DB::rollBack();
 
-            $this->alertInventario   = $e->getMessage();
-            $this->inventarioError   = $e->getMessage();
+            $this->alertInventario   = \App\Support\Seguridad\MensajeError::de($e);
+            $this->inventarioError   = \App\Support\Seguridad\MensajeError::de($e);
             $this->desayuno_registrado = false;
             $this->showNotification  = true;
-            $this->dispatch('notify-inventario', message: $e->getMessage());
+            $this->dispatch('notify-inventario', message: \App\Support\Seguridad\MensajeError::de($e));
             return;
         }
     }
@@ -487,12 +471,12 @@ class RegistroComida extends Component
 
         if ($buscar) {
             $query->whereHas('receta', function ($q) use ($buscar) {
-                $q->where('nombre', 'like', "%{$buscar}%");
+                $q->where('nombre_rct', 'like', "%{$buscar}%");
             });
         }
 
         $data = $query->paginate(10);
-        $comidas = Receta::orderBy('id', 'desc')->where('estado', true)->get();
+        $comidas = Receta::orderBy('id_rct', 'desc')->where('status_id', Receta::STATUS_ACTIVO)->get();
 
         return view('livewire.registro-comida', [
             'data'                => $data,

@@ -101,13 +101,13 @@
             @foreach($historias as $historia)
                 @php $paciente = $historia['paciente']; @endphp
                 <tr>
-                    <td>{{ $paciente->persona->nombre_persona ?? '' }}</td>
-                    <td>{{ $paciente->persona->persona_persona ?? '' }}</td>
-                    <td>{{ $paciente->persona->cedula_persona ?? '' }}</td>
-                    <td>{{ $paciente->pnf ?? 'N/A' }}</td>
-                    <td>{{ $paciente->persona->fecha_nacimiento_persona ? \Carbon\Carbon::parse($paciente->fecha_nacimiento)->age : 'N/A' }}</td>
-                    <td>{{ $paciente->persona->fecha_nacimiento_persona ? \Carbon\Carbon::parse($paciente->fecha_nacimiento)->format('d/m/Y') : 'N/A' }}</td>
-                    <td>{{ $paciente->persona->telefono_persona ?? 'N/A' }}</td>
+                    <td>{{ $paciente->persona->nombres_per ?? '' }}</td>
+                    <td>{{ $paciente->persona->apellidos_per ?? '' }}</td>
+                    <td>{{ $paciente->persona->cedula_per ?? '' }}</td>
+                    <td>{{ $paciente->persona?->personaPnf->first()?->pnf?->nombre_prg ?? 'N/A' }}</td>
+                    <td>{{ $paciente->persona->fecha_nacimiento_per ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->age : 'N/A' }}</td>
+                    <td>{{ $paciente->persona->fecha_nacimiento_per ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->format('d/m/Y') : 'N/A' }}</td>
+                    <td>{{ $paciente->persona->telefono_per ?? 'N/A' }}</td>
                     <td style="text-align: center;">{{ $historia['citas_realizadas'] ?? 0 }}</td>
                 </tr>
             @endforeach

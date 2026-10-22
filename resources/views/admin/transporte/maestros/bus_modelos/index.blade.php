@@ -6,13 +6,15 @@
                 <div>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Modelos de buses</h1>
                     <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
+                @canRoute('admin.transporte.maestros.bus_modelos.store')
                 <button type="button" onclick="openModal('modalCrear')" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                     <i class="fas fa-plus text-xs"></i> Nuevo modelo
                 </button>
+                @endcanRoute
             </div>
 
             <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center" style="background-color:var(--bg-card);border-color:var(--border-color);">
@@ -48,23 +50,24 @@
                 </thead>
                 <tbody>
                     @forelse($modelos as $modelo)
-                        <x-table-row :id="$modelo->id" data-id="{{ $modelo->id }}">
+                        <x-table-row :id="$modelo->id_mov" data-id="{{ $modelo->id_mov }}">
                             <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
                                 {{ ($modelos->currentPage() - 1) * $modelos->perPage() + $loop->iteration }}
                             </td>
-                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->busMarca->nombre ?? 'Sin marca' }}</td>
-                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->nombre }}</td>
-                            <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $modelo->descripcion ?: 'Sin descripción' }}</td>
+                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->busMarca->nombre_mav ?? 'Sin marca' }}</td>
+                            <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $modelo->nombre_mov }}</td>
+                            <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $modelo->descripcion_mov ?: 'Sin descripción' }}</td>
                             <td class="whitespace-nowrap px-6 py-4 text-center">
-                                @if ($modelo->estado)
+                                @if ($modelo->estaActivo())
                                     <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activo</span>
                                 @else
                                     <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactivo</span>
                                 @endif
                             </td>
-                            <x-table-actions :id="$modelo->id" baseUrl="admin/transporte/maestros/bus_modelos" :show="false" :toggle="false"
-                                :on-edit="'abrirModalEditarModelo(' . json_encode($modelo) . ')'">
-                                    @if ($modelo->estado)
+                            <x-table-actions :id="$modelo->id_mov" baseUrl="admin/transporte/maestros/bus_modelos" :show="false" :toggle="false"
+                                :on-edit="'abrirModalEditarModelo(' . json_encode(['id' => $modelo->id_mov, 'nombre' => $modelo->nombre_mov, 'descripcion' => $modelo->descripcion_mov, 'marca_id' => $modelo->mav_id, 'marca_nombre' => $modelo->busMarca->nombre_mav ?? null], JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
+                                    @if ($modelo->estaActivo())
+                                        @canRoute('admin.transporte.maestros.bus_modelos.destroy')
                                         <form action="{{ route('admin.transporte.maestros.bus_modelos.destroy', $modelo) }}" method="POST" class="inline">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-rose-100 hover:text-rose-500 dark:hover:bg-rose-950/50"
@@ -72,7 +75,9 @@
                                                 <i class="fas fa-trash-alt text-xs"></i>
                                             </button>
                                         </form>
+                                        @endcanRoute
                                     @else
+                                        @canRoute('admin.transporte.maestros.bus_modelos.activar')
                                         <form action="{{ route('admin.transporte.maestros.bus_modelos.activar', $modelo) }}" method="POST" class="inline">
                                             @csrf @method('PUT')
                                             <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500 dark:hover:bg-emerald-950/50"
@@ -80,6 +85,7 @@
                                                 <i class="fas fa-check text-xs"></i>
                                             </button>
                                         </form>
+                                        @endcanRoute
                                     @endif
                             </x-table-actions>
                         </x-table-row>
@@ -117,7 +123,7 @@
                                 <select name="marca_id" class="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-0" style="color:var(--text-main);">
                                     <option value="">-- Seleccione una marca --</option>
                                     @foreach ($marcas as $marca)
-                                        <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
+                                        <option value="{{ $marca->id_mav }}">{{ $marca->nombre_mav }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -168,7 +174,7 @@
                                 <select id="editMarca" name="marca_id" class="w-full border-0 bg-transparent px-3 py-2.5 text-sm outline-none focus:ring-0" style="color:var(--text-main);">
                                     <option value="">-- Seleccione una marca --</option>
                                     @foreach ($marcas as $marca)
-                                        <option value="{{ $marca->id }}">{{ $marca->nombre }}</option>
+                                        <option value="{{ $marca->id_mav }}">{{ $marca->nombre_mav }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -238,6 +244,8 @@
         }
 
         const CSRF = '{{ csrf_token() }}';
+        const puedeEditarFila = @json(auth()->user()->puedeRuta('admin.transporte.maestros.bus_modelos.update'));
+        const puedeInactivarFila = @json(auth()->user()->puedeRuta('admin.transporte.maestros.bus_modelos.destroy'));
         const BASE_URL = '/admin/transporte/maestros/bus_modelos';
 
         function toastExito(mensaje) {
@@ -383,6 +391,7 @@
                 <div class="acciones-wrap relative flex h-8 items-center justify-center">
                     <div class="acciones-trigger flex h-8 w-8 items-center justify-center rounded-xl border text-gray-500 shadow-sm transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-gray-600/50 dark:text-gray-400 dark:hover:bg-rose-950/50"><i class="fas fa-ellipsis-vertical text-xs"></i></div>
                     <div class="acciones-panel">
+                    ${puedeEditarFila ? `
                     <button type="button" onclick="event.stopPropagation()" class="btn-abrir-editar flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50"
                         data-id="${modelo.id}"
                         data-nombre="${modelo.nombre}"
@@ -392,6 +401,8 @@
                         title="Editar">
                         <i class="fas fa-edit text-xs"></i>
                     </button>
+                    ` : ''}
+                    ${puedeInactivarFila ? `
                     <form action="${BASE_URL}/${modelo.id}" method="POST" style="display:inline;">
                         <input type="hidden" name="_token" value="${CSRF}">
                         <input type="hidden" name="_method" value="DELETE">
@@ -400,12 +411,14 @@
                             <i class="fas fa-trash-alt text-xs"></i>
                         </button>
                     </form>
+                    ` : ''}
                     </div>
                 </div>
             </td>
         </tr>`;
             tbody.insertAdjacentHTML('beforeend', fila);
-            bindEditar(tbody.querySelector(`tr[data-id="${modelo.id}"] .btn-abrir-editar`));
+            const btnEditarNuevo = tbody.querySelector(`tr[data-id="${modelo.id}"] .btn-abrir-editar`);
+            if (btnEditarNuevo) bindEditar(btnEditarNuevo);
         }
 
         function actualizarFilaTabla(modelo) {

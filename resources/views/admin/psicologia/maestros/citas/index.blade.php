@@ -27,9 +27,11 @@
                                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </button>
+                                    @canRoute('admin.psicologia.maestros.citas.create')
                                     <a href="{{ route('admin.psicologia.maestros.citas.create') }}"
                                         class="inline-flex shrink-0 whitespace-nowrap items-center px-4 py-2 sm:px-5 sm:py-2.5 bg-blue-800 hover:bg-blue-700 text-white text-sm font-bold rounded-2xl transition-all shadow-md shadow-blue-100 dark:shadow-blue-900/30">+
                                         Solicitar cita</a>
+                                    @endcanRoute
                                 </div>
                             @endif
                         </div>
@@ -37,7 +39,7 @@
 
 
                         @php
-                            $citasActivas = $citas->filter(fn($c) => in_array($c->estado, ['pendiente', 'confirmada']));
+                            $citasActivas = $citas->filter(fn($c) => in_array($c->estado_cita_cps, ['pendiente', 'confirmada']));
                         @endphp
 
                         <div id="emptyCitasState"
@@ -80,13 +82,13 @@
                                         <tbody
                                             class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                                             @foreach ($citasActivas as $cita)
-                                                <tr id="cita-card-{{ $cita->id }}"
+                                                <tr id="cita-card-{{ $cita->id_cps }}"
                                                     class="hover:bg-gray-50/60 dark:hover:bg-white/[0.02] transition-colors"
                                                     data-ajax-remove-card="true">
 
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         @php
-                                                            $bloqueConfirmado = $cita->bloque_propuesto;
+                                                            $bloqueConfirmado = $cita->bloque_propuesto_cps;
                                                             if ($bloqueConfirmado) {
                                                                 preg_match(
                                                                     '/^([^\s]+)\s+(\d{1,2}:\d{2})\s*[-–—]\s*(\d{1,2}:\d{2})$/',
@@ -133,13 +135,13 @@
                                                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                                                                     </path>
                                                                 </svg>
-                                                                @if ($cita->estado === 'confirmada' && $cita->fecha)
-                                                                    {{ ucfirst(\Carbon\Carbon::parse($cita->fecha)->locale('es')->translatedFormat('l, d M Y')) }}
+                                                                @if ($cita->estado_cita_cps === 'confirmada' && $cita->fecha_cps)
+                                                                    {{ ucfirst(\Carbon\Carbon::parse($cita->fecha_cps)->locale('es')->translatedFormat('l, d M Y')) }}
                                                                 @else
                                                                     En Espera
                                                                 @endif
                                                             </span>
-                                                            @if ($cita->estado === 'confirmada' && $bloqueConfirmado)
+                                                            @if ($cita->estado_cita_cps === 'confirmada' && $bloqueConfirmado)
                                                                 <span
                                                                     class="text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
                                                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none"
@@ -158,31 +160,31 @@
                                                     @if (auth()->user()->tieneRol('psicologo'))
                                                         <td class="px-6 py-4 whitespace-nowrap">
                                                             <span
-                                                                class="font-bold text-slate-700 dark:text-gray-300">{{ optional($cita->paciente->persona)->nombre_persona ?: $cita->paciente->persona ?? 'N/A' }}</span>
+                                                                class="font-bold text-slate-700 dark:text-gray-300">{{ optional($cita->paciente->persona)->nombres_per ?: $cita->paciente->persona ?? 'N/A' }}</span>
                                                         </td>
                                                     @endif
 
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="flex items-center gap-2">
                                                             <span
-                                                                class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0">{{ substr(optional($cita->psicologo->persona)->nombre_persona ?: 'N', 0, 1) }}</span>
+                                                                class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0">{{ substr(optional($cita->psicologo->persona)->nombres_per ?: 'N', 0, 1) }}</span>
                                                             <span class="font-bold text-slate-700 dark:text-gray-300">
-                                                                {{ optional($cita->psicologo->persona)->nombre_persona ?: 'No asignado' }}
-                                                                {{ optional($cita->psicologo->persona)->apellido_persona ?: '' }}
+                                                                {{ optional($cita->psicologo->persona)->nombres_per ?: 'No asignado' }}
+                                                                {{ optional($cita->psicologo->persona)->apellidos_per ?: '' }}
                                                             </span>
                                                         </div>
                                                     </td>
 
                                                     <td class="px-6 py-4 max-w-[200px]">
                                                         <p class="text-slate-600 dark:text-gray-300 italic truncate">
-                                                            "{{ $cita->motivo ?: 'Sin motivo' }}"</p>
+                                                            "{{ $cita->motivo_cps ?: 'Sin motivo' }}"</p>
                                                     </td>
 
                                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                                         <span
                                                             class="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border
-                                                            {{ $cita->estado === 'confirmada' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' }}">
-                                                            {{ ucfirst($cita->estado ?: 'pendiente') }}
+                                                            {{ $cita->estado_cita_cps === 'confirmada' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' }}">
+                                                            {{ ucfirst($cita->estado_cita_cps ?: 'pendiente') }}
                                                         </span>
                                                     </td>
 
@@ -194,13 +196,13 @@
                                                                     auth()
                                                                         ->user()
                                                                         ->tieneRol(['paciente']) &&
-                                                                    $cita->estado === 'confirmada' &&
-                                                                    $cita->fecha &&
-                                                                    $cita->hora
+                                                                    $cita->estado_cita_cps === 'confirmada' &&
+                                                                    $cita->fecha_cps &&
+                                                                    $cita->hora_cps
                                                                 ) {
-                                                                    $fechaSolo = substr($cita->fecha, 0, 10);
+                                                                    $fechaSolo = substr($cita->fecha_cps, 0, 10);
                                                                     $fechaHoraCita = \Carbon\Carbon::parse(
-                                                                        $fechaSolo . ' ' . $cita->hora,
+                                                                        $fechaSolo . ' ' . $cita->hora_cps,
                                                                     );
                                                                     if ($fechaHoraCita->isPast()) {
                                                                         $puedeCancelar = false;
@@ -208,12 +210,14 @@
                                                                 }
                                                             @endphp
                                                             @if ($puedeCancelar)
+                                                                @canRoute('admin.psicologia.maestros.citas.cancel')
                                                                 <button type="button"
-                                                                    onclick="openPatientCancelModal('{{ route('admin.psicologia.maestros.citas.cancel', $cita->id) }}', '{{ $cita->id }}')"
+                                                                    onclick="openPatientCancelModal('{{ route('admin.psicologia.maestros.citas.cancel', $cita->id_cps) }}', '{{ $cita->id_cps }}')"
                                                                     class="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700/60 dark:hover:border-red-700/60 text-gray-400 hover:text-rose-600 hover:bg-rose-600/10 hover:border-rose-300 inline-flex items-center justify-center transition-all active:scale-95"
                                                                     title="Cancelar cita">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
+                                                                @endcanRoute
                                                             @else
                                                                 <span
                                                                     class="text-[10px] text-slate-400 bg-slate-100 dark:bg-gray-700 px-2 py-1 rounded-lg font-bold uppercase tracking-wide whitespace-nowrap">Cita
@@ -224,8 +228,8 @@
                                                 </tr>
 
                                                 @if (auth()->user()->tieneRol(['paciente']) &&
-                                                        isset($cita->propuesta_estado) &&
-                                                        $cita->propuesta_estado === 'pendiente')
+                                                        isset($cita->propuesta_estado_cps) &&
+                                                        $cita->propuesta_estado_cps === 'pendiente')
                                                     <tr
                                                         class="bg-sky-50/60 dark:bg-sky-950/20 border-b border-sky-100 dark:border-sky-900/40">
                                                         <td colspan="{{ auth()->user()->tieneRol('psicologo') ? 6 : 5 }}"
@@ -252,8 +256,8 @@
                                                                         pronto posible, esta es mi propuesta para
                                                                         atenderte"</p>
 
-                                                                    <form id="form-propuesta-{{ $cita->id }}"
-                                                                        onsubmit="responderPropuestaForm(event, {{ $cita->id }})"
+                                                                    <form id="form-propuesta-{{ $cita->id_cps }}"
+                                                                        onsubmit="responderPropuestaForm(event, {{ $cita->id_cps }})"
                                                                         class="w-full">
                                                                         <p
                                                                             class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-2">
@@ -281,7 +285,7 @@
                                                                                         name="bloque_seleccionado"
                                                                                         value="{{ $bloque }}"
                                                                                         class="peer sr-only" required
-                                                                                        onchange="document.getElementById('rechazo-area-{{ $cita->id }}').style.display='none'; if(typeof updateSubmitBtnState === 'function') updateSubmitBtnState({{ $cita->id }});">
+                                                                                        onchange="document.getElementById('rechazo-area-{{ $cita->id_cps }}').style.display='none'; if(typeof updateSubmitBtnState === 'function') updateSubmitBtnState({{ $cita->id_cps }});">
                                                                                     <div
                                                                                         class="p-2.5 bg-white dark:bg-gray-800/80 border-2 border-slate-200 dark:border-gray-700/80 rounded-xl peer-checked:border-sky-600 dark:peer-checked:border-sky-500 peer-checked:bg-sky-50 dark:peer-checked:bg-sky-950/40 transition-all h-full w-full flex items-center justify-center text-center shadow-sm">
                                                                                         <p
@@ -336,11 +340,11 @@
                                                                             <label
                                                                                 class="cursor-pointer block w-full h-full">
                                                                                 <input type="radio"
-                                                                                    id="radio-ninguno-{{ $cita->id }}"
+                                                                                    id="radio-ninguno-{{ $cita->id_cps }}"
                                                                                     name="bloque_seleccionado"
                                                                                     value="ninguno"
                                                                                     class="peer sr-only" required
-                                                                                    onchange="document.getElementById('rechazo-area-{{ $cita->id }}').style.display='block'; if(typeof initCalendarForCita === 'function') initCalendarForCita({{ $cita->id }}, {{ $cita->psicologo_id }}); if(typeof updateSubmitBtnState === 'function') updateSubmitBtnState({{ $cita->id }});">
+                                                                                    onchange="document.getElementById('rechazo-area-{{ $cita->id_cps }}').style.display='block'; if(typeof initCalendarForCita === 'function') initCalendarForCita({{ $cita->id_cps }}, {{ $cita->psicologo_use_id }}); if(typeof updateSubmitBtnState === 'function') updateSubmitBtnState({{ $cita->id_cps }});">
                                                                                 <div
                                                                                     class="p-2.5 bg-white dark:bg-gray-800/80 border-2 border-slate-200 dark:border-gray-700/80 rounded-xl peer-checked:border-rose-500 dark:peer-checked:border-rose-500 peer-checked:bg-rose-50 dark:peer-checked:bg-rose-950/40 transition-all w-full flex items-center justify-center h-full text-center shadow-sm">
                                                                                     <p
@@ -350,7 +354,7 @@
                                                                             </label>
                                                                         </div>
 
-                                                                        <div id="rechazo-area-{{ $cita->id }}"
+                                                                        <div id="rechazo-area-{{ $cita->id_cps }}"
                                                                             style="display: none;" class="mb-3">
                                                                             <div
                                                                                 class="mt-3 border-t border-slate-200 dark:border-gray-700/80 pt-3">
@@ -373,14 +377,14 @@
                                                                                         <div>Vie</div>
                                                                                         <div>Sáb</div>
                                                                                     </div>
-                                                                                    <div id="calendarGrid-{{ $cita->id }}"
+                                                                                    <div id="calendarGrid-{{ $cita->id_cps }}"
                                                                                         class="grid grid-cols-7 gap-1">
                                                                                     </div>
                                                                                 </div>
-                                                                                <div id="slotsContainer-{{ $cita->id }}"
+                                                                                <div id="slotsContainer-{{ $cita->id_cps }}"
                                                                                     class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                                                                 </div>
-                                                                                <p id="minBlocksHelpText-{{ $cita->id }}"
+                                                                                <p id="minBlocksHelpText-{{ $cita->id_cps }}"
                                                                                     class="text-xs text-rose-600 dark:text-rose-400 font-bold mt-2 hidden">
                                                                                     Debes seleccionar al menos 2 días, y
                                                                                     elegir mínimo un bloque de horario
@@ -388,7 +392,7 @@
                                                                                 </p>
                                                                                 <input type="hidden"
                                                                                     name="nuevos_bloques"
-                                                                                    id="nuevos_bloques_{{ $cita->id }}">
+                                                                                    id="nuevos_bloques_{{ $cita->id_cps }}">
                                                                             </div>
                                                                             <label
                                                                                 class="block text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest mt-3 mb-1">Motivo
@@ -398,22 +402,24 @@
                                                                                 rows="2" placeholder="Explique por qué no puede asistir en estos horarios..."></textarea>
                                                                         </div>
 
+                                                                        @canRoute('admin.psicologia.maestros.citas.responder_propuesta')
                                                                         <div
                                                                             class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-gray-700/50">
                                                                             <button type="submit"
-                                                                                id="btn-submit-{{ $cita->id }}"
+                                                                                id="btn-submit-{{ $cita->id_cps }}"
                                                                                 class="px-5 py-2 text-xs font-black bg-slate-200 dark:bg-gray-700 text-slate-400 dark:text-gray-400 rounded-xl transition-all cursor-not-allowed">
                                                                                 Selecciona una opción
                                                                             </button>
                                                                         </div>
+                                                                        @endcanRoute
                                                                     </form>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                     </tr>
                                                 @elseif(auth()->user()->tieneRol(['paciente']) &&
-                                                        isset($cita->propuesta_estado) &&
-                                                        $cita->propuesta_estado !== 'pendiente')
+                                                        isset($cita->propuesta_estado_cps) &&
+                                                        $cita->propuesta_estado_cps !== 'pendiente')
                                                     <tr
                                                         class="bg-slate-50/50 dark:bg-gray-700/20 border-b border-slate-100 dark:border-gray-800">
                                                         <td colspan="{{ auth()->user()->tieneRol('psicologo') ? 6 : 5 }}"
@@ -430,14 +436,14 @@
                                                                 Has respondido a la propuesta:
                                                                 <strong
                                                                     class="text-slate-800 dark:text-white uppercase tracking-wider">
-                                                                    @if ($cita->propuesta_estado === 'aceptada')
+                                                                    @if ($cita->propuesta_estado_cps === 'aceptada')
                                                                         Contrapropuesta aceptada
-                                                                    @elseif($cita->propuesta_estado === 'cualquier_dia')
+                                                                    @elseif($cita->propuesta_estado_cps === 'cualquier_dia')
                                                                         Cualquier día está bien
-                                                                    @elseif($cita->propuesta_estado === 'sugerencia_aceptada')
+                                                                    @elseif($cita->propuesta_estado_cps === 'sugerencia_aceptada')
                                                                         Sugerencia aceptada
-                                                                        ({{ $cita->propuesta_bloque_seleccionado }})
-                                                                    @elseif($cita->propuesta_estado === 'rechazada')
+                                                                        ({{ $cita->propuesta_bloque_seleccionado_cps }})
+                                                                    @elseif($cita->propuesta_estado_cps === 'rechazada')
                                                                         Rechazado, vas a esperar nueva cita
                                                                     @endif
                                                                 </strong>
@@ -446,13 +452,13 @@
                                                     </tr>
                                                 @endif
 
-                                                @if ($cita->estado !== 'confirmada')
+                                                @if ($cita->estado_cita_cps !== 'confirmada')
                                                     <tr
                                                         class="bg-slate-50/30 dark:bg-gray-800/20 border-b border-slate-100 dark:border-gray-800">
                                                         <td colspan="{{ auth()->user()->tieneRol('psicologo') ? 6 : 5 }}"
                                                             class="px-6 py-3">
                                                             @php
-                                                                $rawBloques = $cita->bloques_sugeridos ?: '';
+                                                                $rawBloques = $cita->bloques_sugeridos_cps ?: '';
                                                                 $horariosDisplay = trim(
                                                                     preg_replace(
                                                                         '/^\s*Horarios\s*(propuestos)?\s*:\s*/i',
@@ -677,6 +683,12 @@
     </div>
 
     <script>
+        function escaparHtmlCita(valor) {
+            const div = document.createElement('div');
+            div.textContent = valor ?? '';
+            return div.innerHTML;
+        }
+
         let currentHistoryData = [];
         let currentStartDate = '{{ now()->subMonth()->toDateString() }}';
         let currentEndDate = '{{ now()->toDateString() }}';
@@ -928,7 +940,7 @@
                     </div>
                     <div class="col-span-2">
                         <p class="text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1">Motivo de Solicitud</p>
-                        <p class="text-sm font-medium text-slate-600 dark:text-gray-300 italic leading-relaxed">"${cita.motivo || 'No especificado'}"</p>
+                        <p class="text-sm font-medium text-slate-600 dark:text-gray-300 italic leading-relaxed">"${escaparHtmlCita(cita.motivo || 'No especificado')}"</p>
                     </div>
             `;
 

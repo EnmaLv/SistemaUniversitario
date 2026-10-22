@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Salud;
 
+use App\Models\salud\Consulta;
 use App\Services\Salud\RecetaService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
@@ -25,15 +27,22 @@ class RecetaRequest extends FormRequest
             'descripcion' => ['nullable', 'string', 'max:500'],
 
             'detalles'                   => ['required', 'array', 'min:1', 'max:50'],
-            'detalles.*.producto_id'     => ['required', 'integer', 'exists:productos,id'],
+            'detalles.*.producto_id'     => ['required', 'integer', 'exists:producto,id_pdt'],
             'detalles.*.cantidad'        => ['required', 'numeric', 'min:0.01', 'max:99999'],
-            'detalles.*.unidad_id'       => ['required', 'integer', 'exists:unidades,id'],
+            'detalles.*.unidad_dosis'    => ['required', 'string', 'max:100', Rule::in($this->unidadesPermitidas())],
             'detalles.*.frecuencia'      => ['required', 'string', 'max:255'],
-            'detalles.*.equivalencia_ml' => ['nullable', 'numeric', 'min:0', 'max:99999'],
+            'detalles.*.equivalencia_ml_drm' => ['nullable', 'numeric', 'min:0', 'max:99999'],
             'detalles.*.fecha_inicio'    => ['nullable', 'date', 'after_or_equal:fecha'],
             'detalles.*.fecha_fin'       => ['nullable', 'date', 'after_or_equal:fecha'],
             'detalles.*.observaciones'   => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    private function unidadesPermitidas(): array
+    {
+        $consulta = $this->route('consulta');
+
+        return app(RecetaService::class)->unidadesDosisPermitidas($consulta instanceof Consulta ? $consulta : null);
     }
 
     /**
@@ -50,11 +59,12 @@ class RecetaRequest extends FormRequest
 
             // 1. Solo productos activos del tipo salud
             $idsSolicitados = collect($detalles)->pluck('producto_id')->map(fn($id) => (int) $id)->unique();
-            $idsValidos = app(RecetaService::class)
+            $validos = app(RecetaService::class)
                 ->productosSaludQuery()
-                ->whereIn('id', $idsSolicitados)
-                ->pluck('id')
-                ->map(fn($id) => (int) $id);
+                ->whereIn('id_pdt', $idsSolicitados)
+                ->get(['id_pdt', 'unm_id']);
+            $idsValidos = $validos->pluck('id_pdt')->map(fn($id) => (int) $id);
+            $idsSinUnidad = $validos->whereNull('unm_id')->pluck('id_pdt')->map(fn($id) => (int) $id);
 
             foreach ($detalles as $i => $item) {
                 $n = is_numeric($i) ? (int) $i + 1 : $i;
@@ -63,6 +73,11 @@ class RecetaRequest extends FormRequest
                     $validator->errors()->add(
                         "detalles.{$i}.producto_id",
                         "Medicamento #{$n}: el producto no está activo o no es de tipo salud."
+                    );
+                } elseif ($idsSinUnidad->contains((int) $item['producto_id'])) {
+                    $validator->errors()->add(
+                        "detalles.{$i}.producto_id",
+                        "Medicamento #{$n}: el producto no tiene unidad de inventario configurada."
                     );
                 }
 
@@ -87,7 +102,8 @@ class RecetaRequest extends FormRequest
             'detalles.*.producto_id.required'    => 'Seleccione el medicamento.',
             'detalles.*.producto_id.exists'      => 'El medicamento seleccionado no existe.',
             'detalles.*.cantidad.min'            => 'La cantidad debe ser mayor a 0.',
-            'detalles.*.unidad_id.required'      => 'Seleccione la unidad.',
+            'detalles.*.unidad_dosis.required'   => 'Seleccione la unidad de dosis.',
+            'detalles.*.unidad_dosis.in'         => 'La unidad de dosis seleccionada no es válida.',
             'detalles.*.frecuencia.required'     => 'Indique la frecuencia.',
             'detalles.*.fecha_inicio.after_or_equal' => 'La fecha de inicio no puede ser anterior a la fecha de la receta.',
             'detalles.*.fecha_fin.after_or_equal'    => 'La fecha fin no puede ser anterior a la fecha de la receta.',
@@ -102,9 +118,9 @@ class RecetaRequest extends FormRequest
             'descripcion'                => 'descripción',
             'detalles.*.producto_id'     => 'medicamento',
             'detalles.*.cantidad'        => 'cantidad',
-            'detalles.*.unidad_id'       => 'unidad',
+            'detalles.*.unidad_dosis'    => 'unidad de dosis',
             'detalles.*.frecuencia'      => 'frecuencia',
-            'detalles.*.equivalencia_ml' => 'equivalencia (ml)',
+            'detalles.*.equivalencia_ml_drm' => 'equivalencia (ml)',
             'detalles.*.fecha_inicio'    => 'fecha de inicio',
             'detalles.*.fecha_fin'       => 'fecha fin',
             'detalles.*.observaciones'   => 'observaciones',

@@ -32,7 +32,7 @@
             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                 class="rounded-2xl border shadow-sm overflow-hidden p-6 sm:p-8">
 
-                <form action="{{ route('admin.psicologia.maestros.estado_animos.update', $estado->id) }}"
+                <form action="{{ route('admin.psicologia.maestros.estado_animos.update', $estado->id_esa) }}"
                     method="POST">
                     @csrf
                     @method('PUT')
@@ -45,7 +45,7 @@
                                 Nombre del Estado <span class="text-red-500">*</span>
                             </label>
                             <input type="text" name="nombre" id="nombre"
-                                value="{{ old('nombre', $estado->nombre) }}"
+                                value="{{ old('nombre', $estado->nombre_esa) }}"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all"
                                 placeholder="Ej: Esperanzado, Confundido, Motivado..." required>
@@ -68,9 +68,9 @@
                                 </option>
                                 @foreach ($valoresDisponibles as $v)
                                     <option value="{{ $v }}"
-                                        {{ old('valor', $estado->valor) == $v ? 'selected' : '' }}
+                                        {{ old('valor', $estado->valor_esa) == $v ? 'selected' : '' }}
                                         class="dark:bg-gray-800">
-                                        Nivel {{ $v }} {{ $v == $estado->valor ? '(Actual)' : '' }}
+                                        Nivel {{ $v }} {{ $v == $estado->valor_esa ? '(Actual)' : '' }}
                                     </option>
                                 @endforeach
                             </select>

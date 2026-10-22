@@ -2,37 +2,39 @@
 
 namespace Database\Seeders;
 
+use App\Models\Unidad;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Unidad; // importar la unidad
 
 class RecetaIngredienteSeeder extends Seeder
 {
     public function run(): void
     {
         $data = [
-            ['recetas_id' => 1, 'producto_id' => 7,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 1, 'producto_id' => 1,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 2, 'producto_id' => 14, 'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 2, 'producto_id' => 1,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 3, 'producto_id' => 2,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 3, 'producto_id' => 1,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 4, 'producto_id' => 6,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 4, 'producto_id' => 16,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 4, 'producto_id' => 1,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 5, 'producto_id' => 15, 'cantidad_porcion' => 40.00, 'unidad_id' => 1],
-            ['recetas_id' => 5, 'producto_id' => 1,  'cantidad_porcion' => 40.00, 'unidad_id' => 1],
+            ['rct_id' => 1, 'producto' => 'CAR-CAR-006', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 1, 'producto' => 'CER-HAR-001', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 2, 'producto' => 'EMB-SAL-013', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 2, 'producto' => 'CER-HAR-001', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 3, 'producto' => 'EMB-MOR-002', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 3, 'producto' => 'CER-HAR-001', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 4, 'producto' => 'GRA-MAN-005-1', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 4, 'producto' => 'LAC-QUE-015', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 4, 'producto' => 'CER-HAR-001', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 5, 'producto' => 'CAR-POL-014', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
+            ['rct_id' => 5, 'producto' => 'CER-HAR-001', 'cantidad_porcion_rci' => 40.00, 'unidad' => 'Unidad'],
         ];
 
         foreach ($data as $item) {
-            $unidad = Unidad::find($item['unidad_id']);
+            $unidad = Unidad::findOrFail(ProductoSeeder::unidad($item['unidad']));
 
-            DB::table('receta_ingredientes')->insert([
-                'recetas_id' => $item['recetas_id'],
-                'producto_id' => $item['producto_id'],
-                'cantidad_porcion' => $item['cantidad_porcion'],
-                'cantidad_gramos' => $item['cantidad_porcion'] * $unidad->factor_a_gramo,
-                'unidad_id' => $item['unidad_id'],
+            DB::table('receta_ingrediente')->insert([
+                'rct_id' => $item['rct_id'],
+                'pdt_id' => ProductoSeeder::producto($item['producto']),
+                'cantidad_porcion_rci' => $item['cantidad_porcion_rci'],
+                'cantidad_convertida_rci' => $item['cantidad_porcion_rci'] * $unidad->factor_conversion_unm,
+                'unm_id' => $unidad->id_unm,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }

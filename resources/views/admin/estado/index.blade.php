@@ -6,14 +6,16 @@
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">Estados</h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
-                <button type="button" onclick="window.abrirCrearEstado()"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                    <i class="fas fa-plus text-xs"></i><span>Nuevo estado</span>
-                </button>
+                @canAction('ubicaciones_estados', 'crear')
+                    <button type="button" onclick="window.abrirCrearEstado()"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                        <i class="fas fa-plus text-xs"></i><span>Nuevo estado</span>
+                    </button>
+                @endcanAction
             </div>
             @livewire('admin.estado-index')
         </div>

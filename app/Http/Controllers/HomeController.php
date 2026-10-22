@@ -11,7 +11,6 @@ use App\Models\Becas\SolicitudBeca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use App\Services\Salud\PsicologiaHomeService;
 use App\Services\Salud\SaludHomeService;
 use App\Services\Transporte\TransporteHomeService;
@@ -44,66 +43,12 @@ class HomeController extends Controller
 
     public function index()
     {
-        $guardUser = Auth::user();
         $user = Usuario::query()->findOrFail(Auth::id());
-        $guardSnapshot = [
-            'id' => $guardUser?->getAuthIdentifier(),
-        ];
-
-        if ($guardUser instanceof Usuario) {
-            $guardSnapshot += [
-                'persona_id' => $guardUser->id_persona,
-                'persona_relation_loaded' => $guardUser->relationLoaded('persona'),
-                'persona_relation_id' => $guardUser->relationLoaded('persona')
-                    ? $guardUser->getRelation('persona')?->id_persona
-                    : null,
-                'roles_relation_loaded' => $guardUser->relationLoaded('roles'),
-                'roles' => $guardUser->relationLoaded('roles')
-                    ? $guardUser->getRelation('roles')->pluck('nombre')->all()
-                    : null,
-            ];
-        }
-
         $user->load(['persona', 'roles']);
         Auth::guard()->setUser($user);
-        $userId = $user->id_usuario;
-        $permisosAntes = [
-            'usuario_id' => session('permisos_usuario_id'),
-            'es_admin' => session('es_admin'),
-            'modulos' => session('modulos_permitidos'),
-            'menu' => session('menu_permissions_user'),
-        ];
+        $userId = $user->id_use;
 
         (new \App\AdminLTE\Filters\ModuleFilter())->asegurarSesion($userId);
-
-        Log::info('Home access diagnostic', [
-            'usuario' => [
-                'guard_id' => $guardUser?->getAuthIdentifier(),
-                'id' => $userId,
-                'username' => $user->username,
-                'id_perfil' => $user->id_perfil,
-                'role_legacy' => $user->getAttribute('role'),
-            ],
-            'guard_user_before_refresh' => $guardSnapshot,
-            'roles_eloquent_activos' => $user->roles()
-                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug'])
-                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug])
-                ->values()
-                ->all(),
-            'roles_pivote_incluyendo_borrados' => DB::table('rol_usuario')
-                ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
-                ->where('rol_usuario.id_usuario', $userId)
-                ->get(['rol.id_rol', 'rol.nombre', 'rol.slug', 'rol.deleted_at'])
-                ->map(fn($role) => ['id' => $role->id_rol, 'nombre' => $role->nombre, 'slug' => $role->slug, 'deleted_at' => $role->deleted_at])
-                ->all(),
-            'permisos_sesion_antes' => $permisosAntes,
-            'permisos_sesion_despues' => [
-                'usuario_id' => session('permisos_usuario_id'),
-                'es_admin' => session('es_admin'),
-                'modulos' => session('modulos_permitidos'),
-                'menu' => session('menu_permissions_user'),
-            ],
-        ]);
 
         $psicologiaData = $this->psicologiaService->getPacienteData();
         $saludData      = $this->saludService->getDashboardData();
@@ -125,9 +70,9 @@ class HomeController extends Controller
         $visibleModules = $this->construirModulosVisibles($roleName);
 
         $hoy             = Carbon::now();
-        $jornadasActivas = JornadaBeca::where('activa', 1)
-            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
-            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+        $jornadasActivas = JornadaBeca::where('status_id', 1)
+            ->whereDate('fecha_inicio_solicitud_jnb', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud_jnb', '>=', $hoy)
             ->with(['beneficio', 'lapso'])
             ->get();
 
@@ -140,16 +85,19 @@ class HomeController extends Controller
             : null;
 
         return view('home', array_merge([
-            'variacion_dolar' => $ultimaTasa?->variacion,
-            'tasa_actual'     => $ultimaTasa?->tasa,
+            'variacion_dolar' => $ultimaTasa?->variacion_tca,
+            'tasa_actual'     => $ultimaTasa?->promedio_tca,
             'visibleModules'  => $visibleModules,
             'saludData'       => $saludData,
             'resumenGeneral'  => $resumenGeneral,
             'transporteData'  => $transporteData,
             'comedorData'     => $comedorData,
             'becasData'       => $becasData,
+            'jornadasActivas'    => $jornadasActivas,
+            'jornadasRenovables' => $jornadasRenovables,
             'psicologiaAdminData' => $psicologiaAdminData,
             'administracionData' => $administracionData,
+            'deportesData'       => session('modulo_activo') === 'deporte' ? app(\App\Services\Deporte\DeporteHomeService::class)->datos() : null,
         ], $psicologiaData));
     }
 
@@ -202,13 +150,13 @@ class HomeController extends Controller
         return [
             'fechaInicio'  => $fechaInicio,
             'fechaFin'     => $fechaFin,
-            'avances'      => DB::table('avances_sesion')
-                ->where('status', 1)
-                ->orderBy('nombre', 'asc')
+            'avances'      => DB::table('avance_sesion')
+                ->whereNull('deleted_at')
+                ->orderBy('nombre_avs', 'asc')
                 ->get(),
-            'estadosAnimo' => DB::table('estado_animos')
-                ->where('status', 1)
-                ->orderBy('valor', 'asc')
+            'estadosAnimo' => DB::table('estado_animo')
+                ->whereNull('deleted_at')
+                ->orderBy('valor_esa', 'asc')
                 ->get(),
         ];
     }
@@ -226,7 +174,7 @@ class HomeController extends Controller
 
         $estado          = $request->input('estado');
         $avanceId        = $request->input('avance_id');
-        $estadoAnimoId   = $request->input('estado_animo_id');
+        $estadoAnimoId   = $request->input('esa_id');
         $prioridad       = $request->input('prioridad');
         $perfilAcademico = $request->input('perfil_academico');
         $pnf             = $request->input('pnf');
@@ -235,11 +183,13 @@ class HomeController extends Controller
         $citas = Cita::obtenerEstadisticas(
             null, $fechaInicio, $fechaFin,
             $estado, $avanceId, $estadoAnimoId,
-            $prioridad, $perfilAcademico, $pnf
+            $prioridad, $perfilAcademico, $pnf,
+            true
         );
 
         $resumen = Cita::obtenerResumenEstadistico($citas, $fechaInicio, $fechaFin, null);
-        $resumen['por_estado'] = $citas->groupBy('estado')->map->count()->toArray();
+        $resumen['por_estado'] = $citas->groupBy('estado_cita_cps')->map->count()->toArray();
+        unset($resumen['avances_pacientes'], $resumen['prioridades_pacientes'], $resumen['estados_animo_pacientes']);
 
         $porPsicologo = Cita::obtenerEstadisticasPorPsicologo($fechaInicio, $fechaFin);
         $resumen['total_psicologos_activos'] = count($porPsicologo);
@@ -318,15 +268,15 @@ class HomeController extends Controller
 
         $roles = $user->roles;
         $privilegedRole = $roles->first(function ($role) {
-            return in_array(mb_strtolower($role->nombre ?? ''), ['administrador', 'secretaria de bienestar'], true);
+            return in_array(mb_strtolower($role->nombre_rol ?? ''), ['administrador', 'secretaria de bienestar'], true);
         });
 
-        return $privilegedRole?->nombre ?? $roles->first()?->nombre;
+        return $privilegedRole?->nombre_rol ?? $roles->first()?->nombre_rol;
     }
 
     protected function construirModulosVisibles(?string $roleName): array
     {
-        $rol             = $roleName ? Rol::where('nombre', $roleName)->first() : null;
+        $rol             = $roleName ? Rol::where('nombre_rol', $roleName)->first() : null;
         $menuPermissions = $rol?->menu_permissions ?? [];
         $isAdministrator = $roleName && strtolower($roleName) === 'administrador';
         $isSecretaria    = $roleName && strtolower($roleName) === 'secretaria de bienestar';
@@ -385,19 +335,19 @@ class HomeController extends Controller
     {
         $renovables = collect();
 
-        if (!$user || !$user->id_persona) {
+        if (!$user || !$user->per_id) {
             return $renovables;
         }
 
         foreach ($jornadasActivas as $jornada) {
-            $aprobadoAnterior = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
-                ->where('estado', 1)
-                ->where('id_lapso', '!=', $jornada->lapsos_id)
-                ->where('id_persona', $user->id_persona)
+            $aprobadoAnterior = SolicitudBeca::where('bes_id', $jornada->bes_id)
+                ->where('estado_solicitud_sob', 1)
+                ->where('laa_id', '!=', $jornada->laa_id)
+                ->where('per_id', $user->per_id)
                 ->exists();
 
-            $postuladoActual = SolicitudBeca::where('jornada_id', $jornada->id)
-                ->where('id_persona', $user->id_persona)
+            $postuladoActual = SolicitudBeca::where('jnb_id', $jornada->id_jnb)
+                ->where('per_id', $user->per_id)
                 ->exists();
 
             if ($aprobadoAnterior && !$postuladoActual) {

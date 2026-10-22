@@ -29,8 +29,8 @@ class CategoriaController extends Controller
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('categorias', 'nombre')->where(function ($query) {
-                    return $query->where('tipo_producto_id', self::TIPO_PRODUCTO_ID);
+                Rule::unique('categoria_producto', 'nombre_cap')->where(function ($query) {
+                    return $query->where('tpr_id', self::TIPO_PRODUCTO_ID);
                 }),
             ],
             'descripcion' => 'nullable|string|max:255',
@@ -54,9 +54,9 @@ class CategoriaController extends Controller
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('categorias', 'nombre')
-                    ->where('tipo_producto_id', self::TIPO_PRODUCTO_ID)
-                    ->ignore($id),
+                Rule::unique('categoria_producto', 'nombre_cap')
+                    ->where('tpr_id', self::TIPO_PRODUCTO_ID)
+                    ->ignore($id, 'id_cap'),
             ],
             'descripcion' => 'nullable|string|max:255',
         ], [

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Modulo;
 use App\Models\Permiso;
 use App\Models\Rol;
+use App\Support\Auditoria\CambiosPermisos;
 use App\Support\Permisos\CatalogoPermisos;
 use App\Support\Permisos\VersionPermisos;
 use Illuminate\Http\Request;
@@ -27,8 +28,8 @@ class RolesController extends Controller
         $query = Rol::query()->withCount('permisos');
         if ($search = $request->get('q')) {
             $query->where(function ($q) use ($search) {
-                $q->where('nombre', 'like', "%{$search}%")
-                    ->orWhere('descripcion', 'like', "%{$search}%");
+                $q->where('nombre_rol', 'like', "%{$search}%")
+                    ->orWhere('descripcion_rol', 'like', "%{$search}%");
             });
         }
         $roles = $query->orderBy('id_rol', 'desc')->paginate(10)->withQueryString();
@@ -37,7 +38,7 @@ class RolesController extends Controller
 
     public function create()
     {
-        $modulos = Modulo::where('activo', 1)->orderBy('nombre')->get();
+        $modulos = Modulo::where('status_id', 1)->orderBy('nombre_mod')->get();
         $grupos  = CatalogoPermisos::agrupado();
 
         return view('admin.configuracion.roles.create', compact('modulos', 'grupos'));
@@ -51,13 +52,15 @@ class RolesController extends Controller
 
         DB::transaction(function () use ($data) {
             $rol = Rol::create([
-                'nombre'      => $data['nombre'],
-                'slug'        => $data['slug'],
-                'descripcion' => $data['descripcion'] ?? null,
+                'nombre_rol'      => $data['nombre'],
+                'slug_rol'        => $data['slug'],
+                'descripcion_rol' => $data['descripcion'] ?? null,
             ]);
 
-            $rol->modulos()->sync($data['modulos'] ?? []);
-            $rol->permisos()->sync($data['permisos'] ?? []);
+            $sincModulos  = $rol->modulos()->sync($data['modulos'] ?? []);
+            $sincPermisos = $rol->permisos()->sync($data['permisos'] ?? []);
+
+            CambiosPermisos::rol($rol, 'rol_permisos_asignados', $sincPermisos, $sincModulos);
         });
 
         VersionPermisos::invalidar();
@@ -68,7 +71,7 @@ class RolesController extends Controller
     public function edit($id)
     {
         $rol         = Rol::with(['modulos', 'permisos'])->findOrFail($id);
-        $modulos     = Modulo::where('activo', 1)->orderBy('nombre')->get();
+        $modulos     = Modulo::where('status_id', 1)->orderBy('nombre_mod')->get();
         $grupos      = CatalogoPermisos::agrupado();
         $isProtected = $this->esProtegido($rol);
 
@@ -80,7 +83,7 @@ class RolesController extends Controller
         $rol = Rol::findOrFail($id);
 
         if ($this->esProtegido($rol)) {
-            return back()->withErrors(['roles' => 'El rol ' . $rol->nombre . ' está protegido y no puede editarse.']);
+            return back()->withErrors(['roles' => 'El rol ' . $rol->nombre_rol . ' está protegido y no puede editarse.']);
         }
 
         $request->merge(['slug' => Str::slug($request->input('nombre', ''))]);
@@ -89,13 +92,15 @@ class RolesController extends Controller
 
         DB::transaction(function () use ($rol, $data) {
             $rol->update([
-                'nombre'      => $data['nombre'],
-                'slug'        => $data['slug'],
-                'descripcion' => $data['descripcion'] ?? null,
+                'nombre_rol'      => $data['nombre'],
+                'slug_rol'        => $data['slug'],
+                'descripcion_rol' => $data['descripcion'] ?? null,
             ]);
 
-            $rol->modulos()->sync($data['modulos'] ?? []);
-            $rol->permisos()->sync($rol->esSuperAdmin() ? Permiso::pluck('id')->all() : ($data['permisos'] ?? []));
+            $sincModulos  = $rol->modulos()->sync($data['modulos'] ?? []);
+            $sincPermisos = $rol->permisos()->sync($rol->esSuperAdmin() ? Permiso::pluck('id')->all() : ($data['permisos'] ?? []));
+
+            CambiosPermisos::rol($rol, 'rol_permisos_actualizados', $sincPermisos, $sincModulos);
         });
 
         VersionPermisos::invalidar();
@@ -112,7 +117,7 @@ class RolesController extends Controller
         if ($this->esProtegido($rol)) {
             return redirect()
                 ->route('admin.configuracion.roles.index')
-                ->withErrors(['delete' => 'El rol ' . $rol->nombre . ' está protegido y no puede eliminarse.']);
+                ->withErrors(['delete' => 'El rol ' . $rol->nombre_rol . ' está protegido y no puede eliminarse.']);
         }
 
         if (Rol::tieneUsuarios($id)) {
@@ -125,9 +130,14 @@ class RolesController extends Controller
         }
 
         DB::transaction(function () use ($rol) {
+            $permisos = $rol->permisos()->pluck('permiso.id_pmi')->all();
+            $modulos  = $rol->modulos()->pluck('modulo.id_mod')->all();
+
             $rol->permisos()->detach();
             $rol->modulos()->detach();
             $rol->delete();
+
+            CambiosPermisos::rol($rol, 'rol_permisos_retirados', ['detached' => $permisos], ['detached' => $modulos]);
         });
 
         VersionPermisos::invalidar();
@@ -139,22 +149,22 @@ class RolesController extends Controller
 
     private function esProtegido(Rol $rol): bool
     {
-        return in_array(mb_strtolower($rol->nombre ?? ''), self::PROTEGIDOS, true);
+        return in_array(mb_strtolower($rol->nombre_rol ?? ''), self::PROTEGIDOS, true);
     }
 
     private function reglas(?int $idRol = null): array
     {
-        $unicoNombre = 'unique:rol,nombre' . ($idRol ? ",{$idRol},id_rol" : '');
-        $unicoSlug   = 'unique:rol,slug' . ($idRol ? ",{$idRol},id_rol" : '');
+        $unicoNombre = 'unique:rol,nombre_rol' . ($idRol ? ",{$idRol},id_rol" : '');
+        $unicoSlug   = 'unique:rol,slug_rol' . ($idRol ? ",{$idRol},id_rol" : '');
 
         return [
             'nombre'      => "required|string|max:255|{$unicoNombre}",
             'slug'        => "required|string|{$unicoSlug}",
             'descripcion' => 'nullable|string',
             'modulos'     => 'nullable|array',
-            'modulos.*'   => 'integer|exists:modulos,id',
+            'modulos.*'  => 'integer|exists:modulo,id_mod',
             'permisos'    => 'nullable|array',
-            'permisos.*'  => 'integer|exists:permiso,id',
+            'permisos.*'  => 'integer|exists:permiso,id_pmi',
         ];
     }
 

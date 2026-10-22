@@ -79,19 +79,19 @@
                                     style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02);">
                                     <div
                                         class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex items-center justify-center font-bold text-lg">
-                                        {{ substr(auth()->user()->persona?->nombre_persona ?? 'E', 0, 1) }}
+                                        {{ substr(auth()->user()->persona?->nombres_per ?? 'E', 0, 1) }}
                                     </div>
                                     <div>
                                         <p class="text-sm font-bold" style="color: var(--text-main);">
-                                            {{ auth()->user()->persona?->nombre_persona }}
-                                            {{ auth()->user()->persona?->apellido_persona }}
+                                            {{ auth()->user()->persona?->nombres_per }}
+                                            {{ auth()->user()->persona?->apellidos_per }}
                                         </p>
                                         <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                            CI: {{ auth()->user()->persona?->cedula_persona ?? 'No registrada' }}
+                                            CI: {{ auth()->user()->persona?->cedula_per ?? 'No registrada' }}
                                         </p>
                                     </div>
                                 </div>
-                                <input type="hidden" name="id_persona" value="{{ auth()->user()->id_persona }}">
+                                <input type="hidden" name="per_id" value="{{ auth()->user()->per_id }}">
                             </div>
                         @else
                             <div>
@@ -105,22 +105,22 @@
                                         style="border-color: var(--border-color);">
                                         <i class="fas fa-user text-sm"></i>
                                     </span>
-                                    <select name="id_persona" id="id_persona" required
+                                    <select name="per_id" id="per_id" required
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
-                                        <option value="" disabled {{ old('id_persona') ? '' : 'selected' }}>
+                                        <option value="" disabled {{ old('per_id') ? '' : 'selected' }}>
                                             Seleccione al estudiante...
                                         </option>
                                         @foreach ($estudiantes as $est)
-                                            <option value="{{ $est->id_persona }}"
-                                                @selected(old('id_persona') == $est->id_persona)>
-                                                {{ $est->nombre_persona }} {{ $est->apellido_persona }}
-                                                — {{ $est->cedula_persona }}
+                                            <option value="{{ $est->id_per }}"
+                                                @selected(old('per_id') == $est->id_per)>
+                                                {{ $est->nombres_per }} {{ $est->apellidos_per }}
+                                                — {{ $est->cedula_per }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
-                                @error('id_persona')
+                                @error('per_id')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -144,9 +144,9 @@
                                         Seleccione la jornada...
                                     </option>
                                     @foreach ($jornadas as $j)
-                                        <option value="{{ $j->id }}" data-beneficio-id="{{ $j->beneficio_id }}"
-                                            data-lapso-id="{{ $j->lapsos_id }}" @selected(old('jornada_id') == $j->id)>
-                                            {{ $j->nombre_jornada }}
+                                        <option value="{{ $j->id_jnb }}" data-beneficio-id="{{ $j->bes_id }}"
+                                            data-lapso-id="{{ $j->laa_id }}" @selected(old('jornada_id') == $j->id_jnb)>
+                                            {{ $j->nombre_jornada_jnb }}
                                         </option>
                                     @endforeach
                                 </select>

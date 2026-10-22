@@ -31,12 +31,12 @@ class ContrapropuestaCitaNotification extends Notification implements ShouldQueu
 
     public function toArray(object $notifiable): array
     {
-        $pacienteName = trim(($this->cita->paciente->persona->nombre_persona ?? '') . ' ' . ($this->cita->paciente->persona->apellido_persona ?? '')) ?: 'paciente';
+        $pacienteName = trim(($this->cita->paciente->persona->nombres_per ?? '') . ' ' . ($this->cita->paciente->persona->apellidos_per ?? '')) ?: 'paciente';
 
         return [
             'type_id' => 'contrapropuesta_cita',
-            'cita_id' => $this->cita->id,
-            'psicologo_name' => $this->cita->psicologo->persona->nombre_persona ?? 'Tu psicólogo',
+            'cita_id' => $this->cita->id_cps,
+            'psicologo_name' => $this->cita->psicologo->persona->nombres_per ?? 'Tu psicólogo',
             'body' => "Hola $pacienteName, tu psicólogo te ha enviado una contrapropuesta de horario para tu cita. Revísala y responde como corresponde.",
             'url' => route('admin.psicologia.maestros.citas.index'),
         ];

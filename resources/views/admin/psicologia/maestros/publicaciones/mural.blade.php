@@ -34,12 +34,12 @@
                                         <img src="{{ route('media.profile_photos', basename($pub->profile_photo_path)) }}"
                                             class="w-full h-full object-cover">
                                     @else
-                                        {{ substr($pub->psicologo->persona->nombre_persona ?? 'P', 0, 1) }}{{ substr($pub->psicologo->persona->apellido_persona ?? '', 0, 1) }}
+                                        {{ substr($pub->psicologo->persona->nombres_per ?? 'P', 0, 1) }}{{ substr($pub->psicologo->persona->apellidos_per ?? '', 0, 1) }}
                                     @endif
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-bold leading-tight" style="color: var(--text-main);">
-                                        {{ explode(' ', trim($pub->psicologo->persona->nombre_persona ?? ''))[0] ?: 'Psicólogo' }} {{ explode(' ', trim($pub->psicologo->persona->apellido_persona ?? ''))[0] ?? '' }}
+                                        {{ explode(' ', trim($pub->psicologo->persona->nombres_per ?? ''))[0] ?: 'Psicólogo' }} {{ explode(' ', trim($pub->psicologo->persona->apellidos_per ?? ''))[0] ?? '' }}
                                     </h4>
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="text-[11px] font-medium text-gray-400">

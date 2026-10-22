@@ -5,7 +5,7 @@
         <div>
             <h1 class="m-0 rd-title-sm" style="font-size:1.4rem;">Ver Producto</h1>
             <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
+                Bienvenido <strong>{{ auth()->user()->persona->nombres_per }}</strong>.
             </p>
         </div>
         <div class="d-flex align-items-center" style="gap:14px;">

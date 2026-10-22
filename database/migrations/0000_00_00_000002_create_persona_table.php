@@ -15,27 +15,27 @@ return new class extends Migration
         Schema::create('perfil', function (Blueprint $table) {
             $table->id('id_perfil');
             $table->string('nombre_perfil');
-            $table->boolean('estado')->default(true);
             $table->timestamps();
+            $table->auditoria();
         });
 
         Schema::create('persona', function (Blueprint $table) {
-            $table->id('id_persona');
-            $table->string('nombre_persona');
-            $table->string('segundo_nombre_persona')->nullable();
-            $table->string('apellido_persona');
-            $table->string('segundo_apellido_persona')->nullable();
-            $table->string('cedula_persona');
-            $table->string('telefono_persona');
-            $table->string('genero_persona');
-            $table->integer('edad_persona')->nullable();
-            $table->date('fecha_nacimiento_persona')->nullable();
-            $table->string('email_persona');
-            $table->string('semestre_persona')->nullable();
-            $table->boolean('estado')->default(true);
+            $table->id('id_per');
+            $table->string('cedula_per', 15)->unique();
+            $table->string('nacionalidad_per', 1)->default('V');
+            $table->string('nombres_per');
+            $table->string('segundo_nombre_per')->nullable();
+            $table->string('apellidos_per');
+            $table->string('segundo_apellido_per')->nullable();
+            $table->string('telefono_per');
+            $table->string('genero_per');
+            $table->date('fecha_nacimiento_per')->nullable();
+            $table->string('correo_per');
+            $table->string('semestre_per')->nullable();
             $table->foreignId('id_perfil')->references('id_perfil')->on('perfil')->onDelete('cascade');
-            $table->foreignId('id_sede')->constrained('sede')->cascadeOnDelete();
+            $table->foreignId('sed_id')->constrained('sede', 'id_sed')->cascadeOnDelete();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 

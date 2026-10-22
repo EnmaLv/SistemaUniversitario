@@ -135,6 +135,7 @@
                                     </svg>
                                 </a>
 
+                                @canRoute('admin.psicologia.maestros.agenda.exportarPdf')
                                 <a href="{{ route('admin.psicologia.maestros.agenda.exportarPdf', ['view' => $view, 'date' => $currentDate->toDateString(), 'psicologo_id' => $psicologoId]) }}"
                                     target="_blank"
                                     class="px-3 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all font-black tracking-wider gap-1.5 flex-shrink-0"
@@ -144,6 +145,7 @@
                                             d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </a>
+                                @endcanRoute
                             </div>
                         </div>
                     </div>
@@ -188,8 +190,8 @@
                                             class="w-full rounded-2xl border border-gray-200 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-900/50 px-4 py-2.5 text-sm focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 transition-all font-medium text-gray-900 dark:text-white">
                                             <option value="">Todas</option>
                                             @foreach ($prioridadesDisponibles as $prioridad)
-                                                <option value="{{ $prioridad->nombre }}">
-                                                    {{ ucfirst($prioridad->nombre) }}</option>
+                                                <option value="{{ $prioridad->nombre_pat }}">
+                                                    {{ ucfirst($prioridad->nombre_pat) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -228,18 +230,18 @@
                                                         </div>
                                                         <div
                                                             class="space-y-1 overflow-y-auto max-h-[80px] custom-scrollbar pointer-events-none">
-                                                            @foreach ($data['citas']->where('estado', '!=', 'cancelada') as $cita)
+                                                            @foreach ($data['citas']->where('estado_cita_cps', '!=', 'cancelada') as $cita)
                                                                 <div
                                                                     class="px-2 py-1 rounded-lg text-[9px] font-extrabold truncate
-                                                                    {{ $cita->estado === 'confirmada'
+                                                                    {{ $cita->estado_cita_cps === 'confirmada'
                                                                         ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60'
-                                                                        : ($cita->estado === 'realizada'
+                                                                        : ($cita->estado_cita_cps === 'realizada'
                                                                             ? 'bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60'
-                                                                            : ($cita->estado === 'no_asistio'
+                                                                            : ($cita->estado_cita_cps === 'no_asistio'
                                                                                 ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60'
                                                                                 : 'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600')) }}">
-                                                                    {{ $cita->hora ? \Carbon\Carbon::parse($cita->hora)->format('g:i A') : 'S/H' }}
-                                                                    - {{ $cita->paciente->persona->nombre_persona }}
+                                                                    {{ $cita->hora_cps ? \Carbon\Carbon::parse($cita->hora_cps)->format('g:i A') : 'S/H' }}
+                                                                    - {{ $cita->paciente->persona->nombres_per }}
                                                                 </div>
                                                             @endforeach
                                                         </div>
@@ -293,11 +295,11 @@
                                                                 <div class="flex items-center gap-3">
                                                                     <div class="w-9 h-9 text-{{ $themeColor ?? 'indigo' }}-600 dark:text-{{ $themeColor ?? 'indigo' }}-400 border border-{{ $themeColor ?? 'indigo' }}-200 dark:border-{{ $themeColor ?? 'indigo me' }}-800/40 rounded-xl flex items-center justify-center text-xs font-black uppercase"
                                                                         style="background-color: rgba(0,0,0,0.02);">
-                                                                        {{ substr($cita->paciente->persona->nombre_persona, 0, 1) }}
+                                                                        {{ substr($cita->paciente->persona->nombres_per, 0, 1) }}
                                                                     </div>
                                                                     <span class="text-sm font-bold"
                                                                         style="color: var(--text-main);">
-                                                                        {{ $cita->paciente->persona->nombre_persona }}
+                                                                        {{ $cita->paciente->persona->nombres_per }}
                                                                     </span>
                                                                 </div>
                                                             </td>
@@ -315,18 +317,18 @@
                                                             </td>
                                                             <td class="py-4">
                                                                 <div class="flex flex-col">
-                                                                    @if (!$cita->hora)
+                                                                    @if (!$cita->hora_cps)
                                                                         <span
                                                                             class="text-xs font-bold text-gray-400 italic">Sin
                                                                             horario asignado</span>
                                                                     @else
                                                                         <span class="text-xs font-bold"
                                                                             style="color: var(--text-main);">
-                                                                            {{ $cita->fecha ? $cita->fecha->translatedFormat('d M, Y') : 'Sin fecha' }}
+                                                                            {{ $cita->fecha_cps ? $cita->fecha_cps->translatedFormat('d M, Y') : 'Sin fecha' }}
                                                                         </span>
                                                                         <span
                                                                             class="text-[10px] font-bold text-gray-400 tracking-wider">
-                                                                            {{ \Carbon\Carbon::parse($cita->hora)->format('g:i A') }}
+                                                                            {{ \Carbon\Carbon::parse($cita->hora_cps)->format('g:i A') }}
                                                                         </span>
                                                                     @endif
                                                                 </div>
@@ -334,40 +336,40 @@
                                                             <td class="py-4">
                                                                 <span
                                                                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-bold border uppercase tracking-wider
-                                                                    {{ $cita->estado === 'realizada'
+                                                                    {{ $cita->estado_cita_cps === 'realizada'
                                                                         ? 'border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400'
-                                                                        : ($cita->estado === 'cancelada'
+                                                                        : ($cita->estado_cita_cps === 'cancelada'
                                                                             ? 'border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
-                                                                            : ($cita->estado === 'rechazada'
+                                                                            : ($cita->estado_cita_cps === 'rechazada'
                                                                                 ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
-                                                                                : ($cita->estado === 'confirmada'
+                                                                                : ($cita->estado_cita_cps === 'confirmada'
                                                                                     ? 'border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400'
-                                                                                    : ($cita->estado === 'no_asistio'
+                                                                                    : ($cita->estado_cita_cps === 'no_asistio'
                                                                                         ? 'border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
                                                                                         : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400')))) }}">
                                                                     <i class="fas fa-circle text-[6px]"></i>
-                                                                    {{ str_replace('_', ' ', $cita->estado) }}
+                                                                    {{ str_replace('_', ' ', $cita->estado_cita_cps) }}
                                                                 </span>
                                                             </td>
                                                             <td class="py-4 text-right">
                                                                 <button type="button"
                                                                     onclick="abrirDetalleCita({{ json_encode([
-                                                                        'id' => $cita->id,
-                                                                        'paciente' => $cita->paciente->persona->nombre_persona,
-                                                                        'estado' => $cita->estado,
-                                                                        'motivo' => $cita->motivo ?? 'No especificado',
-                                                                        'prioridad' => $cita->prioridad ?? 'Normal',
+                                                                        'id' => $cita->id_cps,
+                                                                        'paciente' => $cita->paciente->persona->nombres_per,
+                                                                        'estado' => $cita->estado_cita_cps,
+                                                                        'motivo' => $cita->motivo_cps ?? 'No especificado',
+                                                                        'prioridad' => $cita->prioridad_texto_cps ?? 'Normal',
                                                                         'fecha_solicitud' => $cita->created_at
                                                                             ? \Carbon\Carbon::parse($cita->created_at)->translatedFormat('d M, Y - g:i A')
                                                                             : 'N/A',
                                                                         'fecha_programada' =>
-                                                                            $cita->fecha && $cita->hora
-                                                                                ? $cita->fecha->translatedFormat('d M, Y') . ' - ' . \Carbon\Carbon::parse($cita->hora)->format('g:i A')
+                                                                            $cita->fecha_cps && $cita->hora_cps
+                                                                                ? $cita->fecha_cps->translatedFormat('d M, Y') . ' - ' . \Carbon\Carbon::parse($cita->hora_cps)->format('g:i A')
                                                                                 : 'Sin horario asignado',
-                                                                        'fecha_programada_iso' => $cita->fecha ? $cita->fecha->format('Y-m-d') : null,
-                                                                        'hora_programada_iso' => $cita->hora ? \Carbon\Carbon::parse($cita->hora)->format('H:i') : null,
-                                                                        'cancelado_por' => $cita->cancelado_por ?? null,
-                                                                        'motivo_rechazo' => $cita->motivo_rechazo_propuesta ?? null,
+                                                                        'fecha_programada_iso' => $cita->fecha_cps ? $cita->fecha_cps->format('Y-m-d') : null,
+                                                                        'hora_programada_iso' => $cita->hora_cps ? \Carbon\Carbon::parse($cita->hora_cps)->format('H:i') : null,
+                                                                        'cancelado_por' => $cita->cancelado_por_cps ?? null,
+                                                                        'motivo_rechazo' => $cita->motivo_rechazo_propuesta_cps ?? null,
                                                                     ]) }})"
                                                                     class="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700/60 text-gray-400 hover:text-{{ $themeColor ?? 'indigo' }}-600 hover:border-{{ $themeColor ?? 'indigo' }}-300 inline-flex items-center justify-center transition-all active:scale-95">
                                                                     <i class="fas fa-eye text-xs"></i>
@@ -507,15 +509,15 @@
                                                                     $horaFin = $intervalo['fin'];
 
                                                                     $horarioBloque = $horarios
-                                                                        ->where('dia', $dia)
+                                                                        ->where('dia_hpr', $dia)
                                                                         ->first(function ($h) use (
                                                                             $horaInicio,
                                                                             $horaFin,
                                                                         ) {
                                                                             $hInicio = \Carbon\Carbon::parse(
-                                                                                $h->hora_inicio,
+                                                                                $h->hora_inicio_hpr,
                                                                             );
-                                                                            $hFin = \Carbon\Carbon::parse($h->hora_fin);
+                                                                            $hFin = \Carbon\Carbon::parse($h->hora_fin_hpr);
                                                                             $iInicio = \Carbon\Carbon::parse(
                                                                                 $horaInicio,
                                                                             );
@@ -529,11 +531,11 @@
                                                                         ? $dia .
                                                                             ' ' .
                                                                             \Carbon\Carbon::parse(
-                                                                                $horarioBloque->hora_inicio,
+                                                                                $horarioBloque->hora_inicio_hpr,
                                                                             )->format('H:i') .
                                                                             ' - ' .
                                                                             \Carbon\Carbon::parse(
-                                                                                $horarioBloque->hora_fin,
+                                                                                $horarioBloque->hora_fin_hpr,
                                                                             )->format('H:i')
                                                                         : "$dia $horaInicio - $horaFin";
                                                                     $normalizedSlotText = $normalizeBlock($bloqueLabel);
@@ -543,38 +545,38 @@
                                                                         ->toDateString();
 
                                                                     $citasConfirmadasEnSlot = $citasCalendario->filter(
-                                                                        fn($cita) => in_array($cita->estado, [
+                                                                        fn($cita) => in_array($cita->estado_cita_cps, [
                                                                             'confirmada',
                                                                             'realizada',
                                                                             'no_asistio',
                                                                             'pendiente',
                                                                         ]) &&
-                                                                            $cita->fecha &&
-                                                                            $cita->fecha->isSameDay($fechaDelDia) &&
-                                                                            (($cita->bloque_propuesto &&
+                                                                            $cita->fecha_cps &&
+                                                                            $cita->fecha_cps->isSameDay($fechaDelDia) &&
+                                                                            (($cita->bloque_propuesto_cps &&
                                                                                 str_contains(
                                                                                     $normalizeBlock(
-                                                                                        $cita->bloque_propuesto,
+                                                                                        $cita->bloque_propuesto_cps,
                                                                                     ),
                                                                                     $normalizedSlotText,
                                                                                 )) ||
-                                                                                ($cita->hora &&
+                                                                                ($cita->hora_cps &&
                                                                                     \Carbon\Carbon::parse(
-                                                                                        $cita->hora,
+                                                                                        $cita->hora_cps,
                                                                                     )->format('H:i') === $horaInicio)),
                                                                     );
                                                                     $assignedCita = $citasConfirmadasEnSlot->first();
 
                                                                     $canceladaCita = $citasCalendario
                                                                         ->filter(
-                                                                            fn($cita) => $cita->estado ===
+                                                                            fn($cita) => $cita->estado_cita_cps ===
                                                                                 'cancelada' &&
-                                                                                $cita->fecha &&
-                                                                                $cita->fecha->isSameDay($fechaDelDia) &&
-                                                                                $cita->bloque_propuesto &&
+                                                                                $cita->fecha_cps &&
+                                                                                $cita->fecha_cps->isSameDay($fechaDelDia) &&
+                                                                                $cita->bloque_propuesto_cps &&
                                                                                 str_contains(
                                                                                     $normalizeBlock(
-                                                                                        $cita->bloque_propuesto,
+                                                                                        $cita->bloque_propuesto_cps,
                                                                                     ),
                                                                                     $normalizedSlotText,
                                                                                 ),
@@ -593,24 +595,24 @@
                                                                         $fechaDelDia,
                                                                     ) {
                                                                         if (
-                                                                            $cita->fecha &&
+                                                                            $cita->fecha_cps &&
                                                                             \Carbon\Carbon::parse(
-                                                                                $cita->fecha,
+                                                                                $cita->fecha_cps,
                                                                             )->isSameDay($fechaDelDia)
                                                                         ) {
                                                                             if (
-                                                                                $cita->hora &&
+                                                                                $cita->hora_cps &&
                                                                                 \Carbon\Carbon::parse(
-                                                                                    $cita->hora,
+                                                                                    $cita->hora_cps,
                                                                                 )->format('H:i') === $horaInicio
                                                                             ) {
                                                                                 return true;
                                                                             }
                                                                             if (
-                                                                                $cita->bloque_propuesto &&
+                                                                                $cita->bloque_propuesto_cps &&
                                                                                 str_contains(
                                                                                     $normalizeBlock(
-                                                                                        $cita->bloque_propuesto,
+                                                                                        $cita->bloque_propuesto_cps,
                                                                                     ),
                                                                                     $normalizedSlotText,
                                                                                 )
@@ -619,13 +621,13 @@
                                                                             }
                                                                         }
                                                                         if (
-                                                                            !$cita->bloques_sugeridos ||
-                                                                            $cita->bloques_sugeridos === 'x'
+                                                                            !$cita->bloques_sugeridos_cps ||
+                                                                            $cita->bloques_sugeridos_cps === 'x'
                                                                         ) {
                                                                             return false;
                                                                         }
 
-                                                                        $raw = $cita->bloques_sugeridos;
+                                                                        $raw = $cita->bloques_sugeridos_cps;
                                                                         $excepcionesStr = '';
                                                                         $horariosStr = $raw;
                                                                         if (str_contains($raw, '|')) {
@@ -712,26 +714,26 @@
                                                                             class="block-slot-button w-full p-3 text-center transition-all drop-zone group bg-gray-100/10 dark:bg-gray-900/10
                                                                                         {{ $assignedCita
                                                                                             ? 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/60 text-sky-600 dark:text-sky-400 shadow-sm'
-                                                                                            : ($horarioBloque->activo === \App\Models\salud\Horario::STATUS_ACTIVE
+                                                                                            : ((int) $horarioBloque->status_id === \App\Models\salud\Horario::STATUS_ACTIVE
                                                                                                 ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700/60 text-gray-900 dark:text-gray-300 hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-sm'
                                                                                                 : 'bg-amber-50/50 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/50 text-amber-700 dark:text-amber-400 hover:border-amber-300 dark:hover:border-amber-700') }}"
                                                                             data-block-label="{{ $bloqueLabel }}"
                                                                             data-block-date="{{ $fechaDelDia }}"
-                                                                            data-block-time="{{ $horarioBloque->hora_inicio }}"
-                                                                            data-block-active="{{ $horarioBloque->activo === \App\Models\salud\Horario::STATUS_ACTIVE ? 'true' : 'false' }}"
-                                                                            data-pending-requests="{{ json_encode($citasEnSlot->map(fn($c) => ['id' => $c->id, 'paciente' => $c->paciente->persona->nombre_persona ?? ($c->paciente->persona->nombre_persona ?? 'Paciente'), 'motivo' => $c->motivo ?? 'Solicitud pendiente', 'estado' => $c->estado ?? 'pendiente'])->values()) }}"
-                                                                            @if ($assignedCita) data-assigned-cita-id="{{ $assignedCita->id }}"
-                                                                                        data-assigned-paciente="{{ $assignedCita->paciente->persona->nombre_persona }} {{ $assignedCita->paciente->persona->apellido_persona }}"
-                                                                                        data-assigned-estado="{{ $assignedCita->estado }}"
+                                                                            data-block-time="{{ $horarioBloque->hora_inicio_hpr }}"
+                                                                            data-block-active="{{ (int) $horarioBloque->status_id === \App\Models\salud\Horario::STATUS_ACTIVE ? 'true' : 'false' }}"
+                                                                            data-pending-requests="{{ json_encode($citasEnSlot->map(fn($c) => ['id' => $c->id_cps, 'paciente' => $c->paciente->persona->nombres_per ?? ($c->paciente->persona->nombres_per ?? 'Paciente'), 'motivo' => $c->motivo_cps ?? 'Solicitud pendiente', 'estado' => $c->estado_cita_cps ?? 'pendiente'])->values()) }}"
+                                                                            @if ($assignedCita) data-assigned-cita-id="{{ $assignedCita->id_cps }}"
+                                                                                        data-assigned-paciente="{{ $assignedCita->paciente->persona->nombres_per }} {{ $assignedCita->paciente->persona->apellidos_per }}"
+                                                                                        data-assigned-estado="{{ $assignedCita->estado_cita_cps }}"
                                                                                         data-assigned-block="true" @endif>
 
                                                                             <div
                                                                                 class="flex items-center justify-center mb-1">
                                                                                 <span
                                                                                     class="text-[10px] font-black uppercase tracking-wider opacity-55 group-hover:opacity-100 transition-opacity text-gray-900 dark:text-gray-400">
-                                                                                    {{ \Carbon\Carbon::parse($horarioBloque->hora_inicio)->format('g:i') }}
+                                                                                    {{ \Carbon\Carbon::parse($horarioBloque->hora_inicio_hpr)->format('g:i') }}
                                                                                     -
-                                                                                    {{ \Carbon\Carbon::parse($horarioBloque->hora_fin)->format('g:i') }}
+                                                                                    {{ \Carbon\Carbon::parse($horarioBloque->hora_fin_hpr)->format('g:i') }}
                                                                                 </span>
                                                                             </div>
 
@@ -740,10 +742,10 @@
                                                                                 @if ($assignedCita)
                                                                                     <div
                                                                                         class="flex items-center gap-1">
-                                                                                        @if ($assignedCita->estado === 'realizada')
+                                                                                        @if ($assignedCita->estado_cita_cps === 'realizada')
                                                                                             <span
                                                                                                 class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                                                                                            @elseif ($assignedCita->estado === 'no_asistio')
+                                                                                            @elseif ($assignedCita->estado_cita_cps === 'no_asistio')
                                                                                             <span
                                                                                                 class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                                                                         @else
@@ -752,8 +754,8 @@
                                                                                         @endif
                                                                                         <p
                                                                                             class="text-[10px] font-black leading-tight truncate text-sky-600 dark:text-sky-400">
-                                                                                            {{ $assignedCita->paciente->persona->nombre_persona }}
-                                                                                            {{ $assignedCita->paciente->persona->apellido_persona }}
+                                                                                            {{ $assignedCita->paciente->persona->nombres_per }}
+                                                                                            {{ $assignedCita->paciente->persona->apellidos_per }}
                                                                                         </p>
                                                                                     </div>
                                                                                 @else
@@ -778,14 +780,16 @@
                                                                                             onclick="event.stopPropagation()">
                                                                                             <span
                                                                                                 class="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0"
-                                                                                                title="{{ $canceladaCita->cancelado_por === 'paciente' ? 'Cancelado por el paciente' : 'Cancelada por el psicólogo' }}"></span>
+                                                                                                title="{{ $canceladaCita->cancelado_por_cps === 'paciente' ? 'Cancelado por el paciente' : 'Cancelada por el psicólogo' }}"></span>
                                                                                             <p
                                                                                                 class="text-[10px] font-extrabold leading-tight truncate text-gray-400 dark:text-gray-500 line-through">
-                                                                                                {{ $canceladaCita->paciente->persona->nombre_persona }}
+                                                                                                {{ $canceladaCita->paciente->persona->nombres_per }}
                                                                                             </p>
-                                                                                            <div onclick="dismissCancelMessage(event, {{ $canceladaCita->id }})"
+                                                                                            @canRoute('admin.psicologia.maestros.citas.dismiss_cancel')
+                                                                                            <div onclick="dismissCancelMessage(event, {{ $canceladaCita->id_cps }})"
                                                                                                 class="ml-1 text-[10px] font-black text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0 cursor-pointer"
                                                                                                 title="Ocultar">✕</div>
+                                                                                            @endcanRoute
                                                                                         </div>
                                                                                     @endif
                                                                                 @endif
@@ -911,7 +915,20 @@
         </div>
     </div>
 
+    @php
+        $permisosAgenda = collect([
+            'accept' => 'admin.psicologia.maestros.citas.accept',
+            'reject' => 'admin.psicologia.maestros.citas.reject',
+            'remove_proposal' => 'admin.psicologia.maestros.citas.quitar_propuesta',
+            'propose' => 'admin.psicologia.maestros.citas.proponer',
+            'realizar' => 'admin.psicologia.maestros.citas.realizar',
+            'no_asistio' => 'admin.psicologia.maestros.citas.no_asistio',
+            'posponer' => 'admin.psicologia.maestros.citas.posponer',
+            'cancelar' => 'admin.psicologia.maestros.citas.cancel.psicologo',
+        ])->map(fn ($ruta) => auth()->user()->puedeRuta($ruta))->all();
+    @endphp
     <script>
+        const PERMISOS_AGENDA = @json($permisosAgenda);
         document.addEventListener('DOMContentLoaded', function() {
             const CONFIG = {
                 endpoints: {
@@ -936,9 +953,9 @@
 
             const HORARIOS_PSICOLOGO = {!! json_encode($horarios->map(function ($h) {
                 return [
-                    'dia'    => $h->dia,
-                    'inicio' => \Carbon\Carbon::parse($h->hora_inicio)->format('H:i'),
-                    'fin'    => \Carbon\Carbon::parse($h->hora_fin)->format('H:i'),
+                    'dia'    => $h->dia_hpr,
+                    'inicio' => \Carbon\Carbon::parse($h->hora_inicio_hpr)->format('H:i'),
+                    'fin'    => \Carbon\Carbon::parse($h->hora_fin_hpr)->format('H:i'),
                 ];
             })->values()) !!};
 
@@ -1115,7 +1132,7 @@
                 const cont = document.getElementById('citaBloquesSugeridos');
                 if (cont) {
                     cont.innerHTML = '';
-                    const raw = cita.bloques_sugeridos || '';
+                    const raw = cita.bloques_sugeridos_cps || '';
                     let horariosStr = raw;
                     if (raw.includes('|')) {
                         const parts = raw.split('|');
@@ -1147,33 +1164,33 @@
                     propInfo.classList.add('hidden');
                     propAcciones.classList.add('hidden');
 
-                    const propList = (cita.bloques_propuestos || '').split(/[;,]/).map(s => s.trim()).filter(
+                    const propList = (cita.bloques_propuestos_cps || '').split(/[;,]/).map(s => s.trim()).filter(
                         Boolean);
 
-                    if (cita.propuesta_estado === 'pendiente') {
+                    if (cita.propuesta_estado_cps === 'pendiente') {
                         propInfo.classList.remove('hidden');
                         propInfo.classList.add('bg-amber-50', 'dark:bg-amber-950/40', 'border-amber-200',
                             'dark:border-amber-800/60', 'text-amber-700', 'dark:text-amber-400');
                         propInfo.innerHTML =
                             `Propuesta enviada al paciente. Esperando su respuesta.<br><strong>Bloques propuestos:</strong> ${propList.map(Utils.formatAmPm).join(', ')}`;
-                    } else if (cita.propuesta_estado === 'cualquier_dia') {
+                    } else if (cita.propuesta_estado_cps === 'cualquier_dia') {
                         propInfo.classList.remove('hidden');
                         propInfo.classList.add('bg-emerald-50', 'dark:bg-emerald-950/40', 'border-emerald-200',
                             'dark:border-emerald-800/60', 'text-emerald-700', 'dark:text-emerald-400');
                         propInfo.innerHTML =
                             `El paciente respondió: <strong>"Cualquier día está bien"</strong>. Puedes agendar esta cita en cualquier bloque.`;
-                    } else if (cita.propuesta_estado === 'sugerencia_aceptada') {
+                    } else if (cita.propuesta_estado_cps === 'sugerencia_aceptada') {
                         propInfo.classList.remove('hidden');
                         propInfo.classList.add('bg-sky-50', 'dark:bg-sky-950/40', 'border-sky-200',
                             'dark:border-sky-800/60', 'text-sky-700', 'dark:text-sky-400');
                         propInfo.innerHTML =
-                            `El paciente aceptó la propuesta para: <strong>${Utils.formatAmPm(cita.propuesta_bloque_seleccionado || 'Sugerencia')}</strong>.`;
-                    } else if (cita.propuesta_estado === 'rechazada') {
+                            `El paciente aceptó la propuesta para: <strong>${Utils.formatAmPm(cita.propuesta_bloque_seleccionado_cps || 'Sugerencia')}</strong>.`;
+                    } else if (cita.propuesta_estado_cps === 'rechazada') {
                         propInfo.classList.remove('hidden');
                         propInfo.classList.add('bg-rose-50', 'dark:bg-rose-950/40', 'border-rose-200',
                             'dark:border-rose-800/60', 'text-rose-700', 'dark:text-rose-400');
-                        let rejectedReason = cita.motivo_rechazo_propuesta ?
-                            `<strong>Motivo:</strong> ${cita.motivo_rechazo_propuesta}<br>` : '';
+                        let rejectedReason = cita.motivo_rechazo_propuesta_cps ?
+                            `<strong>Motivo:</strong> ${Utils.escapeHtml(cita.motivo_rechazo_propuesta_cps)}<br>` : '';
                         let rejectedBlocks = propList.length > 0 ?
                             `<strong>Bloques descartados:</strong> ${propList.map(Utils.formatAmPm).join(', ')}<br>` :
                             '';
@@ -1311,13 +1328,18 @@
 
                     let actionButtons = '';
                     if (assignedEstado === 'confirmada') {
-                        actionButtons = `
+                        const botonesAsignado = [
+                            PERMISOS_AGENDA.realizar ? `<button type="button" id="btn-realizar-${assignedId}" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Realizada</button>` : '',
+                            PERMISOS_AGENDA.no_asistio ? `<button type="button" id="btn-no-asistio-${assignedId}" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Ausente</button>` : '',
+                            PERMISOS_AGENDA.posponer ? `<button type="button" id="btn-posponer-${assignedId}" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Reagendar</button>` : '',
+                            PERMISOS_AGENDA.cancelar ? `<button type="button" id="btn-cancelar-${assignedId}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-2xl font-black text-xs transition-all uppercase tracking-wider active:scale-95">Cancelar</button>` : '',
+                        ].join('');
+                        if (botonesAsignado) {
+                            actionButtons = `
                             <div class="flex flex-wrap justify-center gap-3 mt-6">
-                                <button type="button" id="btn-realizar-${assignedId}" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Realizada</button>
-                                <button type="button" id="btn-no-asistio-${assignedId}" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Ausente</button>
-                                <button type="button" id="btn-posponer-${assignedId}" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Reagendar</button>
-                                <button type="button" id="btn-cancelar-${assignedId}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-2xl font-black text-xs transition-all uppercase tracking-wider active:scale-95">Cancelar</button>
+                                ${botonesAsignado}
                             </div>`;
+                        }
                     }
 
                     assignedList.innerHTML = `
@@ -1382,15 +1404,15 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-2">
-                                        <button title="Aceptar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-emerald-200 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white transition-colors" data-action="accept" data-cita-id="${can.citaId}">
+                                        ${PERMISOS_AGENDA.accept ? `<button title="Aceptar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-emerald-200 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white transition-colors" data-action="accept" data-cita-id="${can.citaId}">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                        </button>
-                                        <button title="Rechazar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 dark:hover:text-white transition-colors" data-action="reject" data-cita-id="${can.citaId}">
+                                        </button>` : ''}
+                                        ${PERMISOS_AGENDA.reject ? `<button title="Rechazar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 dark:hover:text-white transition-colors" data-action="reject" data-cita-id="${can.citaId}">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                        <button title="Quitar sugerencia" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:bg-gray-600 hover:text-white dark:hover:bg-gray-600 dark:hover:text-white transition-colors" data-action="remove_proposal" data-cita-id="${can.citaId}">
+                                        </button>` : ''}
+                                        ${PERMISOS_AGENDA.remove_proposal ? `<button title="Quitar sugerencia" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:bg-gray-600 hover:text-white dark:hover:bg-gray-600 dark:hover:text-white transition-colors" data-action="remove_proposal" data-cita-id="${can.citaId}">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        </button>
+                                        </button>` : ''}
                                     </div>
                                 </div>`;
                             list.appendChild(li);
@@ -1576,11 +1598,11 @@
                         }
 
                         Utils.api(CONFIG.endpoints.json(id)).then(cita => {
-                            const caminoA = isBlockSuggested(cita.bloques_sugeridos, state
+                            const caminoA = isBlockSuggested(cita.bloques_sugeridos_cps, state
                                     .currentBlockLabel, state.currentBlockDate) || ['cualquier_dia',
                                     'aceptada'
-                                ].includes(cita.propuesta_estado) ||
-                                !cita.bloques_sugeridos;
+                                ].includes(cita.propuesta_estado_cps) ||
+                                !cita.bloques_sugeridos_cps;
 
                             if (caminoA) {
                                 Utils.api(CONFIG.endpoints.aceptar(id), 'PATCH', {
@@ -1620,7 +1642,7 @@
                                         'Error.');
                                 });
                             } else {
-                                if (cita.propuesta_estado === 'pendiente') {
+                                if (cita.propuesta_estado_cps === 'pendiente') {
                                     AppModal.alert('Propuesta pendiente',
                                         'Ya se envió una contrapropuesta. Espera la respuesta del paciente.'
                                     );
@@ -2132,6 +2154,12 @@
                     return;
                 }
 
+                const accionSoltar = (isManual || (draggedEl && !draggedEl.dataset.bloquesSugeridos)) ? 'accept' : 'propose';
+                if (!PERMISOS_AGENDA[accionSoltar]) {
+                    AppModal.alert('Acción no permitida', 'No tienes permiso para agendar citas.');
+                    return;
+                }
+
                 if (isManual) {
                     window.showConfirmManualCita(() => handleAction('accept', currentDraggedId));
                 } else if (draggedEl && !draggedEl.dataset.bloquesSugeridos) {
@@ -2417,7 +2445,7 @@
                                         ${cita.hora !== 'S/H' ? cita.hora.split(':')[0] : '--'}
                                     </div>
                                     <div>
-                                        <p class="text-sm font-black text-gray-900 dark:text-white leading-none mb-1.5">${cita.paciente}</p>
+                                        <p class="text-sm font-black text-gray-900 dark:text-white leading-none mb-1.5">${Utils.escapeHtml(cita.paciente)}</p>
                                         <p class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">${cita.hora}</p>
                                     </div>
                                 </div>
@@ -2505,7 +2533,7 @@
                             action: 'cancelar'
                         },
                     ];
-                    actions.forEach(({
+                    actions.filter(({ action }) => PERMISOS_AGENDA[action]).forEach(({
                         label,
                         cls,
                         action
@@ -2541,7 +2569,7 @@
 
         function dismissCancelMessage(event, citaId) {
             event.stopPropagation();
-            fetch(`admin/psicologia/maestros/citas/${citaId}/dismiss-cancel`, {
+            fetch(`{{ url('admin/psicologia/maestros/citas') }}/${citaId}/dismiss-cancel`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2565,7 +2593,7 @@
                 btn.innerText = 'Enviando...';
             }
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            fetch(`admin/psicologia/maestros/citas/${citaId}/enviar-propuesta`, {
+            fetch(`{{ url('admin/psicologia/maestros/citas') }}/${citaId}/enviar-propuesta`, {
                     method: 'PATCH',
                     headers: {
                         'Accept': 'application/json',

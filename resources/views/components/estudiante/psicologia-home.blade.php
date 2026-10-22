@@ -12,13 +12,13 @@
                     @php
                         \Log::info('DEBUG NAME PSICO', [
                             'auth_id'         => auth()->id(),
-                            'id_usuario'      => auth()->user()->id_usuario,
-                            'id_persona'      => auth()->user()->id_persona,
+                            'id_use'      => auth()->user()->id_use,
+                            'per_id'      => auth()->user()->per_id,
                             'persona'         => optional(auth()->user()->persona)->toArray(),
-                            'nombre_persona'  => auth()->user()->persona?->nombre_persona,
+                            'nombres_per'  => auth()->user()->persona?->nombres_per,
                             'nombres_attr'    => auth()->user()->nombres ?? null,
                             'name_attr'       => auth()->user()->name ?? null,
-                            'roles'           => auth()->user()->roles->pluck('nombre', 'slug')->toArray(),
+                            'roles'           => auth()->user()->roles->pluck('nombre_rol', 'slug_rol')->toArray(),
                             'tieneRol_pac'    => auth()->user()->tieneRol('paciente'),
                             'tieneRol_Pac'    => auth()->user()->tieneRol('Paciente'),
                         ]);
@@ -27,7 +27,7 @@
                         style="color: var(--text-main);">
                         {{ $saludo ?? 'Buenos días' }},<br>
                         <span class="text-indigo-600 dark:text-indigo-400">
-                            {{ auth()->user()->persona->nombre_persona ?? (auth()->user()->nombres ?? auth()->user()->name) }}
+                            {{ auth()->user()->persona->nombres_per ?? (auth()->user()->nombres ?? auth()->user()->name) }}
                         </span>
                     </h2>
                     <p class="mt-2 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -41,7 +41,7 @@
             </div>
 
             <div class="relative h-48 sm:h-56 my-4 rounded-2xl overflow-hidden">
-                <img src="{{ asset('img/' . (auth()->user()->persona?->genero_persona === 'Masculino' || auth()->user()->persona?->genero_persona === 'M' ? 'therapy_illustration_masc.png' : 'therapy_illustration.png')) }}"
+                <img src="{{ asset('img/' . (auth()->user()->persona?->genero_per === 'Masculino' || auth()->user()->persona?->genero_per === 'M' ? 'therapy_illustration_masc.png' : 'therapy_illustration.png')) }}"
                     alt="Ilustración Bienestar"
                     class="w-full h-full object-cover object-[50%_60%] transition-transform duration-500 hover:scale-105">
                 <div
@@ -50,11 +50,13 @@
             </div>
 
             <div class="z-10 pt-2">
+                @canRoute('admin.psicologia.maestros.citas.create')
                 <a href="{{ route('admin.psicologia.maestros.citas.create') }}"
                     class="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-2xl shadow-md active:scale-95 transition-all text-sm">
                     <span>Agendar Nueva Cita</span>
                     <i class="fas fa-calendar-plus text-xs"></i>
                 </a>
+                @endcanRoute
             </div>
         </div>
 
@@ -90,8 +92,8 @@
                                             {{ $proximaCita->psicologo_nombre ?? 'Psicólogo Asignado' }}
                                         </p>
                                         <p class="text-[11px] font-medium text-gray-500">
-                                            {{ \Carbon\Carbon::parse($proximaCita->fecha)->format('d M') }} -
-                                            {{ $proximaCita->hora ? \Carbon\Carbon::parse($proximaCita->hora)->format('h:i A') : 'Por definir' }}
+                                            {{ \Carbon\Carbon::parse($proximaCita->fecha_cps)->format('d M') }} -
+                                            {{ $proximaCita->hora_cps ? \Carbon\Carbon::parse($proximaCita->hora_cps)->format('h:i A') : 'Por definir' }}
                                             <span class="text-teal-600 font-bold ml-1">(Confirmada)</span>
                                         </p>
                                     </div>
@@ -106,7 +108,7 @@
                                             {{ $citaPendiente->psicologo_nombre ?? 'Psicólogo' }}
                                         </p>
                                         <p class="text-[11px] font-medium text-gray-500">
-                                            {{ \Carbon\Carbon::parse($citaPendiente->fecha_sugerida ?? $citaPendiente->fecha)->format('d M') }}
+                                            {{ \Carbon\Carbon::parse($citaPendiente->fecha_sugerida ?? $citaPendiente->fecha_cps)->format('d M') }}
                                             <span class="text-amber-600 font-bold ml-1">(Pendiente)</span>
                                         </p>
                                     </div>
@@ -199,7 +201,7 @@
 
                 <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                     <span class="text-[11px] font-bold text-gray-400">Hoy, {{ $now->translatedFormat('d M') }}</span>
-                    @if (!empty($proximaCita) && \Carbon\Carbon::parse($proximaCita->fecha)->isToday())
+                    @if (!empty($proximaCita) && \Carbon\Carbon::parse($proximaCita->fecha_cps)->isToday())
                         <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">1 Sesión programada</span>
                     @else
                         <span class="text-xs font-bold text-gray-500">Sin citas hoy</span>
@@ -222,7 +224,7 @@
 
                     <div class="flex flex-col justify-center min-h-[110px]">
                         @if ($estadoAnimoHoy)
-                            @php $valorAnimo = $estadoAnimoHoy->valor ?? 5; @endphp
+                            @php $valorAnimo = $estadoAnimoHoy->valor_ead ?? 5; @endphp
                             <div class="text-center py-1">
                                 <p class="text-xs font-medium text-gray-500 mb-2">Registro de hoy realizado:</p>
                                 <div class="inline-flex items-center justify-center text-4xl" id="saved-mood-icon">
@@ -235,6 +237,7 @@
                                 </script>
                             </div>
                         @else
+                            @canRoute('admin.psicologia.maestros.estado_animo_diario.store')
                             <p class="text-xs text-gray-500 font-medium text-center mb-3">
                                 ¿Cómo te sientes hoy? (1 al 10)
                             </p>
@@ -280,6 +283,7 @@
                                     Guardar Ánimo
                                 </button>
                             </form>
+                            @endcanRoute
                         @endif
                     </div>
                 </div>

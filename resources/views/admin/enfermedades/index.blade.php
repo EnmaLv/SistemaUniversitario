@@ -11,17 +11,19 @@
                         Catálogo de Enfermedades
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="abrirModalCrearEnfermedad('modal-create-edit')"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                        <i class="fas fa-plus text-xs"></i>
-                        <span>Nueva Enfermedad</span>
-                    </button>
+                    @canRoute('admin.enfermedades.store')
+                        <button type="button" onclick="abrirModalCrearEnfermedad('modal-create-edit')"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span>Nueva Enfermedad</span>
+                        </button>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -84,7 +86,7 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($enfermedades as $enfermedad)
-                                <x-table-row :id="$enfermedad->id">
+                                <x-table-row :id="$enfermedad->id_efm">
                                     {{-- Numeración --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
@@ -97,20 +99,20 @@
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
                                             class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-900/40">
-                                            {{ $enfermedad->codigo ?: 'S/C' }}
+                                            {{ $enfermedad->codigo_efm ?: 'S/C' }}
                                         </span>
                                     </td>
 
                                     {{-- Nombre / Diagnóstico --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $enfermedad->nombre }}
+                                        {{ $enfermedad->nombre_efm }}
                                     </td>
 
                                     {{-- Nivel de Gravedad --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         @php
-                                            $nivel = (int) ($enfermedad->nivel ?? 0);
+                                            $nivel = (int) ($enfermedad->nivel_gravedad_efm ?? 0);
                                         @endphp
 
                                         <span
@@ -129,14 +131,14 @@
 
                                     {{-- Componente de Acciones --}}
                                     <x-table-actions 
-                                    :id="$enfermedad->id" 
+                                    :id="$enfermedad->id_efm" 
                                     baseUrl="admin/enfermedades" 
-                                    :status="$enfermedad->activo ?? true"
+                                    :status="$enfermedad->status_id == 1"
                                     :show="false" 
                                     :on-edit="'abrirModalEditarEnfermedad(' .
                                         htmlspecialchars(json_encode($enfermedad), ENT_QUOTES, 'UTF-8') .
                                         ', `' .
-                                        route('admin.enfermedades.update', $enfermedad->id) .
+                                        route('admin.enfermedades.update', $enfermedad->id_efm) .
                                         '`)'">
                                     </x-table-actions>
 

@@ -13,34 +13,37 @@ class EstadoSeeder extends Seeder
      */
     public function run(): void
     {
+        $pais = DB::table('pais')->where('nombre_pai', 'Venezuela')->value('id_pai')
+            ?? DB::table('pais')->insertGetId(['nombre_pai' => 'Venezuela', 'created_at' => now(), 'updated_at' => now()], 'id_pai');
+
         $estados = [
-            ['id' => 1, 'nombre_estado' => 'Amazonas'],
-            ['id' => 2, 'nombre_estado' => 'Anzoátegui'],
-            ['id' => 3, 'nombre_estado' => 'Apure'],
-            ['id' => 4, 'nombre_estado' => 'Aragua'],
-            ['id' => 5, 'nombre_estado' => 'Barinas'],
-            ['id' => 6, 'nombre_estado' => 'Bolívar'],
-            ['id' => 7, 'nombre_estado' => 'Carabobo'],
-            ['id' => 8, 'nombre_estado' => 'Cojedes'],
-            ['id' => 9, 'nombre_estado' => 'Delta Amacuro'],
-            ['id' => 10, 'nombre_estado' => 'Distrito Capital'],
-            ['id' => 11, 'nombre_estado' => 'Falcón'],
-            ['id' => 12, 'nombre_estado' => 'Guárico'],
-            ['id' => 13, 'nombre_estado' => 'Lara'],
-            ['id' => 14, 'nombre_estado' => 'Mérida'],
-            ['id' => 15, 'nombre_estado' => 'Miranda'],
-            ['id' => 16, 'nombre_estado' => 'Monagas'],
-            ['id' => 17, 'nombre_estado' => 'Nueva Esparta'],
-            ['id' => 18, 'nombre_estado' => 'Portuguesa'],
-            ['id' => 19, 'nombre_estado' => 'Sucre'],
-            ['id' => 20, 'nombre_estado' => 'Táchira'],
-            ['id' => 21, 'nombre_estado' => 'Trujillo'],
-            ['id' => 22, 'nombre_estado' => 'Vargas'],
-            ['id' => 23, 'nombre_estado' => 'Yaracuy'],
-            ['id' => 24, 'nombre_estado' => 'Zulia'],
+            ['id_esd' => 1, 'nombre_esd' => 'Amazonas', 'pai_id' => $pais],
+            ['id_esd' => 2, 'nombre_esd' => 'Anzoátegui', 'pai_id' => $pais],
+            ['id_esd' => 3, 'nombre_esd' => 'Apure', 'pai_id' => $pais],
+            ['id_esd' => 4, 'nombre_esd' => 'Aragua', 'pai_id' => $pais],
+            ['id_esd' => 5, 'nombre_esd' => 'Barinas', 'pai_id' => $pais],
+            ['id_esd' => 6, 'nombre_esd' => 'Bolívar', 'pai_id' => $pais],
+            ['id_esd' => 7, 'nombre_esd' => 'Carabobo', 'pai_id' => $pais],
+            ['id_esd' => 8, 'nombre_esd' => 'Cojedes', 'pai_id' => $pais],
+            ['id_esd' => 9, 'nombre_esd' => 'Delta Amacuro', 'pai_id' => $pais],
+            ['id_esd' => 10, 'nombre_esd' => 'Distrito Capital', 'pai_id' => $pais],
+            ['id_esd' => 11, 'nombre_esd' => 'Falcón', 'pai_id' => $pais],
+            ['id_esd' => 12, 'nombre_esd' => 'Guárico', 'pai_id' => $pais],
+            ['id_esd' => 13, 'nombre_esd' => 'Lara', 'pai_id' => $pais],
+            ['id_esd' => 14, 'nombre_esd' => 'Mérida', 'pai_id' => $pais],
+            ['id_esd' => 15, 'nombre_esd' => 'Miranda', 'pai_id' => $pais],
+            ['id_esd' => 16, 'nombre_esd' => 'Monagas', 'pai_id' => $pais],
+            ['id_esd' => 17, 'nombre_esd' => 'Nueva Esparta', 'pai_id' => $pais],
+            ['id_esd' => 18, 'nombre_esd' => 'Portuguesa', 'pai_id' => $pais],
+            ['id_esd' => 19, 'nombre_esd' => 'Sucre', 'pai_id' => $pais],
+            ['id_esd' => 20, 'nombre_esd' => 'Táchira', 'pai_id' => $pais],
+            ['id_esd' => 21, 'nombre_esd' => 'Trujillo', 'pai_id' => $pais],
+            ['id_esd' => 22, 'nombre_esd' => 'Vargas', 'pai_id' => $pais],
+            ['id_esd' => 23, 'nombre_esd' => 'Yaracuy', 'pai_id' => $pais],
+            ['id_esd' => 24, 'nombre_esd' => 'Zulia', 'pai_id' => $pais],
         ];
         $this->command->info('Estados insertados Exitosamente.');
 
-        DB::table('estados')->insert($estados);
+        DB::table('estado')->insert($estados);
     }
 }

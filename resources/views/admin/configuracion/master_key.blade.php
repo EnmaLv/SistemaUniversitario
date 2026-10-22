@@ -24,7 +24,7 @@
                             class="rd-prevent-double-submit">
                             @csrf
                             <div>
-                                <label for="master_key" class="mb-2 block text-sm font-extrabold"
+                                <label for="master_key_use" class="mb-2 block text-sm font-extrabold"
                                     style="color: var(--text-main);">
                                     Llave maestra
                                 </label>
@@ -34,7 +34,7 @@
                                         style="border-color: var(--input-border);">
                                         <i class="fas fa-key" aria-hidden="true"></i>
                                     </span>
-                                    <input type="password" name="master_key" id="master_key"
+                                    <input type="password" name="master_key_use" id="master_key_use"
                                         class="min-w-0 flex-1 border-0 bg-transparent px-3 py-3 text-sm outline-none focus:ring-0"
                                         style="color: var(--text-main);"
                                         placeholder="Introduce tu llave maestra" required autofocus>
@@ -44,7 +44,7 @@
                                         <i class="fas fa-eye" id="eyeIcon" aria-hidden="true"></i>
                                     </button>
                                 </div>
-                                @error('master_key')
+                                @error('master_key_use')
                                     <p class="mt-2 text-sm font-semibold text-red-600" role="alert">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -69,7 +69,7 @@
 @push('js')
     <script>
         document.getElementById('togglePassword')?.addEventListener('click', function () {
-            const password = document.getElementById('master_key');
+            const password = document.getElementById('master_key_use');
             const icon = document.getElementById('eyeIcon');
 
             if (!password || !icon) return;

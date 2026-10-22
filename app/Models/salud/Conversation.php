@@ -8,12 +8,12 @@ class Conversation
 {
     public static function obtenerUsuarioUno($userOneId)
     {
-        return DB::table('usuario')->where('id_usuario', $userOneId)->first();
+        return DB::table('user')->where('id_use', $userOneId)->first();
     }
 
     public static function obtenerUsuarioDos($userTwoId)
     {
-        return DB::table('usuario')->where('id_usuario', $userTwoId)->first();
+        return DB::table('user')->where('id_use', $userTwoId)->first();
     }
 
     public static function obtenerMensajes($conversationId)

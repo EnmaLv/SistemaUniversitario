@@ -23,23 +23,23 @@ class ChatController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        $userId = $user->id_usuario;
+        $userId = $user->id_use;
         $isPsicologo = $user->tieneRol(['psicologo', 'administrador']);
         $contacts = $user->obtenerContactosParaChat($userId, $isPsicologo);
 
         return $contacts->map(function ($contact) use ($userId) {
-            $conversation = Conversation::obtenerConversacion($userId, $contact->id_usuario);
+            $conversation = Conversation::obtenerConversacion($userId, $contact->id_use);
             $lastMessage  = $conversation ? Message::obtenerUltimoMensaje($conversation->id) : null;
 
             $unreadCount = $conversation
                 ? DB::table('messages')->where('conversation_id', $conversation->id)
-                    ->where('sender_id', $contact->id_usuario)
+                    ->where('sender_id', $contact->id_use)
                     ->whereNull('read_at')
                     ->count()
                 : 0;
 
             return [
-                'id'                => $contact->id_usuario,
+                'id'                => $contact->id_use,
                 'name'              => $contact->name,
                 'avatar'            => strtoupper(substr($contact->name, 0, 2)),
                 'lastMessage'       => $lastMessage ? $lastMessage->body : 'Inicia una conversación',
@@ -75,11 +75,11 @@ class ChatController extends Controller
 
         /** @var Usuario $user */
         $user   = Auth::user();
-        $userId = $user->id_usuario;
+        $userId = $user->id_use;
 
         // Solo staff puede buscar globalmente
         $roleSlugs = $user->roles
-            ->pluck('slug')
+            ->pluck('slug_rol')
             ->map(fn ($s) => strtolower((string) $s))
             ->toArray();
 
@@ -92,32 +92,35 @@ class ChatController extends Controller
 
         $like = '%' . mb_strtolower($q, 'UTF-8') . '%';
 
-        $results = DB::table('usuario')
-            ->join('persona', 'usuario.id_persona', '=', 'persona.id_persona')
-            ->leftJoin('rol_usuario', 'usuario.id_usuario', '=', 'rol_usuario.id_usuario')
-            ->leftJoin('rol', 'rol_usuario.id_rol', '=', 'rol.id_rol')
+        $results = DB::table('user')
+            ->join('persona', 'user.per_id', '=', 'persona.id_per')
             ->select(
-                'usuario.id_usuario as id',
-                'usuario.username',
-                DB::raw("TRIM(CONCAT(COALESCE(persona.nombre_persona,''),' ',COALESCE(persona.apellido_persona,''))) as name"),
-                DB::raw("GROUP_CONCAT(DISTINCT COALESCE(rol.nombre,'') SEPARATOR ', ') as roles")
+                'user.id_use as id',
+                'user.username_use',
+                DB::raw("TRIM(CONCAT(COALESCE(persona.nombres_per,''),' ',COALESCE(persona.apellidos_per,''))) as name")
             )
-            ->where('usuario.id_usuario', '!=', $userId)
+            ->where('user.id_use', '!=', $userId)
             ->where(function ($q) use ($like) {
-                $q->whereRaw("LOWER(COALESCE(persona.nombre_persona,'')) LIKE ?",   [$like])
-                  ->orWhereRaw("LOWER(COALESCE(persona.apellido_persona,'')) LIKE ?", [$like])
-                  ->orWhereRaw("LOWER(CONCAT(COALESCE(persona.nombre_persona,''),' ',COALESCE(persona.apellido_persona,''))) LIKE ?", [$like])
-                  ->orWhereRaw("LOWER(COALESCE(usuario.username,'')) LIKE ?",       [$like]);
+                $q->whereRaw("LOWER(COALESCE(persona.nombres_per,'')) LIKE ?",   [$like])
+                  ->orWhereRaw("LOWER(COALESCE(persona.apellidos_per,'')) LIKE ?", [$like])
+                  ->orWhereRaw("LOWER(CONCAT(COALESCE(persona.nombres_per,''),' ',COALESCE(persona.apellidos_per,''))) LIKE ?", [$like])
+                  ->orWhereRaw("LOWER(COALESCE(user.username_use,'')) LIKE ?",       [$like]);
             })
-            ->groupBy('usuario.id_usuario', 'usuario.username', 'persona.nombre_persona', 'persona.apellido_persona')
-            ->orderBy('persona.nombre_persona')
+            ->orderBy('persona.nombres_per')
             ->limit(20)
             ->get();
+
+        $rolesPorUsuario = DB::table('usuario_rol')
+            ->join('rol', 'usuario_rol.rol_id', '=', 'rol.id_rol')
+            ->whereIn('usuario_rol.use_id', $results->pluck('id'))
+            ->get(['usuario_rol.use_id', 'rol.nombre_rol'])
+            ->groupBy('use_id')
+            ->map(fn ($filas) => $filas->pluck('nombre_rol')->unique()->implode(', '));
 
         // Marcar quiénes ya están en la lista de contactos
         $contactIds = $this->getContactsData()->pluck('id')->toArray();
 
-        return response()->json($results->map(function ($u) use ($contactIds) {
+        return response()->json($results->map(function ($u) use ($contactIds, $rolesPorUsuario) {
             $firstName    = explode(' ', trim($u->name))[0] ?? '';
             $firstLastName = explode(' ', trim($u->name))[1] ?? '';
             return [
@@ -125,7 +128,7 @@ class ChatController extends Controller
                 'name'       => trim($firstName . ' ' . $firstLastName) ?: $u->name,
                 'full_name'  => $u->name,
                 'avatar'     => strtoupper(mb_substr($u->name, 0, 2)),
-                'roles'      => $u->roles,
+                'roles'      => $rolesPorUsuario[$u->id] ?? '',
                 'lastMessage'=> 'Inicia una conversación',
                 'time'       => '',
                 'unreadCount'=> 0,
@@ -146,17 +149,17 @@ class ChatController extends Controller
         $target  = Usuario::with('roles')->find($targetUserId);
         if (!$current || !$target) return false;
 
-        $currentRoles = $current->roles->pluck('slug')->map(fn ($s) => strtolower((string) $s))->toArray();
-        $targetRoles  = $target->roles->pluck('slug')->map(fn ($s) => strtolower((string) $s))->toArray();
+        $currentRoles = $current->roles->pluck('slug_rol')->map(fn ($s) => strtolower((string) $s))->toArray();
+        $targetRoles  = $target->roles->pluck('slug_rol')->map(fn ($s) => strtolower((string) $s))->toArray();
 
         $isPacienteOBecario = in_array('paciente', $currentRoles, true)
                            || in_array('becario', $currentRoles, true);
 
         // Paciente/becario → solo con psicólogos con cita
         if ($isPacienteOBecario) {
-            return DB::table('citas')
-                ->where('user_id', $userId)
-                ->where('psicologo_id', $targetUserId)
+            return DB::table('cita_psicologica')
+                ->where('paciente_use_id', $userId)
+                ->where('psicologo_use_id', $targetUserId)
                 ->exists();
         }
 
@@ -171,7 +174,7 @@ class ChatController extends Controller
             if (in_array('administrador', $currentRoles, true)) {
                 return true;
             }
-            return DB::table('citas')->where('user_id', $targetUserId)->where('psicologo_id', $userId)->exists();
+            return DB::table('cita_psicologica')->where('paciente_use_id', $targetUserId)->where('psicologo_use_id', $userId)->exists();
         }
 
         return false;
@@ -182,12 +185,12 @@ class ChatController extends Controller
      * ============================================================ */
     public function ping(Request $request)
     {
-        $request->validate(['chat_activo_user_id' => 'required|integer']);
+        $request->validate(['chat_activo_use_id' => 'required|integer']);
 
         /** @var Usuario $user */
         $user   = Auth::user();
-        $userId = $user->id_usuario;
-        $target = (int) $request->chat_activo_user_id;
+        $userId = $user->id_use;
+        $target = (int) $request->chat_activo_use_id;
 
         if ($this->puedeEscribirA($userId, $target)) {
             Message::registrarActividadChat($userId, $target);
@@ -201,7 +204,7 @@ class ChatController extends Controller
     {
         /** @var Usuario $user */
         $user = Auth::user();
-        $userId = $user->id_usuario;
+        $userId = $user->id_use;
 
         if (!$this->puedeEscribirA($userId, (int) $targetUserId)) {
             return response()->json(['error' => 'No autorizado'], 403);
@@ -235,7 +238,7 @@ class ChatController extends Controller
 
         /** @var Usuario $user */
         $user   = Auth::user();
-        $userId = $user->id_usuario;
+        $userId = $user->id_use;
 
         if (!$this->puedeEscribirA($userId, (int) $targetUserId)) {
             return response()->json(['error' => 'No tienes permiso para iniciar esta conversación.'], 403);

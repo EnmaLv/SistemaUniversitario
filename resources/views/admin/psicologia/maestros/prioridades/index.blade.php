@@ -13,11 +13,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.psicologia.maestros.prioridades.create')
                     <a href="{{ route('admin.psicologia.maestros.prioridades.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-sky-600 hover:bg-sky-700' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nueva Prioridad</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -62,41 +64,43 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center gap-3">
                                             <div
-                                                class="w-2.5 h-2.5 rounded-full {{ $prioridad->nombre === 'crítica' ? 'bg-rose-500' : ($prioridad->nombre === 'alta' ? 'bg-amber-500' : ($prioridad->nombre === 'media' ? 'bg-sky-500' : ($prioridad->nombre === 'baja' ? 'bg-emerald-500' : 'bg-indigo-500'))) }}">
+                                                class="w-2.5 h-2.5 rounded-full {{ $prioridad->nombre_pat === 'crítica' ? 'bg-rose-500' : ($prioridad->nombre_pat === 'alta' ? 'bg-amber-500' : ($prioridad->nombre_pat === 'media' ? 'bg-sky-500' : ($prioridad->nombre_pat === 'baja' ? 'bg-emerald-500' : 'bg-indigo-500'))) }}">
                                             </div>
                                             <span class="font-bold uppercase tracking-wider text-xs"
                                                 style="color: var(--text-main);">
-                                                {{ $prioridad->nombre }}
+                                                {{ $prioridad->nombre_pat }}
                                             </span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <span
                                             class="inline-flex items-center px-3 py-1 text-[10px] font-black rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-                                            Nivel {{ $prioridad->nivel_gravedad }}
+                                            Nivel {{ $prioridad->nivel_gravedad_pat }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <div class="flex items-center justify-end gap-2">
-                                            @if ($prioridad->psicologo_id === null)
+                                            @if ($prioridad->psicologo_use_id === null)
                                                 <span
                                                     class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 dark:text-gray-600 cursor-not-allowed"
                                                     title="Prioridad predefinida del sistema (no modificable)">
                                                     <i class="fas fa-lock text-xs"></i>
                                                 </span>
                                             @else
-                                                <form id="form-delete-{{ $prioridad->id }}"
-                                                    action="{{ route('admin.psicologia.maestros.prioridades.destroy', $prioridad->id) }}"
+                                                @canRoute('admin.psicologia.maestros.prioridades.destroy')
+                                                <form id="form-delete-{{ $prioridad->id_pat }}"
+                                                    action="{{ route('admin.psicologia.maestros.prioridades.destroy', $prioridad->id_pat) }}"
                                                     method="POST" class="inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="button"
-                                                        onclick="confirmDeletePrioridad({{ $prioridad->id }}, '{{ $prioridad->nivel_gravedad }}', {{ $prioridad->uso_count }})"
+                                                        onclick="confirmDeletePrioridad({{ $prioridad->id_pat }}, '{{ $prioridad->nivel_gravedad_pat }}', {{ $prioridad->uso_count }})"
                                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
                                                         title="Eliminar Prioridad">
                                                         <i class="fas fa-trash-alt text-xs"></i>
                                                     </button>
                                                 </form>
+                                                @endcanRoute
                                             @endif
                                         </div>
                                     </td>

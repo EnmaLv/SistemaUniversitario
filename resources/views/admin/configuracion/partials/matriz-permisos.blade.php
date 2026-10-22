@@ -98,19 +98,19 @@
                         </thead>
                         <tbody class="divide-y" style="border-color: var(--border-color);">
                             @foreach ($vistas as $vista)
-                                @php $porAccion = $vista->permisos->keyBy('accion'); @endphp
-                                <tr data-fila="{{ $vista->id }}"
-                                    data-buscar="{{ mb_strtolower($vista->nombre . ' ' . $vista->key) }}"
+                                @php $porAccion = $vista->permisos->keyBy('accion_pmi'); @endphp
+                                <tr data-fila="{{ $vista->id_vis }}"
+                                    data-buscar="{{ mb_strtolower($vista->nombre_vis . ' ' . $vista->key_vis) }}"
                                     class="hover:bg-red-50/30 dark:hover:bg-red-950/10 transition-colors">
                                     <td class="px-4 py-2.5">
-                                        <p class="text-xs font-bold" style="color: var(--text-main);">{{ $vista->nombre }}</p>
-                                        <p class="text-[10px] text-gray-400 font-mono">{{ $vista->key }}</p>
+                                        <p class="text-xs font-bold" style="color: var(--text-main);">{{ $vista->nombre_vis }}</p>
+                                        <p class="text-[10px] text-gray-400 font-mono">{{ $vista->key_vis }}</p>
                                     </td>
                                     @foreach ($acciones as $accion => $def)
                                         <td class="px-2 py-2.5 text-center">
                                             @if ($permiso = $porAccion->get($accion))
                                                 @php
-                                                    $pid = (int) $permiso->id;
+                                                    $pid = (int) $permiso->id_pmi;
                                                     if ($modo === 'usuario') {
                                                         $esDeRol = in_array($pid, $deRol, true);
                                                         $marcado = $esDeRol ? !in_array($pid, $revokes, true) : in_array($pid, $grants, true);
@@ -120,14 +120,14 @@
                                                     }
                                                 @endphp
                                                 <label class="perm-caja inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all {{ $deshabilitado ? 'cursor-not-allowed' : 'cursor-pointer' }}"
-                                                    title="{{ $permiso->key }}">
+                                                    title="{{ $permiso->nombre_pmi }}">
                                                     <input type="checkbox"
                                                         class="perm-cell w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-red-600 focus:ring-2 focus:ring-red-500/30 {{ $deshabilitado ? 'cursor-not-allowed' : 'cursor-pointer' }}"
                                                         value="{{ $pid }}"
-                                                        data-fila="{{ $vista->id }}"
+                                                        data-fila="{{ $vista->id_vis }}"
                                                         data-accion="{{ $accion }}"
                                                         data-role="{{ $esDeRol ? '1' : '0' }}"
-                                                        data-etiqueta="{{ $def['label'] }} · {{ $vista->nombre }}"
+                                                        data-etiqueta="{{ $def['label'] }} · {{ $vista->nombre_vis }}"
                                                         @if ($modo === 'rol') name="permisos[]" @endif
                                                         @checked($marcado)
                                                         @disabled($deshabilitado)>
@@ -139,7 +139,7 @@
                                     @endforeach
                                     <td class="px-2 py-2.5 text-center">
                                         @if (!$deshabilitado)
-                                            <button type="button" data-fila="{{ $vista->id }}"
+                                            <button type="button" data-fila="{{ $vista->id_vis }}"
                                                 class="fila-toggle w-7 h-7 inline-flex items-center justify-center rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                                                 title="Marcar / desmarcar toda la fila">
                                                 <i class="fas fa-arrows-left-right text-[10px]"></i>

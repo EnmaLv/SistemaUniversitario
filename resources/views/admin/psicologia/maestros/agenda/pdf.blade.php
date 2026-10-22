@@ -153,8 +153,8 @@
             <div class="header-title">
                 @if ($loop->first)
                     <h1>{{ count($semanasInfo) > 1 ? 'AGENDA DEL MES' : 'AGENDA SEMANAL' }}</h1>
-                    <p>{{ mb_strtoupper($psicologo->persona->nombre_persona ?? 'PSICÓLOGO NO ASIGNADO') }}
-                        {{ mb_strtoupper($psicologo->persona->apellido_persona ?? 'N/A') }}</p>
+                    <p>{{ mb_strtoupper($psicologo->persona->nombres_per ?? 'PSICÓLOGO NO ASIGNADO') }}
+                        {{ mb_strtoupper($psicologo->persona->apellidos_per ?? 'N/A') }}</p>
                 @endif
                 <p>SEMANA DEL {{ $currentDate->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->format('d/m/Y') }} AL
                     {{ $currentDate->copy()->endOfWeek(\Carbon\Carbon::FRIDAY)->format('d/m/Y') }}</p>
@@ -269,12 +269,12 @@
 
                                             $horarioBloque = $horarios
                                                 ->where(
-                                                    'dia',
+                                                    'dia_hpr',
                                                     ucfirst($nombreDia === 'miercoles' ? 'Miércoles' : $nombreDia),
                                                 )
                                                 ->first(function ($h) use ($blockStart, $blockEnd) {
-                                                    $hInicio = \Carbon\Carbon::parse($h->hora_inicio);
-                                                    $hFin = \Carbon\Carbon::parse($h->hora_fin);
+                                                    $hInicio = \Carbon\Carbon::parse($h->hora_inicio_hpr);
+                                                    $hFin = \Carbon\Carbon::parse($h->hora_fin_hpr);
                                                     return $hInicio->lt($blockEnd) && $hFin->gt($blockStart);
                                                 });
 
@@ -282,18 +282,18 @@
                                                 echo '<td style="border: 1px solid #e2e8f0; background-color: #f8f8f8;"><span class="empty-dash">-</span></td>';
                                             } else {
                                                 foreach ($citasCalendario as $cita) {
-                                                    if (!$cita->fecha->isSameDay($fechaObj)) {
+                                                    if (!$cita->fecha_cps->isSameDay($fechaObj)) {
                                                         continue;
                                                     }
 
                                                     $citaStart = null;
                                                     $citaEnd = null;
 
-                                                    if (!empty($cita->bloque_propuesto)) {
+                                                    if (!empty($cita->bloque_propuesto_cps)) {
                                                         if (
                                                             preg_match(
                                                                 '/(\d{1,2}:\d{2}(?:\s*[aApP][mM])?)\s*[-–]\s*(\d{1,2}:\d{2}(?:\s*[aApP][mM])?)/i',
-                                                                $cita->bloque_propuesto,
+                                                                $cita->bloque_propuesto_cps,
                                                                 $m,
                                                             )
                                                         ) {
@@ -302,8 +302,8 @@
                                                         }
                                                     }
 
-                                                    if (!$citaStart && !empty($cita->hora)) {
-                                                        $citaStart = \Carbon\Carbon::parse($cita->hora);
+                                                    if (!$citaStart && !empty($cita->hora_cps)) {
+                                                        $citaStart = \Carbon\Carbon::parse($cita->hora_cps);
                                                         $citaEnd = $citaStart->copy()->addHour();
                                                     }
 
@@ -323,16 +323,16 @@
                                                     foreach ($matchedCitas as $mcita) {
                                                         $mcHora = null;
                                                         if (
-                                                            !empty($mcita->bloque_propuesto) &&
+                                                            !empty($mcita->bloque_propuesto_cps) &&
                                                             preg_match(
                                                                 '/(\d{1,2}:\d{2}(?:\s*[aApP][mM])?)/i',
-                                                                $mcita->bloque_propuesto,
+                                                                $mcita->bloque_propuesto_cps,
                                                                 $hm,
                                                             )
                                                         ) {
                                                             $mcHora = \Carbon\Carbon::parse($hm[1]);
-                                                        } elseif (!empty($mcita->hora)) {
-                                                            $mcHora = \Carbon\Carbon::parse($mcita->hora);
+                                                        } elseif (!empty($mcita->hora_cps)) {
+                                                            $mcHora = \Carbon\Carbon::parse($mcita->hora_cps);
                                                         }
 
                                                         echo '<div style="background-color: #ffffff; border-radius: 4px; text-align: center; margin-bottom: 3px;">';
@@ -342,7 +342,7 @@
                                                                 '</span>';
                                                         }
                                                         $nombreCorto =
-                                                            $mcita->paciente->persona->nombre_persona ?? 'Paciente';
+                                                            $mcita->paciente->persona->nombres_per ?? 'Paciente';
                                                         echo '<span style="font-size: 7px; color: #475569; display: block; margin-top: 2px;">' .
                                                             htmlspecialchars($nombreCorto) .
                                                             '</span>';

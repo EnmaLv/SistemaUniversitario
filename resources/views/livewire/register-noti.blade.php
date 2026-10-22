@@ -78,11 +78,13 @@
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);">
                         </div>
 
-                        <button type="submit" @disabled(!$enableInput)
-                            class="inline-flex items-center justify-center rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-4 shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                            title="Buscar y registrar">
-                            <i class="fas fa-check"></i>
-                        </button>
+                        @canAction(['registro_diario', 'comedor_registro_diario'], 'crear')
+                            <button type="submit" @disabled(!$enableInput)
+                                class="inline-flex items-center justify-center rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-4 shadow-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                                title="Buscar y registrar">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        @endcanAction
                     </div>
 
                     <p
@@ -292,27 +294,33 @@
                             <span class="hidden sm:inline">Fechas</span>
                         </button>
 
-                        <a href="{{ route('admin.movimientos.registro_diario.export_excel', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 text-sm font-extrabold shadow-sm transition-all hover:bg-emerald-100 dark:hover:bg-emerald-950/50 active:scale-[0.98] shrink-0"
-                            target="_blank" rel="noopener" title="Exportar a Excel">
-                            <i class="fas fa-file-excel text-xs"></i>
-                            <span class="hidden sm:inline">Excel</span>
-                        </a>
+                        @canRoute('admin.movimientos.registro_diario.export_excel')
+                            <a href="{{ route('admin.movimientos.registro_diario.export_excel', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
+                                class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 text-sm font-extrabold shadow-sm transition-all hover:bg-emerald-100 dark:hover:bg-emerald-950/50 active:scale-[0.98] shrink-0"
+                                target="_blank" rel="noopener" title="Exportar a Excel">
+                                <i class="fas fa-file-excel text-xs"></i>
+                                <span class="hidden sm:inline">Excel</span>
+                            </a>
+                        @endcanRoute
 
-                        <a href="{{ route('admin.movimientos.registro_diario.export_pdf', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 px-4 py-2.5 text-sm font-extrabold shadow-sm transition-all hover:bg-rose-100 dark:hover:bg-rose-950/50 active:scale-[0.98] shrink-0"
-                            target="_blank" rel="noopener" title="Exportar a PDF">
-                            <i class="fas fa-file-pdf text-xs"></i>
-                            <span class="hidden sm:inline">PDF</span>
-                        </a>
+                        @canRoute('admin.movimientos.registro_diario.export_pdf')
+                            <a href="{{ route('admin.movimientos.registro_diario.export_pdf', request()->only(['buscar', 'fecha_desde', 'fecha_hasta'])) }}"
+                                class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 dark:border-rose-800/60 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 px-4 py-2.5 text-sm font-extrabold shadow-sm transition-all hover:bg-rose-100 dark:hover:bg-rose-950/50 active:scale-[0.98] shrink-0"
+                                target="_blank" rel="noopener" title="Exportar a PDF">
+                                <i class="fas fa-file-pdf text-xs"></i>
+                                <span class="hidden sm:inline">PDF</span>
+                            </a>
+                        @endcanRoute
 
                         @if ($showBtnFinalizar)
-                            <button type="button" @click="abrirModal()"
-                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-4 py-2.5 shadow-md transition-all active:scale-[0.98] shrink-0"
-                                title="Finalizar la jornada del día">
-                                <i class="fas fa-sun text-xs"></i>
-                                <span class="hidden sm:inline">Finalizar día</span>
-                            </button>
+                            @canAction(['registro_diario', 'comedor_registro_diario'], 'editar')
+                                <button type="button" @click="abrirModal()"
+                                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-4 py-2.5 shadow-md transition-all active:scale-[0.98] shrink-0"
+                                    title="Finalizar la jornada del día">
+                                    <i class="fas fa-sun text-xs"></i>
+                                    <span class="hidden sm:inline">Finalizar día</span>
+                                </button>
+                            @endcanAction
                         @endif
                     </div>
                 </div>
@@ -371,7 +379,7 @@
                     </thead>
                     <tbody class="text-sm font-medium">
                         @forelse ($data as $registro)
-                            <x-table-row :id="$registro->id" class="border-b"
+                            <x-table-row :id="$registro->id_rgc" class="border-b"
                                 style="border-color: var(--border-color);">
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -389,20 +397,20 @@
                                             <i class="fas fa-user text-xs"></i>
                                         </span>
                                         <div class="min-w-0">
-                                            <p class="font-bold truncate">{{ $registro->nombre_persona }}</p>
+                                            <p class="font-bold truncate">{{ $registro->nombres_per }}</p>
                                             <p class="text-[11px] text-gray-400 dark:text-gray-500 truncate">
-                                                {{ $registro->apellido_persona }}</p>
+                                                {{ $registro->apellidos_per }}</p>
                                         </div>
                                     </div>
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                    {{ $registro->nombre_pnf ?? '—' }}
+                                    {{ $registro->nombre_prg ?? '—' }}
                                 </td>
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                     <i class="far fa-calendar mr-1.5 opacity-60"></i>
-                                    {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($registro->fecha_comedor_rgc)->format('d/m/Y') }}
                                 </td>
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -413,9 +421,9 @@
                                     </span>
                                 </td>
 
-                                <x-table-actions :id="$registro->id" :show="false" :edit="false"
+                                <x-table-actions :id="$registro->id_rgc" :show="false" :edit="false"
                                     :toggle="false">
-                                    <a href="{{ route('admin.movimientos.registro_diario.show', $registro->id) }}"
+                                    <a href="{{ route('admin.movimientos.registro_diario.show', $registro->id_rgc) }}"
                                         onclick="event.stopPropagation()"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 transition-colors"
                                         title="Ver detalle">
@@ -602,11 +610,13 @@
                         <i class="fas fa-times text-xs"></i>
                         Cancelar
                     </button>
-                    <button type="submit"
-                        class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold shadow-md active:scale-[0.98] transition-all">
-                        <i class="fas fa-save text-xs"></i>
-                        Guardar y finalizar
-                    </button>
+                    @canAction(['registro_diario', 'comedor_registro_diario'], 'editar')
+                        <button type="submit"
+                            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold shadow-md active:scale-[0.98] transition-all">
+                            <i class="fas fa-save text-xs"></i>
+                            Guardar y finalizar
+                        </button>
+                    @endcanAction
                 </div>
             </form>
         </div>

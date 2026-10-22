@@ -71,6 +71,7 @@
                 </div>
             </div>
 
+            @canAction(['agenda', 'agenda_estadisticas'], 'exportar')
             <div x-data="{ openExport: false }" class="relative z-20">
                 <button @click="openExport = !openExport" @click.away="openExport = false"
                     style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
@@ -132,6 +133,7 @@
                     </button>
                 </div>
             </div>
+            @endcanAction
         </div>
     </div>
 
@@ -182,7 +184,7 @@
                 class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
                 <option value="">Todos</option>
                 @foreach ($avances as $avance)
-                    <option value="{{ $avance->id }}">{{ $avance->nombre }}</option>
+                    <option value="{{ $avance->id_avs }}">{{ $avance->nombre_avs }}</option>
                 @endforeach
             </select>
         </div>
@@ -194,7 +196,7 @@
                 class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
                 <option value="">Todos</option>
                 @foreach ($estados_animo as $animo)
-                    <option value="{{ $animo->id }}">{{ $animo->valor }} - {{ $animo->nombre }}</option>
+                    <option value="{{ $animo->id_esa }}">{{ $animo->valor_esa }} - {{ $animo->nombre_esa }}</option>
                 @endforeach
             </select>
         </div>
@@ -205,7 +207,7 @@
                 class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
                 <option value="">Todas</option>
                 @foreach ($prioridades as $prioridad)
-                    <option value="{{ $prioridad->nombre }}">{{ $prioridad->nombre }}</option>
+                    <option value="{{ $prioridad->nombre_pat }}">{{ $prioridad->nombre_pat }}</option>
                 @endforeach
             </select>
         </div>
@@ -437,7 +439,7 @@
                 let params = '';
                 if (estado) params += `&estado=${estado}`;
                 if (avance) params += `&avance_id=${avance}`;
-                if (animo) params += `&estado_animo_id=${animo}`;
+                if (animo) params += `&esa_id=${animo}`;
                 if (prioridad) params += `&prioridad=${prioridad}`;
                 if (perfil) params += `&perfil_academico=${perfil}`;
                 if (pnf) params += `&pnf=${pnf}`;

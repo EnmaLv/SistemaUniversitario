@@ -6,23 +6,22 @@
         $pacienteNombreInicial = old('paciente_nombre');
         if (!$pacienteNombreInicial && $consulta->paciente) {
             $pacienteNombreInicial = trim(
-                ($consulta->paciente->cedula_persona ?? '') .
+                ($consulta->paciente->cedula_per ?? '') .
                     ' ' .
-                    ($consulta->paciente->nombre_persona ?? '') .
+                    ($consulta->paciente->nombres_per ?? '') .
                     ' ' .
-                    ($consulta->paciente->apellido_persona ?? ''),
+                    ($consulta->paciente->apellidos_per ?? ''),
             );
         }
 
         // ── Fecha ───────────────────────────────────────────────
         $fechaValue = old('fecha');
         if (!$fechaValue) {
-            $fechaValue = $consulta->fecha
-                ? \Carbon\Carbon::parse($consulta->fecha)->format('Y-m-d')
+            $fechaValue = $consulta->fecha_cme
+                ? \Carbon\Carbon::parse($consulta->fecha_cme)->format('Y-m-d')
                 : now()->format('Y-m-d');
         }
-        $fechaCarbon = \Carbon\Carbon::parse($fechaValue);
-        $fechaTexto = $fechaCarbon->format('d/m/Y') . ($fechaCarbon->isToday() ? ' (hoy)' : '');
+        $fechaRegistro = $esEdicion ? $consulta->fechaRegistro() : now()->toDateString();
 
         // ── Enfermedades seleccionadas ──────────────────────────
         if (!isset($enfermedadesSeleccionadas)) {
@@ -30,7 +29,10 @@
             if (old('enfermedades')) {
                 $oldIds = (array) old('enfermedades');
                 $lista = $enfermedades ?? ($todasEnfermedades ?? collect());
-                $enfermedadesSeleccionadas = collect($lista)->whereIn('id', $oldIds)->values();
+                $enfermedadesSeleccionadas = collect($lista)
+                    ->whereIn('id_efm', $oldIds)
+                    ->map(fn($enf) => ['id' => $enf->id_efm, 'nombre' => $enf->nombre_efm, 'codigo' => $enf->codigo_efm ?? ''])
+                    ->values();
 
                 if ($enfermedadesSeleccionadas->isEmpty()) {
                     $enfermedadesSeleccionadas = collect($oldIds)->map(
@@ -43,9 +45,9 @@
             } elseif ($consulta->enfermedades) {
                 $enfermedadesSeleccionadas = $consulta->enfermedades->map(
                     fn($enf) => [
-                        'id' => $enf->id,
-                        'nombre' => $enf->nombre ?? ($enf->nombre_enfermedad ?? 'Sin nombre'),
-                        'codigo' => $enf->codigo ?? ($enf->codigo_cie ?? ''),
+                        'id' => $enf->id_efm,
+                        'nombre' => $enf->nombre_efm ?? 'Sin nombre',
+                        'codigo' => $enf->codigo_efm ?? '',
                     ],
                 );
             }
@@ -53,16 +55,19 @@
 
         // ── Configuración para Alpine ───────────────────────────
         $configForm = [
-            'pacienteId' => (string) old('id_persona', $consulta->id_persona ?? ''),
+            'pacienteId' => (string) old('per_id', $consulta->paciente_per_id ?? ''),
             'pacienteNombre' => (string) $pacienteNombreInicial,
-            'medicoId' => (string) old('medico_id', $consulta->medico_id ?? ''),
-            'motivo' => (string) old('motivo', $consulta->motivo ?? ''),
-            'diagnostico' => (string) old('diagnostico', $consulta->diagnostico ?? ''),
+            'medicoId' => (string) old('medico_id', $consulta->medico_per_id ?? ''),
+            'motivo' => (string) old('motivo', $consulta->motivo_cme ?? ''),
+            'fecha' => (string) $fechaValue,
+            'fechaRegistro' => $fechaRegistro,
+            'motivoTardio' => (string) old('motivo_registro_tardio', $consulta->motivo_registro_tardio_cme ?? ''),
+            'diagnostico' => (string) old('diagnostico', $consulta->diagnostico_cme ?? ''),
             'enfermedades' => collect($enfermedadesSeleccionadas)->values(),
             'medicos' => collect($medicos)
                 ->map(
                     fn($m) => [
-                        'id' => (string) $m->id_persona,
+                        'id' => (string) $m->per_id,
                         'nombre' => $m->nombre_completo,
                         'consultorio_id' => (string) ($m->consultorio_id ?? ''),
                         'consultorio_nombre' => $m->consultorio_nombre ?? '',
@@ -162,10 +167,9 @@
                     :consulta="$consulta" />
 
                 {{-- Campos ocultos --}}
-                <input type="hidden" name="id_persona" id="id_persona" :value="pacienteId">
+                <input type="hidden" name="per_id" id="per_id" :value="pacienteId">
                 <input type="hidden" name="paciente_nombre" id="paciente_nombre" :value="pacienteNombre">
                 <input type="hidden" name="consultorio_id" id="consultorio_id" :value="consultorioId">
-                <input type="hidden" name="fecha" value="{{ $fechaValue }}">
 
                 <div class="cx-card">
 
@@ -207,7 +211,7 @@
                                         @input="buscarPaciente()"
                                         @focus="pacienteResultados.length && (pacienteAbierto = true)"
                                         @keydown="tecla($event, 'paciente')" placeholder="Nombre, apellido o cédula"
-                                        class="cx-input !pl-8 @error('id_persona') is-invalid @enderror">
+                                        class="cx-input !pl-8 @error('per_id') is-invalid @enderror">
 
                                     <span x-show="pacienteCargando" x-cloak
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] cx-faint">
@@ -218,7 +222,7 @@
                                     <div id="paciente_resultados" x-show="pacienteAbierto" x-cloak
                                         class="cx-dropdown" role="listbox">
                                         <template x-for="(item, i) in pacienteResultados"
-                                            :key="item.id_persona ?? item.id">
+                                            :key="item.per_id ?? item.id">
                                             <button type="button" class="cx-option" role="option"
                                                 :data-activo="i === pacienteActivo"
                                                 :aria-selected="i === pacienteActivo" @mouseenter="pacienteActivo = i"
@@ -240,7 +244,7 @@
                                     Escribe al menos 2 caracteres.
                                 </p>
 
-                                @error('id_persona')
+                                @error('per_id')
                                     <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
                                             aria-hidden="true"></i>{{ $message }}</p>
                                 @enderror
@@ -256,8 +260,8 @@
                                     class="cx-input @error('medico_id') is-invalid @enderror">
                                     <option value="" disabled>Selecciona un médico</option>
                                     @foreach ($medicos as $medico)
-                                        <option value="{{ $medico->id_persona }}"
-                                            {{ old('medico_id', $consulta->medico_id ?? null) == $medico->id_persona ? 'selected' : '' }}>
+                                        <option value="{{ $medico->per_id }}"
+                                            {{ old('medico_id', $consulta->medico_per_id ?? null) == $medico->per_id ? 'selected' : '' }}>
                                             {{ $medico->nombre_completo }} ({{ $medico->nombre_rol }})
                                         </option>
                                     @endforeach
@@ -267,6 +271,47 @@
                                             aria-hidden="true"></i>{{ $message }}</p>
                                 @enderror
                                 @error('consultorio_id')
+                                    <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
+                                            aria-hidden="true"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="cx-divider p-4 sm:p-5" aria-labelledby="sec-fecha">
+                        <h2 id="sec-fecha" class="cx-title">¿Cuándo se atendió?</h2>
+                        <p class="text-xs cx-muted mt-0.5 mb-3">
+                            Fecha real de la atención. Se registra el
+                            {{ \Carbon\Carbon::parse($fechaRegistro)->format('d/m/Y') }}.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3">
+                            <div>
+                                <label for="fecha" class="cx-label">
+                                    Fecha de atención<span class="cx-req" aria-hidden="true">*</span>
+                                </label>
+                                <input type="date" id="fecha" name="fecha" x-model="fecha" required
+                                    max="{{ now()->toDateString() }}"
+                                    class="cx-input @error('fecha') is-invalid @enderror">
+                                <p x-show="esTardio" x-cloak class="cx-hint !opacity-100 text-amber-600 dark:text-amber-400">
+                                    <i class="fas fa-clock-rotate-left text-[10px] mr-1" aria-hidden="true"></i>
+                                    Distinta a la fecha de registro: indica el motivo.
+                                </p>
+                                @error('fecha')
+                                    <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
+                                            aria-hidden="true"></i>{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div x-show="esTardio" x-cloak>
+                                <label for="motivo_registro_tardio" class="cx-label">
+                                    Motivo del registro tardío<span class="cx-req" aria-hidden="true">*</span>
+                                </label>
+                                <textarea id="motivo_registro_tardio" name="motivo_registro_tardio" rows="2" maxlength="1000"
+                                    x-model="motivoTardio" :required="esTardio" :disabled="!esTardio"
+                                    placeholder="Ej.: la atención se hizo en jornada sin conexión y se cargó al día siguiente"
+                                    class="cx-input @error('motivo_registro_tardio') is-invalid @enderror"></textarea>
+                                @error('motivo_registro_tardio')
                                     <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
                                             aria-hidden="true"></i>{{ $message }}</p>
                                 @enderror
@@ -307,7 +352,7 @@
                                     </label>
                                     <textarea id="observaciones" name="observaciones" rows="2" maxlength="2000"
                                         placeholder="Ej.: alérgico a la penicilina, hipertenso"
-                                        class="cx-input @error('observaciones') is-invalid @enderror">{{ old('observaciones', $consulta->observaciones ?? '') }}</textarea>
+                                        class="cx-input @error('observaciones') is-invalid @enderror">{{ old('observaciones', $consulta->observaciones_cme ?? '') }}</textarea>
                                     <p class="cx-hint">Alergias o datos que el farmaceuta deba conocer.</p>
                                     @error('observaciones')
                                         <p class="cx-error"><i class="fas fa-circle-exclamation mt-0.5"
@@ -428,10 +473,12 @@
                         <p class="hidden md:block text-xs cx-muted" x-show="completos < checklist.length">
                             Faltan <span x-text="checklist.length - completos"></span> datos obligatorios.
                         </p>
+                        @canRoute($esEdicion ? 'admin.salud.movimientos.consultas.update' : 'admin.salud.movimientos.consultas.store')
                         <button type="submit" class="rd-submit-btn cx-btn cx-btn-primary">
                             {{ $esEdicion ? 'Guardar cambios y continuar' : 'Guardar y continuar a la receta' }}
                             <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
                         </button>
+                        @endcanRoute
                     </div>
                 </div>
             </form>
@@ -460,6 +507,9 @@
 
                 // Clínico
                 motivo: cfg.motivo || '',
+                fecha: cfg.fecha || '',
+                fechaRegistro: cfg.fechaRegistro || '',
+                motivoTardio: cfg.motivoTardio || '',
                 diagnostico: cfg.diagnostico || '',
 
                 // Enfermedades
@@ -487,11 +537,25 @@
                     return this.medicoActual ? this.medicoActual.consultorio_nombre : '';
                 },
 
+                get esTardio() {
+                    return !!this.fecha && this.fecha !== this.fechaRegistro;
+                },
+
                 get checklist() {
+                    const tardio = this.esTardio ? [{
+                        label: 'Motivo del registro tardío',
+                        ok: this.motivoTardio.trim().length >= 5
+                    }] : [];
+
                     return [{
                             label: 'Paciente',
                             ok: !!this.pacienteId
                         },
+                        {
+                            label: 'Fecha de atención',
+                            ok: !!this.fecha && this.fecha <= '{{ now()->toDateString() }}'
+                        },
+                        ...tardio,
                         {
                             label: 'Médico tratante',
                             ok: !!this.medicoId
@@ -559,7 +623,7 @@
                 },
 
                 elegirPaciente(item) {
-                    this.pacienteId = String(item.id_persona ?? item.id);
+                    this.pacienteId = String(item.per_id ?? item.id);
                     this.pacienteNombre = (item.nombre || '').trim();
                     this.pacienteQuery = '';
                     this.pacienteResultados = [];

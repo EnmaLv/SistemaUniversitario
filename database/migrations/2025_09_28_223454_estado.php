@@ -11,11 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('estados', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre_estado');
-            $table->boolean('status')->default(true);
+        Schema::create('pais', function (Blueprint $table) {
+            $table->id('id_pai');
+            $table->string('nombre_pai');
             $table->timestamps();
+            $table->auditoria();
+        });
+
+        Schema::create('estado', function (Blueprint $table) {
+            $table->id('id_esd');
+            $table->string('nombre_esd');
+            $table->foreignId('pai_id')->constrained('pais', 'id_pai');
+            $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -24,6 +32,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('estados');
+        Schema::dropIfExists('estado');
+        Schema::dropIfExists('pais');
     }
 };

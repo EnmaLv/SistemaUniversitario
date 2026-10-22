@@ -273,7 +273,7 @@
         <div class="document-header-right">
             <div class="folio-box">
                 <span>Consulta N°</span>
-                #{{ str_pad($consulta->id, 5, '0', STR_PAD_LEFT) }}
+                #{{ str_pad($consulta->id_cme, 5, '0', STR_PAD_LEFT) }}
             </div>
         </div>
     </div>
@@ -284,14 +284,14 @@
             <div class="info-cell">
                 <strong class="label">Datos del paciente</strong>
                 <span class="field-name">Nombre:</span>
-                <span class="field-value">{{ $consulta->paciente->nombre_persona }}
-                    {{ $consulta->paciente->apellido_persona }}</span><br>
+                <span class="field-value">{{ $consulta->paciente->nombres_per }}
+                    {{ $consulta->paciente->apellidos_per }}</span><br>
                 <span class="field-name">Cédula/ID:</span>
-                <span class="field-value">{{ $consulta->paciente->cedula_persona ?? 'S/N' }}</span><br>
+                <span class="field-value">{{ $consulta->paciente->cedula_per ?? 'S/N' }}</span><br>
                 <span class="field-name">Válido hasta:</span>
                 <span class="field-value">
-                    @if (optional($consulta->receta)->vigencia)
-                        {{ \Carbon\Carbon::parse($consulta->receta->vigencia)->format('d/m/Y') }}
+                    @if (optional($consulta->receta)->fecha_vigencia_rme)
+                        {{ \Carbon\Carbon::parse($consulta->receta->fecha_vigencia_rme)->format('d/m/Y') }}
                     @else
                         N/A
                     @endif
@@ -300,12 +300,14 @@
             <div class="info-cell">
                 <strong class="label">Datos de la consulta</strong>
                 <span class="field-name">Médico:</span>
-                <span class="field-value">Dr(a). {{ $consulta->medico->nombre_persona }}
-                    {{ $consulta->medico->apellido_persona }}</span><br>
+                <span class="field-value">Dr(a). {{ $consulta->medico->nombres_per }}
+                    {{ $consulta->medico->apellidos_per }}</span><br>
                 <span class="field-name">Consultorio:</span>
-                <span class="field-value">{{ optional($consulta->consultorio)->nombre ?? 'Centro Médico' }}</span><br>
-                <span class="field-name">Fecha:</span>
-                <span class="field-value">{{ $consulta->fecha->format('d/m/Y') }}</span>
+                <span class="field-value">{{ optional($consulta->consultorio)->nombre_csr ?? 'Centro Médico' }}</span><br>
+                <span class="field-name">Fecha de atención:</span>
+                <span class="field-value">{{ optional($consulta->fecha_cme)->format('d/m/Y') }}</span><br>
+                <span class="field-name">Fecha de registro:</span>
+                <span class="field-value">{{ optional($consulta->created_at)->format('d/m/Y') }}</span>
             </div>
         </div>
     </div>
@@ -323,14 +325,14 @@
                 <div class="medication-item">
                     <div class="med-body">
                         <div class="med-name">
-                            &mdash; {{ optional($detalle->producto)->nombre ?? 'Producto no especificado' }}
-                            <span class="med-qty">- {{ floatval($detalle->cantidad) }}
-                                {{ optional($detalle->unidad)->nombre ?? 'Und' }}</span>
+                            &mdash; {{ optional($detalle->producto)->nombre_pdt ?? 'Producto no especificado' }}
+                            <span class="med-qty">- {{ floatval($detalle->cantidad_prescrita_drm) }}
+                                {{ mb_strtolower($detalle->unidad_prescrita_drm ?: (optional($detalle->unidad)->nombre_unm ?? 'unidad')) }}</span>
                         </div>
                         <div class="med-instructions">
-                            <strong>Tomar / Aplicar:</strong> {{ $detalle->frecuencia }}
-                            @if ($detalle->observaciones)
-                                <span class="med-note"><strong>Nota:</strong> {{ $detalle->observaciones }}</span>
+                            <strong>Tomar / Aplicar:</strong> {{ $detalle->frecuencia_drm }}
+                            @if ($detalle->instrucciones_drm)
+                                <span class="med-note"><strong>Nota:</strong> {{ $detalle->instrucciones_drm }}</span>
                             @endif
                         </div>
                     </div>
@@ -347,8 +349,8 @@
     <div class="signature-area">
         <div class="signature-line"></div>
         <div class="signature-text">
-            <strong>Dr(a). {{ $consulta->medico->nombre_persona }}
-                {{ $consulta->medico->apellido_persona }}</strong><br>
+            <strong>Dr(a). {{ $consulta->medico->nombres_per }}
+                {{ $consulta->medico->apellidos_per }}</strong><br>
             Firma y sello médico
         </div>
     </div>

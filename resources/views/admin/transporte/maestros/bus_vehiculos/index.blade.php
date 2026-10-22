@@ -8,17 +8,19 @@
             </h1>
             <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                 Bienvenido <span
-                    class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span>.
+                    class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span>.
                 Gestione los viajes activos y programados.
             </p>
         </div>
 
         <div class="flex items-center gap-3">
+            @canRoute('admin.transporte.maestros.bus_vehiculos.create')
             <a href="{{ route('admin.transporte.maestros.bus_vehiculos.create') }}"
                 class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
                 <i class="fas fa-bus text-xs"></i>
                 <span>Nuevo Vehiculo</span>
             </a>
+            @endcanRoute
         </div>
     </div>
 
@@ -88,7 +90,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                     @forelse($vehiculos as $vehiculo)
-                        <x-table-row :id="$vehiculo->id">
+                        <x-table-row :id="$vehiculo->id_vtr">
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <span
                                     class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">
@@ -100,47 +102,47 @@
                                 style="color: var(--text-main);">
                                 <span class="inline-flex items-center gap-1.5">
                                     <i class="fas fa-bus text-red-600 dark:text-red-500"></i>
-                                    {{ $vehiculo->placa }}
+                                    {{ $vehiculo->placa_vtr }}
                                 </span>
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <div class="font-bold" style="color: var(--text-main);">
-                                    {{ $vehiculo->modelo->busMarca->nombre ?? '-' }} /
-                                    {{ $vehiculo->modelo->nombre ?? '-' }}
+                                    {{ $vehiculo->modelo->busMarca->nombre_mav ?? '-' }} /
+                                    {{ $vehiculo->modelo->nombre_mov ?? '-' }}
                                 </div>
 
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <div class="font-bold" style="color: var(--text-main);">
-                                    {{ $vehiculo->anio }} - <small class="text-muted">{{ $vehiculo->color }}</small>
+                                    {{ $vehiculo->anio_vtr }} - <small class="text-muted">{{ $vehiculo->color_vtr }}</small>
                                 </div>
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                {{ $vehiculo->peso }}
+                                {{ $vehiculo->peso_vtr }}
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 <span
-                                    title="Urbano: {{ $vehiculo->consumo_urbano }} L/km | Carretera: {{ $vehiculo->consumo_carretera }} L/km | Ralentí: {{ $vehiculo->consumo_relenti }} L/h">
-                                    {{ $vehiculo->tipoCombustible->nombre ?? '-' }} <i
+                                    title="Urbano: {{ $vehiculo->consumo_urbano_vtr }} L/km | Carretera: {{ $vehiculo->consumo_carretera_vtr }} L/km | Ralentí: {{ $vehiculo->consumo_ralenti_vtr }} L/h">
+                                    {{ $vehiculo->tipoCombustible->nombre_tcb ?? '-' }} <i
                                         class="fas fa-info-circle text-muted" style="font-size:0.8rem;"></i>
                                 </span>
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap font-semibold font-bold"
                                 style="color: var(--text-main);">
-                                {{ $vehiculo->cantidad_pasajeros }} pas.
+                                {{ $vehiculo->capacidad_pasajeros_vtr }} pas.
                             </td>
 
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 {!! $vehiculo->estado_badge !!}
                             </td>
 
-                            <x-table-actions :id="$vehiculo->id" baseUrl="admin/transporte/maestros/bus_vehiculos"
-                                :status="$vehiculo->activo" :show="false" />
+                            <x-table-actions :id="$vehiculo->id_vtr" baseUrl="admin/transporte/maestros/bus_vehiculos"
+                                :status="$vehiculo->status_id == 1" :show="false" />
 
                         </x-table-row>
                     @empty

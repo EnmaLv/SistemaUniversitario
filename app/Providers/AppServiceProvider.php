@@ -3,8 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
             if (Auth::check()) {
                 $user = Auth::user();
                 return (new \App\AdminLTE\Filters\ModuleFilter())
-                    ->resolveInitialRoute($user->id_usuario ?? $user->id);
+                    ->resolveInitialRoute($user->id_use ?? $user->id);
             }
             return '/';
         });
@@ -92,15 +90,5 @@ class AppServiceProvider extends ServiceProvider
         $directories = glob($mainPath . '/*', GLOB_ONLYDIR);
         $paths = array_merge([$mainPath], $directories);
         $this->loadMigrationsFrom($paths);
-
-        if (!app()->runningInConsole()) {
-            try {
-                if (!Schema::hasTable('sessions')) {
-                    Artisan::call('migrate', ['--force' => true]);
-                    Artisan::call('db:seed', ['--force' => true]);
-                }
-            } catch (\Exception $e) {
-            }
-        }
     }
 }

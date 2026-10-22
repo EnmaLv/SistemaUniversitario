@@ -43,7 +43,7 @@
             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                 class="rounded-2xl border shadow-sm overflow-hidden p-6 sm:p-8">
 
-                <form action="{{ route('admin.psicologia.maestros.avances_sesion.update', $avance->id) }}"
+                <form action="{{ route('admin.psicologia.maestros.avances_sesion.update', $avance->id_avs) }}"
                     method="POST">
                     @csrf
                     @method('PUT')
@@ -56,7 +56,7 @@
                                 Nombre del Avance <span class="text-red-500">*</span>
                             </label>
                             <input type="text" name="nombre" id="nombre"
-                                value="{{ old('nombre', $avance->nombre) }}"
+                                value="{{ old('nombre', $avance->nombre_avs) }}"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all"
                                 required>
@@ -73,7 +73,7 @@
                                 Valor Numérico (1 - 10) <span class="text-red-500">*</span>
                             </label>
                             <input type="number" name="valor" id="valor" min="1" max="10"
-                                value="{{ old('valor', $avance->valor) }}"
+                                value="{{ old('valor', $avance->valor_avs) }}"
                                 oninput="if(this.value > 10) this.value = 10; if(this.value < 0) this.value = 0; if(this.value.length > 2) this.value = this.value.slice(0, 2);"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all"
@@ -99,7 +99,7 @@
                             <textarea name="descripcion" id="descripcion" rows="4"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full p-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all resize-none"
-                                placeholder="Detalles o criterios para asignar este avance...">{{ old('descripcion', $avance->descripcion) }}</textarea>
+                                placeholder="Detalles o criterios para asignar este avance...">{{ old('descripcion', $avance->descripcion_avs) }}</textarea>
                             @error('descripcion')
                                 <p class="mt-2 text-xs text-red-500 font-bold flex items-center gap-1">
                                     <i class="fas fa-circle-exclamation"></i> {{ $message }}

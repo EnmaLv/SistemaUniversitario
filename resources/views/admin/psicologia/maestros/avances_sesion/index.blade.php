@@ -31,11 +31,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.psicologia.maestros.avances_sesion.create')
                     <a href="{{ route('admin.psicologia.maestros.avances_sesion.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nuevo Avance</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -56,12 +58,12 @@
                 @forelse($avances as $avance)
                     @php
                         $valorColor = match(true) {
-                            $avance->valor >= 7 => 'bg-emerald-500',
-                            $avance->valor >= 4 => 'bg-amber-500',
+                            $avance->valor_avs >= 7 => 'bg-emerald-500',
+                            $avance->valor_avs >= 4 => 'bg-amber-500',
                             default => 'bg-rose-500',
                         };
-                        $barWidth = ($avance->valor / 10) * 100;
-                        $enUso = !$avance->es_sistema && \App\Models\salud\AvanceSesion::enUsoUltimaNota($avance->id, Auth::id());
+                        $barWidth = ($avance->valor_avs / 10) * 100;
+                        $enUso = !$avance->es_sistema_avs && \App\Models\salud\AvanceSesion::enUsoUltimaNota($avance->id_avs, Auth::id());
                     @endphp
 
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -69,14 +71,14 @@
 
                         <div class="flex items-center gap-4 mb-4">
                             <div class="w-12 h-12 rounded-xl bg-{{ $themeColor }}-50 dark:bg-{{ $themeColor }}-950/50 text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400 flex items-center justify-center shrink-0 font-black text-lg shadow-sm">
-                                {{ $avance->valor }}
+                                {{ $avance->valor_avs }}
                             </div>
                             <div class="min-w-0 flex-1">
                                 <h3 class="text-lg font-bold tracking-tight uppercase leading-tight truncate" style="color: var(--text-main);">
-                                    {{ $avance->nombre }}
+                                    {{ $avance->nombre_avs }}
                                 </h3>
                                 <div class="mt-1">
-                                    @if($avance->es_sistema)
+                                    @if($avance->es_sistema_avs)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 uppercase tracking-wider">
                                             <i class="fas fa-shield-alt me-1 text-[9px]"></i> Sistema
                                         </span>
@@ -95,18 +97,18 @@
                                 <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden flex-grow border border-gray-200/50 dark:border-gray-700/50">
                                     <div class="h-full rounded-full {{ $valorColor }} transition-all duration-500" style="width: {{ $barWidth }}%"></div>
                                 </div>
-                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 w-10 text-right">{{ $avance->valor }}/10</span>
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 w-10 text-right">{{ $avance->valor_avs }}/10</span>
                             </div>
                         </div>
 
                         <div class="flex-grow my-2">
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed line-clamp-2">
-                                {{ $avance->descripcion ?? 'Sin descripción configurada.' }}
+                                {{ $avance->descripcion_avs ?? 'Sin descripción configurada.' }}
                             </p>
                         </div>
 
                         <div class="flex items-center justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-800/80 mt-auto">
-                            @if($avance->es_sistema)
+                            @if($avance->es_sistema_avs)
                                 <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-2.5 py-1 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-1.5"
                                     title="Los avances predefinidos del sistema no se pueden modificar.">
                                     <i class="fas fa-lock text-[10px]"></i> Predefinido
@@ -117,12 +119,15 @@
                                     <i class="fas fa-lock text-[10px]"></i> En Uso (Bloqueado)
                                 </span>
                             @else
-                                <a href="{{ route('admin.psicologia.maestros.avances_sesion.edit', $avance->id) }}"
+                                @canRoute('admin.psicologia.maestros.avances_sesion.edit')
+                                <a href="{{ route('admin.psicologia.maestros.avances_sesion.edit', $avance->id_avs) }}"
                                     class="p-2.5 bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 rounded-xl hover:bg-sky-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
                                     title="Editar Avance">
                                     <i class="fas fa-pen"></i>
                                 </a>
-                                <form action="{{ route('admin.psicologia.maestros.avances_sesion.destroy', $avance->id) }}"
+                                @endcanRoute
+                                @canRoute('admin.psicologia.maestros.avances_sesion.destroy')
+                                <form action="{{ route('admin.psicologia.maestros.avances_sesion.destroy', $avance->id_avs) }}"
                                     method="POST" class="inline-block"
                                     onsubmit="event.preventDefault(); AppModal.confirm('Confirmar', '¿Estás seguro de eliminar este avance? Se realizará un borrado lógico.').then(c => { if(c) this.submit(); });">
                                     @csrf
@@ -133,6 +138,7 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
+                                @endcanRoute
                             @endif
                         </div>
                     </div>

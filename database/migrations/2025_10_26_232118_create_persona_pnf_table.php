@@ -11,24 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pnf', function (Blueprint $table) {
-            $table->id('id_pnf');
-            $table->string('nombre_pnf');
-            $table->foreignId('id_estatus')->nullable()->constrained('estatus', 'id_estatus')->onDelete('cascade');
+        Schema::create('programa', function (Blueprint $table) {
+            $table->id('id_prg');
+            $table->string('codigo_prg', 30)->unique();
+            $table->string('nombre_prg');
             $table->timestamps();
+            $table->auditoria();
         });
 
-        Schema::create('persona_pnf', function (Blueprint $table) {
-            $table->id('id_persona_pnf');
-            $table->foreignId('id_persona')
-                ->references("id_persona")->on("persona")
+        Schema::create('persona_programa', function (Blueprint $table) {
+            $table->id('id_pep');
+            $table->foreignId('per_id')
+                ->references('id_per')->on('persona')
                 ->onDelete('cascade');
-            $table->foreignId('id_pnf')
-                ->references("id_pnf")->on("pnf")
+            $table->foreignId('prg_id')
+                ->references('id_prg')->on("programa")
                 ->onDelete('cascade');
-            $table->date('fecha_inicio');
-            $table->date('fecha_fin')->nullable();
+            $table->date('fecha_inicio_pep');
+            $table->date('fecha_fin_pep')->nullable();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -37,7 +39,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('persona_pnf');
-        Schema::dropIfExists('pnf');
+        Schema::dropIfExists('persona_programa');
+        Schema::dropIfExists('programa');
     }
 };

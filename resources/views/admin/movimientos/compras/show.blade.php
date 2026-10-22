@@ -1,374 +1,132 @@
-@extends('layouts.app')
+<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-@section('content_header')
-    <div class="rd-card p-4 mb-4 d-flex justify-content-between align-items-center"
-        style="background: var(--bg-card); border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid var(--border-color);">
+            @include('components.alert')
 
-        <!-- Texto principal -->
-        <div>
-            <h1 class="m-0" style="font-size:1.45rem; color:var(--text-main); font-weight:700;">
-                Requisición N.º {{ $compra->id }}
-            </h1>
+            @php
+                $finalizada = $compra->estado_compra_cmp === \App\Models\Compra::ESTADO_FINALIZADA;
+                $sedeCompra = $compra->sed_id ? \Illuminate\Support\Facades\DB::table('sede')->where('id_sed', $compra->sed_id)->value('nombre_sed') : null;
+                $datosCompra = [
+                    ['fa-user-tie', 'Proveedor', $compra->proveedor_empresa ?: $compra->proveedor_nombre],
+                    ['fa-calendar-alt', 'Fecha', \Carbon\Carbon::parse($compra->fecha_compra_cmp)->format('d/m/Y H:i')],
+                    ['fa-flag', 'Estado', $compra->estado_compra_cmp],
+                    ['fa-store-alt', 'Sede que compró', $sedeCompra ?? '—'],
+                    ['fa-sticky-note', 'Observaciones', $compra->observacion_cmp ?: 'Sin observaciones'],
+                ];
+            @endphp
 
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:var(--text-main); opacity:.72;">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
-            </p>
-        </div>
-
-        <!-- Imagen + Fecha -->
-        <div class="d-flex align-items-center" style="gap:14px;">
-            <div class="text-right d-none d-sm-block">
-                <small class="text-muted d-block" style="font-size:0.75rem;">Hoy</small>
-                <span style="font-weight:600; font-size:0.95rem;">
-                    {{ \Carbon\Carbon::now()->format('d/m/Y') }}
-                </span>
-            </div>
-
-            <div
-                style="
-                width:46px;
-                height:46px;
-                border-radius:12px;
-                overflow:hidden;
-                box-shadow:0 4px 12px rgba(15,23,42,0.08);
-            ">
-                <img src="{{ asset('img/usuario-verificado.webp') }}" alt="Usuario"
-                    style="width:100%; height:100%; object-fit:cover;">
-            </div>
-        </div>
-
-    </div>
-@stop
-
-@section('content')
-    <div class="row">
-        <div class="col-md-12 m-auto">
-            <div class="card rd-card">
-                <div class="card-header">
-                    <h3 class="card-title"><b>Compra Creada</b></h3>
-
-                    <div class="card-tools">
-                        <a href="{{ route('admin.movimientos.compras.index') }}" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 tool">
-                            <i class="fas fa-arrow-left"></i>
-                            <b>Volver</b>
-                        </a>
-                    </div>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                        Requisición #{{ $compra->id_cmp }}
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium" style="color: var(--text-muted);">
+                        Consulta qué se compró y cómo se repartió entre las sedes.
+                    </p>
                 </div>
-                <div class="card-body" style="display: block;">
+                <div class="flex items-center gap-3">
+                    @if (! $finalizada)
+                        @canRoute('admin.movimientos.compras.edit')
+                            <a href="{{ route('admin.movimientos.compras.edit', $compra->id_cmp) }}"
+                                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-md active:scale-95 transition-all">
+                                <i class="fas fa-arrow-right text-xs"></i> Continuar la requisición
+                            </a>
+                        @endcanRoute
+                    @endif
+                    <a href="{{ route('admin.movimientos.compras.index') }}"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                        style="border-color: var(--border-color); color: var(--text-main);">
+                        <i class="fas fa-arrow-left text-[10px]"></i> Volver
+                    </a>
+                </div>
+            </div>
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="row">
-                                <div class="col-md-3" style="display: inline-block;">
-                                    <div class="form-group">
-                                        <label for="proveedor_id">Proveedor</label>
-                                        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
-                                            <div class="">
-                                                <span class="px-3 text-slate-500 inline-block"><i
-                                                        class="fas fa-tags"></i></span>
-                                            </div>
-                                            <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="proveedor_id" name="proveedor_id"
-                                                placeholder="Seleccione proveedor"
-                                                value="{{ old('proveedor_id', $compra->proveedor_nombre) }}" readonly>
-                                        </div>
-                                        @error('proveedor_id')
-                                            <div class="alert text-danger p-0 m-0">
-                                                <b>{{ 'Este campo es obligatorio.' }}</b>
-                                            </div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="form-group col-md-2" style="display: inline-block;">
-                                    <label for="fecha">Fecha de Compra</label>
-                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
-                                        <div class="">
-                                            <span class="px-3 text-slate-500 inline-block"><i
-                                                    class="fas fa-calendar-alt"></i></span>
-                                        </div>
-                                        <input type="datetime-local"
-                                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="fecha" name="fecha"
-                                            value="{{ old('fecha', $compra->fecha ? \Carbon\Carbon::parse($compra->fecha)->format('Y-m-d\TH:i') : '') }}" disabled>
-                                    </div>
-                                    @error('fecha')
-                                        <div class="alert text-danger p-0 m-0">
-                                            <b>{{ 'Este campo es obligatorio.' }}</b>
-                                        </div>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-3" style="display: inline-block;">
-                                    <label for="observaciones">Observaciones</label>
-                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
-                                        <div class="">
-                                            <span class="px-3 text-slate-500 inline-block"><i
-                                                    class="fas fa-sticky-note"></i></span>
-                                        </div>
-                                        <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="observaciones"
-                                            name="observaciones" placeholder="Ingrese observaciones"
-                                            value="{{ old('observaciones', $compra->observaciones ?? 'Sin observaciones') }}" readonly>
-                                    </div>
-                                    @error('observaciones')
-                                        <div class="alert text-danger p-0 m-0">
-                                            <b>{{ 'Este campo es obligatorio.' }}</b>
-                                        </div>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-2" style="display: inline-block;">
-                                    <label for="estado">Estado Compra</label>
-                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
-                                        <div class="">
-                                            <span class="px-3 text-slate-500 inline-block"><i
-                                                    class="fas fa-sticky-note"></i></span>
-                                        </div>
-                                        <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="estado" name="estado"
-                                            placeholder="Ingrese estado" value="{{ old('estado', $compra->estado) }}"
-                                            readonly>
-                                    </div>
-                                    @error('estado')
-                                        <div class="alert text-danger p-0 m-0">
-                                            <b>{{ 'Este campo es obligatorio.' }}</b>
-                                        </div>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-2" style="display: inline-block;">
-                                    <label for="sede_destino">Sede de Destino</label>
-                                    <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mb-3">
-                                        <div class="">
-                                            <span class="px-3 text-slate-500 inline-block"><i
-                                                    class="fas fa-building"></i></span>
-                                        </div>
-                                        <input type="text" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="sede_destino"
-                                            name="sede_destino" placeholder="Sede de destino"
-                                            value="{{ $sede_destino ? $sede_destino->nombre : 'Sin concluir' }}" readonly>
-                                    </div>
-                                    @error('sede_destino')
-                                        <div class="alert text-danger p-0 m-0">
-                                            <b>{{ 'Este campo es obligatorio.' }}</b>
-                                        </div>
-                                    @enderror
-                                </div>
-                            </div>
-
+            <div class="rounded-2xl border shadow-sm p-5 sm:p-6 mb-6" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    @foreach ($datosCompra as [$icono, $etiqueta, $valor])
+                        <div>
+                            <p class="text-[10px] uppercase tracking-wider font-black" style="color: var(--text-muted);">
+                                <i class="fas {{ $icono }} mr-1"></i> {{ $etiqueta }}
+                            </p>
+                            <p class="mt-1 text-sm font-bold break-words" style="color: var(--text-main);">{{ $valor }}</p>
                         </div>
-                    </div>
-
+                    @endforeach
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 m-auto">
-            <div class="card rd-card">
-                <div class="card-header">
-                    <h3 class="card-title"><b>Productos Agregados</b></h3>
+
+            <div class="rounded-2xl border shadow-sm overflow-hidden mb-6" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                <div class="px-5 sm:px-6 py-4 border-b" style="border-color: var(--border-color);">
+                    <h3 class="text-sm font-extrabold tracking-tight" style="color: var(--text-main);">Productos comprados</h3>
                 </div>
-                <div class="card-body" style="display: block;">
-
-                    <div class="row">
-                        <div class="col-md-12">
-
-                            @if ($detalles->count() > 0)
-                                <h2 class="my-4">Detalles de la Orden de Compra</h2>
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Producto</th>
-                                            <th>Código de Lote</th>
-                                            <th>Cantidad</th>
-                                            <th>Precio Unitario</th>
-                                            <th>Subtotal</th>
+                <div class="p-5 sm:p-6">
+                    @if ($detalles->count() > 0)
+                        <div class="overflow-x-auto rounded-2xl border" style="border-color: var(--border-color);">
+                            <table class="w-full text-sm">
+                                <thead style="background-color: rgba(0,0,0,0.025); border-bottom: 1px solid var(--border-color);">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-[10px] uppercase tracking-wider font-black text-gray-500 dark:text-gray-400">Producto</th>
+                                        <th class="px-4 py-3 text-left text-[10px] uppercase tracking-wider font-black text-gray-500 dark:text-gray-400">Lote</th>
+                                        <th class="px-4 py-3 text-center text-[10px] uppercase tracking-wider font-black text-gray-500 dark:text-gray-400">Cantidad</th>
+                                        <th class="px-4 py-3 text-right text-[10px] uppercase tracking-wider font-black text-gray-500 dark:text-gray-400">Precio</th>
+                                        <th class="px-4 py-3 text-right text-[10px] uppercase tracking-wider font-black text-gray-500 dark:text-gray-400">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y" style="border-color: var(--border-color);">
+                                    @foreach ($detalles as $detalle)
+                                        @php $u = \App\Support\Inventario\UnidadCompra::de((int) $detalle->pdt_id); @endphp
+                                        <tr style="border-color: var(--border-color);">
+                                            <td class="px-4 py-3 text-xs font-bold" style="color: var(--text-main);">
+                                                {{ $detalle->producto_nombre }}
+                                                <span class="block text-[10px] font-normal" style="color: var(--text-muted);">{{ $detalle->producto_codigo }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-xs font-mono" style="color: var(--text-main);">{{ $detalle->codigo_lote_lot }}</td>
+                                            <td class="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style="color: var(--text-main);">
+                                                {{ $u->describirCantidad((float) $detalle->cantidad_dcm) }}
+                                                <span class="block text-[10px] font-normal" style="color: var(--text-muted);">
+                                                    {{ \App\Support\Inventario\UnidadCompra::numero((float) $detalle->cantidad_convertida_dcm) }} {{ $u->unidadBase }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-right text-xs whitespace-nowrap" style="color: var(--text-main);">
+                                                {{ number_format($detalle->precio_unitario_dcm, 2, ',', '.') }} Bs
+                                                <span class="block text-[10px]" style="color: var(--text-muted);">{{ $u->precioPor() }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-right text-xs font-extrabold whitespace-nowrap" style="color: var(--text-main);">
+                                                {{ number_format($detalle->subtotal_dcm, 2, ',', '.') }} Bs
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($detalles as $detalle)
-                                            <tr>
-                                                <td>{{ $detalle->producto_nombre }}</td>
-                                                <td>{{ $detalle->codigo_lote }}</td>
-                                                <td>{{ $detalle->cantidad }} {{ $detalle->unidad_abreviatura }}</td>
-                                                <td>{{ number_format($detalle->precio_unitario, 2, ',', '.') }}.BS</td>
-                                                <td>{{ number_format($detalle->subtotal, 2, ',', '.') }}.BS</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-
-                                <hr>
-                            @else
-                                <h4>No hay productos agregados a la compra.</h4>
-                            @endif
-                            <h3 align="right"><b>Total de la Compra:
-                                </b>{{ number_format($compra->total, 2, ',', '.') }}.BS</h3>
-
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
+                        <p class="mt-4 text-right text-lg font-black" style="color: var(--text-main);">
+                            Total: {{ number_format($compra->total_cmp, 2, ',', '.') }} Bs
+                        </p>
+                    @else
+                        <div class="rounded-2xl border border-dashed p-8 text-center text-xs" style="border-color: var(--border-color); color: var(--text-muted);">
+                            Esta requisición no tiene productos. Ábrela con "Continuar la requisición" para agregarlos.
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                <div class="px-5 sm:px-6 py-4 border-b" style="border-color: var(--border-color);">
+                    <h3 class="text-sm font-extrabold tracking-tight" style="color: var(--text-main);">Reparto entre sedes</h3>
+                    <p class="text-[11px] font-medium" style="color: var(--text-muted);">
+                        Lo que recibió cada sede al recibir la compra. La sede principal se queda con el sobrante.
+                    </p>
+                </div>
+                <div class="p-5 sm:p-6">
+                    @if ($finalizada)
+                        @include('admin.movimientos.compras._reparto', ['reparto' => $reparto, 'vacio' => 'No se encontraron entradas de inventario para esta compra.'])
+                    @else
+                        <div class="rounded-2xl border border-dashed p-6 text-center text-xs" style="border-color: var(--border-color); color: var(--text-muted);">
+                            La compra todavía no se ha recibido. Cuando llegue el pedido, ábrela con "Continuar la requisición": allí verás la vista previa del reparto y el botón "Recibir y repartir".
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
-@stop
-
-@push('css')
-    <style>
-        .rd-card {
-            background: var(--bg-card);
-            border-radius: 14px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-            border: 1px solid var(--border-color);
-            margin-bottom: 1.5rem;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.25rem 1.5rem;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-main);
-            margin: 0;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--text-main);
-            font-size: 0.875rem;
-        }
-
-        .flex.items-center.rounded-xl.border.border-slate-200.bg-slate-50 {
-            border: 1px solid #d8dee9;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.2s ease;
-        }
-
-        .px-3.text-slate-500 {
-            background: transparent;
-            border: none;
-            color: #64748b;
-            padding: 0.5rem 0.75rem;
-        }
-
-        input[readonly],
-        input:disabled,
-        select:disabled,
-        textarea:disabled,
-        textarea[readonly] {
-            background-color: var(--input-bg);
-            color: var(--text-main);
-            cursor: not-allowed;
-        }
-
-        .table {
-            width: 100%;
-            margin-bottom: 1.5rem;
-            background-color: var(--bg-card);
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .table thead th {
-            background-color: var(--input-bg);
-            color: var(--text-main);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            padding: 0.75rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .table tbody td {
-            padding: 1rem 1.5rem;
-            vertical-align: middle;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-main);
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            background-color: #f1f5f9;
-            color: #4b5563;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .card-tools {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-        }
-
-        .btn i {
-            margin-right: 0.5rem;
-        }
-
-        .btn-primary {
-            background-color: var(--color-primary);
-            color: white;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--color-btn-hover, #b91c1c);
-        }
-
-        .btn-tool {
-            background: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-tool:hover {
-            background-color: var(--input-bg);
-        }
-
-        @media (max-width: 768px) {
-            .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .table {
-                display: block;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-        }
-
-        .alert.alert-danger {
-            background-color: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #b91c1c;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        .content-header {
-            padding: 1.5rem 1.5rem 0;
-        }
-    </style>
-@endpush
+</x-app-layout>

@@ -52,39 +52,41 @@
         </div>
 
         {{-- Exportar --}}
-        <div x-data="{ openExport: false }" class="relative z-20">
-            <button @click="openExport = !openExport" @click.away="openExport = false"
-                style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
-                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
-                <i class="fas fa-file-export text-xs"></i>
-                <span>Exportar</span>
-                <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
-            </button>
-            <div x-show="openExport" x-transition
-                style="display: none; background-color: var(--bg-card); border-color: var(--border-color);"
-                class="absolute right-0 mt-2 w-64 rounded-2xl shadow-xl border overflow-hidden z-50 p-2 space-y-1">
-                <button @click="openExport = false; window.comedorApp.exportar('pdf');"
-                    class="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-left w-full">
-                    <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center shrink-0">
-                        <i class="fas fa-file-pdf text-xs"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold" style="color: var(--text-main);">Descargar PDF</span>
-                        <span class="text-[10px] text-gray-400">Reporte completo</span>
-                    </div>
+        @canAction('comedor', 'exportar')
+            <div x-data="{ openExport: false }" class="relative z-20">
+                <button @click="openExport = !openExport" @click.away="openExport = false"
+                    style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+                    <i class="fas fa-file-export text-xs"></i>
+                    <span>Exportar</span>
+                    <i class="fas fa-chevron-down text-[10px] opacity-70"></i>
                 </button>
-                <button @click="openExport = false; window.comedorApp.exportar('word');"
-                    class="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-left w-full">
-                    <div class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center shrink-0">
-                        <i class="fas fa-file-word text-xs"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold" style="color: var(--text-main);">Descargar Word</span>
-                        <span class="text-[10px] text-gray-400">Reporte completo</span>
-                    </div>
-                </button>
+                <div x-show="openExport" x-transition
+                    style="display: none; background-color: var(--bg-card); border-color: var(--border-color);"
+                    class="absolute right-0 mt-2 w-64 rounded-2xl shadow-xl border overflow-hidden z-50 p-2 space-y-1">
+                    <button @click="openExport = false; window.comedorApp.exportar('pdf');"
+                        class="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-left w-full">
+                        <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center shrink-0">
+                            <i class="fas fa-file-pdf text-xs"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold" style="color: var(--text-main);">Descargar PDF</span>
+                            <span class="text-[10px] text-gray-400">Reporte completo</span>
+                        </div>
+                    </button>
+                    <button @click="openExport = false; window.comedorApp.exportar('word');"
+                        class="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-left w-full">
+                        <div class="w-7 h-7 rounded-lg bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center shrink-0">
+                            <i class="fas fa-file-word text-xs"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold" style="color: var(--text-main);">Descargar Word</span>
+                            <span class="text-[10px] text-gray-400">Reporte completo</span>
+                        </div>
+                    </button>
+                </div>
             </div>
-        </div>
+        @endcanAction
     </div>
 </div>
 
@@ -118,7 +120,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($pnfs as $p)
-                <option value="{{ $p->id_pnf }}">{{ $p->nombre_pnf }}</option>
+                <option value="{{ $p->id_prg }}">{{ $p->nombre_prg }}</option>
             @endforeach
         </select>
     </div>

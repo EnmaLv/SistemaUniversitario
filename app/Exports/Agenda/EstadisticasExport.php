@@ -73,18 +73,18 @@ class EstadisticasExport implements FromCollection, WithHeadings, WithMapping, W
         $fechaSolicitada = $cita->created_at_carbon ? $cita->created_at_carbon->format('d/m/Y') : 'N/A';
         $horaSolicitada = $cita->created_at_carbon ? $cita->created_at_carbon->format('h:i A') : 'N/A';
         
-        $fechaProgramada = ($cita->fecha_carbon && !in_array($cita->estado, ['pendiente', 'rechazada'])) ? $cita->fecha_carbon->format('d/m/Y') : 'Por definir';
-        $horaProgramada = ($cita->hora && !in_array($cita->estado, ['pendiente', 'rechazada'])) ? Carbon::parse($cita->hora)->format('h:i A') : 'Por definir';
+        $fechaProgramada = ($cita->fecha_carbon && !in_array($cita->estado_cita_cps, ['pendiente', 'rechazada'])) ? $cita->fecha_carbon->format('d/m/Y') : 'Por definir';
+        $horaProgramada = ($cita->hora_cps && !in_array($cita->estado_cita_cps, ['pendiente', 'rechazada'])) ? Carbon::parse($cita->hora_cps)->format('h:i A') : 'Por definir';
 
         return [
-            $cita->id,
+            $cita->id_cps,
             $cita->paciente_nombre,
             $fechaSolicitada,
             $horaSolicitada,
             $fechaProgramada,
             $horaProgramada,
-            ucfirst(str_replace('_', ' ', $cita->estado)),
-            ucfirst($cita->prioridad ?? 'Normal'),
+            ucfirst(str_replace('_', ' ', $cita->estado_cita_cps)),
+            ucfirst($cita->prioridad_texto_cps ?? 'Normal'),
         ];
     }
 
@@ -178,7 +178,7 @@ class EstadisticasExport implements FromCollection, WithHeadings, WithMapping, W
                 
                 $totales = [];
                 foreach($this->citas as $cita) {
-                    $estado = $cita->estado;
+                    $estado = $cita->estado_cita_cps;
                     if(!isset($totales[$estado])) {
                         $totales[$estado] = 0;
                     }

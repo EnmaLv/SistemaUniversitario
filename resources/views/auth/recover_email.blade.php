@@ -388,6 +388,10 @@
             <span>El correo electrónico no está registrado en el sistema</span>
         </div>
 
+        @if ($errors->any())
+            <div role="alert" style="color:#b71c1c;margin-bottom:12px;font-weight:600">{{ $errors->first() }}</div>
+        @endif
+
         <form method="POST" action="{{ route('password.recover.post_email') }}">
             @csrf
             <div class="form-group">
@@ -397,7 +401,7 @@
                         <path
                             d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
                     </svg>
-                    <input class="input" type="email" name="email" placeholder="ejemplo@correo.com" required
+                    <input class="input" type="text" name="email" placeholder="Cédula o correo electrónico" autocomplete="username" required
                         autofocus>
                 </div>
             </div>

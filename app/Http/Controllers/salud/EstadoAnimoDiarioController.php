@@ -26,10 +26,11 @@ class EstadoAnimoDiarioController extends Controller
             return redirect()->back()->with('error', 'Ya has registrado tu estado de ánimo hoy.');
         }
 
-        DB::table('estado_animo_diarios')->insert([
-            'paciente_id' => Auth::id(),
-            'valor' => $request->valor,
-            'fecha' => Carbon::today(),
+        DB::table('estado_animo_diario')->insert([
+            'paciente_use_id' => Auth::id(),
+            'valor_ead' => $request->valor,
+            'fecha_ead' => Carbon::today(),
+            'created_id' => Auth::id(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now()
         ]);

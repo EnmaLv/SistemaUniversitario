@@ -87,7 +87,7 @@
                 <p class="mt-2 text-[11px] font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                     <i class="fas fa-layer-group text-{{ $themeColor }}-500 text-[10px]"></i>
                     Grupo: <span
-                        class="font-bold text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $grupoSeleccionado->nombre }}</span>
+                        class="font-bold text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $grupoSeleccionado->nombre_gha }}</span>
                 </p>
             @endisset
         </div>
@@ -268,6 +268,7 @@
                 <span>Cancelar</span>
             </a>
 
+            @canRoute('admin.psicologia.maestros.horarios.store')
             <div class="h-5 w-[1px] bg-gray-200 dark:bg-[#222744] mx-1"></div>
 
             <button type="submit" title="Confirmar y Guardar"
@@ -275,6 +276,7 @@
                 class="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white dark:bg-[#0a2720] dark:hover:bg-[#0f3d32] border border-emerald-600 dark:border-[#135343] dark:text-[#34d399] flex items-center justify-center transition-all active:scale-90 shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
                 <i class="fas fa-check text-[16px]"></i>
             </button>
+            @endcanRoute
         </div>
     </div>
 </form>

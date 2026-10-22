@@ -3,67 +3,71 @@
 namespace App\Models;
 
 use App\Models\salud\Dispensacion;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lote extends Model
 {
-    protected $table = 'lotes';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'lote';
+
+    protected $primaryKey = 'id_lot';
 
     protected $fillable = [
-        'codigo_lote',
-        'fecha_entrada',
-        'fecha_vencimiento',
-        'cantidad_inicial',
-        'cantidad_actual',
-        'precio_compra',
-        'estado',
-        'producto_id',
-        'proveedor_id',
+        'codigo_lote_lot',
+        'fecha_entrada_lot',
+        'fecha_vencimiento_lot',
+        'cantidad_inicial_lot',
+        'cantidad_actual_lot',
+        'precio_compra_lot',
+        'status_id',
+        'pdt_id',
+        'prv_id',
     ];
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class);
+        return $this->belongsTo(Producto::class, 'pdt_id', 'id_pdt');
     }
 
     public function proveedor()
     {
-        return $this->belongsTo(Proveedor::class);
+        return $this->belongsTo(Proveedor::class, 'prv_id', 'id_prv');
     }
 
     public function inventarioSedeLotes()
     {
-        return $this->hasMany(InventarioSedeLote::class);
+        return $this->hasMany(InventarioSedeLote::class, 'lot_id', 'id_lot');
     }
 
     public function movimientos()
     {
-        return $this->hasMany(MovimientoInventario::class);
+        return $this->hasMany(MovimientoInventario::class, 'lot_id', 'id_lot');
     }
 
     public function detalleCompras()
     {
-        return $this->hasMany(DetalleCompra::class);
+        return $this->hasMany(DetalleCompra::class, 'lot_id', 'id_lot');
     }
 
     public function dispensaciones()
     {
-        return $this->hasMany(Dispensacion::class);
+        return $this->hasMany(Dispensacion::class, 'lot_id', 'id_lot');
     }
 
-    /**
-     * Obtiene los lotes disponibles (con stock y no vencidos) para un producto.
-     */
     public static function disponiblesParaProducto($productoId, ?int $sedeId = null)
     {
-        return self::where('producto_id', $productoId)
-            ->where('cantidad_actual', '>', 0)
+        return self::where('pdt_id', $productoId)
+            ->where('cantidad_actual_lot', '>', 0)
             ->where(function ($query) {
-                $query->whereNull('fecha_vencimiento')
-                    ->orWhere('fecha_vencimiento', '>=', now()->toDateString());
+                $query->whereNull('fecha_vencimiento_lot')
+                    ->orWhere('fecha_vencimiento_lot', '>=', now()->toDateString());
             })
             ->with('inventarioSedeLotes')
-            ->orderBy('fecha_vencimiento', 'asc')
+            ->orderBy('fecha_vencimiento_lot', 'asc')
             ->get();
     }
 }

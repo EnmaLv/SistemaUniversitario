@@ -20,7 +20,7 @@ class ModuleFilter implements FilterInterface
             return false;
         }
 
-        $userId = $user->id_usuario ?? $user->id ?? null;
+        $userId = $user->id_use ?? $user->id ?? null;
         if (! $userId) {
             return false;
         }
@@ -109,9 +109,7 @@ class ModuleFilter implements FilterInterface
 
     public function inicializarSesion($userId)
     {
-        $modulesTable = Schema::hasTable('modulos')
-            ? 'modulos'
-            : (Schema::hasTable('modulo') ? 'modulo' : null);
+        $modulesTable = Schema::hasTable('modulo') ? 'modulo' : null;
 
         $usuario = Usuario::find($userId);
 
@@ -122,32 +120,33 @@ class ModuleFilter implements FilterInterface
 
         $esAdmin = $usuario->esSuperAdmin();
 
-        $roleIds = DB::table('rol_usuario')
-            ->join('rol', 'rol.id_rol', '=', 'rol_usuario.id_rol')
-            ->where('rol_usuario.id_usuario', $userId)
+        $roleIds = DB::table('usuario_rol')
+            ->join('rol', 'rol.id_rol', '=', 'usuario_rol.rol_id')
+            ->where('usuario_rol.use_id', $userId)
             ->whereNull('rol.deleted_at')
             ->pluck('rol.id_rol')
             ->all();
 
         if ($esAdmin) {
             $permitidos = DB::table($modulesTable)
-                ->where('activo', 1)
-                ->pluck('key')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->pluck('key_mod')
                 ->toArray();
         } else {
             $deRol = empty($roleIds) ? [] : DB::table('rol_modulo')
-                ->join($modulesTable, $modulesTable . '.id', '=', 'rol_modulo.modulo_id')
+                ->join($modulesTable, $modulesTable . '.id_mod', '=', 'rol_modulo.mod_id')
                 ->whereIn('rol_modulo.rol_id', $roleIds)
-                ->where($modulesTable . '.activo', 1)
-                ->pluck($modulesTable . '.key')
+                ->where($modulesTable . '.status_id', 1)
+                ->pluck($modulesTable . '.key_mod')
                 ->toArray();
 
             $extra = Schema::hasTable('usuario_modulo')
                 ? DB::table('usuario_modulo')
-                    ->join($modulesTable, $modulesTable . '.id', '=', 'usuario_modulo.modulo_id')
-                    ->where('usuario_modulo.usuario_id', $userId)
-                    ->where($modulesTable . '.activo', 1)
-                    ->pluck($modulesTable . '.key')
+                    ->join($modulesTable, $modulesTable . '.id_mod', '=', 'usuario_modulo.mod_id')
+                    ->where('usuario_modulo.use_id', $userId)
+                    ->where($modulesTable . '.status_id', 1)
+                    ->pluck($modulesTable . '.key_mod')
                     ->toArray()
                 : [];
 

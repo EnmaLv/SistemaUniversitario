@@ -14,18 +14,18 @@ class PnfSeeder extends Seeder
     public function run(): void
     {
         $pnfs = [
-            ['nombre_pnf' => 'INFORMATICA', 'id_estatus' => 1],
-            ['nombre_pnf' => 'ELECTRICIDAD', 'id_estatus' => 1],
-            ['nombre_pnf' => 'AGROALIMENTACION', 'id_estatus' => 1],
-            ['nombre_pnf' => 'ADMINISTRACION', 'id_estatus' => 1],
-            ['nombre_pnf' => 'VETERINARIA', 'id_estatus' => 1],
-            ['nombre_pnf' => 'MECANICA', 'id_estatus' => 1],
-            ['nombre_pnf' => 'MANTENIMIENTO', 'id_estatus' => 1],
-            ['nombre_pnf' => 'DISTRIBUCIÓN LOGÍSTICA', 'id_estatus' => 1],
-            ['nombre_pnf' => 'PROC. Y DIST. DE ALIMENTOS', 'id_estatus' => 1],
-            ['nombre_pnf' => 'SEGURIDAD ALIMENTARIA', 'id_estatus' => 1],
+            ['codigo_prg' => 'PNF-INFORMATICA', 'nombre_prg' => 'INFORMATICA', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-ELECTRICIDAD', 'nombre_prg' => 'ELECTRICIDAD', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-AGROALIMENTA', 'nombre_prg' => 'AGROALIMENTACION', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-ADMINISTRACI', 'nombre_prg' => 'ADMINISTRACION', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-VETERINARIA', 'nombre_prg' => 'VETERINARIA', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-MECANICA', 'nombre_prg' => 'MECANICA', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-MANTENIMIENT', 'nombre_prg' => 'MANTENIMIENTO', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-DISTRIBUCION', 'nombre_prg' => 'DISTRIBUCIÓN LOGÍSTICA', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-PROCYDISTDEA', 'nombre_prg' => 'PROC. Y DIST. DE ALIMENTOS', 'status_id' => 1],
+            ['codigo_prg' => 'PNF-SEGURIDADALI', 'nombre_prg' => 'SEGURIDAD ALIMENTARIA', 'status_id' => 1],
         ];
         $this->command->info('Pnfs insertados Exitosamente.');
-        DB::table('pnf')->insert($pnfs);
+        DB::table('programa')->insert($pnfs);
     }
 }

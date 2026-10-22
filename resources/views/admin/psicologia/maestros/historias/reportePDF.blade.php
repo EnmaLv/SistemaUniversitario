@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Expediente Clínico - {{ $paciente->persona->nombre_persona }}</title>
+    <title>Expediente Clínico - {{ $paciente->persona->nombres_per }}</title>
     <style>
         @page { margin: 80px 18mm 80px 18mm; }
         header { position: fixed; top: -60px; left: 0px; right: 0px; height: 50px; text-align: center; }
@@ -187,16 +187,16 @@
             </td>
             <td style="width: 50%;" class="doc-info">
                 <div class="doc-title">EXPEDIENTE CLÍNICO GENERAL</div>
-                <div class="doc-subtitle">{{ strtoupper(Auth::user()->persona->nombre_persona . ' ' . Auth::user()->persona->apellido_persona) }} | PSICÓLOGO</div>
+                <div class="doc-subtitle">{{ strtoupper(Auth::user()->persona->nombres_per . ' ' . Auth::user()->persona->apellidos_per) }} | PSICÓLOGO</div>
             </td>
         </tr>
     </table>
 
     <div class="patient-card">
-        <div class="patient-name">{{ $paciente->persona->nombre_persona }} {{ $paciente->persona->apellido_persona }}</div>
+        <div class="patient-name">{{ $paciente->persona->nombres_per }} {{ $paciente->persona->apellidos_per }}</div>
         <div class="patient-meta">
             <span>Sesiones Totales: {{ $stats['realizadas'] }}</span>
-            <span>N° Expediente: {{ $historia->id }}</span>
+            <span>N° Expediente: {{ $historia->id_hcl }}</span>
         </div>
     </div>
 
@@ -204,10 +204,10 @@
     <table class="info-grid">
         <tr>
             <td>
-                <div class="info-label">Cédula: {{ $paciente->persona->cedula_persona ?? 'No registrada' }} </div>
+                <div class="info-label">Cédula: {{ $paciente->persona->cedula_per ?? 'No registrada' }} </div>
             </td>
             <td>
-                <div class="info-label">Teléfono: {{ $paciente->persona->telefono_persona ?? 'No registrado' }}</div>
+                <div class="info-label">Teléfono: {{ $paciente->persona->telefono_per ?? 'No registrado' }}</div>
                 
             </td>
         </tr>
@@ -215,16 +215,16 @@
             <td>
                 @php
                     $edad = 'No registrada';
-                    if(!empty($paciente->persona->fecha_nacimiento_persona)) {
-                        $edad = \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->age . ' años';
+                    if(!empty($paciente->persona->fecha_nacimiento_per)) {
+                        $edad = \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->age . ' años';
                     }
                 @endphp
-                <div class="info-label">Edad y Nacimiento: {{ $edad }} ({{ !empty($paciente->persona->fecha_nacimiento_persona) ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->format('d/m/Y') : 'N/A' }})</div>
+                <div class="info-label">Edad y Nacimiento: {{ $edad }} ({{ !empty($paciente->persona->fecha_nacimiento_per) ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->format('d/m/Y') : 'N/A' }})</div>
             </td>
             <td>
                 <div class="info-label">Perfil Académico: {{ $paciente->perfil_academico ?? 'No registrado' }}
                     @if(($paciente->perfil_academico ?? '') === 'Estudiante')
-                        - {{ $paciente->pnf ?? 'N/A' }} (Semestre: {{ $paciente->persona->semestre_persona ?? 'N/A' }})
+                        - {{ $paciente->pnf ?? 'N/A' }} (Semestre: {{ $paciente->persona->semestre_per ?? 'N/A' }})
                     @endif
                 </div>
             </td>
@@ -232,25 +232,25 @@
     </table>
 
     @foreach($seccionesPersonalizadas as $seccion)
-        <div class="section-title">{{ $seccion->titulo }}</div>
-        @if($seccion->descripcion_general)
-            <div style="font-size: 10px; color: #6b7280; margin-bottom: 10px;">{{ $seccion->descripcion_general }}</div>
+        <div class="section-title">{{ $seccion->titulo_hsp }}</div>
+        @if($seccion->descripcion_general_hsp)
+            <div style="font-size: 10px; color: #6b7280; margin-bottom: 10px;">{{ $seccion->descripcion_general_hsp }}</div>
         @endif
         
         @foreach($seccion->segmentos as $segmento)
-            <div class="segment-title">{{ $segmento->titulo }}</div>
+            <div class="segment-title">{{ $segmento->titulo_hsm }}</div>
             <div class="segment-content">
-                {!! nl2br(e(strip_tags($segmento->contenido ?? 'Sin información registrada.'))) !!}
+                {!! nl2br(e(strip_tags($segmento->contenido_hsm ?? 'Sin información registrada.'))) !!}
                 
                 @php
-                    $contextoSeg = 'seg_' . $segmento->id;
+                    $contextoSeg = 'seg_' . $segmento->id_hsm;
                     $enfermedadesSeg = $enfermedadesVinculadas[$contextoSeg] ?? [];
                 @endphp
                 @if(count($enfermedadesSeg) > 0)
                     <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e7eb;">
                         <strong>Trastornos o Condiciones Presentes:</strong><br>
                         @foreach($enfermedadesSeg as $enf)
-                            <span class="disease-tag">{{ $enf->nombre }}</span>
+                            <span class="disease-tag">{{ $enf->nombre_efm }}</span>
                         @endforeach
                     </div>
                 @endif

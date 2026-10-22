@@ -25,36 +25,36 @@
 
             <div class="space-y-2">
                 <label class="block text-sm font-medium text-slate-700">Pregunta 1</label>
-                <select name="security_questions[0][question_type]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="q0_type" required>
+                <select name="security_questions_use[0][question_type]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="q0_type" required>
                     <option value="">-- Seleccione una pregunta --</option>
                     @foreach($questions as $q)
                         <option value="{{ $q }}">{{ $q }}</option>
                     @endforeach
                 </select>
-                <input type="text" name="security_questions[0][question]" id="q0_custom" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" placeholder="Escribe tu pregunta personal" style="display:none">
+                <input type="text" name="security_questions_use[0][question]" id="q0_custom" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" placeholder="Escribe tu pregunta personal" style="display:none">
             </div>
 
             <div class="space-y-2">
                 <label class="block text-sm font-medium text-slate-700">Respuesta 1</label>
-                <input class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" name="security_questions[0][answer]" required>
+                <input class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" name="security_questions_use[0][answer]" required>
             </div>
 
             <hr class="border-slate-200">
 
             <div class="space-y-2">
                 <label class="block text-sm font-medium text-slate-700">Pregunta 2</label>
-                <select name="security_questions[1][question_type]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="q1_type" required>
+                <select name="security_questions_use[1][question_type]" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" id="q1_type" required>
                     <option value="">-- Seleccione una pregunta --</option>
                     @foreach($questions as $q)
                         <option value="{{ $q }}">{{ $q }}</option>
                     @endforeach
                 </select>
-                <input type="text" name="security_questions[1][question]" id="q1_custom" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" placeholder="Escribe tu pregunta personal" style="display:none">
+                <input type="text" name="security_questions_use[1][question]" id="q1_custom" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" placeholder="Escribe tu pregunta personal" style="display:none">
             </div>
 
             <div class="space-y-2">
                 <label class="block text-sm font-medium text-slate-700">Respuesta 2</label>
-                <input class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" name="security_questions[1][answer]" required>
+                <input class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20" name="security_questions_use[1][answer]" required>
             </div>
 
             <button class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700">Guardar preguntas</button>
@@ -93,20 +93,20 @@
             var q0Actual = q0Type === 'Otro' ? q0Custom.value : q0Type;
             var q1Actual = q1Type === 'Otro' ? q1Custom.value : q1Type;
 
-            var existing0 = document.querySelector('input[name="security_questions[0][question]"]');
+            var existing0 = document.querySelector('input[name="security_questions_use[0][question]"]');
             if(!existing0){
                 var i0 = document.createElement('input');
                 i0.type = 'hidden';
-                i0.name = 'security_questions[0][question]';
+                i0.name = 'security_questions_use[0][question]';
                 i0.value = q0Actual;
                 this.appendChild(i0);
             } else { existing0.value = q0Actual; }
 
-            var existing1 = document.querySelector('input[name="security_questions[1][question]"]');
+            var existing1 = document.querySelector('input[name="security_questions_use[1][question]"]');
             if(!existing1){
                 var i1 = document.createElement('input');
                 i1.type = 'hidden';
-                i1.name = 'security_questions[1][question]';
+                i1.name = 'security_questions_use[1][question]';
                 i1.value = q1Actual;
                 this.appendChild(i1);
             } else { existing1.value = q1Actual; }

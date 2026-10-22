@@ -3,101 +3,132 @@
 namespace App\Models;
 
 use App\Traits\ConvierteAMayusculasNoEloquent;
+use App\Traits\PerteneceASede;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class Compra extends Model
 {
     use ConvierteAMayusculasNoEloquent;
-    protected $table = 'compras';
+    use PerteneceASede;
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    public const ESTADO_PENDIENTE = 'Pendiente';
+
+    public const ESTADO_FINALIZADA = 'Finalizada';
+
+    protected $table = 'compra';
+
+    protected $primaryKey = 'id_cmp';
 
     protected $fillable = [
-        'proveedor_id',
-        'fecha',
-        'modulo_id',
-        'total',
-        'estado',
-        'observaciones',
+        'prv_id',
+        'fecha_compra_cmp',
+        'mod_id',
+        'use_id',
+        'sed_id',
+        'total_cmp',
+        'estado_compra_cmp',
+        'observacion_cmp',
     ];
 
     protected $casts = [
-        'fecha' => 'date',
-        'total' => 'decimal:2',
+        'fecha_compra_cmp' => 'datetime',
+        'total_cmp'        => 'decimal:2',
     ];
 
     public function proveedor()
     {
-        return $this->belongsTo(Proveedor::class);
+        return $this->belongsTo(Proveedor::class, 'prv_id', 'id_prv');
     }
 
     public function modulo()
     {
-        return $this->belongsTo(Modulo::class);
+        return $this->belongsTo(Modulo::class, 'mod_id', 'id_mod');
+    }
+
+    public function creador()
+    {
+        return $this->belongsTo(Usuario::class, 'use_id', 'id_use');
+    }
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sed_id', 'id_sed');
     }
 
     public function detalleCompras()
     {
-        return $this->hasMany(DetalleCompra::class);
+        return $this->hasMany(DetalleCompra::class, 'cmp_id', 'id_cmp');
     }
 
     public function getDatosFormulario()
     {
         return [
-            'proveedores' => DB::table('proveedors')
-                ->select('id', 'nombre', 'email')
-                ->where('estado', 1)
-                ->orderBy('nombre')
+            'proveedores' => DB::table('proveedor')
+                ->select('id_prv', 'empresa_prv', 'nombre_contacto_prv', 'email_prv')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->orderBy('empresa_prv')
                 ->get(),
 
-            'modulos' => DB::table('modulos')
-                ->select('id', 'nombre')
-                ->where('activo', 1)
-                ->orderBy('nombre')
+            'modulos' => DB::table('modulo')
+                ->select('id_mod', 'nombre_mod')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->orderBy('nombre_mod')
                 ->get(),
 
-            'productos' => DB::table('productos')
-                ->select('id', 'codigo', 'nombre')
-                ->where('estado', 1)
-                ->orderBy('nombre')
+            'productos' => DB::table('producto')
+                ->select('id_pdt', 'codigo_pdt', 'nombre_pdt')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->orderBy('nombre_pdt')
                 ->get(),
 
             'sedes' => DB::table('sede')
-                ->select('id', 'nombre')
-                ->where('activo', 1)
-                ->orderBy('nombre')
+                ->select('id_sed', 'nombre_sed')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->orderBy('nombre_sed')
                 ->get(),
         ];
     }
 
     public static function listarCompras($buscar = null, $estado = null, $fechas = null)
     {
-        $query = DB::table('compras')
-            ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
+        $query = \App\Support\Sedes\SedeActiva::filtrar(DB::table('compra'), 'compra.sed_id')
+            ->join('proveedor', 'proveedor.id_prv', '=', 'compra.prv_id')
+            ->whereNull('compra.deleted_at')
             ->select(
-                'compras.*',
-                'proveedors.empresa as proveedor_empresa',
-                'proveedors.nombre as proveedor_nombre',
-                'proveedors.id as proveedor_id'
+                'compra.*',
+                'proveedor.empresa_prv as proveedor_empresa',
+                'proveedor.nombre_contacto_prv as proveedor_nombre',
+                'proveedor.id_prv as proveedor_id'
             );
 
         if (!empty($buscar)) {
             $query->where(function ($q) use ($buscar) {
-                $q->where('proveedors.empresa', 'like', "%{$buscar}%")
-                    ->orWhere('proveedors.nombre', 'like', "%{$buscar}%")
-                    ->orWhere('compras.id', 'like', "%{$buscar}%");
+                $q->where('proveedor.empresa_prv', 'like', "%{$buscar}%")
+                    ->orWhere('proveedor.nombre_contacto_prv', 'like', "%{$buscar}%")
+                    ->orWhere('compra.id_cmp', 'like', "%{$buscar}%");
             });
         }
 
         if ($estado !== null && $estado !== '') {
-            $query->where('compras.estado', $estado);
+            $query->where('compra.estado_compra_cmp', $estado);
         }
 
         if ($fechas !== null) {
-            $query->whereBetween('compras.fecha', [$fechas['fecha_desde'], $fechas['fecha_hasta']]);
+            $query->whereBetween('compra.fecha_compra_cmp', [$fechas['fecha_desde'], $fechas['fecha_hasta']]);
         }
 
-        return $query->orderBy('compras.id', 'desc')->paginate(10)->withQueryString();
+        return $query->orderBy('compra.id_cmp', 'desc')->paginate(10)->withQueryString();
     }
 
     public static function crearCompra(array $data)
@@ -106,87 +137,87 @@ class Compra extends Model
 
         $data = $helper->convertirCamposAMayusculas($data, ['observaciones']);
 
-        return DB::table('compras')->insertGetId([
-            'proveedor_id'  => $data['proveedor_id'],
-            'modulo_id'     => $data['modulo_id'],
-            'fecha'         => $data['fecha'],
-            'observaciones' => $data['observaciones'] ?? null,
-            'total'         => 0,
-            'estado'        => 'Pendiente',
-            'created_at'    => now(),
-            'updated_at'    => now(),
-        ]);
+        return DB::table('compra')->insertGetId([
+            'prv_id'            => $data['proveedor_id'],
+            'mod_id'            => $data['modulo_id'] ?? null,
+            'sed_id'            => $data['sed_id'] ?? Sede::idPrincipal() ?? \App\Support\Sedes\SedeActiva::idParaCrear(),
+            'use_id'            => Auth::id(),
+            'fecha_compra_cmp'  => $data['fecha'],
+            'observacion_cmp'   => $data['observaciones'] ?? null,
+            'total_cmp'         => 0,
+            'estado_compra_cmp' => self::ESTADO_PENDIENTE,
+            'created_id'        => Auth::id(),
+            'created_at'        => now(),
+            'updated_at'        => now(),
+        ], 'id_cmp');
     }
 
     public static function obtenerDetallesCompra($compra_id)
     {
-        return DB::table('detalle_compras')
-            ->join('productos', 'productos.id', '=', 'detalle_compras.producto_id')
-            ->join('lotes', 'lotes.id', '=', 'detalle_compras.lote_id')
-            ->join('unidades', 'unidades.id', '=', 'detalle_compras.unidad_id')
-            ->where('detalle_compras.compra_id', $compra_id)
+        return DB::table('detalle_compra')
+            ->join('producto', 'producto.id_pdt', '=', 'detalle_compra.pdt_id')
+            ->join('lote', 'lote.id_lot', '=', 'detalle_compra.lot_id')
+            ->join('unidad_medida', 'unidad_medida.id_unm', '=', 'detalle_compra.unm_id')
+            ->where('detalle_compra.cmp_id', $compra_id)
             ->select(
-                'detalle_compras.*',
-                'productos.nombre as producto_nombre',
-                'productos.codigo as producto_codigo',
-                'lotes.codigo_lote',
-                'lotes.fecha_vencimiento',
-                'unidades.nombre as unidad_nombre',
-                'unidades.abreviatura as unidad_abreviatura'
+                'detalle_compra.*',
+                'producto.nombre_pdt as producto_nombre',
+                'producto.codigo_pdt as producto_codigo',
+                'lote.codigo_lote_lot',
+                'lote.fecha_vencimiento_lot',
+                'unidad_medida.nombre_unm as unidad_nombre',
+                'unidad_medida.abreviatura_unm as unidad_abreviatura'
             )
-            ->orderBy('detalle_compras.id')
+            ->orderBy('detalle_compra.id_dcm')
             ->get();
     }
 
-    public static function obtenerSedeDestino($compra_id)
+    public static function obtenerRepartoAplicado($compra_id)
     {
-        return DB::table('movimiento_inventarios')
-            ->join('sede', 'sede.id', '=', 'movimiento_inventarios.sede_id')
-            ->join('detalle_compras', 'detalle_compras.lote_id', '=', 'movimiento_inventarios.lote_id')
-            ->where('detalle_compras.compra_id', $compra_id)
-            ->select('sede.id', 'sede.nombre')
-            ->first();
+        return app(\App\Support\Inventario\RepartoCompra::class)->aplicado((int) $compra_id);
     }
 
     public static function obtenerCompra($id)
     {
-        return DB::table('compras')
-            ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
+        return \App\Support\Sedes\SedeActiva::filtrar(DB::table('compra'), 'compra.sed_id')
+            ->join('proveedor', 'proveedor.id_prv', '=', 'compra.prv_id')
             ->select(
-                'compras.*',
-                'proveedors.nombre AS proveedor_nombre',
-                'proveedors.empresa AS proveedor_empresa',
-                'proveedors.id AS proveedor_id',
-                'proveedors.email AS proveedor_email',
-                'proveedors.telefono AS proveedor_telefono'
+                'compra.*',
+                'proveedor.nombre_contacto_prv AS proveedor_nombre',
+                'proveedor.empresa_prv AS proveedor_empresa',
+                'proveedor.id_prv AS proveedor_id',
+                'proveedor.email_prv AS proveedor_email',
+                'proveedor.telefono_prv AS proveedor_telefono'
             )
-            ->where('compras.id', $id)
+            ->where('compra.id_cmp', $id)
+            ->whereNull('compra.deleted_at')
             ->first();
     }
 
     public static function obtenerTodosDetallesCompras($buscar, $estado)
     {
-        $query = DB::table('detalle_compras')
-            ->join('productos', 'productos.id', '=', 'detalle_compras.producto_id')
-            ->join('compras', 'compras.id', '=', 'detalle_compras.compra_id')
-            ->join('proveedors', 'proveedors.id', '=', 'compras.proveedor_id')
-            ->join('unidades', 'unidades.id', '=', 'detalle_compras.unidad_id')
+        $query = DB::table('detalle_compra')
+            ->join('producto', 'producto.id_pdt', '=', 'detalle_compra.pdt_id')
+            ->join('compra', 'compra.id_cmp', '=', 'detalle_compra.cmp_id')
+            ->when(\App\Support\Sedes\SedeActiva::id(), fn ($q, $sede) => $q->where('compra.sed_id', $sede))
+            ->join('proveedor', 'proveedor.id_prv', '=', 'compra.prv_id')
+            ->join('unidad_medida', 'unidad_medida.id_unm', '=', 'detalle_compra.unm_id')
             ->select(
-                'detalle_compras.*',
-                'compras.fecha',
-                'proveedors.empresa as proveedor_empresa',
-                'productos.nombre as producto_nombre',
-                'unidades.nombre as unidad_nombre',
-                'unidades.abreviatura as unidad_abreviatura'
+                'detalle_compra.*',
+                'compra.fecha_compra_cmp',
+                'proveedor.empresa_prv as proveedor_empresa',
+                'producto.nombre_pdt as producto_nombre',
+                'unidad_medida.nombre_unm as unidad_nombre',
+                'unidad_medida.abreviatura_unm as unidad_abreviatura'
             )
-            ->orderBy('detalle_compras.id');
+            ->orderBy('detalle_compra.id_dcm');
 
         if ($estado) {
-            $query->where('detalle_compras.estado', $estado);
+            $query->where('compra.estado_compra_cmp', $estado);
         }
 
         if ($buscar) {
-            $query->where('detalle_compras.id', 'like', "%{$buscar}%");
+            $query->where('detalle_compra.id_dcm', 'like', "%{$buscar}%");
         }
 
         return $query->get();
@@ -197,24 +228,24 @@ class Compra extends Model
         DB::beginTransaction();
 
         try {
-            $detalles = DB::table('detalle_compras')
-                ->where('compra_id', $id)
+            $detalles = DB::table('detalle_compra')
+                ->where('cmp_id', $id)
                 ->get();
 
             foreach ($detalles as $detalle) {
-                $usoLote = DB::table('inventario_sede_lotes')
-                    ->where('lote_id', $detalle->lote_id)
+                $usoLote = DB::table('inventario_sede_lote')
+                    ->where('lot_id', $detalle->lot_id)
                     ->exists();
 
                 if ($usoLote) {
                     throw new \Exception('No se puede eliminar la compra porque uno de sus lotes está siendo utilizado en el inventario.');
                 }
 
-                DB::table('lotes')->where('id', $detalle->lote_id)->delete();
-                DB::table('detalle_compras')->where('id', $detalle->id)->delete();
+                DB::table('lote')->where('id_lot', $detalle->lot_id)->delete();
+                DB::table('detalle_compra')->where('id_dcm', $detalle->id_dcm)->delete();
             }
 
-            DB::table('compras')->where('id', $id)->delete();
+            DB::table('compra')->where('id_cmp', $id)->delete();
 
             DB::commit();
             return true;
@@ -225,203 +256,8 @@ class Compra extends Model
         }
     }
 
-    public static function finalizarCompra($compra, $sede_id)
-    {
-        DB::beginTransaction();
-        try {
-            $detalles = DB::table('detalle_compras')
-                ->where('compra_id', $compra->id)
-                ->get();
-
-            foreach ($detalles as $detalle) {
-                $inventario = DB::table('inventario_sede_lotes')
-                    ->where('lote_id', $detalle->lote_id)
-                    ->where('sede_id', $sede_id)
-                    ->first();
-
-                if ($inventario) {
-                    DB::table('inventario_sede_lotes')
-                        ->where('id', $inventario->id)
-                        ->update([
-                            'cantidad'         => $inventario->cantidad + $detalle->cantidad,
-                            'cantidad_convertida'  => $inventario->cantidad_convertida + $detalle->cantidad_convertida
-                        ]);
-                } else {
-                    DB::table('inventario_sede_lotes')->insert([
-                        'lote_id'         => $detalle->lote_id,
-                        'sede_id'         => $sede_id,
-                        'cantidad'        => $detalle->cantidad,
-                        'cantidad_convertida' => $detalle->cantidad_convertida
-                    ]);
-                }
-
-                DB::table('movimiento_inventarios')->insert([
-                    'producto_id'     => $detalle->producto_id,
-                    'lote_id'         => $detalle->lote_id,
-                    'sede_id'         => $sede_id,
-                    'tipo_movimiento' => 'ENTRADA',
-                    'unidad_id'       => $detalle->unidad_id,
-                    'cantidad'        => $detalle->cantidad,
-                    'cantidad_convertida' => $detalle->cantidad_convertida,
-                    'fecha'           => now(),
-                ]);
-            }
-
-            DB::table('compras')
-                ->where('id', $compra->id)
-                ->update([
-                    'estado'     => 'Finalizada',
-                    'updated_at' => now()
-                ]);
-
-            DB::commit();
-            return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
-    }
-
     public static function finalizarCompraDistribuida($compra)
     {
-        DB::beginTransaction();
-
-        try {
-            $sedes = DB::table('sede')
-                ->where('activo', 1)
-                ->orderByRaw("id = 1 DESC")
-                ->get();
-
-            if ($sedes->isEmpty()) {
-                throw new \Exception('No existen sedes activas.');
-            }
-
-            $acariguaId = 1;
-            $cantidadSedes = $sedes->count();
-
-            $detalles = DB::table('detalle_compras')
-                ->where('compra_id', $compra->id)
-                ->get();
-
-            foreach ($detalles as $detalle) {
-                $producto = DB::table('productos')->where('id', $detalle->producto_id)->first();
-                if (!$producto) {
-                    throw new \Exception("Producto {$detalle->producto_id} no encontrado.");
-                }
-
-                $stockMaximo = $producto->stock_maximo;
-                $gramosPorUnidad = $detalle->cantidad_convertida / $detalle->cantidad;
-                $cantidadBase = intdiv($detalle->cantidad, $cantidadSedes);
-                $resto = $detalle->cantidad % $cantidadSedes;
-                $cantidadRestante = 0;
-
-                foreach ($sedes as $index => $sede) {
-                    $cantidadEquitativa = $cantidadBase + ($index < $resto ? 1 : 0);
-
-                    if ($cantidadEquitativa <= 0) {
-                        continue;
-                    }
-
-                    if ($sede->id != $acariguaId) {
-                        $stockActual = DB::table('inventario_sede_lotes')
-                            ->join('lotes', 'lotes.id', '=', 'inventario_sede_lotes.lote_id')
-                            ->where('lotes.producto_id', $producto->id)
-                            ->where('inventario_sede_lotes.sede_id', $sede->id)
-                            ->sum('inventario_sede_lotes.cantidad');
-
-                        $espacioDisponible = max(0, $stockMaximo - $stockActual);
-                        $cantidadAsignada = min($cantidadEquitativa, $espacioDisponible);
-                        $sobrante = $cantidadEquitativa - $cantidadAsignada;
-                        $cantidadRestante += $sobrante;
-                    } else {
-                        $cantidadAsignada = $cantidadEquitativa;
-                    }
-
-                    if ($cantidadAsignada > 0) {
-                        $gramosAsignados = $cantidadAsignada * $gramosPorUnidad;
-                        $inventario = DB::table('inventario_sede_lotes')
-                            ->where('lote_id', $detalle->lote_id)
-                            ->where('sede_id', $sede->id)
-                            ->first();
-
-                        if ($inventario) {
-                            DB::table('inventario_sede_lotes')
-                                ->where('id', $inventario->id)
-                                ->update([
-                                    'cantidad'        => $inventario->cantidad + $cantidadAsignada,
-                                    'cantidad_convertida' => $inventario->cantidad_convertida + $gramosAsignados,
-                                ]);
-                        } else {
-                            DB::table('inventario_sede_lotes')->insert([
-                                'lote_id'         => $detalle->lote_id,
-                                'sede_id'         => $sede->id,
-                                'cantidad'        => $cantidadAsignada,
-                                'cantidad_convertida' => $gramosAsignados,
-                            ]);
-                        }
-
-                        DB::table('movimiento_inventarios')->insert([
-                            'producto_id'     => $detalle->producto_id,
-                            'lote_id'         => $detalle->lote_id,
-                            'sede_id'         => $sede->id,
-                            'tipo_movimiento' => 'ENTRADA',
-                            'unidad_id'       => $detalle->unidad_id,
-                            'cantidad'        => $cantidadAsignada,
-                            'cantidad_convertida' => $gramosAsignados,
-                            'fecha'           => now(),
-                        ]);
-                    }
-                }
-
-                if ($cantidadRestante > 0) {
-                    $gramosAsignados = $cantidadRestante * $gramosPorUnidad;
-
-                    $inventario = DB::table('inventario_sede_lotes')
-                        ->where('lote_id', $detalle->lote_id)
-                        ->where('sede_id', $acariguaId)
-                        ->first();
-
-                    if ($inventario) {
-                        DB::table('inventario_sede_lotes')
-                            ->where('id', $inventario->id)
-                            ->update([
-                                'cantidad'        => $inventario->cantidad + $cantidadRestante,
-                                'cantidad_convertida' => $inventario->cantidad_convertida + $gramosAsignados,
-                            ]);
-                    } else {
-                        DB::table('inventario_sede_lotes')->insert([
-                            'lote_id'         => $detalle->lote_id,
-                            'sede_id'         => $acariguaId,
-                            'cantidad'        => $cantidadRestante,
-                            'cantidad_convertida' => $gramosAsignados,
-                        ]);
-                    }
-
-                    DB::table('movimiento_inventarios')->insert([
-                        'producto_id'     => $detalle->producto_id,
-                        'lote_id'         => $detalle->lote_id,
-                        'sede_id'         => $acariguaId,
-                        'tipo_movimiento' => 'ENTRADA',
-                        'unidad_id'       => $detalle->unidad_id,
-                        'cantidad'        => $cantidadRestante,
-                        'cantidad_convertida' => $gramosAsignados,
-                        'fecha'           => now(),
-                    ]);
-                }
-            }
-
-            DB::table('compras')
-                ->where('id', $compra->id)
-                ->update([
-                    'estado' => 'Finalizada',
-                    'updated_at' => now(),
-                ]);
-
-            DB::commit();
-            return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        return app(\App\Support\Inventario\RepartoCompra::class)->aplicar($compra instanceof self ? $compra : (int) $compra);
     }
 }

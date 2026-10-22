@@ -524,3 +524,18 @@ Breadcrumbs::for('admin.enfermedades.index', function (Trail $trail) {
     $trail->parent('home');
     $trail->push('Enfermedades', route('admin.enfermedades.index'));
 });
+
+Breadcrumbs::for('admin.deportes.implementos.index', function (Trail $trail) {
+    $trail->parent('home');
+    $trail->push('Implementos y materiales', route('admin.deportes.implementos.index'));
+});
+
+Breadcrumbs::for('admin.deportes.implementos.create', function (Trail $trail) {
+    $trail->parent('admin.deportes.implementos.index');
+    $trail->push('Crear', route('admin.deportes.implementos.create'));
+});
+
+Breadcrumbs::for('admin.deportes.implementos.edit', function (Trail $trail, $producto) {
+    $trail->parent('admin.deportes.implementos.index');
+    $trail->push('Editar', route('admin.deportes.implementos.edit', $producto));
+});

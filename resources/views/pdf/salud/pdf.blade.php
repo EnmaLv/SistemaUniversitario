@@ -550,7 +550,7 @@
         }
 
         if (!empty($perfil_academico)) {
-            $filtrosAplicados[] = ['Rol', $perfil_academico];
+            $filtrosAplicados[] = ['Tipo de persona', $perfil_academico];
         }
 
         if (!empty($pnf)) {
@@ -661,16 +661,16 @@
                         </div>
                     @endforeach
 
-                    <div class="subsection-title" style="margin-top: 18px;">Distribución por edad</div>
+                    <div class="subsection-title" style="margin-top: 18px;">Consultas por edad al consultar</div>
                     @php
-                        $rangos = $resumen['edades']['rangos'] ?? [];
+                        $rangos = $resumen['edad_consulta'] ?? [];
                         $maxEdad = max(1, count($rangos) ? max($rangos) : 1);
                     @endphp
                     @foreach ($rangos as $rango => $cantidad)
                         <div class="bar-row">
                             <table>
                                 <tr>
-                                    <td class="label">{{ $rango }} años</td>
+                                    <td class="label">{{ $rango }}</td>
                                     <td class="bar-cell">
                                         <div class="bar-bg">
                                             <div class="bar-fill"
@@ -690,9 +690,9 @@
                 </div>
 
                 <div class="col">
-                    <div class="subsection-title">Rol institucional</div>
+                    <div class="subsection-title">Consultas por tipo de persona</div>
                     @php
-                        $roles = $resumen['perfil_academico'] ?? [];
+                        $roles = $resumen['tipo_persona_consulta'] ?? [];
                         $maxRol = max(1, count($roles) ? max($roles) : 1);
                     @endphp
                     @foreach ($roles as $rol => $cantidad)
@@ -714,9 +714,9 @@
                         @endif
                     @endforeach
 
-                    <div class="subsection-title" style="margin-top: 18px;">PNF / Carrera</div>
+                    <div class="subsection-title" style="margin-top: 18px;">Consultas por PNF</div>
                     @php
-                        $pnfs = $resumen['pnf'] ?? [];
+                        $pnfs = $resumen['pnf_consulta'] ?? [];
                         $maxPnf = max(1, count($pnfs) ? max($pnfs) : 1);
                     @endphp
                     @foreach ($pnfs as $pnfNombre => $cantidad)
@@ -1073,23 +1073,28 @@
                 <tbody>
                     @foreach ($consultas as $c)
                         <tr>
-                            <td>{{ \Carbon\Carbon::parse($c->fecha)->format('d/m/Y') }}</td>
+                            <td>
+                                {{ \Carbon\Carbon::parse($c->fecha_cme)->format('d/m/Y') }}
+                                @if ($c->created_at && $c->created_at->toDateString() !== \Carbon\Carbon::parse($c->fecha_cme)->toDateString())
+                                    <br><span style="font-size: 7px; color: #6b7280;">Reg. {{ $c->created_at->format('d/m/Y') }}</span>
+                                @endif
+                            </td>
                             <td class="strong">
-                                {{ trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) ?: '—' }}
+                                {{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—' }}
                             </td>
-                            <td>{{ $c->paciente->cedula_persona ?? '—' }}</td>
-                            <td>{{ trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')) ?: '—' }}
+                            <td>{{ $c->paciente->cedula_per ?? '—' }}</td>
+                            <td>{{ trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: '—' }}
                             </td>
-                            <td>{{ $c->consultorio->nombre ?? '—' }}</td>
+                            <td>{{ $c->consultorio->nombre_csr ?? '—' }}</td>
                             <td>
                                 @foreach ($c->enfermedades as $enf)
-                                    <div>{{ $enf->nombre }}</div>
+                                    <div>{{ $enf->nombre_efm }}</div>
                                 @endforeach
                             </td>
                             <td>
                                 @if ($c->receta)
-                                    <span class="estado {{ $c->receta->estado == 2 ? '' : 'incompleto' }}">
-                                        {{ $c->receta->estado == 2 ? 'Completada' : 'En proceso' }}
+                                    <span class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
+                                        {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso' }}
                                     </span>
                                 @else
                                     <span class="estado sin">Sin receta</span>
@@ -1123,16 +1128,16 @@
                     @foreach ($consultas as $c)
                         @if ($c->receta)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($c->receta->fecha)->format('d/m/Y') }}</td>
-                                <td class="strong">#{{ str_pad($c->receta->id, 5, '0', STR_PAD_LEFT) }}</td>
-                                <td>{{ trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) }}
+                                <td>{{ \Carbon\Carbon::parse($c->receta->fecha_emision_rme)->format('d/m/Y') }}</td>
+                                <td class="strong">#{{ str_pad($c->receta->id_rme, 5, '0', STR_PAD_LEFT) }}</td>
+                                <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                 </td>
-                                <td>{{ trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')) }}
+                                <td>{{ trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) }}
                                 </td>
                                 <td class="center">{{ $c->receta->detalles->count() }}</td>
                                 <td>
-                                    <span class="estado {{ $c->receta->estado == 2 ? '' : 'incompleto' }}">
-                                        {{ $c->receta->estado == 2 ? 'Completada' : 'En proceso' }}
+                                    <span class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
+                                        {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso' }}
                                     </span>
                                 </td>
                             </tr>
@@ -1168,13 +1173,13 @@
                                 @foreach ($det->dispensaciones as $disp)
                                     @php $totalItems++; @endphp
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($disp->fecha)->format('d/m/Y') }}</td>
-                                        <td>{{ trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) }}
+                                        <td>{{ \Carbon\Carbon::parse($disp->fecha_dispensacion_dsm)->format('d/m/Y') }}</td>
+                                        <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                         </td>
-                                        <td>{{ $det->producto->nombre ?? '—' }}</td>
-                                        <td class="center">{{ number_format($disp->cantidad, 2) }}</td>
-                                        <td>{{ $disp->lote->codigo ?? '—' }}</td>
-                                        <td>{{ trim(($disp->usuario->persona->nombre_persona ?? '') . ' ' . ($disp->usuario->persona->apellido_persona ?? '')) ?: '—' }}
+                                        <td>{{ $det->producto->nombre_pdt ?? '—' }}</td>
+                                        <td class="center">{{ number_format($disp->cantidad_dsm, 2) }}</td>
+                                        <td>{{ $disp->lote->codigo_lote_lot ?? '—' }}</td>
+                                        <td>{{ trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—' }}
                                         </td>
                                     </tr>
                                 @endforeach

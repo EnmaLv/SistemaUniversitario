@@ -452,7 +452,7 @@ select {
     }
 
     &::picker-icon{
-        content: url("../../public/img/keyboard_arrow.svg");
+        content: url("/img/keyboard_arrow.webp");
         transition: all .2s ease;
         width: 24px;
         height: 24px;
@@ -464,7 +464,7 @@ select {
 
 }
 option::checkmark{
-    content: url('../../public/img/check_small.svg');
+    content: url('/img/check_small.webp');
     width: 24px;
     height: 24px;
     margin-left: 4px;

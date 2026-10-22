@@ -8,18 +8,20 @@ use Carbon\Carbon;
 
 class GrupoHorario
 {
-    const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_INACTIVE = 2;
 
     public static function obtenerUsuario($userId)
     {
-        return DB::table('usuario')->where('id_usuario', $userId)->first();
+        return DB::table('user')->where('id_use', $userId)->first();
     }
 
     public static function obtenerHorarios($grupoId)
     {
-        return DB::table('horarios')->where('grupo_horario_id', $grupoId)->get();
+        return DB::table('horario_profesional')
+            ->where('gha_id', $grupoId)
+            ->whereNull('horario_profesional.deleted_at')
+            ->get();
     }
 
     public static function eliminar($id)
@@ -28,17 +30,21 @@ class GrupoHorario
             DB::beginTransaction();
             $now = Carbon::now();
             
-            $updated = DB::table('grupos_horarios')
-                ->where('id', $id)
+            $updated = DB::table('grupo_horario_atencion')
+                ->where('id_gha', $id)
+                ->whereNull('deleted_at')
                 ->update([
-                    'activo' => self::STATUS_DELETED,
+                    'deleted_at' => $now,
+                    'updated_id' => Auth::id(),
                     'updated_at' => $now,
                 ]);
 
-            DB::table('horarios')
-                ->where('grupo_horario_id', $id)
+            DB::table('horario_profesional')
+                ->where('gha_id', $id)
+                ->whereNull('deleted_at')
                 ->update([
-                    'activo' => Horario::STATUS_DELETED,
+                    'deleted_at' => $now,
+                    'updated_id' => Auth::id(),
                     'updated_at' => $now,
                 ]);
 
@@ -60,25 +66,32 @@ class GrupoHorario
                 return [false, 'Error: Usuario no autenticado.'];
             }
 
-            DB::table('grupos_horarios')
-                ->where('user_id', $userId)
-                ->where('activo', '!=', self::STATUS_DELETED)
-                ->update(['activo' => self::STATUS_INACTIVE, 'updated_at' => Carbon::now()]);
+            DB::table('grupo_horario_atencion')
+                ->where('psicologo_use_id', $userId)
+                ->whereNull('deleted_at')
+                ->update(['status_id' => self::STATUS_INACTIVE, 'updated_id' => $userId, 'updated_at' => Carbon::now()]);
 
-            DB::table('horarios')
-                ->where('user_id', $userId)
-                ->where('activo', '!=', Horario::STATUS_DELETED)
-                ->update(['activo' => Horario::STATUS_INACTIVE, 'updated_at' => Carbon::now()]);
+            DB::table('horario_profesional')
+                ->where('psicologo_use_id', $userId)
+                ->whereNull('deleted_at')
+                ->update(['status_id' => Horario::STATUS_INACTIVE, 'updated_id' => $userId, 'updated_at' => Carbon::now()]);
 
-            $updated = DB::table('grupos_horarios')->where('id', $id)->update([
-                'activo' => self::STATUS_ACTIVE,
-                'updated_at' => Carbon::now(),
-            ]);
-
-            DB::table('horarios')->where('grupo_horario_id', $id)
-                ->where('activo', '!=', Horario::STATUS_DELETED)
+            $updated = DB::table('grupo_horario_atencion')
+                ->where('id_gha', $id)
+                ->where('psicologo_use_id', $userId)
+                ->whereNull('deleted_at')
                 ->update([
-                    'activo' => self::STATUS_ACTIVE,
+                    'status_id' => self::STATUS_ACTIVE,
+                    'updated_id' => $userId,
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            DB::table('horario_profesional')->where('gha_id', $id)
+                ->where('psicologo_use_id', $userId)
+                ->whereNull('deleted_at')
+                ->update([
+                    'status_id' => Horario::STATUS_ACTIVE,
+                    'updated_id' => $userId,
                     'updated_at' => Carbon::now(),
                 ]);
 
@@ -87,7 +100,7 @@ class GrupoHorario
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return [false, 'Error al activar el horario: ' . $e->getMessage()];
+            return [false, 'Error al activar el horario: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -96,15 +109,20 @@ class GrupoHorario
         try {
             DB::beginTransaction();
 
-            $updated = DB::table('grupos_horarios')->where('id', $id)->update([
-                'activo' => self::STATUS_INACTIVE,
-                'updated_at' => Carbon::now(),
-            ]);
-
-            DB::table('horarios')->where('grupo_horario_id', $id)
-                ->where('activo', '!=', Horario::STATUS_DELETED)
+            $updated = DB::table('grupo_horario_atencion')
+                ->where('id_gha', $id)
+                ->whereNull('deleted_at')
                 ->update([
-                    'activo' => self::STATUS_INACTIVE,
+                    'status_id' => self::STATUS_INACTIVE,
+                    'updated_id' => Auth::id(),
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            DB::table('horario_profesional')->where('gha_id', $id)
+                ->whereNull('deleted_at')
+                ->update([
+                    'status_id' => Horario::STATUS_INACTIVE,
+                    'updated_id' => Auth::id(),
                     'updated_at' => Carbon::now(),
                 ]);
 
@@ -113,7 +131,7 @@ class GrupoHorario
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return [false, 'Error al desactivar el horario: ' . $e->getMessage()];
+            return [false, 'Error al desactivar el horario: ' . \App\Support\Seguridad\MensajeError::de($e)];
         }
     }
 
@@ -121,10 +139,14 @@ class GrupoHorario
     {
         try {
             DB::beginTransaction();
-            $res = DB::table('grupos_horarios')
-                ->where('user_id', $userId)
-                ->where('activo', '!=', self::STATUS_DELETED)
-                ->update(['activo' => self::STATUS_INACTIVE]);
+            $res = DB::table('grupo_horario_atencion')
+                ->where('psicologo_use_id', $userId)
+                ->whereNull('deleted_at')
+                ->update([
+                    'status_id' => self::STATUS_INACTIVE,
+                    'updated_id' => Auth::id(),
+                    'updated_at' => Carbon::now(),
+                ]);
             DB::commit();
             return $res;
         } catch (\Exception $e) {
@@ -135,44 +157,45 @@ class GrupoHorario
 
     public static function obtenerActivoPorPsicologo($psicologoId)
     {
-        return DB::table('grupos_horarios')
-            ->where('user_id', $psicologoId)
-            ->where('activo', self::STATUS_ACTIVE)
+        return DB::table('grupo_horario_atencion')
+            ->where('psicologo_use_id', $psicologoId)
+            ->where('status_id', self::STATUS_ACTIVE)
+            ->whereNull('deleted_at')
             ->first();
     }
 
     public static function obtenerPorIdYUsuario($id, $userId)
     {
-        return DB::table('grupos_horarios')
-            ->where('id', $id)
-            ->where('user_id', $userId)
-            ->where('activo', '!=', self::STATUS_DELETED)
+        return DB::table('grupo_horario_atencion')
+            ->where('id_gha', $id)
+            ->where('psicologo_use_id', $userId)
+            ->whereNull('deleted_at')
             ->first();
     }
 
     public static function obtenerPorId($id)
     {
-        return DB::table('grupos_horarios')->where('id', $id)->first();
+        return DB::table('grupo_horario_atencion')->where('id_gha', $id)->first();
     }
 
     public static function obtenerConHorarios($userId)
     {
-        return DB::table('grupos_horarios')
-            ->where('user_id', $userId)
-            ->whereIn('activo', [self::STATUS_ACTIVE, self::STATUS_INACTIVE])
+        return DB::table('grupo_horario_atencion')
+            ->where('psicologo_use_id', $userId)
+            ->whereNull('grupo_horario_atencion.deleted_at')
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
-                    ->from('horarios')
-                    ->whereColumn('horarios.grupo_horario_id', 'grupos_horarios.id')
-                    ->whereIn('horarios.activo', [Horario::STATUS_ACTIVE, Horario::STATUS_INACTIVE]);
+                    ->from('horario_profesional')
+                    ->whereColumn('horario_profesional.gha_id', 'grupo_horario_atencion.id_gha')
+                    ->whereNull('horario_profesional.deleted_at');
             })
             ->get()
             ->map(function ($grupo) {
-                $grupo->horarios = DB::table('horarios')
-                    ->where('grupo_horario_id', $grupo->id)
-                    ->whereIn('activo', [Horario::STATUS_ACTIVE, Horario::STATUS_INACTIVE])
-                    ->orderByRaw("CASE dia WHEN 'Lunes' THEN 1 WHEN 'Martes' THEN 2 WHEN 'Miércoles' THEN 3 WHEN 'Jueves' THEN 4 WHEN 'Viernes' THEN 5 ELSE 6 END")
-                    ->orderBy('hora_inicio')
+                $grupo->horarios = DB::table('horario_profesional')
+                    ->where('gha_id', $grupo->id_gha)
+                    ->whereNull('deleted_at')
+                    ->orderByRaw(Horario::ORDEN_DIAS)
+                    ->orderBy('hora_inicio_hpr')
                     ->get();
                 return $grupo;
             });
@@ -180,13 +203,13 @@ class GrupoHorario
 
     public static function existeNombre($userId, $nombre, $excludeId = null)
     {
-        $query = DB::table('grupos_horarios')
-            ->where('user_id', $userId)
-            ->where('nombre', $nombre)
-            ->whereIn('activo', [self::STATUS_ACTIVE, self::STATUS_INACTIVE]);
+        $query = DB::table('grupo_horario_atencion')
+            ->where('psicologo_use_id', $userId)
+            ->where('nombre_gha', $nombre)
+            ->whereNull('deleted_at');
 
         if ($excludeId) {
-            $query->where('id', '<>', $excludeId);
+            $query->where('id_gha', '<>', $excludeId);
         }
 
         return $query->exists();
@@ -196,13 +219,14 @@ class GrupoHorario
     {
         try {
             DB::beginTransaction();
-            $id = DB::table('grupos_horarios')->insertGetId([
-                'user_id' => $data['user_id'],
-                'nombre' => $data['nombre'],
-                'activo' => $data['activo'] ?? self::STATUS_INACTIVE,
+            $id = DB::table('grupo_horario_atencion')->insertGetId([
+                'psicologo_use_id' => $data['psicologo_use_id'],
+                'nombre_gha' => $data['nombre_gha'],
+                'status_id' => $data['status_id'] ?? self::STATUS_INACTIVE,
+                'created_id' => Auth::id(),
                 'created_at' => Carbon::now(),
                 'updated_at' => null,
-            ]);
+            ], 'id_gha');
             DB::commit();
             return $id;
         } catch (\Exception $e) {
@@ -215,9 +239,10 @@ class GrupoHorario
     {
         try {
             DB::beginTransaction();
-            $res = DB::table('grupos_horarios')
-                ->where('id', $id)
-                ->update(array_merge($data, ['updated_at' => Carbon::now()]));
+            $res = DB::table('grupo_horario_atencion')
+                ->where('id_gha', $id)
+                ->whereNull('deleted_at')
+                ->update(array_merge($data, ['updated_id' => Auth::id(), 'updated_at' => Carbon::now()]));
             DB::commit();
             return $res;
         } catch (\Exception $e) {
@@ -228,19 +253,20 @@ class GrupoHorario
 
     public static function obtenerNoEliminados($userId)
     {
-        return DB::table('grupos_horarios')
-            ->where('user_id', $userId)
-            ->where('activo', '!=', self::STATUS_DELETED)
+        return DB::table('grupo_horario_atencion')
+            ->where('psicologo_use_id', $userId)
+            ->whereNull('deleted_at')
             ->get();
     }
 
     public static function obtenerHorariosHoy($grupoId, $dia)
     {
-        return DB::table('horarios')
-            ->where('grupo_horario_id', $grupoId)
-            ->where('dia', $dia)
-            ->where('activo', self::STATUS_ACTIVE)
-            ->orderBy('hora_inicio')
+        return DB::table('horario_profesional')
+            ->where('gha_id', $grupoId)
+            ->where('dia_hpr', $dia)
+            ->where('status_id', Horario::STATUS_ACTIVE)
+            ->whereNull('deleted_at')
+            ->orderBy('hora_inicio_hpr')
             ->get();
     }
 
@@ -248,7 +274,7 @@ class GrupoHorario
     {
         $grupoActivo = self::obtenerActivoPorPsicologo($userId);
 
-        $horarios = Horario::obtenerPorFiltros($userId, $grupoActivo ? $grupoActivo->id : null);
+        $horarios = Horario::obtenerPorFiltros($userId, $grupoActivo ? $grupoActivo->id_gha : null);
 
         if ($horarios->count() < 2) {
             throw new \Exception('Debe haber al menos dos bloques de horario configurados para guardar el grupo de horarios.');
@@ -256,7 +282,7 @@ class GrupoHorario
 
         $buildSignature = function ($bloques) {
             return $bloques->map(function ($h) {
-                return trim($h->dia . '|' . $h->hora_inicio . '|' . $h->hora_fin . '|' . ($h->descripcion ?? ''));
+                return trim($h->dia_hpr . '|' . $h->hora_inicio_hpr . '|' . $h->hora_fin_hpr . '|' . ($h->descripcion_hpr ?? ''));
             })->sort()->values()->implode(';');
         };
 
@@ -270,12 +296,12 @@ class GrupoHorario
 
         $oldGroup = self::obtenerNoEliminados($userId)
             ->first(function ($grupo) use ($newSignature, $action, $grupoActivo, $buildSignature) {
-                if ($action === 'update' && $grupoActivo && $grupo->id === $grupoActivo->id) {
+                if ($action === 'update' && $grupoActivo && (int) $grupo->id_gha === (int) $grupoActivo->id_gha) {
                     return false;
                 }
 
                 $signature = $buildSignature(
-                    Horario::obtenerPorGrupo($grupo->id)
+                    Horario::obtenerPorGrupo($grupo->id_gha)
                 );
 
                 return $signature === $newSignature;
@@ -292,9 +318,9 @@ class GrupoHorario
                 self::desactivarTodos($userId);
 
                 $grupoId = self::crear([
-                    'user_id' => $userId,
-                    'nombre' => $nombre,
-                    'activo' => self::STATUS_ACTIVE,
+                    'psicologo_use_id' => $userId,
+                    'nombre_gha' => $nombre,
+                    'status_id' => self::STATUS_ACTIVE,
                 ]);
             } else {
                 if (!$grupoActivo) {
@@ -303,11 +329,11 @@ class GrupoHorario
 
                 self::desactivarTodos($userId);
 
-                $grupoId = $grupoActivo->id;
-                self::actualizar($grupoId, ['activo' => self::STATUS_ACTIVE]);
+                $grupoId = $grupoActivo->id_gha;
+                self::actualizar($grupoId, ['status_id' => self::STATUS_ACTIVE]);
             }
 
-            Horario::asignarGrupo($horarios->pluck('id'), $grupoId);
+            Horario::asignarGrupo($horarios->pluck('id_hpr'), $grupoId);
 
             DB::commit();
             return $action === 'create' ? 'Grupo nuevo creado y asignado.' : 'Grupo activo actualizado correctamente.';

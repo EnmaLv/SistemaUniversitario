@@ -10,12 +10,27 @@ use App\Models\Becas\JornadaCriterio;
 use App\Models\Becas\SolicitudRespuesta;
 use App\Models\Becas\Lapso;
 use App\Models\Becas\SolicitudDocumento;
+use App\Models\Persona;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
 use Exception;
 
 class SolicitudBecasService
 {
+    public const MENSAJE_SOLO_ESTUDIANTES = 'Solo las personas con perfil Estudiante pueden solicitar becas.';
+
+    public static function esEstudiante(int|string|null $personaId): bool
+    {
+        return $personaId !== null && $personaId !== ''
+            && Persona::whereKey((int) $personaId)->estudiantes()->exists();
+    }
+
+    private function asegurarEstudiante(int|string|null $personaId): void
+    {
+        if (! self::esEstudiante($personaId)) {
+            throw new Exception(self::MENSAJE_SOLO_ESTUDIANTES);
+        }
+    }
 
     public function listarSolicitudes(array $filtros = [])
     {
@@ -24,18 +39,18 @@ class SolicitudBecasService
         if (!empty($filtros['buscar'])) {
             $buscar = $filtros['buscar'];
             $query->whereHas('persona', function ($q) use ($buscar) {
-                $q->where('cedula_persona', 'like', "%{$buscar}%")
-                  ->orWhere('nombre_persona', 'like', "%{$buscar}%")
-                  ->orWhere('apellido_persona', 'like', "%{$buscar}%");
+                $q->where('cedula_per', 'like', "%{$buscar}%")
+                  ->orWhere('nombres_per', 'like', "%{$buscar}%")
+                  ->orWhere('apellidos_per', 'like', "%{$buscar}%");
             });
         }
 
         if (isset($filtros['estado']) && $filtros['estado'] !== '') {
-            $query->where('estado', intval($filtros['estado']));
+            $query->where('estado_solicitud_sob', intval($filtros['estado']));
         }
 
         if (!empty($filtros['beneficio_id'])) {
-            $query->where('id_beneficio', intval($filtros['beneficio_id']));
+            $query->where('bes_id', intval($filtros['beneficio_id']));
         }
 
         return $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
@@ -44,30 +59,32 @@ class SolicitudBecasService
     public function crearSolicitud(array $data): SolicitudBeca
     {
         return DB::transaction(function () use ($data) {
-            $personaId = $data['id_persona'];
+            $personaId = $data['per_id'];
             $jornadaId = $data['jornada_id'];
 
+            $this->asegurarEstudiante($personaId);
+
             $jornada = JornadaBeca::findOrFail($jornadaId);
-            if (!$jornada->activa) {
+            if ((int) $jornada->status_id !== 1) {
                 throw new Exception("La jornada seleccionada no está activa.");
             }
 
             $hoy = now()->toDateString();
-            if ($jornada->fecha_inicio_solicitud->toDateString() > $hoy
-                || $jornada->fecha_fin_solicitud->toDateString() < $hoy) {
+            if ($jornada->fecha_inicio_solicitud_jnb->toDateString() > $hoy
+                || $jornada->fecha_fin_solicitud_jnb->toDateString() < $hoy) {
                 throw new Exception("El período de solicitudes para esta jornada ya expiró o no ha iniciado.");
             }
 
-            $existe = SolicitudBeca::where('id_persona', $personaId)
-                ->where('id_beneficio', $jornada->beneficio_id)
-                ->where('id_lapso', $jornada->lapsos_id)
-                ->whereIn('estado', [0, 1])
+            $existe = SolicitudBeca::where('per_id', $personaId)
+                ->where('bes_id', $jornada->bes_id)
+                ->where('laa_id', $jornada->laa_id)
+                ->whereIn('estado_solicitud_sob', [0, 1])
                 ->exists();
             if ($existe) {
                 throw new Exception("Ya existe una solicitud en proceso o aprobada para este beneficio en el lapso actual.");
             }
 
-            if ($jornada->cupos_maximos <= $jornada->cupos_asignados) {
+            if ($jornada->cupos_maximos_jnb <= $jornada->cupos_asignados_jnb) {
                 throw new Exception("No hay cupos disponibles en esta jornada.");
             }
 
@@ -77,28 +94,34 @@ class SolicitudBecasService
             $archivoNotas = $data['archivo_notas'] ?? null;
             unset($data['archivo_notas']);
 
-            $data['estado'] = 0;
-            $solicitud = SolicitudBeca::create($data);
+            $solicitud = SolicitudBeca::create([
+                'per_id'               => $personaId,
+                'bes_id'               => $jornada->bes_id,
+                'jnb_id'               => $jornada->id_jnb,
+                'laa_id'               => $jornada->laa_id,
+                'tipo_solicitud_sob'   => $data['tipo_solicitud'] ?? 'nueva',
+                'estado_solicitud_sob' => 0,
+            ]);
 
             // Procesamiento y guardado del documento adjunto (Notas)
             if ($archivoNotas instanceof UploadedFile) {
                 // Obtener el código del lapso académico activo para agrupar los archivos en carpetas por período
-                $lapsoActual = Lapso::where('es_actual', true)->first();
-                $codigoLapso = $lapsoActual ? $lapsoActual->codigo : 'sin-lapso';
+                $lapsoActual = Lapso::where('es_actual_laa', true)->first();
+                $codigoLapso = $lapsoActual ? $lapsoActual->codigo_laa : 'sin-lapso';
 
                 // Generar un nombre único para el archivo que evita exponer información sensible del estudiante
                 $extension = $archivoNotas->extension() ?: $archivoNotas->getClientOriginalExtension();
-                $nombreArchivo = 'notas_solicitud_' . $solicitud->id . '_' . uniqid() . '.' . $extension;
+                $nombreArchivo = 'notas_solicitud_' . $solicitud->id_sob . '_' . uniqid() . '.' . $extension;
                 
                 // Guardar el archivo físicamente en el storage bajo: documentos_becas/{codigo_lapso}/{nombre_archivo}
-                $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'public');
+                $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'local');
 
                 // Registrar la referencia del documento en la base de datos asociado a la solicitud
                 SolicitudDocumento::create([
-                    'id_solicitud'     => $solicitud->id,
-                    'nombre_documento' => 'Notas Certificadas',
-                    'ruta_archivo'     => $ruta,
-                    'tipo_archivo'     => $extension,
+                    'sob_id'               => $solicitud->id_sob,
+                    'nombre_documento_dsb' => 'Notas Certificadas',
+                    'ruta_archivo_dsb'     => $ruta,
+                    'tipo_archivo_dsb'     => $extension,
                 ]);
             }
 
@@ -112,13 +135,14 @@ class SolicitudBecasService
     {
         if (empty($respuestas)) return;
 
-        $criterios = JornadaCriterio::where('id_jornada', $jornada->id)
+        $criterios = JornadaCriterio::where('jnb_id', $jornada->id_jnb)
             ->get()
-            ->keyBy('id_pregunta');
+            ->keyBy('pgb_id');
 
-        $preguntas = BecaPregunta::whereIn('id', collect($respuestas)->pluck('id_pregunta'))
+        $preguntas = BecaPregunta::where('bes_id', $jornada->bes_id)
+            ->whereIn('id_pgb', collect($respuestas)->pluck('id_pregunta'))
             ->get()
-            ->keyBy('id');
+            ->keyBy('id_pgb');
 
         $rows = [];
 
@@ -132,18 +156,20 @@ class SolicitudBecasService
             $valorJson = $r['valor_json'] ?? null;
 
             $cumple = null;
-            if ($criterio && $criterio->operador) {
+            if ($criterio && $criterio->operador_cjb) {
                 $cumple = $this->evaluarCriterio($criterio, $valor, $valorJson);
             }
 
             $rows[] = [
-                'id_solicitud'    => $solicitud->id,
-                'id_pregunta'     => $idPregunta,
-                'valor'           => $valor,
-                'valor_json'      => $valorJson ? json_encode($valorJson) : null,
-                'cumple_criterio' => $cumple,
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'sob_id'              => $solicitud->id_sob,
+                'pgb_id'              => $idPregunta,
+                'valor_rsb'           => $valor,
+                'valor_json_rsb'      => $valorJson ? json_encode($valorJson) : null,
+                'cumple_criterio_rsb' => $cumple,
+                'status_id'           => 1,
+                'created_id'          => auth()->id(),
+                'created_at'          => now(),
+                'updated_at'          => now(),
             ];
         }
 
@@ -154,8 +180,8 @@ class SolicitudBecasService
 
     private function evaluarCriterio($criterio, $valor, $valorJson): bool
     {
-        $operador = $criterio->operador;
-        $esperado = $criterio->valor_esperado;
+        $operador = $criterio->operador_cjb;
+        $esperado = $criterio->valor_esperado_cjb;
 
         if ($operador === 'in' || $operador === 'not_in') {
             $lista = array_map('trim', explode(',', (string) $esperado));
@@ -196,45 +222,45 @@ class SolicitudBecasService
     {
         return DB::transaction(function () use ($id, $nuevoEstado, $comentario, $verificadorId) {
             $solicitud = SolicitudBeca::findOrFail($id);
-            $estadoAnterior = $solicitud->estado;
+            $estadoAnterior = (int) $solicitud->estado_solicitud_sob;
 
             if ($estadoAnterior === $nuevoEstado) {
                 return $solicitud;
             }
 
-            $jornada = JornadaBeca::findOrFail($solicitud->jornada_id);
-            $beneficio = Beneficio::findOrFail($solicitud->id_beneficio);
+            $jornada = JornadaBeca::findOrFail($solicitud->jnb_id);
+            $beneficio = Beneficio::findOrFail($solicitud->bes_id);
 
             if ($nuevoEstado === 1) {
-                if ($jornada->cupos_asignados >= $jornada->cupos_maximos) {
+                if ($jornada->cupos_asignados_jnb >= $jornada->cupos_maximos_jnb) {
                     throw new Exception("No hay cupos disponibles en la jornada para aprobar esta solicitud.");
                 }
-                if ($beneficio->cupones_disponibles <= 0) {
+                if ($beneficio->cupones_disponibles_bes <= 0) {
                     throw new Exception("No hay cupones disponibles en el beneficio configurado.");
                 }
 
-                $jornada->increment('cupos_asignados');
+                $jornada->increment('cupos_asignados_jnb');
 
-                $beneficio->increment('cupones_ocupados');
-                $beneficio->decrement('cupones_disponibles');
+                $beneficio->increment('cupones_ocupados_bes');
+                $beneficio->decrement('cupones_disponibles_bes');
             }
 
             if ($estadoAnterior === 1) {
-                if ($jornada->cupos_asignados > 0) {
-                    $jornada->decrement('cupos_asignados');
+                if ($jornada->cupos_asignados_jnb > 0) {
+                    $jornada->decrement('cupos_asignados_jnb');
                 }
 
-                if ($beneficio->cupones_ocupados > 0) {
-                    $beneficio->decrement('cupones_ocupados');
+                if ($beneficio->cupones_ocupados_bes > 0) {
+                    $beneficio->decrement('cupones_ocupados_bes');
                 }
-                $beneficio->increment('cupones_disponibles');
+                $beneficio->increment('cupones_disponibles_bes');
             }
 
             $solicitud->update([
-                'estado' => $nuevoEstado,
-                'comentario_verificador' => $nuevoEstado === 2 ? $comentario : null, // Comentario solo en caso de rechazo
-                'verificado_por' => $verificadorId,
-                'fecha_verificacion' => now(),
+                'estado_solicitud_sob'       => $nuevoEstado,
+                'comentario_verificador_sob' => $nuevoEstado === 2 ? $comentario : null,
+                'verificado_por_use_id'      => $verificadorId,
+                'fecha_verificacion_sob'     => now(),
             ]);
 
             return $solicitud;
@@ -246,14 +272,14 @@ class SolicitudBecasService
         $jornada = JornadaBeca::findOrFail($jornadaId);
         
         // Estudiantes aprobados en el mismo beneficio en cualquier lapso anterior
-        $aprobadosAnteriores = SolicitudBeca::where('id_beneficio', $jornada->beneficio_id)
-            ->where('estado', 1)
-            ->where('id_lapso', '!=', $jornada->lapsos_id)
-            ->pluck('id_persona');
+        $aprobadosAnteriores = SolicitudBeca::where('bes_id', $jornada->bes_id)
+            ->where('estado_solicitud_sob', 1)
+            ->where('laa_id', '!=', $jornada->laa_id)
+            ->pluck('per_id');
 
         // Estudiantes que ya tienen solicitud (de cualquier estado) en la jornada actual
-        $postuladosActuales = SolicitudBeca::where('jornada_id', $jornadaId)
-            ->pluck('id_persona');
+        $postuladosActuales = SolicitudBeca::where('jnb_id', $jornadaId)
+            ->pluck('per_id');
 
         // Los que faltan por postularse en esta jornada
         $pendientes = $aprobadosAnteriores->diff($postuladosActuales);
@@ -264,23 +290,25 @@ class SolicitudBecasService
     public function renovarSolicitudSimplificada(int $personaId, int $jornadaId, UploadedFile $archivoNotas): SolicitudBeca
     {
         return DB::transaction(function () use ($personaId, $jornadaId, $archivoNotas) {
+            $this->asegurarEstudiante($personaId);
+
             $jornada = JornadaBeca::findOrFail($jornadaId);
 
-            if (!$jornada->activa) {
+            if ((int) $jornada->status_id !== 1) {
                 throw new Exception("La jornada seleccionada no está activa.");
             }
 
             $hoy = now()->toDateString();
-            if ($jornada->fecha_inicio_solicitud->toDateString() > $hoy
-                || $jornada->fecha_fin_solicitud->toDateString() < $hoy) {
+            if ($jornada->fecha_inicio_solicitud_jnb->toDateString() > $hoy
+                || $jornada->fecha_fin_solicitud_jnb->toDateString() < $hoy) {
                 throw new Exception("El período de solicitudes para esta jornada ya expiró o no ha iniciado.");
             }
 
             // Verificar si tiene una solicitud previa aprobada para este beneficio
-            $solicitudPrevia = SolicitudBeca::where('id_persona', $personaId)
-                ->where('id_beneficio', $jornada->beneficio_id)
-                ->where('estado', 1)
-                ->where('id_lapso', '!=', $jornada->lapsos_id)
+            $solicitudPrevia = SolicitudBeca::where('per_id', $personaId)
+                ->where('bes_id', $jornada->bes_id)
+                ->where('estado_solicitud_sob', 1)
+                ->where('laa_id', '!=', $jornada->laa_id)
                 ->latest('created_at')
                 ->first();
 
@@ -289,56 +317,58 @@ class SolicitudBecasService
             }
 
             // Verificar si ya tiene solicitud en este lapso
-            $existe = SolicitudBeca::where('id_persona', $personaId)
-                ->where('id_beneficio', $jornada->beneficio_id)
-                ->where('id_lapso', $jornada->lapsos_id)
+            $existe = SolicitudBeca::where('per_id', $personaId)
+                ->where('bes_id', $jornada->bes_id)
+                ->where('laa_id', $jornada->laa_id)
                 ->exists();
             if ($existe) {
                 throw new Exception("Ya existe una solicitud registrada para este beneficio en el lapso actual.");
             }
 
-            if ($jornada->cupos_maximos <= $jornada->cupos_asignados) {
+            if ($jornada->cupos_maximos_jnb <= $jornada->cupos_asignados_jnb) {
                 throw new Exception("No hay cupos disponibles en esta jornada para renovar.");
             }
 
             // Crear la nueva solicitud
             $nuevaSolicitud = SolicitudBeca::create([
-                'id_persona' => $personaId,
-                'id_beneficio' => $jornada->beneficio_id,
-                'jornada_id' => $jornadaId,
-                'id_lapso' => $jornada->lapsos_id,
-                'tipo_solicitud' => 'renovacion',
-                'estado' => 0, // Pendiente de revisión
+                'per_id'               => $personaId,
+                'bes_id'               => $jornada->bes_id,
+                'jnb_id'               => $jornada->id_jnb,
+                'laa_id'               => $jornada->laa_id,
+                'tipo_solicitud_sob'   => 'renovacion',
+                'estado_solicitud_sob' => 0,
             ]);
 
             // Guardar el nuevo documento de notas
-            $lapsoActual = Lapso::where('id', $jornada->lapsos_id)->first();
-            $codigoLapso = $lapsoActual ? $lapsoActual->codigo : 'sin-lapso';
+            $lapsoActual = Lapso::where('id_laa', $jornada->laa_id)->first();
+            $codigoLapso = $lapsoActual ? $lapsoActual->codigo_laa : 'sin-lapso';
             $extension = $archivoNotas->extension() ?: $archivoNotas->getClientOriginalExtension();
-            $nombreArchivo = 'notas_renovacion_' . $nuevaSolicitud->id . '_' . uniqid() . '.' . $extension;
+            $nombreArchivo = 'notas_renovacion_' . $nuevaSolicitud->id_sob . '_' . uniqid() . '.' . $extension;
             
-            $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'public');
+            $ruta = $archivoNotas->storeAs('documentos_becas/' . $codigoLapso, $nombreArchivo, 'local');
 
             SolicitudDocumento::create([
-                'id_solicitud'     => $nuevaSolicitud->id,
-                'nombre_documento' => 'Notas Certificadas',
-                'ruta_archivo'     => $ruta,
-                'tipo_archivo'     => $extension,
+                'sob_id'               => $nuevaSolicitud->id_sob,
+                'nombre_documento_dsb' => 'Notas Certificadas',
+                'ruta_archivo_dsb'     => $ruta,
+                'tipo_archivo_dsb'     => $extension,
             ]);
 
             // Clonar las respuestas anteriores
-            $respuestasAnteriores = SolicitudRespuesta::where('id_solicitud', $solicitudPrevia->id)->get();
+            $respuestasAnteriores = SolicitudRespuesta::where('sob_id', $solicitudPrevia->id_sob)->get();
             $nuevasRespuestas = [];
 
             foreach ($respuestasAnteriores as $respuesta) {
                 $nuevasRespuestas[] = [
-                    'id_solicitud'    => $nuevaSolicitud->id,
-                    'id_pregunta'     => $respuesta->id_pregunta,
-                    'valor'           => $respuesta->valor,
-                    'valor_json'      => $respuesta->valor_json,
-                    'cumple_criterio' => $respuesta->cumple_criterio,
-                    'created_at'      => now(),
-                    'updated_at'      => now(),
+                    'sob_id'              => $nuevaSolicitud->id_sob,
+                    'pgb_id'              => $respuesta->pgb_id,
+                    'valor_rsb'           => $respuesta->valor_rsb,
+                    'valor_json_rsb'      => $respuesta->valor_json_rsb !== null ? json_encode($respuesta->valor_json_rsb) : null,
+                    'cumple_criterio_rsb' => $respuesta->cumple_criterio_rsb,
+                    'status_id'           => 1,
+                    'created_id'          => auth()->id(),
+                    'created_at'          => now(),
+                    'updated_at'          => now(),
                 ];
             }
 

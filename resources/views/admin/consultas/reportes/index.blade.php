@@ -5,7 +5,7 @@
 @stop
 
 @section('content')
-    <p>Bienvenido {{ auth()->user()->persona->nombre_persona }}.</p>
+    <p>Bienvenido {{ auth()->user()->persona->nombres_per }}.</p>
 @stop
 
 @section('css')

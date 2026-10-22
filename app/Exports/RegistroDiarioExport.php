@@ -25,13 +25,13 @@ class RegistroDiarioExport implements FromCollection, WithHeadings, ShouldAutoSi
     public function map($registro): array
     {
         return [
-            $registro->id,
-            $registro->cedula_persona,
-            $registro->nombre_persona,
-            $registro->apellido_persona,
-            $registro->nombre_pnf,
-            $registro->fecha_regis_diario_c,
-            $registro->sector ?? 'N/A',
+            $registro->id_rgc,
+            $registro->cedula_per,
+            $registro->nombres_per,
+            $registro->apellidos_per,
+            $registro->nombre_prg,
+            $registro->fecha_comedor_rgc,
+            $registro->sector_dir ?? 'N/A',
         ]; 
     }
 

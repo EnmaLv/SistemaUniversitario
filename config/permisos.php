@@ -17,6 +17,11 @@ return [
         'secretaria-de-bienestar',
     ],
 
+    'roles_psicologo' => [
+        'psicologo',
+        'psicólogo',
+    ],
+
     'grupo_modulo' => [
         'general'        => null,
         'administracion' => 'administracion',
@@ -25,6 +30,7 @@ return [
         'psicologia'     => 'psicologia',
         'becas'          => 'beca',
         'transporte'     => 'transporte',
+        'deportes'       => 'deporte',
     ],
 
     'sufijos' => [
@@ -41,10 +47,14 @@ return [
 
     'rutas_accion' => [
         'admin.movimientos.compras.enviarCorreo'          => 'editar',
+        'admin.deportes.asistencia.reabrir'               => 'editar',
         'admin.salud.movimientos.consultas.recetacion'    => 'crear',
         'admin.salud.movimientos.consultas.dispensacion'  => 'crear',
         'admin.psicologia.maestros.publicaciones.reaccionar' => 'ver',
         'notifications.readAll'                           => 'ver',
+        'admin.configuracion.seguridad.bloqueos.desbloquear' => 'activar',
+        'admin.becas.lapsos.avanzar'                      => 'editar',
+        'admin.transporte.maestros.bus_viajes.marcar_referencia' => 'editar',
     ],
 
     'rutas_libres' => [
@@ -57,11 +67,16 @@ return [
             'admin.configuracion.master_key.verify',
             'admin.becas.solicitudes.store',
             'admin.becas.solicitudes.renovar',
-            'admin.becas.lapsos.avanzar',
+            'admin.becas.solicitudes.descargar_documento',
+            'media.profile_photos',
+            'media.publicaciones',
         ],
     ],
 
     'claves_obsoletas' => [
         'admin/modulos/seleccionar',
+        'deportes_implementos',
+        'material_oficina',
+        'deportes_entregas',
     ],
 ];

@@ -170,10 +170,10 @@
         const icon = document.getElementById(modalId + 'Icon');
         if (icon) icon.className = `fas fa-edit ${ICON_COLOR_CLASS_ENFERMEDAD}`;
 
-        document.getElementById(modalId + 'Nombre').value = enfermedad.nombre || '';
-        document.getElementById(modalId + 'Codigo').value = enfermedad.codigo || '';
+        document.getElementById(modalId + 'Nombre').value = enfermedad.nombre_efm || '';
+        document.getElementById(modalId + 'Codigo').value = enfermedad.codigo_efm || '';
 
-        const nivelVal = (enfermedad.nivel !== undefined && enfermedad.nivel !== null) ? enfermedad.nivel : 0;
+        const nivelVal = (enfermedad.nivel_gravedad_efm !== undefined && enfermedad.nivel_gravedad_efm !== null) ? enfermedad.nivel_gravedad_efm : 0;
         document.getElementById(modalId + 'Nivel').value = nivelVal;
 
         openModal(modalId);

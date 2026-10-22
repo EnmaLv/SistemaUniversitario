@@ -285,9 +285,9 @@
                                 onchange="toggleMasterKeyField()">
                                 <option value="" disabled selected>Seleccione el rol correspondiente...</option>
                                 @foreach ($roles as $rol)
-                                    <option value="{{ $rol->id_rol }}" data-nombre="{{ strtolower($rol->nombre) }}"
+                                    <option value="{{ $rol->id_rol }}" data-nombre="{{ strtolower($rol->nombre_rol) }}"
                                         {{ old('id_rol') == $rol->id_rol ? 'selected' : '' }}>
-                                        {{ $rol->nombre }}
+                                        {{ $rol->nombre_rol }}
                                     </option>
                                 @endforeach
                             </select>
@@ -337,7 +337,7 @@
                     @for ($i = 0; $i < 2; $i++)
                         <div class="form-row">
                             <div class="form-group">
-                                <select name="security_questions[{{ $i }}][question]"
+                                <select name="security_questions_use[{{ $i }}][question]"
                                     id="q{{ $i }}_type" class="select" required>
                                     <option value="" disabled selected>Selecciona pregunta {{ $i + 1 }}
                                     </option>
@@ -353,15 +353,15 @@
                                     @endphp
                                     @foreach ($questions as $q)
                                         <option value="{{ $q }}"
-                                            {{ old("security_questions.$i.question") == $q ? 'selected' : '' }}>
+                                            {{ old("security_questions_use.$i.question") == $q ? 'selected' : '' }}>
                                             {{ $q }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="form-group">
-                                <input class="input" name="security_questions[{{ $i }}][answer]"
+                                <input class="input" name="security_questions_use[{{ $i }}][answer]"
                                     placeholder="Respuesta {{ $i + 1 }}" required
-                                    value="{{ old('security_questions.' . $i . '.answer') }}">
+                                    value="{{ old('security_questions_use.' . $i . '.answer') }}">
                             </div>
                         </div>
                     @endfor
@@ -372,7 +372,7 @@
                             $systemHasAdmin = $adminRol ? $adminRol->usuarios()->count() > 0 : false;
                         } catch (\Throwable $e) {
                             $systemHasAdmin =
-                                \App\Models\Usuario::join('perfil', 'usuario.id_perfil', '=', 'perfil.id_perfil')
+                                \App\Models\Usuario::join('perfil', 'user.id_perfil', '=', 'perfil.id_perfil')
                                     ->where('perfil.nombre_perfil', 'Administrador')
                                     ->count() > 0;
                         }
@@ -380,7 +380,7 @@
 
                     <div class="form-group" id="master-key-group"
                         style="{{ $systemHasAdmin ? 'display: none;' : '' }}">
-                        <input class="input" type="password" id="master_key" name="master_key"
+                        <input class="input" type="password" id="master_key_use" name="master_key_use"
                             placeholder="Llave Maestra (requerida para administrador)">
                     </div>
 
@@ -414,7 +414,7 @@
         function toggleMasterKeyField() {
             const selectRol = document.getElementById('id_rol');
             const masterKeyGroup = document.getElementById('master-key-group');
-            const masterKeyInput = document.getElementById('master_key');
+            const masterKeyInput = document.getElementById('master_key_use');
 
             if (!selectRol) return;
 

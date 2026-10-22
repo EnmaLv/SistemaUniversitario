@@ -91,17 +91,17 @@ class EstadisticasWordExport
         foreach ($citas as $cita) {
             $fechaSolicitada = $cita->created_at_carbon ? $cita->created_at_carbon->format('d/m/Y') : 'N/A';
             $horaSolicitada = $cita->created_at_carbon ? $cita->created_at_carbon->format('h:i A') : 'N/A';
-            $fechaProgramada = ($cita->fecha_carbon && !in_array($cita->estado, ['pendiente', 'rechazada'])) ? $cita->fecha_carbon->format('d/m/Y') : 'N/A';
-            $horaProgramada = ($cita->hora && !in_array($cita->estado, ['pendiente', 'rechazada'])) ? Carbon::parse($cita->hora)->format('h:i A') : 'N/A';
+            $fechaProgramada = ($cita->fecha_carbon && !in_array($cita->estado_cita_cps, ['pendiente', 'rechazada'])) ? $cita->fecha_carbon->format('d/m/Y') : 'N/A';
+            $horaProgramada = ($cita->hora_cps && !in_array($cita->estado_cita_cps, ['pendiente', 'rechazada'])) ? Carbon::parse($cita->hora_cps)->format('h:i A') : 'N/A';
 
             $table->addRow();
-            $table->addCell()->addText('#' . $cita->id, $cellFontStyle);
+            $table->addCell()->addText('#' . $cita->id_cps, $cellFontStyle);
             $table->addCell()->addText($cita->paciente_nombre, $cellFontStyle);
             $table->addCell()->addText($fechaSolicitada, $cellFontStyle);
             $table->addCell()->addText($horaSolicitada, $cellFontStyle);
             $table->addCell()->addText($fechaProgramada, $cellFontStyle);
             $table->addCell()->addText($horaProgramada, $cellFontStyle);
-            $table->addCell()->addText(ucfirst(str_replace('_', ' ', $cita->estado)), $cellFontStyle);
+            $table->addCell()->addText(ucfirst(str_replace('_', ' ', $cita->estado_cita_cps)), $cellFontStyle);
         }
         
         $section->addTextBreak(2);
@@ -109,9 +109,9 @@ class EstadisticasWordExport
         // Resumen
         $totales = [];
         foreach($citas as $cita) {
-            $est = $cita->estado;
+            $est = $cita->estado_cita_cps;
             if ($est === 'cancelada') {
-                $est = $cita->cancelado_por === 'psicologo' ? 'cancelada_por_psicólogo' : 'cancelada_por_paciente';
+                $est = $cita->cancelado_por_cps === 'psicologo' ? 'cancelada_por_psicólogo' : 'cancelada_por_paciente';
             }
             if(!isset($totales[$est])) $totales[$est] = 0;
             $totales[$est]++;
@@ -206,12 +206,8 @@ class EstadisticasWordExport
 
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         
-        if (!file_exists(storage_path('app/public'))) {
-            mkdir(storage_path('app/public'), 0755, true);
-        }
-        
         $fileName = 'Estadisticas_Citas_' . date('Y_m_d_His') . '.docx';
-        $tempPath = storage_path('app/public/' . $fileName);
+        $tempPath = \App\Support\Archivos\Temporales::ruta($fileName);
         $objWriter->save($tempPath);
 
         return $tempPath;

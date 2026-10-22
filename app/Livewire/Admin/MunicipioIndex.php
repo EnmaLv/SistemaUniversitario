@@ -13,9 +13,9 @@ class MunicipioIndex extends Component
     use WithPagination;
 
     public $filtroEstado = true;
-    public $nombre_municipio;
-    public $municipio_id;
-    public $estado_id;
+    public $nombre_mun;
+    public $mun_id;
+    public $esd_id;
     public $updateMode = false;
     public $search = '';
     public $from;
@@ -26,8 +26,8 @@ class MunicipioIndex extends Component
     }
 
     protected $rules = [
-        'nombre_municipio' => 'required|string|max:255',
-        'estado_id' => 'required|integer|exists:estados,id',
+        'nombre_mun' => 'required|string|max:255',
+        'esd_id' => 'required|integer|exists:estado,id_esd',
     ];
 
     // 🔥 Resetea la página automáticamente al escribir en el buscador live
@@ -38,19 +38,19 @@ class MunicipioIndex extends Component
 
     public function render()
     {
-        $estados = Estado::where('status', true)->get();
+        $estados = Estado::where('status_id', 1)->get();
 
-        $municipios = Municipio::where('status', $this->filtroEstado)
+        $municipios = Municipio::where('status_id', $this->filtroEstado ? 1 : 2)
             ->when($this->search, function ($query) {
                 // Encapsulamos el buscador en un sub-bloque para que el OR no rompa el filtro de status
                 $query->where(function ($q) {
-                    $q->where('nombre_municipio', 'like', '%' . $this->search . '%')
+                    $q->where('nombre_mun', 'like', '%' . $this->search . '%')
                       ->orWhereHas('estado', function ($subQ) {
-                          $subQ->where('nombre_estado', 'like', '%' . $this->search . '%');
+                          $subQ->where('nombre_esd', 'like', '%' . $this->search . '%');
                       });
                 });
             })
-            ->orderBy('nombre_municipio', 'asc')
+            ->orderBy('nombre_mun', 'asc')
             ->paginate(10);
 
         return view('livewire.admin.municipio-index', compact('municipios', 'estados'));
@@ -63,9 +63,9 @@ class MunicipioIndex extends Component
 
     public function resetInputFields()
     {
-        $this->nombre_municipio = '';
-        $this->municipio_id = null;
-        $this->estado_id = null;
+        $this->nombre_mun = '';
+        $this->mun_id = null;
+        $this->esd_id = null;
         $this->updateMode = false;
     }
 
@@ -73,9 +73,9 @@ class MunicipioIndex extends Component
     {
         $this->validate();
 
-        if (Municipio::where('nombre_municipio', $this->nombre_municipio)
-            ->where('estado_id', $this->estado_id)
-            ->where('status', true)->exists()
+        if (Municipio::where('nombre_mun', $this->nombre_mun)
+            ->where('esd_id', $this->esd_id)
+            ->where('status_id', 1)->exists()
         ) {
             $this->dispatch(
                 'swal',
@@ -87,14 +87,14 @@ class MunicipioIndex extends Component
         }
 
         $municipio = Municipio::create([
-            'nombre_municipio' => $this->nombre_municipio,
-            'estado_id' => $this->estado_id,
-            'status' => true,
+            'nombre_mun' => $this->nombre_mun,
+            'esd_id' => $this->esd_id,
+            'status_id' => 1,
         ]);
 
         if ($this->from) {
             return redirect()->to(
-                $this->from . '?municipio_id=' . $municipio->id
+                $this->from . '?mun_id=' . $municipio->id_mun
             );
         }
 
@@ -111,9 +111,9 @@ class MunicipioIndex extends Component
     public function edit($id)
     {
         $municipio = Municipio::findOrFail($id);
-        $this->municipio_id = $id;
-        $this->nombre_municipio = $municipio->nombre_municipio;
-        $this->estado_id = $municipio->estado_id;
+        $this->mun_id = $id;
+        $this->nombre_mun = $municipio->nombre_mun;
+        $this->esd_id = $municipio->esd_id;
         $this->updateMode = true;
     }
 
@@ -121,8 +121,8 @@ class MunicipioIndex extends Component
     {
         $this->validate();
 
-        $municipio = Municipio::find($this->municipio_id);
-        $municipio->update(['nombre_municipio' => $this->nombre_municipio, 'estado_id' => $this->estado_id]);
+        $municipio = Municipio::find($this->mun_id);
+        $municipio->update(['nombre_mun' => $this->nombre_mun, 'esd_id' => $this->esd_id]);
 
         $this->dispatch(
             'swal',
@@ -146,7 +146,7 @@ class MunicipioIndex extends Component
     public function destroy($id)
     {
         Municipio::findOrFail($id)->update([
-            'status' => false
+            'status_id' => 2
         ]);
 
         $this->dispatch(
@@ -161,7 +161,7 @@ class MunicipioIndex extends Component
     public function activate($id)
     {
         Municipio::findOrFail($id)->update([
-            'status' => true
+            'status_id' => 1
         ]);
 
         $this->dispatch(

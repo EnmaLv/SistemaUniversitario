@@ -6,13 +6,15 @@
         <div>
             <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Cargas de Combustible</h1>
             <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
+                Bienvenido <strong>{{ auth()->user()->persona->nombres_per }}</strong>.
             </p>
         </div>
         <div>
+            @canRoute('admin.transporte.maestros.bus_carga_combustibles.create')
             <a href="{{ route('admin.transporte.maestros.bus_carga_combustibles.create') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                 <i class="fas fa-plus"></i> Nueva Carga
             </a>
+            @endcanRoute
         </div>
     </div>
 
@@ -31,10 +33,10 @@
                         class="d-flex gap-3 align-items-center">
                         <select name="vehiculo_id" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input" style="width:180px;"
                             onchange="this.form.submit()">
-                            <option value="">Todos los vehÃ­culos</option>
+                            <option value="">Todos los vehículos</option>
                             @foreach($vehiculos as $v)
-                                <option value="{{ $v->id }}" {{ request('vehiculo_id') == $v->id ? 'selected' : '' }}>
-                                    {{ $v->placa }}
+                                <option value="{{ $v->id_vtr }}" {{ request('vehiculo_id') == $v->id_vtr ? 'selected' : '' }}>
+                                    {{ $v->placa_vtr }}
                                 </option>
                             @endforeach
                         </select>
@@ -52,40 +54,43 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th class="text-center">Fecha</th>
-                        <th class="text-center">VehÃ­culo</th>
+                        <th class="text-center">Vehículo</th>
                         <th class="text-center">Tipo Combustible</th>
                         <th class="text-center">Boca #</th>
                         <th class="text-center">Litros</th>
                         <th class="text-center">Precio / L</th>
                         <th class="text-center">Total</th>
-                        <th class="text-center">KM OdÃ³metro</th>
+                        <th class="text-center">KM Odómetro</th>
                         <th style="width:140px" class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($cargas as $c)
-                        <x-table-row :id="$c->id">
+                        <x-table-row :id="$c->id_ccb">
                             <td class="text-center">
                                 {{ ($cargas->currentPage() - 1) * $cargas->perPage() + $loop->iteration }}
                             </td>
-                            <td class="text-center">{{ $c->fecha ? $c->fecha->format('d/m/Y') : '-' }}</td>
-                            <td class="text-center"><strong>{{ $c->vehiculo->placa ?? '-' }}</strong></td>
+                            <td class="text-center">{{ $c->fecha_ccb ? $c->fecha_ccb->format('d/m/Y') : '-' }}</td>
+                            <td class="text-center"><strong>{{ $c->vehiculo->placa_vtr ?? '-' }}</strong></td>
                             <td class="text-center">
-                                <span class="rd-badge rd-badge-info">{{ $c->tipoCombustible->nombre ?? '-' }}</span>
+                                <span class="rd-badge rd-badge-info">{{ $c->tipoCombustible->nombre_tcb ?? '-' }}</span>
                             </td>
                             <td class="text-center">{{ $c->boca_numero }}</td>
-                            <td class="text-center"><strong>{{ number_format($c->litros, 2) }} L</strong></td>
-                            <td class="text-center">${{ number_format($c->precio_litros, 2) }}</td>
+                            <td class="text-center"><strong>{{ number_format($c->litros_ccb, 2) }} L</strong></td>
+                            <td class="text-center">${{ number_format($c->precio_litro_ccb, 2) }}</td>
                             <td class="text-center" style="color:var(--color-primary);font-weight:700;">
-                                ${{ number_format($c->total, 2) }}
+                                ${{ number_format($c->total_ccb, 2) }}
                             </td>
-                            <td class="text-center">{{ number_format($c->km_al_cargar, 1) }} km</td>
+                            <td class="text-center">{{ number_format($c->km_al_cargar_ccb, 1) }} km</td>
                             <td class="text-center">
                                 <div class="rd-action-group">
+                                    @canRoute('admin.transporte.maestros.bus_carga_combustibles.edit')
                                     <a href="{{ route('admin.transporte.maestros.bus_carga_combustibles.edit', $c) }}"
                                         class="rd-action" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcanRoute
+                                    @canRoute('admin.transporte.maestros.bus_carga_combustibles.destroy')
                                     <form action="{{ route('admin.transporte.maestros.bus_carga_combustibles.destroy', $c) }}"
                                         method="POST" style="display:inline;">
                                         @csrf @method('DELETE')
@@ -94,6 +99,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endcanRoute
                                 </div>
                             </td>
                         </x-table-row>
@@ -117,13 +123,13 @@
 function confirmEliminar(event, button) {
     event.preventDefault();
     Swal.fire({
-        title: 'Â¿EstÃ¡s seguro?',
-        text: 'Â¿Desea eliminar este registro de carga? Esta acciÃ³n no se puede deshacer.',
+        title: '¿Estás seguro?',
+        text: '¿Desea eliminar este registro de carga? Esta acción no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'SÃ­, eliminar',
+        confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) button.closest('form').submit();
@@ -131,5 +137,4 @@ function confirmEliminar(event, button) {
 }
 </script>
 @endpush
-</x-app-layout>
 </x-app-layout>

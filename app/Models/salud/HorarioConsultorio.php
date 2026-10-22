@@ -2,29 +2,32 @@
 
 namespace App\Models\salud;
 
+use App\Models\RolUsuario;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
 class HorarioConsultorio extends Model
 {
     use HasFactory;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'horario_consultorios';
+    protected $table = 'horario_consultorio';
+
+    protected $primaryKey = 'id_hrc';
 
     protected $fillable = [
-        'consultorio_id',
-        'id_rol_usuario',
-        'dia',
-        'hora_inicio',
-        'hora_fin',
-        'descripcion',
-        'activo',
-    ];
-
-    protected $casts = [
-        'activo' => 'boolean',
+        'csr_id',
+        'usr_id',
+        'dia_hrc',
+        'hora_inicio_hrc',
+        'hora_fin_hrc',
+        'descripcion_hrc',
+        'status_id',
     ];
 
     /**
@@ -69,9 +72,9 @@ class HorarioConsultorio extends Model
     ];
 
     /**
-     * Accessor para formatear hora_inicio a HH:mm
+     * Accessor para formatear hora_inicio_hrc a HH:mm
      */
-    protected function horaInicio(): Attribute
+    protected function horaInicioHrc(): Attribute
     {
         return Attribute::make(
             get: fn($value) => $value ? Carbon::parse($value)->format('H:i') : null,
@@ -79,9 +82,9 @@ class HorarioConsultorio extends Model
     }
 
     /**
-     * Accessor para formatear hora_fin a HH:mm
+     * Accessor para formatear hora_fin_hrc a HH:mm
      */
-    protected function horaFin(): Attribute
+    protected function horaFinHrc(): Attribute
     {
         return Attribute::make(
             get: fn($value) => $value ? Carbon::parse($value)->format('H:i') : null,
@@ -90,16 +93,16 @@ class HorarioConsultorio extends Model
 
     public function consultorio()
     {
-        return $this->belongsTo(Consultorio::class, 'consultorio_id');
+        return $this->belongsTo(Consultorio::class, 'csr_id', 'id_csr');
     }
 
     public function rolUsuario()
     {
-        return $this->belongsTo(\App\Models\RolUsuario::class, 'id_rol_usuario');
+        return $this->belongsTo(RolUsuario::class, 'usr_id', 'id_usr');
     }
 
     /**
-     * Nombre de la persona asignada a este bloque (vía rol_usuario -> usuario -> persona).
+     * Nombre de la persona asignada a este bloque (vía usuario_rol -> user -> persona).
      */
     public function getNombrePersonalAttribute(): string
     {
@@ -115,15 +118,15 @@ class HorarioConsultorio extends Model
     }
 
     /**
-     * Usuarios elegibles para asignar horarios: filas de rol_usuario cuyo
-     * id_rol sea Administrador de Salud (4) o Secretaria de Salud (5).
+     * Usuarios elegibles para asignar horarios: filas de usuario_rol cuyo
+     * rol_id sea Administrador de Salud (4) o Secretaria de Salud (5).
      */
     public static function usuariosElegibles()
     {
         $rolesPermitidos = [4, 5];
 
-        return \App\Models\RolUsuario::with(['usuario.persona', 'rol'])
-            ->whereIn('id_rol', $rolesPermitidos)
+        return RolUsuario::with(['usuario.persona', 'rol'])
+            ->whereIn('rol_id', $rolesPermitidos)
             ->get()
             ->map(function ($ru) {
                 // Obtenemos la relación persona desde el usuario
@@ -131,18 +134,18 @@ class HorarioConsultorio extends Model
 
                 // Consultar el consultorio asignado a este rol en los horarios
                 $horario = self::with('consultorio')
-                    ->where('id_rol_usuario', $ru->id)
-                    ->where('activo', true)
+                    ->where('usr_id', $ru->id_usr)
+                    ->where('status_id', self::STATUS_ACTIVO)
                     ->first();
 
                 return (object) [
-                    'id_persona'      => $persona?->id_persona ?? $persona?->id, // ID necesario para la validación
-                    'id_usuario'      => $ru->usuario?->id,
-                    'id_rol_usuario'  => $ru->id,
+                    'per_id'      => $persona?->id_per, // ID necesario para la validación
+                    'id_use'      => $ru->usuario?->id_use,
+                    'usr_id'  => $ru->id_usr,
                     'nombre_completo' => $ru->nombre_completo,
                     'nombre_rol'      => $ru->nombre_rol,
-                    'consultorio_id'     => $horario?->consultorio_id ?? '',
-                    'consultorio_nombre' => $horario?->consultorio?->nombre ?? 'Sin consultorio asignado',
+                    'consultorio_id'     => $horario?->csr_id ?? '',
+                    'consultorio_nombre' => $horario?->consultorio?->nombre_csr ?? 'Sin consultorio asignado',
                 ];
             })
             ->values();
@@ -154,28 +157,28 @@ class HorarioConsultorio extends Model
     public static function porConsultorioAgrupado(int $consultorioId)
     {
         return self::with('rolUsuario.usuario.persona', 'rolUsuario.rol')
-            ->where('consultorio_id', $consultorioId)
-            ->where('activo', true)
+            ->where('csr_id', $consultorioId)
+            ->where('status_id', self::STATUS_ACTIVO)
             ->get()
-            ->groupBy('dia');
+            ->groupBy('dia_hrc');
     }
 
     /**
-     * Mapa [consultorio_id => ['lunes|07:00|08:15|10', ...]]
+     * Mapa [csr_id => ['lunes|07:00|08:15|10', ...]]
      */
     public static function ocupadosPorConsultorio()
     {
-        return self::where('activo', true)
+        return self::where('status_id', self::STATUS_ACTIVO)
             ->get()
-            ->groupBy('consultorio_id')
+            ->groupBy('csr_id')
             ->map(function ($items) {
                 return $items->map(function ($h) {
-                    $inicio = Carbon::parse($h->hora_inicio)->format('H:i');
-                    $fin    = Carbon::parse($h->hora_fin)->format('H:i');
+                    $inicio = Carbon::parse($h->hora_inicio_hrc)->format('H:i');
+                    $fin    = Carbon::parse($h->hora_fin_hrc)->format('H:i');
                     return [
-                        'clave'          => "{$h->dia}|{$inicio}|{$fin}",
-                        'rol_usuario_id' => $h->id_rol_usuario,
-                        'full'           => "{$h->dia}|{$inicio}|{$fin}|{$h->id_rol_usuario}"
+                        'clave'          => "{$h->dia_hrc}|{$inicio}|{$fin}",
+                        'rol_usuario_id' => $h->usr_id,
+                        'full'           => "{$h->dia_hrc}|{$inicio}|{$fin}|{$h->usr_id}"
                     ];
                 })->values();
             });
@@ -191,8 +194,8 @@ class HorarioConsultorio extends Model
         }
 
         return $horariosDia->filter(function ($h) use ($horaInicio, $horaFin) {
-            $inicio = Carbon::parse($h->hora_inicio)->format('H:i');
-            $fin    = Carbon::parse($h->hora_fin)->format('H:i');
+            $inicio = Carbon::parse($h->hora_inicio_hrc)->format('H:i');
+            $fin    = Carbon::parse($h->hora_fin_hrc)->format('H:i');
 
             return $inicio === $horaInicio && $fin === $horaFin;
         });

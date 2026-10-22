@@ -55,6 +55,7 @@
         </div>
 
         {{-- Exportar --}}
+        @canAction('bus_viajes', 'exportar')
         <div x-data="{ openExport: false }" class="relative z-20">
             <button @click="openExport = !openExport" @click.away="openExport = false"
                 style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
@@ -88,6 +89,7 @@
                 </button>
             </div>
         </div>
+        @endcanAction
     </div>
 </div>
 
@@ -121,7 +123,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($vehiculos as $vh)
-                <option value="{{ $vh->id }}">{{ $vh->placa }}</option>
+                <option value="{{ $vh->id_vtr }}">{{ $vh->placa_vtr }}</option>
             @endforeach
         </select>
     </div>
@@ -132,7 +134,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todas</option>
             @foreach ($rutas as $r)
-                <option value="{{ $r->id }}">{{ $r->nombre }}</option>
+                <option value="{{ $r->id_rtr }}">{{ $r->nombre_rtr }}</option>
             @endforeach
         </select>
     </div>
@@ -143,7 +145,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($conductores as $c)
-                <option value="{{ $c->id_usuario }}">{{ $c->nombre_completo }}</option>
+                <option value="{{ $c->id_use }}">{{ $c->nombre_completo }}</option>
             @endforeach
         </select>
     </div>

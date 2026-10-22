@@ -2,7 +2,7 @@
     <div class="pt-8 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @include('components.alert')
-            <div x-data="{ search: '', items: {{ json_encode($campos->pluck('titulo')->map(function ($t) {return strtolower($t);})) }} }">
+            <div x-data="{ search: '', items: {{ json_encode($campos->pluck('titulo_cne')->map(function ($t) {return strtolower($t);})) }} }">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
@@ -14,11 +14,13 @@
                     </div>
 
                     <div class="flex items-center gap-3">
+                        @canRoute('admin.psicologia.maestros.campos_evolucion.create')
                         <a href="{{ route('admin.psicologia.maestros.campos_evolucion.create') }}"
                             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-indigo-600 hover:bg-indigo-700' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>Nuevo Campo</span>
                         </a>
+                        @endcanRoute
                     </div>
                 </div>
 
@@ -50,7 +52,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                                 @forelse($campos as $campo)
-                                    <tr x-show="search === '' || '{{ strtolower($campo->titulo) }}'.includes(search.toLowerCase())"
+                                    <tr x-show="search === '' || '{{ strtolower($campo->titulo_cne) }}'.includes(search.toLowerCase())"
                                         class="hover:bg-gray-50/60 dark:hover:bg-white/[0.02] transition-colors">
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-3">
@@ -59,12 +61,12 @@
                                                     <i class="fas fa-list-check text-xs"></i>
                                                 </div>
                                                 <span class="font-bold text-sm" style="color: var(--text-main);">
-                                                    {{ $campo->titulo }}
+                                                    {{ $campo->titulo_cne }}
                                                 </span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                                            @if (is_null($campo->psicologo_id))
+                                            @if (is_null($campo->psicologo_use_id))
                                                 <span
                                                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">
                                                     <i class="fas fa-shield-alt text-[9px]"></i>
@@ -81,15 +83,18 @@
 
                                         <td class="px-6 py-4 whitespace-nowrap text-right">
                                             <div class="flex items-center justify-end gap-1">
-                                                @if (!is_null($campo->psicologo_id))
-                                                    <a href="{{ route('admin.psicologia.maestros.campos_evolucion.edit', $campo->id) }}"
+                                                @if (!is_null($campo->psicologo_use_id))
+                                                    @canRoute('admin.psicologia.maestros.campos_evolucion.edit')
+                                                    <a href="{{ route('admin.psicologia.maestros.campos_evolucion.edit', $campo->id_cne) }}"
                                                         class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all"
                                                         title="Editar">
                                                         <i class="fas fa-pen-to-square text-sm"></i>
                                                     </a>
+                                                    @endcanRoute
 
+                                                    @canRoute('admin.psicologia.maestros.campos_evolucion.destroy')
                                                     <form
-                                                        action="{{ route('admin.psicologia.maestros.campos_evolucion.destroy', $campo->id) }}"
+                                                        action="{{ route('admin.psicologia.maestros.campos_evolucion.destroy', $campo->id_cne) }}"
                                                         method="POST" class="inline">
                                                         @csrf
                                                         @method('DELETE')
@@ -100,6 +105,7 @@
                                                             <i class="fas fa-trash-can text-sm"></i>
                                                         </button>
                                                     </form>
+                                                    @endcanRoute
                                                 @else
                                                     <span
                                                         class="w-8 h-8 inline-flex items-center justify-center text-gray-300 dark:text-gray-600 cursor-not-allowed"

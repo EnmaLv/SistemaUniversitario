@@ -36,21 +36,21 @@ class BeneficioCriterioController extends Controller
         $criterios = BeneficioCriterio::with(['beneficio', 'pregunta'])
             ->when($buscar, function ($q) use ($buscar) {
                 $q->where(function ($q) use ($buscar) {
-                    $q->whereHas('pregunta', fn ($p) => $p->where('etiqueta', 'like', "%{$buscar}%")
-                                                            ->orWhere('codigo', 'like', "%{$buscar}%"))
-                      ->orWhereHas('beneficio', fn ($b) => $b->where('nombre_beneficio', 'like', "%{$buscar}%"));
+                    $q->whereHas('pregunta', fn ($p) => $p->where('etiqueta_pgb', 'like', "%{$buscar}%")
+                                                            ->orWhere('codigo_pgb', 'like', "%{$buscar}%"))
+                      ->orWhereHas('beneficio', fn ($b) => $b->where('nombre_beneficio_bes', 'like', "%{$buscar}%"));
                 });
             })
-            ->when($beneficio, fn ($q) => $q->where('id_be_beneficio', $beneficio))
+            ->when($beneficio, fn ($q) => $q->where('bes_id', $beneficio))
             ->when($eliminatoria !== null && $eliminatoria !== '', function ($q) use ($eliminatoria) {
-                $q->where('es_eliminatoria', (int) $eliminatoria);
+                $q->where('es_eliminatoria_crb', (bool) (int) $eliminatoria);
             })
-            ->orderBy('id_be_beneficio')
-            ->orderBy('id')
+            ->orderBy('bes_id')
+            ->orderBy('id_crb')
             ->paginate(10)
             ->appends($request->query());
 
-        $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
+        $beneficios = Beneficio::orderBy('nombre_beneficio_bes')->get();
         $operadores = $this->operadores();
 
         return view('admin.becas.criterios.index', compact('criterios', 'beneficios', 'operadores'));
@@ -58,11 +58,11 @@ class BeneficioCriterioController extends Controller
 
     public function create()
     {
-        $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
+        $beneficios = Beneficio::orderBy('nombre_beneficio_bes')->get();
 
-        $preguntas = BecaPregunta::where('activo', true)
-            ->orderBy('id_be_beneficio')
-            ->orderBy('orden')
+        $preguntas = BecaPregunta::activos()
+            ->orderBy('bes_id')
+            ->orderBy('orden_pgb')
             ->get();
 
         $operadores = $this->operadores();
@@ -73,16 +73,16 @@ class BeneficioCriterioController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id_be_beneficio' => 'required|exists:be_beneficios,id',
-            'id_pregunta'     => 'required|exists:be_beca_preguntas,id',
+            'id_be_beneficio' => 'required|exists:beneficio_estudiantil,id_bes',
+            'id_pregunta'     => 'required|exists:pregunta_beneficio,id_pgb',
             'es_eliminatoria' => 'nullable|boolean',
             'operador'        => 'nullable|in:=,!=,>,>=,<,<=,in,not_in,between',
             'valor_esperado'  => 'nullable|string|max:255',
             'peso'            => 'nullable|numeric|min:0',
         ]);
 
-        $preguntaValida = BecaPregunta::where('id', $data['id_pregunta'])
-            ->where('id_be_beneficio', $data['id_be_beneficio'])
+        $preguntaValida = BecaPregunta::where('id_pgb', $data['id_pregunta'])
+            ->where('bes_id', $data['id_be_beneficio'])
             ->exists();
 
         if (!$preguntaValida) {
@@ -90,8 +90,9 @@ class BeneficioCriterioController extends Controller
                 ->withErrors(['id_pregunta' => 'La pregunta seleccionada no pertenece a este beneficio.']);
         }
 
-        $duplicado = BeneficioCriterio::where('id_be_beneficio', $data['id_be_beneficio'])
-            ->where('id_pregunta', $data['id_pregunta'])
+        $duplicado = BeneficioCriterio::withTrashed()
+            ->where('bes_id', $data['id_be_beneficio'])
+            ->where('pgb_id', $data['id_pregunta'])
             ->exists();
 
         if ($duplicado) {
@@ -105,12 +106,12 @@ class BeneficioCriterioController extends Controller
         }
 
         BeneficioCriterio::create([
-            'id_be_beneficio' => $data['id_be_beneficio'],
-            'id_pregunta'     => $data['id_pregunta'],
-            'es_eliminatoria' => $request->boolean('es_eliminatoria'),
-            'operador'        => $request->filled('operador') ? $data['operador'] : null,
-            'valor_esperado'  => $request->filled('valor_esperado') ? $data['valor_esperado'] : null,
-            'peso'            => $data['peso'] ?? 0,
+            'bes_id'              => $data['id_be_beneficio'],
+            'pgb_id'              => $data['id_pregunta'],
+            'es_eliminatoria_crb' => $request->boolean('es_eliminatoria'),
+            'operador_crb'        => $request->filled('operador') ? $data['operador'] : null,
+            'valor_esperado_crb'  => $request->filled('valor_esperado') ? $data['valor_esperado'] : null,
+            'peso_crb'            => $data['peso'] ?? 0,
         ]);
 
         return redirect()
@@ -122,11 +123,11 @@ class BeneficioCriterioController extends Controller
     {
         $criterio = BeneficioCriterio::with(['beneficio', 'pregunta'])->findOrFail($id);
 
-        $beneficios = Beneficio::orderBy('nombre_beneficio')->get();
+        $beneficios = Beneficio::orderBy('nombre_beneficio_bes')->get();
 
-        $preguntas = BecaPregunta::where('activo', true)
-            ->orderBy('id_be_beneficio')
-            ->orderBy('orden')
+        $preguntas = BecaPregunta::activos()
+            ->orderBy('bes_id')
+            ->orderBy('orden_pgb')
             ->get();
 
         $operadores = $this->operadores();
@@ -139,16 +140,16 @@ class BeneficioCriterioController extends Controller
         $criterio = BeneficioCriterio::findOrFail($id);
 
         $data = $request->validate([
-            'id_be_beneficio' => 'required|exists:be_beneficios,id',
-            'id_pregunta'     => 'required|exists:be_beca_preguntas,id',
+            'id_be_beneficio' => 'required|exists:beneficio_estudiantil,id_bes',
+            'id_pregunta'     => 'required|exists:pregunta_beneficio,id_pgb',
             'es_eliminatoria' => 'nullable|boolean',
             'operador'        => 'nullable|in:=,!=,>,>=,<,<=,in,not_in,between',
             'valor_esperado'  => 'nullable|string|max:255',
             'peso'            => 'nullable|numeric|min:0',
         ]);
 
-        $preguntaValida = BecaPregunta::where('id', $data['id_pregunta'])
-            ->where('id_be_beneficio', $data['id_be_beneficio'])
+        $preguntaValida = BecaPregunta::where('id_pgb', $data['id_pregunta'])
+            ->where('bes_id', $data['id_be_beneficio'])
             ->exists();
 
         if (!$preguntaValida) {
@@ -156,9 +157,10 @@ class BeneficioCriterioController extends Controller
                 ->withErrors(['id_pregunta' => 'La pregunta seleccionada no pertenece a este beneficio.']);
         }
 
-        $duplicado = BeneficioCriterio::where('id_be_beneficio', $data['id_be_beneficio'])
-            ->where('id_pregunta', $data['id_pregunta'])
-            ->where('id', '!=', $id)
+        $duplicado = BeneficioCriterio::withTrashed()
+            ->where('bes_id', $data['id_be_beneficio'])
+            ->where('pgb_id', $data['id_pregunta'])
+            ->where('id_crb', '!=', $id)
             ->exists();
 
         if ($duplicado) {
@@ -172,12 +174,12 @@ class BeneficioCriterioController extends Controller
         }
 
         $criterio->update([
-            'id_be_beneficio' => $data['id_be_beneficio'],
-            'id_pregunta'     => $data['id_pregunta'],
-            'es_eliminatoria' => $request->boolean('es_eliminatoria'),
-            'operador'        => $request->filled('operador') ? $data['operador'] : null,
-            'valor_esperado'  => $request->filled('valor_esperado') ? $data['valor_esperado'] : null,
-            'peso'            => $data['peso'] ?? 0,
+            'bes_id'              => $data['id_be_beneficio'],
+            'pgb_id'              => $data['id_pregunta'],
+            'es_eliminatoria_crb' => $request->boolean('es_eliminatoria'),
+            'operador_crb'        => $request->filled('operador') ? $data['operador'] : null,
+            'valor_esperado_crb'  => $request->filled('valor_esperado') ? $data['valor_esperado'] : null,
+            'peso_crb'            => $data['peso'] ?? 0,
         ]);
 
         return redirect()
@@ -188,7 +190,7 @@ class BeneficioCriterioController extends Controller
     public function destroy(int $id)
     {
         $criterio = BeneficioCriterio::findOrFail($id);
-        $criterio->delete();
+        $criterio->forceDelete();
 
         return redirect()
             ->route('admin.becas.criterios.index')

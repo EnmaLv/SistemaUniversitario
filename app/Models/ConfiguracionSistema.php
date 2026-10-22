@@ -2,29 +2,36 @@
 
 namespace App\Models;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
 
 class ConfiguracionSistema extends Model
 {
+    use RegistraAutoria;
+    use SoftDeletes;
+
     protected $table = 'configuracion_sistema';
-    protected $fillable = ['clave_parametro', 'valor_parametro'];
+
+    protected $primaryKey = 'id_csi';
+    protected $fillable = ['clave_csi', 'valor_csi'];
 
     public static function getParametro(string $clave)
     {
-        return self::where('clave_parametro', $clave)->first();
+        return self::where('clave_csi', $clave)->first();
     }
 
     public static function checkMasterKey(string $candidate): bool
     {
-        $row = self::getParametro('master_key');
+        $row = self::getParametro('master_key_use');
         if (!$row) return false;
-        return Hash::check($candidate, $row->valor_parametro);
+        return Hash::check($candidate, $row->valor_csi);
     }
 
     public static function updateMasterKey(string $newKey): void
     {
         $hash = Hash::make($newKey);
-        $row = self::updateOrCreate(['clave_parametro' => 'master_key'], ['valor_parametro' => $hash]);
+        $row = self::updateOrCreate(['clave_csi' => 'master_key_use'], ['valor_csi' => $hash]);
     }
 }

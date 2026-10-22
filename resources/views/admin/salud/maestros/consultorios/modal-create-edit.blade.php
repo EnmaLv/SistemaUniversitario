@@ -7,7 +7,7 @@
 ])
 
 <div id="{{ $modalId }}"
-    class="fixed inset-0 z-50 {{ $errors->has('nombre') || $errors->has('sede_id') ? 'flex' : 'hidden' }} items-center justify-center p-4">
+    class="fixed inset-0 z-50 {{ $errors->has('nombre') || $errors->has('sed_id') ? 'flex' : 'hidden' }} items-center justify-center p-4">
 
     {{-- Backdrop --}}
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModalConsultorio('{{ $modalId }}')">
@@ -50,19 +50,19 @@
                             style="border-color: var(--border-color);">
                             <i class="fas fa-building text-sm"></i>
                         </span>
-                        <select id="{{ $modalId }}SedeId" name="sede_id" required
+                        <select id="{{ $modalId }}SedeId" name="sed_id" required
                             style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                             class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                             <option value="">Seleccione una sede...</option>
                             @foreach ($sedes as $sede)
-                                <option value="{{ $sede->id }}"
-                                    {{ old('sede_id', 1) == $sede->id ? 'selected' : '' }}>
-                                    {{ $sede->nombre }}
+                                <option value="{{ $sede->id_sed }}"
+                                    {{ old('sed_id', 1) == $sede->id_sed ? 'selected' : '' }}>
+                                    {{ $sede->nombre_sed }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    @error('sede_id')
+                    @error('sed_id')
                         <p class="mt-1.5 text-xs font-semibold text-rose-500 flex items-center gap-1">
                             <i class="fas fa-circle-exclamation text-xs"></i> {{ $message }}
                         </p>
@@ -185,13 +185,13 @@
         if (icon) icon.className = "fas fa-edit text-sky-600";
 
         const sedeSelect = document.getElementById(id + 'SedeId');
-        if (sedeSelect) sedeSelect.value = data.sede_id || '1';
+        if (sedeSelect) sedeSelect.value = data.sed_id || '1';
 
         const nombreInput = document.getElementById(id + 'Nombre');
-        if (nombreInput) nombreInput.value = data.nombre || '';
+        if (nombreInput) nombreInput.value = data.nombre_csr || '';
 
         const descTextarea = document.getElementById(id + 'Descripcion');
-        if (descTextarea) descTextarea.value = data.descripcion || '';
+        if (descTextarea) descTextarea.value = data.descripcion_csr || '';
 
         openModalConsultorio(id);
     }

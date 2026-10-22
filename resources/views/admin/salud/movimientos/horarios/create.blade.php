@@ -59,9 +59,9 @@
                                     Seleccione un consultorio
                                 </option>
                                 @foreach ($consultorios as $consultorio)
-                                    <option value="{{ $consultorio->id }}"
-                                        {{ old('consultorio_id', $consultorioSeleccionado) == $consultorio->id ? 'selected' : '' }}>
-                                        {{ $consultorio->nombre }}
+                                    <option value="{{ $consultorio->id_csr }}"
+                                        {{ old('consultorio_id', $consultorioSeleccionado) == $consultorio->id_csr ? 'selected' : '' }}>
+                                        {{ $consultorio->nombre_csr }}
                                     </option>
                                 @endforeach
                             </select>
@@ -135,7 +135,7 @@
                                 @forelse ($usuariosElegibles as $usr)
                                     <div class="user-card flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-200 dark:border-gray-700/80 bg-white dark:bg-gray-800/60 hover:border-sky-400 cursor-grab active:cursor-grabbing transition-all select-none group"
                                         draggable="true" ondragstart="handleDragStart(event)"
-                                        data-id="{{ $usr->id_rol_usuario }}" data-nombre="{{ $usr->nombre_completo }}"
+                                        data-id="{{ $usr->usr_id }}" data-nombre="{{ $usr->nombre_completo }}"
                                         data-rol="{{ $usr->nombre_rol }}">
 
                                         <div
@@ -474,7 +474,7 @@
                 horariosActuales.forEach(item => {
                     const zone = document.querySelector(`.drop-zone[data-key="${item.clave_simple}"]`);
                     if (zone) {
-                        asignarUsuarioABloque(zone, item.id_rol_usuario, item.nombre_usuario, item
+                        asignarUsuarioABloque(zone, item.usr_id, item.nombre_usuario, item
                             .rol_usuario);
                     }
                 });

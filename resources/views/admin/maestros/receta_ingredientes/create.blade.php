@@ -30,26 +30,28 @@
 
                     <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
                         <div class="lg:col-span-1">
-                            <label for="recetas_id" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Seleccionar receta</label>
-                            <select id="recetas_id" name="recetas_id" required
+                            <label for="rct_id" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Seleccionar receta</label>
+                            <select id="rct_id" name="rct_id" required
                                 class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                                 <option value="">Seleccione una receta...</option>
                                 @foreach ($recetas as $receta)
-                                    <option value="{{ $receta->id }}" {{ old('recetas_id', request('recetas_id')) == $receta->id ? 'selected' : '' }}>
-                                        {{ $receta->nombre }}
+                                    <option value="{{ $receta->id_rct }}" {{ old('rct_id', request('rct_id')) == $receta->id_rct ? 'selected' : '' }}>
+                                        {{ $receta->nombre_rct }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('recetas_id')
+                            @error('rct_id')
                                 <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p>
                             @enderror
 
                             <div class="mt-4 rounded-xl border border-gray-200 bg-slate-50 p-3 text-sm text-slate-600">
                                 <p>
                                     ¿No encuentras lo que buscas?
-                                    <a href="{{ route('admin.maestros.recetas.create', ['from' => url()->current()]) }}" class="font-bold text-red-700 hover:text-red-800">
-                                        Créala aquí
-                                    </a>
+                                    @canRoute('admin.maestros.recetas.create')
+                                        <a href="{{ route('admin.maestros.recetas.create', ['from' => url()->current()]) }}" class="font-bold text-red-700 hover:text-red-800">
+                                            Créala aquí
+                                        </a>
+                                    @endcanRoute
                                 </p>
                             </div>
                         </div>
@@ -62,8 +64,8 @@
                                         class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                                         <option value="">Buscar producto...</option>
                                         @foreach ($productos as $producto)
-                                            <option value="{{ $producto->id }}" data-nombre="{{ $producto->nombre }}">
-                                                {{ $producto->nombre }}
+                                            <option value="{{ $producto->id_pdt }}" data-nombre="{{ $producto->nombre_pdt }}">
+                                                {{ $producto->nombre_pdt }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -79,8 +81,8 @@
                                         class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                                         <option value="">Unidad</option>
                                         @foreach ($unidades as $unidad)
-                                            <option value="{{ $unidad->id }}" data-nombre="{{ $unidad->nombre }}">
-                                                {{ $unidad->nombre }}
+                                            <option value="{{ $unidad->id_unm }}" data-nombre="{{ $unidad->nombre_unm }}">
+                                                {{ $unidad->nombre_unm }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -149,7 +151,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <input type="hidden" name="producto_id[]" value="${prodId}">
-                        <input type="hidden" name="cantidad_porcion[]" value="${cantidad}">
+                        <input type="hidden" name="cantidad_porcion_rci[]" value="${cantidad}">
                         <input type="hidden" name="unidad_id[]" value="${unidadId}">
                         <button type="button" class="remove-item flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100">
                             <i class="fas fa-trash-alt text-xs"></i>
@@ -221,8 +223,8 @@
 
         .receta-ingredientes-panel select,
         .receta-ingredientes-panel select option,
-        #recetas_id,
-        #recetas_id option,
+        #rct_id,
+        #rct_id option,
         #producto_select,
         #producto_select option,
         #unidad_select,
@@ -239,8 +241,8 @@
 
         html.dark .receta-ingredientes-panel select,
         html.dark .receta-ingredientes-panel select option,
-        html.dark #recetas_id,
-        html.dark #recetas_id option,
+        html.dark #rct_id,
+        html.dark #rct_id option,
         html.dark #producto_select,
         html.dark #producto_select option,
         html.dark #unidad_select,
@@ -254,7 +256,7 @@
             color-scheme: dark;
         }
 
-        html.dark select#recetas_id,
+        html.dark select#rct_id,
         html.dark .receta-ingredientes-panel select,
         html.dark #producto_select,
         html.dark #unidad_select {
@@ -262,14 +264,14 @@
         }
 
         html.dark .receta-ingredientes-panel select option,
-        html.dark #recetas_id option,
+        html.dark #rct_id option,
         html.dark #producto_select option,
         html.dark #unidad_select option {
             background: #160c0e !important;
             color: #f8fafc !important;
         }
 
-        html:not(.dark) select#recetas_id,
+        html:not(.dark) select#rct_id,
         html:not(.dark) .receta-ingredientes-panel select,
         html:not(.dark) #producto_select,
         html:not(.dark) #unidad_select {

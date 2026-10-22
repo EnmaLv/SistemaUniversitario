@@ -11,7 +11,7 @@ class BusModeloController extends Controller
     public function index(Request $request)
     {
         $modelos = BusModelo::listarModelos($request->buscar, $request->input('estado', 1));
-        $marcas  = BusMarca::where('estado', 1)->orderBy('nombre')->get();
+        $marcas  = BusMarca::activos()->orderBy('nombre_mav')->get();
 
         return view('admin.transporte.maestros.bus_modelos.index', compact('modelos', 'marcas'));
     }
@@ -19,8 +19,8 @@ class BusModeloController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'marca_id' => 'required|exists:marcas,id',
-            'nombre'       => 'required|string|max:100|unique:modelos,nombre',
+            'marca_id' => 'required|exists:marca_vehiculo,id_mav',
+            'nombre'       => 'required|string|max:100|unique:modelo_vehiculo,nombre_mov',
             'descripcion'  => 'nullable|string|max:255',
         ]);
 
@@ -31,11 +31,11 @@ class BusModeloController extends Controller
             'success' => true,
             'message' => 'Modelo registrado correctamente.',
             'modelo'  => [
-                'id'          => $modelo->id,
-                'nombre'      => $modelo->nombre,
-                'descripcion' => $modelo->descripcion,
-                'marca_id'    => $modelo->marca_id,
-                'marca_nombre' => $modelo->busMarca->nombre,
+                'id'          => $modelo->id_mov,
+                'nombre'      => $modelo->nombre_mov,
+                'descripcion' => $modelo->descripcion_mov,
+                'marca_id'    => $modelo->mav_id,
+                'marca_nombre' => $modelo->busMarca->nombre_mav,
                 'estado'      => true,
             ],
         ]);
@@ -44,8 +44,8 @@ class BusModeloController extends Controller
     public function update(Request $request, BusModelo $busModelo)
     {
         $validated = $request->validate([
-            'marca_id' => 'required|exists:marcas,id',
-            'nombre'       => 'required|string|max:100|unique:modelos,nombre,' . $busModelo->id,
+            'marca_id' => 'required|exists:marca_vehiculo,id_mav',
+            'nombre'       => 'required|string|max:100|unique:modelo_vehiculo,nombre_mov,' . $busModelo->id_mov . ',id_mov',
             'descripcion'  => 'nullable|string|max:255',
         ]);
 
@@ -56,25 +56,25 @@ class BusModeloController extends Controller
             'success' => true,
             'message' => 'Modelo actualizado correctamente.',
             'modelo'  => [
-                'id'          => $busModelo->id,
-                'nombre'      => $busModelo->nombre,
-                'descripcion' => $busModelo->descripcion,
-                'marca_id'    => $busModelo->marca_id,
-                'marca_nombre' => $busModelo->busMarca->nombre,
-                'estado'      => $busModelo->estado,
+                'id'          => $busModelo->id_mov,
+                'nombre'      => $busModelo->nombre_mov,
+                'descripcion' => $busModelo->descripcion_mov,
+                'marca_id'    => $busModelo->mav_id,
+                'marca_nombre' => $busModelo->busMarca->nombre_mav,
+                'estado'      => $busModelo->estaActivo(),
             ],
         ]);
     }
 
     public function destroy(BusModelo $busModelo)
     {
-        $busModelo->update(['estado' => 0]);
+        $busModelo->update(['status_id' => BusModelo::STATUS_INACTIVO]);
         return response()->json(['success' => true, 'message' => 'Modelo inactivado correctamente.']);
     }
 
     public function activar(BusModelo $busModelo)
     {
-        $busModelo->update(['estado' => 1]);
+        $busModelo->update(['status_id' => BusModelo::STATUS_ACTIVO]);
         return response()->json(['success' => true, 'message' => 'Modelo activado correctamente.']);
     }
 }

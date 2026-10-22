@@ -6,45 +6,41 @@ use Illuminate\Database\Eloquent\Model;
 
 class RolUsuario extends Model
 {
-    protected $table = 'rol_usuario';
+    protected $table = 'usuario_rol';
+
+    protected $primaryKey = 'id_usr';
 
     protected $fillable = [
-        'id_rol',
-        'id_usuario',
+        'rol_id',
+        'use_id',
     ];
 
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
+        return $this->belongsTo(Usuario::class, 'use_id', 'id_use');
     }
 
     public function rol()
     {
-        return $this->belongsTo(Rol::class, 'id_rol', 'id_rol');
+        return $this->belongsTo(Rol::class, 'rol_id', 'id_rol');
     }
 
-    /**
-     * Nombre completo de la persona asociada (o el username si no tiene persona).
-     */
     public function getNombreCompletoAttribute(): string
     {
         $persona = optional($this->usuario)->persona;
 
         if ($persona) {
-            $nombre = "{$persona->nombre_persona} {$persona->apellido_persona}";
+            $nombre = "{$persona->nombres_per} {$persona->apellidos_per}";
             if ($nombre !== '') {
                 return $nombre;
             }
         }
 
-        return optional($this->usuario)->username ?? 'Usuario sin nombre';
+        return optional($this->usuario)->username_use ?? 'Usuario sin nombre';
     }
 
-    /**
-     * Nombre del rol asociado a esta fila.
-     */
     public function getNombreRolAttribute(): string
     {
-        return optional($this->rol)->nombre ?? 'Sin Rol';
+        return optional($this->rol)->nombre_rol ?? 'Sin Rol';
     }
 }

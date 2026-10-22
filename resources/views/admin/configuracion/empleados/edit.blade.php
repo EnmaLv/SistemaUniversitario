@@ -12,7 +12,7 @@
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                         <i class="fas fa-user-edit mr-1 text-red-600"></i>
-                        ID de usuario: <strong>{{ $usuario->id_usuario }}</strong>
+                        ID de usuario: <strong>{{ $usuario->id_use }}</strong>
                         · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -27,7 +27,7 @@
             <div class="rounded-2xl border shadow-sm overflow-hidden"
                 style="background-color: var(--bg-card); border-color: var(--border-color);">
 
-                <form action="{{ route('admin.configuracion.empleados.update', $usuario->id_usuario) }}"
+                <form action="{{ route('admin.configuracion.empleados.update', $usuario->id_use) }}"
                     method="POST" class="rd-prevent-double-submit">
                     @csrf
                     @method('PUT')
@@ -57,7 +57,7 @@
                                         <i class="fas fa-envelope text-sm"></i>
                                     </span>
                                     <input type="email" name="username"
-                                        value="{{ old('username', $usuario->username) }}"
+                                        value="{{ old('username', $usuario->username_use) }}"
                                         required placeholder="ejemplo@gmail.com"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -73,11 +73,11 @@
                                     Asignación de Rol
                                 </label>
                                 @php
-                                    $isAdminUsuario = $usuario->roles->contains('nombre', 'Administrador');
+                                    $isAdminUsuario = $usuario->roles->contains('nombre_rol', 'Administrador');
                                     $authUser       = auth()->user();
                                     $isSelfAdmin    = $authUser
-                                        && $authUser->id_usuario == $usuario->id_usuario
-                                        && $authUser->roles->contains('nombre', 'Administrador');
+                                        && $authUser->id_use == $usuario->id_use
+                                        && $authUser->roles->contains('nombre_rol', 'Administrador');
                                     $hideRoleSelectForSelfAdmin = $isSelfAdmin;
                                     $currentRole    = $usuario->roles->first();
                                 @endphp
@@ -95,7 +95,7 @@
                                             @foreach ($roles as $r)
                                                 <option value="{{ $r->id_rol }}"
                                                     {{ old('role', $currentRole ? $currentRole->id_rol : '') == $r->id_rol ? 'selected' : '' }}>
-                                                    {{ $r->nombre }}
+                                                    {{ $r->nombre_rol }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -109,11 +109,11 @@
                                         </span>
                                         <div class="w-full px-3 py-2.5 text-sm font-medium"
                                             style="color: var(--text-main);">
-                                            {{ $currentRole ? $currentRole->nombre : '—' }}
+                                            {{ $currentRole ? $currentRole->nombre_rol : '—' }}
                                         </div>
                                     </div>
                                     <input type="hidden" name="role" id="roleSelectHidden"
-                                        data-text="{{ $currentRole ? $currentRole->nombre : '' }}"
+                                        data-text="{{ $currentRole ? $currentRole->nombre_rol : '' }}"
                                         value="{{ $currentRole ? $currentRole->id_rol : '' }}">
                                     <small class="block mt-1.5 text-xs font-semibold text-rose-500">
                                         No puedes cambiar tu propio rol de Administrador.
@@ -214,12 +214,12 @@
                                         style="background-color: rgba(251,191,36,0.08);">
                                         <i class="fas fa-shield-alt text-sm"></i>
                                     </span>
-                                    <input type="password" name="master_key" id="newAdminKey"
+                                    <input type="password" name="master_key_use" id="newAdminKey"
                                         placeholder="{{ $isAdminUsuario ? 'Escriba una nueva llave maestra o deje en blanco para mantener la actual' : 'Defina la llave maestra para el nuevo Administrador...' }}"
                                         style="color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none bg-transparent focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('master_key')
+                                @error('master_key_use')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -227,7 +227,7 @@
 
                         {{-- Preguntas de seguridad --}}
                         @php
-                            $sq = $usuario->security_questions;
+                            $sq = $usuario->security_questions_use;
                             if (is_string($sq)) $sq = json_decode($sq, true);
                             $q1 = $sq['pregunta_1'] ?? '';
                             $q2 = $sq['pregunta_2'] ?? '';
@@ -264,15 +264,15 @@
                                             style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                             <i class="fas fa-list text-xs"></i>
                                         </span>
-                                        <select name="security_questions[pregunta_1]"
+                                        <select name="security_questions_use[pregunta_1]"
                                             style="color: var(--text-main);"
                                             class="w-full px-3 py-2.5 text-sm font-medium border-none bg-transparent focus:ring-0 focus:outline-none">
-                                            <option value="" {{ empty(old('security_questions.pregunta_1', $q1)) ? 'selected' : '' }}>
+                                            <option value="" {{ empty(old('security_questions_use.pregunta_1', $q1)) ? 'selected' : '' }}>
                                                 -- Selecciona pregunta 1 --
                                             </option>
                                             @foreach ($questionsList as $q)
                                                 <option value="{{ $q }}"
-                                                    {{ old('security_questions.pregunta_1', $q1) == $q ? 'selected' : '' }}>
+                                                    {{ old('security_questions_use.pregunta_1', $q1) == $q ? 'selected' : '' }}>
                                                     {{ $q }}
                                                 </option>
                                             @endforeach
@@ -291,7 +291,7 @@
                                             style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                             <i class="fas fa-comment-dots text-xs"></i>
                                         </span>
-                                        <input type="password" name="security_questions[respuesta_1]"
+                                        <input type="password" name="security_questions_use[respuesta_1]"
                                             placeholder="Escriba la nueva respuesta..."
                                             style="color: var(--text-main);"
                                             class="w-full px-3 py-2.5 text-sm font-medium border-none bg-transparent focus:ring-0 focus:outline-none">
@@ -309,15 +309,15 @@
                                             style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                             <i class="fas fa-list text-xs"></i>
                                         </span>
-                                        <select name="security_questions[pregunta_2]"
+                                        <select name="security_questions_use[pregunta_2]"
                                             style="color: var(--text-main);"
                                             class="w-full px-3 py-2.5 text-sm font-medium border-none bg-transparent focus:ring-0 focus:outline-none">
-                                            <option value="" {{ empty(old('security_questions.pregunta_2', $q2)) ? 'selected' : '' }}>
+                                            <option value="" {{ empty(old('security_questions_use.pregunta_2', $q2)) ? 'selected' : '' }}>
                                                 -- Selecciona pregunta 2 --
                                             </option>
                                             @foreach ($questionsList as $q)
                                                 <option value="{{ $q }}"
-                                                    {{ old('security_questions.pregunta_2', $q2) == $q ? 'selected' : '' }}>
+                                                    {{ old('security_questions_use.pregunta_2', $q2) == $q ? 'selected' : '' }}>
                                                     {{ $q }}
                                                 </option>
                                             @endforeach
@@ -336,7 +336,7 @@
                                             style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                             <i class="fas fa-comment-dots text-xs"></i>
                                         </span>
-                                        <input type="password" name="security_questions[respuesta_2]"
+                                        <input type="password" name="security_questions_use[respuesta_2]"
                                             placeholder="Escriba la nueva respuesta..."
                                             style="color: var(--text-main);"
                                             class="w-full px-3 py-2.5 text-sm font-medium border-none bg-transparent focus:ring-0 focus:outline-none">
@@ -364,19 +364,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Cédula de Identidad
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('cedula_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('cedula_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-id-card text-sm"></i>
                                     </span>
-                                    <input type="text" name="cedula_persona"
-                                        value="{{ old('cedula_persona', optional($usuario->persona)->cedula_persona) }}"
+                                    <input type="text" name="cedula_per"
+                                        value="{{ old('cedula_per', optional($usuario->persona)->cedula_per) }}"
                                         placeholder="Ej: V-12345678"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('cedula_persona')
+                                @error('cedula_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -386,19 +386,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Teléfono de Contacto
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('telefono_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('telefono_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-phone text-sm"></i>
                                     </span>
-                                    <input type="text" name="telefono_persona"
-                                        value="{{ old('telefono_persona', optional($usuario->persona)->telefono_persona) }}"
+                                    <input type="text" name="telefono_per"
+                                        value="{{ old('telefono_per', optional($usuario->persona)->telefono_per) }}"
                                         placeholder="Ej: 0412-1234567"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('telefono_persona')
+                                @error('telefono_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -408,19 +408,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Nombres
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('nombre_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('nombres_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-user text-sm"></i>
                                     </span>
-                                    <input type="text" name="nombre_persona"
-                                        value="{{ old('nombre_persona', optional($usuario->persona)->nombre_persona) }}"
+                                    <input type="text" name="nombres_per"
+                                        value="{{ old('nombres_per', optional($usuario->persona)->nombres_per) }}"
                                         placeholder="Nombres del empleado"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('nombre_persona')
+                                @error('nombres_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -430,19 +430,19 @@
                                 <label class="block text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
                                     Apellidos
                                 </label>
-                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('apellido_persona') border-rose-400 @enderror"
+                                <div class="flex items-stretch rounded-xl border overflow-hidden transition-all focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-red-500 @error('apellidos_per') border-rose-400 @enderror"
                                     style="border-color: var(--border-color);">
                                     <span class="flex items-center justify-center px-3.5 border-r text-gray-400"
                                         style="background-color: rgba(0,0,0,0.03); border-color: var(--border-color);">
                                         <i class="fas fa-user text-sm"></i>
                                     </span>
-                                    <input type="text" name="apellido_persona"
-                                        value="{{ old('apellido_persona', optional($usuario->persona)->apellido_persona) }}"
+                                    <input type="text" name="apellidos_per"
+                                        value="{{ old('apellidos_per', optional($usuario->persona)->apellidos_per) }}"
                                         placeholder="Apellidos del empleado"
                                         style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                         class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 </div>
-                                @error('apellido_persona')
+                                @error('apellidos_per')
                                     <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                                 @enderror
                             </div>

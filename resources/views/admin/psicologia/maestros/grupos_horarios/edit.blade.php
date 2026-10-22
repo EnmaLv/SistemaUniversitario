@@ -8,12 +8,12 @@
 
 @section('content')
     <div class="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <form method="POST" action="{{ route('admin.psicologia.maestros.grupos_horarios.update', $grupoHorario->id) }}" class="space-y-5">
+        <form method="POST" action="{{ route('admin.psicologia.maestros.grupos_horarios.update', $grupoHorario->id_gha) }}" class="space-y-5">
             @csrf
             @method('PUT')
             <div>
                 <label for="nombre" class="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Nombre del Grupo') }}</label>
-                <input id="nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" type="text" name="nombre" value="{{ old('nombre', $grupoHorario->nombre) }}" required autofocus autocomplete="nombre">
+                <input id="nombre" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" type="text" name="nombre" value="{{ old('nombre', $grupoHorario->nombre_gha) }}" required autofocus autocomplete="nombre">
                 @error('nombre') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
             <div class="flex justify-end gap-3 border-t border-slate-200 pt-5 dark:border-slate-700">

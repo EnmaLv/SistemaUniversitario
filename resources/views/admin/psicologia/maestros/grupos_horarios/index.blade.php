@@ -58,7 +58,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @forelse($grupos as $grupo)
                     @php
-                        $esActivo = $grupo->activo == \App\Models\salud\GrupoHorario::STATUS_ACTIVE;
+                        $esActivo = $grupo->status_id == \App\Models\salud\GrupoHorario::STATUS_ACTIVE;
                     @endphp
 
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -68,7 +68,7 @@
                             <div class="min-w-0 flex-1">
                                 <h3 class="text-lg font-bold tracking-tight uppercase leading-tight truncate"
                                     style="color: var(--text-main);">
-                                    {{ $grupo->nombre }}
+                                    {{ $grupo->nombre_gha }}
                                 </h3>
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mt-1">
                                     <i class="fas fa-clock me-1 text-gray-400"></i> {{ $grupo->horarios->count() }}
@@ -91,6 +91,7 @@
                             class="flex items-center justify-between gap-2 pt-4 border-t border-gray-100 dark:border-gray-800/80 mt-4">
                             <div>
                                 @if (!$esActivo)
+                                    @canRoute('admin.psicologia.maestros.grupos_horarios.activate')
                                     @if (!empty($tieneCitasPendientes))
                                         <button type="button" disabled title="Bloqueado por citas pendientes"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 cursor-not-allowed">
@@ -98,7 +99,7 @@
                                         </button>
                                     @else
                                         <form
-                                            action="{{ route('admin.psicologia.maestros.grupos_horarios.activate', $grupo->id) }}"
+                                            action="{{ route('admin.psicologia.maestros.grupos_horarios.activate', $grupo->id_gha) }}"
                                             method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
@@ -108,7 +109,9 @@
                                             </button>
                                         </form>
                                     @endif
+                                    @endcanRoute
                                 @else
+                                    @canRoute('admin.psicologia.maestros.grupos_horarios.deactivate')
                                     @if (!empty($tieneCitasPendientes))
                                         <button type="button" disabled title="Bloqueado por citas pendientes"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 cursor-not-allowed">
@@ -116,7 +119,7 @@
                                         </button>
                                     @else
                                         <form
-                                            action="{{ route('admin.psicologia.maestros.grupos_horarios.deactivate', $grupo->id) }}"
+                                            action="{{ route('admin.psicologia.maestros.grupos_horarios.deactivate', $grupo->id_gha) }}"
                                             method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
@@ -126,6 +129,7 @@
                                             </button>
                                         </form>
                                     @endif
+                                    @endcanRoute
                                 @endif
                             </div>
 
@@ -146,7 +150,7 @@
                                         <i class="fas fa-pen"></i>
                                     </span>
                                 @else
-                                    <a href="{{ route('admin.psicologia.maestros.horarios.index', ['grupo' => $grupo->id]) }}"
+                                    <a href="{{ route('admin.psicologia.maestros.horarios.index', ['grupo' => $grupo->id_gha]) }}"
                                         class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-{{ $themeColor }}-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
                                         title="Editar bloques de este grupo">
                                         <i class="fas fa-pen"></i>
@@ -154,6 +158,7 @@
                                 @endif
 
                                 <!-- Eliminar -->
+                                @canRoute('admin.psicologia.maestros.grupos_horarios.destroy')
                                 @if (!empty($tieneCitasPendientes))
                                     <span
                                         class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 rounded-xl text-xs font-bold flex items-center justify-center cursor-not-allowed"
@@ -162,7 +167,7 @@
                                     </span>
                                 @else
                                     <form
-                                        action="{{ route('admin.psicologia.maestros.grupos_horarios.destroy', $grupo->id) }}"
+                                        action="{{ route('admin.psicologia.maestros.grupos_horarios.destroy', $grupo->id_gha) }}"
                                         method="POST" data-ajax-reload="true"
                                         data-confirm-message="¿Estás seguro de eliminar este grupo de horarios?"
                                         class="inline">
@@ -175,11 +180,12 @@
                                         </button>
                                     </form>
                                 @endif
+                                @endcanRoute
                             </div>
                         </div>
 
                         <!-- Modal de Detalle -->
-                        <div id="grupoModal-{{ $grupo->id }}"
+                        <div id="grupoModal-{{ $grupo->id_gha }}"
                             class="modal-container fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-xs p-4">
                             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                                 class="rounded-2xl border shadow-2xl w-full max-w-5xl p-6 overflow-y-auto max-h-[90vh] transition-all">
@@ -189,12 +195,12 @@
                                     <div>
                                         <h3 class="text-xl font-extrabold tracking-tight"
                                             style="color: var(--text-main);">
-                                            Grupo: {{ $grupo->nombre }}
+                                            Grupo: {{ $grupo->nombre_gha }}
                                         </h3>
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Distribución de bloques
                                             horarios por día de la semana.</p>
                                     </div>
-                                    <button onclick="closeGrupoModal('grupoModal-{{ $grupo->id }}')"
+                                    <button onclick="closeGrupoModal('grupoModal-{{ $grupo->id_gha }}')"
                                         class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white text-lg rounded-xl transition-all">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -206,8 +212,8 @@
                                         $horariosPorDia = [];
                                         foreach ($dias as $dia) {
                                             $horariosPorDia[$dia] = $grupo->horarios
-                                                ->where('dia', $dia)
-                                                ->sortBy('hora_inicio');
+                                                ->where('dia_hpr', $dia)
+                                                ->sortBy('hora_inicio_hpr');
                                         }
                                     @endphp
 
@@ -227,17 +233,17 @@
                                                 <div class="space-y-2">
                                                     @foreach ($horariosPorDia[$dia] as $horario)
                                                         <div
-                                                            class="bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-center shadow-2xs {{ $horario->activo == \App\Models\salud\Horario::STATUS_INACTIVE ? 'opacity-50' : '' }}">
+                                                            class="bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 text-center shadow-2xs {{ $horario->status_id == \App\Models\salud\Horario::STATUS_INACTIVE ? 'opacity-50' : '' }}">
                                                             <span
                                                                 class="text-xs font-bold text-gray-800 dark:text-gray-200 block">
-                                                                {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('g:i A') }}
+                                                                {{ \Carbon\Carbon::parse($horario->hora_inicio_hpr)->format('g:i A') }}
                                                                 -
-                                                                {{ \Carbon\Carbon::parse($horario->hora_fin)->format('g:i A') }}
+                                                                {{ \Carbon\Carbon::parse($horario->hora_fin_hpr)->format('g:i A') }}
                                                             </span>
-                                                            @if ($horario->descripcion)
+                                                            @if ($horario->descripcion_hpr)
                                                                 <p
                                                                     class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
-                                                                    {{ $horario->descripcion }}
+                                                                    {{ $horario->descripcion_hpr }}
                                                                 </p>
                                                             @endif
                                                         </div>
@@ -249,7 +255,7 @@
                                 </div>
 
                                 <div class="mt-8 pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-end">
-                                    <button onclick="closeGrupoModal('grupoModal-{{ $grupo->id }}')"
+                                    <button onclick="closeGrupoModal('grupoModal-{{ $grupo->id_gha }}')"
                                         class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all">
                                         Cerrar Vista
                                     </button>

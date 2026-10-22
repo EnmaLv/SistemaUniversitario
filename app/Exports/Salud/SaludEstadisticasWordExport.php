@@ -5,6 +5,7 @@ namespace App\Exports\Salud;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\SimpleType\Jc;
+use App\Models\salud\Consulta;
 use Carbon\Carbon;
 
 class SaludEstadisticasWordExport
@@ -99,14 +100,14 @@ class SaludEstadisticasWordExport
 
         if (!empty($filtros['perfil_academico'])) {
             $run = $section->addTextRun();
-            $run->addText('Rol institucional: ', $filterStyle);
+            $run->addText('Tipo de persona: ', $filterStyle);
             $run->addText($filtros['perfil_academico'], $filterValueStyle);
         }
 
         if (!empty($filtros['pnf'])) {
             $run = $section->addTextRun();
             $run->addText('PNF: ', $filterStyle);
-            $run->addText(str_replace('_', ' ', $filtros['pnf']), $filterValueStyle);
+            $run->addText($filtros['pnf'], $filterValueStyle);
         }
 
         $section->addTextBreak(1);
@@ -134,25 +135,25 @@ class SaludEstadisticasWordExport
 
             foreach ($consultas as $c) {
                 $estado = $c->receta
-                    ? ($c->receta->estado == 2 ? 'Completada' : 'En proceso')
+                    ? ((int) $c->receta->estado_rme === Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso')
                     : 'Sin receta';
 
                 $table->addRow();
-                $table->addCell()->addText('#' . $c->id, $cellFontStyle);
+                $table->addCell()->addText('#' . $c->id_cme, $cellFontStyle);
                 $table->addCell()->addText(
-                    trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')) ?: '—',
+                    trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—',
                     $cellFontStyle
                 );
-                $table->addCell()->addText($c->paciente->cedula_persona ?? '—', $cellFontStyle);
+                $table->addCell()->addText($c->paciente->cedula_per ?? '—', $cellFontStyle);
                 $table->addCell()->addText(
-                    $c->fecha ? Carbon::parse($c->fecha)->format('d/m/Y') : '—',
+                    $c->fecha_cme ? Carbon::parse($c->fecha_cme)->format('d/m/Y') : '—',
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
-                    trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')) ?: '—',
+                    trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: '—',
                     $cellFontStyle
                 );
-                $table->addCell()->addText($c->consultorio->nombre ?? '—', $cellFontStyle);
+                $table->addCell()->addText($c->consultorio->nombre_csr ?? '—', $cellFontStyle);
                 $table->addCell()->addText($estado, $cellFontStyle);
             }
 
@@ -183,21 +184,21 @@ class SaludEstadisticasWordExport
                 if (!$c->receta) continue;
 
                 $table->addRow();
-                $table->addCell()->addText('#' . str_pad($c->receta->id, 5, '0', STR_PAD_LEFT), $cellFontStyle);
+                $table->addCell()->addText('#' . str_pad($c->receta->id_rme, 5, '0', STR_PAD_LEFT), $cellFontStyle);
                 $table->addCell()->addText(
-                    $c->receta->fecha ? Carbon::parse($c->receta->fecha)->format('d/m/Y') : '—',
+                    $c->receta->fecha_emision_rme ? Carbon::parse($c->receta->fecha_emision_rme)->format('d/m/Y') : '—',
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
-                    trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')),
+                    trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')),
                     $cellFontStyle
                 );
                 $table->addCell()->addText(
-                    trim(($c->medico->nombre_persona ?? '') . ' ' . ($c->medico->apellido_persona ?? '')),
+                    trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')),
                     $cellFontStyle
                 );
                 $table->addCell()->addText((string) $c->receta->detalles->count(), $cellFontStyle);
-                $table->addCell()->addText($c->receta->estado == 2 ? 'Completada' : 'En proceso', $cellFontStyle);
+                $table->addCell()->addText((int) $c->receta->estado_rme === Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso', $cellFontStyle);
             }
 
             $section->addTextBreak(2);
@@ -231,18 +232,18 @@ class SaludEstadisticasWordExport
                         $totalItems++;
                         $table->addRow();
                         $table->addCell()->addText(
-                            $disp->fecha ? Carbon::parse($disp->fecha)->format('d/m/Y') : '—',
+                            $disp->fecha_dispensacion_dsm ? Carbon::parse($disp->fecha_dispensacion_dsm)->format('d/m/Y') : '—',
                             $cellFontStyle
                         );
                         $table->addCell()->addText(
-                            trim(($c->paciente->nombre_persona ?? '') . ' ' . ($c->paciente->apellido_persona ?? '')),
+                            trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')),
                             $cellFontStyle
                         );
-                        $table->addCell()->addText($det->producto->nombre ?? '—', $cellFontStyle);
-                        $table->addCell()->addText(number_format($disp->cantidad, 2), $cellFontStyle);
-                        $table->addCell()->addText($disp->lote->codigo ?? '—', $cellFontStyle);
+                        $table->addCell()->addText($det->producto->nombre_pdt ?? '—', $cellFontStyle);
+                        $table->addCell()->addText(number_format($disp->cantidad_dsm, 2), $cellFontStyle);
+                        $table->addCell()->addText($disp->lote->codigo_lote_lot ?? '—', $cellFontStyle);
                         $table->addCell()->addText(
-                            trim(($disp->usuario->persona->nombre_persona ?? '') . ' ' . ($disp->usuario->persona->apellido_persona ?? '')) ?: '—',
+                            trim(($disp->usuario->persona->nombres_per ?? '') . ' ' . ($disp->usuario->persona->apellidos_per ?? '')) ?: '—',
                             $cellFontStyle
                         );
                     }
@@ -288,25 +289,22 @@ class SaludEstadisticasWordExport
             self::addSummaryRow($summaryTable, '- Mujeres:', (string) $resumen['genero']['femenino']);
             self::addSummaryRow($summaryTable, '- Otro:', (string) $resumen['genero']['otro']);
 
-            // Edades
-            self::addSummarySection($summaryTable, 'Rangos de Edad');
-            foreach ($resumen['edades']['rangos'] as $rango => $cantidad) {
-                self::addSummaryRow($summaryTable, '- ' . $rango . ' años:', (string) $cantidad);
+            self::addSummarySection($summaryTable, 'Consultas por edad del paciente al consultar');
+            foreach ($resumen['edad_consulta'] ?? [] as $rango => $cantidad) {
+                self::addSummaryRow($summaryTable, '- ' . $rango . ':', (string) $cantidad);
             }
             self::addSummaryRow($summaryTable, 'Promedio de Edad:', $resumen['edades']['promedio'] . ' años', 'F8FAFC');
             self::addSummaryRow($summaryTable, 'Mediana de Edad:', $resumen['edades']['mediana'] . ' años', 'F8FAFC');
             self::addSummaryRow($summaryTable, 'Moda de Edad:', $resumen['edades']['moda'] . ' años', 'F8FAFC');
 
-            // Perfil académico
-            self::addSummarySection($summaryTable, 'Perfil Institucional / Académico');
-            foreach ($resumen['perfil_academico'] as $rol => $cantidad) {
-                self::addSummaryRow($summaryTable, '- ' . $rol . ':', (string) $cantidad);
+            self::addSummarySection($summaryTable, 'Consultas por tipo de persona');
+            foreach ($resumen['tipo_persona_consulta'] ?? [] as $tipo => $cantidad) {
+                self::addSummaryRow($summaryTable, '- ' . $tipo . ':', (string) $cantidad);
             }
 
-            // PNF
-            self::addSummarySection($summaryTable, 'Pacientes de acuerdo al PNF');
-            foreach ($resumen['pnf'] as $pnfKey => $cantidad) {
-                self::addSummaryRow($summaryTable, '- ' . str_replace('_', ' ', $pnfKey) . ':', (string) $cantidad);
+            self::addSummarySection($summaryTable, 'Consultas por PNF');
+            foreach ($resumen['pnf_consulta'] ?? [] as $pnf => $cantidad) {
+                self::addSummaryRow($summaryTable, '- ' . $pnf . ':', (string) $cantidad);
             }
 
             // Métricas avanzadas
@@ -380,12 +378,8 @@ class SaludEstadisticasWordExport
         // =====================================================
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
 
-        if (!file_exists(storage_path('app/public'))) {
-            mkdir(storage_path('app/public'), 0755, true);
-        }
-
         $fileName = 'Estadisticas_Salud_' . date('Y_m_d_His') . '.docx';
-        $tempPath = storage_path('app/public/' . $fileName);
+        $tempPath = \App\Support\Archivos\Temporales::ruta($fileName);
         $objWriter->save($tempPath);
 
         return $tempPath;

@@ -15,6 +15,7 @@ use App\Models\Usuario;
 use App\Services\becas\SolicitudBecasService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SolicitudBecaController extends Controller
 {
@@ -28,15 +29,15 @@ class SolicitudBecaController extends Controller
     public function index(Request $request)
     {
         $solicitudes = $this->solicitudService->listarSolicitudes($request->all());
-        $beneficios = Beneficio::where('status', 1)->get();
+        $beneficios = Beneficio::where('status_id', 1)->get();
 
-        $jornadasActivas = JornadaBeca::where('activa', 1)->with('beneficio')->get();
+        $jornadasActivas = JornadaBeca::where('status_id', 1)->with('beneficio')->get();
         $pendientesRenovacion = collect();
         foreach($jornadasActivas as $jornada) {
-            $ids = $this->solicitudService->obtenerPendientesPorRenovar($jornada->id);
+            $ids = $this->solicitudService->obtenerPendientesPorRenovar($jornada->id_jnb);
             if($ids->isNotEmpty()) {
-                $personas = Persona::whereIn('id_persona', $ids)->get();
-                $pendientesRenovacion->put($jornada->id, [
+                $personas = Persona::deSedeActiva()->estudiantes()->whereIn('id_per', $ids)->get();
+                $pendientesRenovacion->put($jornada->id_jnb, [
                     'jornada' => $jornada,
                     'personas' => $personas
                 ]);
@@ -50,18 +51,18 @@ class SolicitudBecaController extends Controller
     {
         $hoy = now()->toDateString();
 
-        $jornadas = JornadaBeca::where('activa', 1)
-            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
-            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+        $jornadas = JornadaBeca::where('status_id', 1)
+            ->whereDate('fecha_inicio_solicitud_jnb', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud_jnb', '>=', $hoy)
             ->whereHas('lapso', function ($q) {
-                $q->where('es_actual', 1);
+                $q->where('es_actual_laa', 1);
             })
             ->with(['beneficio', 'lapso'])
             ->get();
 
-        $estudiantes = Persona::where('id_perfil', 2)
-            ->orderBy('nombre_persona')
-            ->orderBy('apellido_persona')
+        $estudiantes = Persona::deSedeActiva()->estudiantes()
+            ->orderBy('nombres_per')
+            ->orderBy('apellidos_per')
             ->get();
 
         $formularios = $this->construirFormularios($jornadas);
@@ -72,13 +73,20 @@ class SolicitudBecaController extends Controller
 
     public function solicitarEstudiante()
     {
+        /** @var Usuario|null $usuario */
+        $usuario = Auth::user();
+
+        if (! $usuario?->persona?->esEstudiante()) {
+            return response()->view('admin.becas.solicitudes.create_estudiante', ['soloEstudiantes' => true], 403);
+        }
+
         $hoy = now()->toDateString();
 
-        $jornadas = JornadaBeca::where('activa', 1)
-            ->whereDate('fecha_inicio_solicitud', '<=', $hoy)
-            ->whereDate('fecha_fin_solicitud', '>=', $hoy)
+        $jornadas = JornadaBeca::where('status_id', 1)
+            ->whereDate('fecha_inicio_solicitud_jnb', '<=', $hoy)
+            ->whereDate('fecha_fin_solicitud_jnb', '>=', $hoy)
             ->whereHas('lapso', function ($q) {
-                $q->where('es_actual', 1);
+                $q->where('es_actual_laa', 1);
             })
             ->with(['beneficio', 'lapso'])
             ->get();
@@ -91,54 +99,54 @@ class SolicitudBecaController extends Controller
 
     private function construirFormularios($jornadas): array
     {
-        $beneficioIds = $jornadas->pluck('beneficio_id')->unique()->all();
+        $beneficioIds = $jornadas->pluck('bes_id')->unique()->all();
 
-        $preguntas = BecaPregunta::whereIn('id_be_beneficio', $beneficioIds)
-            ->where('activo', true)
+        $preguntas = BecaPregunta::whereIn('bes_id', $beneficioIds)
+            ->where('status_id', 1)
             ->with('opciones')
-            ->orderBy('id_be_beneficio')
-            ->orderBy('orden')
+            ->orderBy('bes_id')
+            ->orderBy('orden_pgb')
             ->get()
-            ->groupBy('id_be_beneficio');
+            ->groupBy('bes_id');
 
-        $criteriosPorJornada = JornadaCriterio::whereIn('id_jornada', $jornadas->pluck('id'))
+        $criteriosPorJornada = JornadaCriterio::whereIn('jnb_id', $jornadas->pluck('id_jnb'))
             ->get()
-            ->groupBy('id_jornada');
+            ->groupBy('jnb_id');
 
         $formularios = [];
 
         foreach ($jornadas as $jornada) {
-            $preguntasBeneficio = $preguntas[$jornada->beneficio_id] ?? collect();
-            $criterios = $criteriosPorJornada[$jornada->id] ?? collect();
+            $preguntasBeneficio = $preguntas[$jornada->bes_id] ?? collect();
+            $criterios = $criteriosPorJornada[$jornada->id_jnb] ?? collect();
 
-            $criteriosMap = $criterios->keyBy('id_pregunta');
+            $criteriosMap = $criterios->keyBy('pgb_id');
 
-            $formularios[$jornada->id] = [
-                'beneficio_id' => $jornada->beneficio_id,
-                'lapso_id'     => $jornada->lapsos_id,
+            $formularios[$jornada->id_jnb] = [
+                'beneficio_id' => $jornada->bes_id,
+                'lapso_id'     => $jornada->laa_id,
                 'preguntas'    => $preguntasBeneficio->map(function ($p) use ($criteriosMap) {
-                    $c = $criteriosMap[$p->id] ?? null;
+                    $c = $criteriosMap[$p->id_pgb] ?? null;
 
                     return [
-                        'id'             => $p->id,
-                        'codigo'         => $p->codigo,
-                        'etiqueta'       => $p->etiqueta,
-                        'placeholder'    => $p->placeholder,
-                        'tipo'           => $p->tipo,
-                        'obligatoria'    => (bool) $p->obligatoria,
-                        'valor_min'      => $p->valor_min,
-                        'valor_max'      => $p->valor_max,
-                        'min_length'     => $p->min_length,
-                        'max_length'     => $p->max_length,
-                        'regex'          => $p->regex,
+                        'id'             => $p->id_pgb,
+                        'codigo'         => $p->codigo_pgb,
+                        'etiqueta'       => $p->etiqueta_pgb,
+                        'placeholder'    => $p->placeholder_pgb,
+                        'tipo'           => $p->tipo_campo_pgb,
+                        'obligatoria'    => (bool) $p->obligatoria_pgb,
+                        'valor_min'      => $p->valor_min_pgb,
+                        'valor_max'      => $p->valor_max_pgb,
+                        'min_length'     => $p->min_length_pgb,
+                        'max_length'     => $p->max_length_pgb,
+                        'regex'          => $p->regex_pgb,
                         'opciones'       => $p->opciones->map(fn ($o) => [
-                            'etiqueta' => $o->etiqueta,
-                            'valor'    => $o->valor,
+                            'etiqueta' => $o->etiqueta_opb,
+                            'valor'    => $o->valor_opb,
                         ])->values()->all(),
                         'criterio'       => $c ? [
-                            'operador'        => $c->operador,
-                            'valor_esperado'  => $c->valor_esperado,
-                            'es_eliminatoria' => (bool) $c->es_eliminatoria,
+                            'operador'        => $c->operador_cjb,
+                            'valor_esperado'  => $c->valor_esperado_cjb,
+                            'es_eliminatoria' => (bool) $c->es_eliminatoria_cjb,
                         ] : null,
                     ];
                 })->values()->all(),
@@ -153,7 +161,12 @@ class SolicitudBecaController extends Controller
         /** @var Usuario $user */
         $user = Auth::user();
         try {
-            $this->solicitudService->crearSolicitud($request->validated());
+            $datos = $request->validated();
+            if (!$user->puedeAlguna(['solicitud', 'solicitudes_becas'], 'crear')) {
+                $datos['per_id'] = $user->per_id;
+            }
+
+            $this->solicitudService->crearSolicitud($datos);
             
             if(!$user || $user->tieneRol(['paciente', 'becario', 'estudiante'])){
                 return redirect()
@@ -167,26 +180,30 @@ class SolicitudBecaController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Error al registrar la solicitud: ' . $e->getMessage());
+                ->with('error', 'Error al registrar la solicitud: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
     public function renovar(Request $request)
     {
         $request->validate([
-            'jornada_id' => 'required|exists:be_jornadas_becas,id',
+            'jornada_id' => 'required|exists:jornada_beneficio,id_jnb',
             'archivo_notas' => 'required|file|mimes:pdf|max:2048',
         ]);
 
         /** @var Usuario $user */
         $user = Auth::user();
-        if (!$user || !$user->id_persona) {
+        if (!$user || !$user->per_id) {
             return redirect()->back()->with('error', 'No se pudo identificar al estudiante.');
+        }
+
+        if (! $user->persona?->esEstudiante()) {
+            return redirect()->back()->with('error', SolicitudBecasService::MENSAJE_SOLO_ESTUDIANTES);
         }
 
         try {
             $this->solicitudService->renovarSolicitudSimplificada(
-                $user->id_persona,
+                $user->per_id,
                 $request->input('jornada_id'),
                 $request->file('archivo_notas')
             );
@@ -197,7 +214,7 @@ class SolicitudBecaController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Error al renovar la beca: ' . $e->getMessage());
+                ->with('error', 'Error al renovar la beca: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -216,6 +233,28 @@ class SolicitudBecaController extends Controller
         return view('admin.becas.solicitudes.show', compact('solicitud'));
     }
 
+    public function descargarDocumento(int $id)
+    {
+        $solicitud = SolicitudBeca::with('documento')->findOrFail($id);
+
+        /** @var Usuario $usuario */
+        $usuario = Auth::user();
+        $esPropia = (int) $solicitud->per_id === (int) $usuario->per_id;
+        $puedeGestionar = $usuario->puedeAlguna(['solicitud', 'solicitudes_becas'], 'exportar')
+            || $usuario->puedeAlguna(['solicitud', 'solicitudes_becas'], 'ver');
+
+        abort_unless($esPropia || $puedeGestionar, 403, 'No tienes permiso para ver este documento.');
+
+        $documento = $solicitud->documento;
+        abort_unless($documento && $documento->ruta_archivo_dsb && Storage::disk('local')->exists($documento->ruta_archivo_dsb), 404);
+
+        return Storage::disk('local')->response(
+            $documento->ruta_archivo_dsb,
+            basename($documento->ruta_archivo_dsb),
+            ['X-Content-Type-Options' => 'nosniff']
+        );
+    }
+
     public function verificar(Request $request, int $id)
     {
         $request->validate([
@@ -226,7 +265,7 @@ class SolicitudBecaController extends Controller
         ]);
 
         try {
-            $verificadorId = Auth::user()->id_usuario;
+            $verificadorId = Auth::user()->id_use;
             $this->solicitudService->verificarSolicitud(
                 $id, 
                 intval($request->estado), 
@@ -242,7 +281,7 @@ class SolicitudBecaController extends Controller
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Error al procesar la solicitud: ' . $e->getMessage());
+                ->with('error', 'Error al procesar la solicitud: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 }

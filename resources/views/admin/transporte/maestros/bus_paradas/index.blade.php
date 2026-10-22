@@ -7,14 +7,16 @@
                 <div>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="color:var(--text-main);">Paradas</h1>
                     <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
+                @canRoute('admin.transporte.maestros.bus_paradas.create')
                 <a href="{{ route('admin.transporte.maestros.bus_paradas.create') }}"
                     class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                     <i class="fas fa-plus text-xs"></i> Nueva parada
                 </a>
+                @endcanRoute
             </div>
 
             <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center"
@@ -53,21 +55,21 @@
                         </thead>
                         <tbody class="text-xs font-medium">
                             @forelse($paradas as $parada)
-                                <x-table-row :id="$parada->id">
+                                <x-table-row :id="$parada->id_ptr">
                                     <td class="px-6 py-4 text-center" style="color:var(--text-muted);">
                                         {{ ($paradas->currentPage() - 1) * $paradas->perPage() + $loop->iteration }}
                                     </td>
-                                    <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $parada->nombre }}</td>
-                                    <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $parada->direccion ?: 'Sin dirección' }}</td>
-                                    <td class="px-6 py-4 text-center font-mono text-xs" style="color:var(--text-muted);">{{ $parada->lat }}, {{ $parada->lng }}</td>
+                                    <td class="px-6 py-4 text-center font-bold" style="color:var(--text-main);">{{ $parada->nombre_ptr }}</td>
+                                    <td class="px-6 py-4 text-center" style="color:var(--text-muted);">{{ $parada->direccion_ptr ?: 'Sin dirección' }}</td>
+                                    <td class="px-6 py-4 text-center font-mono text-xs" style="color:var(--text-muted);">{{ $parada->lat_ptr }}, {{ $parada->lng_ptr }}</td>
                                     <td class="whitespace-nowrap px-6 py-4 text-center">
-                                        @if ($parada->estado)
+                                        @if ($parada->estaActivo())
                                             <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activa</span>
                                         @else
                                             <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactiva</span>
                                         @endif
                                     </td>
-                                    <x-table-actions :id="$parada->id" baseUrl="admin/transporte/maestros/bus_paradas" :status="$parada->estado" :show="false" />
+                                    <x-table-actions :id="$parada->id_ptr" baseUrl="admin/transporte/maestros/bus_paradas" :status="$parada->status_id == 1" :show="false" />
                                 </x-table-row>
                             @empty
                                 <tr>

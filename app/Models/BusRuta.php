@@ -3,44 +3,65 @@
 namespace App\Models;
 
 use App\Traits\ConvierteAMayusculasNoEloquent;
+use App\Traits\PerteneceASede;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusRuta extends Model
 {
     use ConvierteAMayusculasNoEloquent;
+    use PerteneceASede;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'bus_rutas';
+    protected $table = 'ruta_transporte';
+
+    protected $primaryKey = 'id_rtr';
 
     protected $fillable = [
-        'nombre',
-        'distancia_km',
-        'descripcion',
-        'sede_id',
-        'estado',
-    ];
-
-    protected $casts = [
-        'estado' => 'boolean',
+        'nombre_rtr',
+        'distancia_km_rtr',
+        'descripcion_rtr',
+        'sed_id',
+        'status_id',
     ];
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'sede_id');
+        return $this->belongsTo(Sede::class, 'sed_id', 'id_sed');
     }
 
     public function horarios()
     {
-        return $this->hasMany(RutaHorario::class, 'bus_ruta_id');
+        return $this->hasMany(RutaHorario::class, 'rtr_id', 'id_rtr');
     }
 
     public function paradas()
     {
-        return $this->belongsToMany(BusParada::class, 'bus_ruta_paradas')
-            ->withPivot('orden')
-            ->orderBy('bus_ruta_paradas.orden');
+        return $this->belongsToMany(BusParada::class, 'ruta_parada_transporte', 'rtr_id', 'ptr_id', 'id_rtr', 'id_ptr')
+            ->withPivot('orden_rpt')
+            ->withTimestamps()
+            ->wherePivotNull('deleted_at')
+            ->orderBy('ruta_parada_transporte.orden_rpt');
     }
 
-    public function getDescripcionAttribute($value): string
+    public function rutaParadas()
+    {
+        return $this->hasMany(BusRutaParada::class, 'rtr_id', 'id_rtr')->orderBy('orden_rpt');
+    }
+
+    public function viajes()
+    {
+        return $this->hasMany(BusViaje::class, 'rtr_id', 'id_rtr');
+    }
+
+    public function trazados()
+    {
+        return $this->hasMany(BusTrazadoRuta::class, 'rtr_id', 'id_rtr');
+    }
+
+    public function getDescripcionRtrAttribute($value): string
     {
         return $value ?? 'Ninguna';
     }
@@ -48,10 +69,10 @@ class BusRuta extends Model
     public static function listarRutas($buscar = null, $estado = 1)
     {
         return self::query()
-            ->with(['sede', 'horarios'])
-            ->when($buscar, fn($q) => $q->where('nombre', 'like', "%{$buscar}%"))
-            ->when($estado !== null && $estado !== '', fn($q) => $q->where('estado', $estado))
-            ->orderBy('nombre')
+            ->with(['sede', 'horarios', 'paradas'])
+            ->when($buscar, fn ($q) => $q->where('nombre_rtr', 'like', "%{$buscar}%"))
+            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('status_id', (int) $estado === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO))
+            ->orderBy('nombre_rtr')
             ->paginate(10)
             ->withQueryString();
     }
@@ -59,26 +80,23 @@ class BusRuta extends Model
     public static function crearRuta(array $datos)
     {
         return self::create([
-            'nombre'       => $datos['nombre'],
-            'distancia_km' => $datos['distancia_km'],
-            'descripcion'  => $datos['descripcion'] ?? null,
-            'sede_id'      => $datos['sede_id'],
-            'estado'       => 1,
+            'nombre_rtr'       => $datos['nombre'],
+            'distancia_km_rtr' => $datos['distancia_km'],
+            'descripcion_rtr'  => $datos['descripcion'] ?? null,
+            'sed_id'           => $datos['sed_id'],
+            'status_id'        => self::STATUS_ACTIVO,
         ]);
     }
 
     public static function actualizarRuta(BusRuta $ruta, array $datos)
     {
         $ruta->update([
-            'nombre'       => $datos['nombre'],
-            'distancia_km' => $datos['distancia_km'],
-            'descripcion'  => $datos['descripcion'] ?? null,
-            'sede_id'      => $datos['sede_id'],
+            'nombre_rtr'       => $datos['nombre'],
+            'distancia_km_rtr' => $datos['distancia_km'],
+            'descripcion_rtr'  => $datos['descripcion'] ?? null,
+            'sed_id'           => $datos['sed_id'],
         ]);
+
         return $ruta;
-    }
-    public function rutaParadas()
-    {
-        return $this->hasMany(BusRutaParada::class, 'bus_ruta_id')->orderBy('orden');
     }
 }

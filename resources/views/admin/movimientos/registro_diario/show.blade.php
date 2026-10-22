@@ -10,7 +10,7 @@
                         Vista detallada del registro
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span>
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span>
                         · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -25,7 +25,7 @@
             </div>
 
             @php
-                $edad = \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->age;
+                $edad = \Carbon\Carbon::parse($registro->fecha_nacimiento_per)->age;
             @endphp
 
             <div class="space-y-5">
@@ -37,14 +37,14 @@
 
                         <div class="min-w-0">
                             <p class="text-[11px] font-black uppercase tracking-wider text-red-700 dark:text-red-500">
-                                Registro diario · {{ $registro->nombre_pnf ?? 'Sin PNF' }}
+                                Registro diario · {{ $registro->nombre_prg ?? 'Sin PNF' }}
                             </p>
                             <h2 class="mt-2 text-xl sm:text-2xl font-extrabold" style="color: var(--text-main);">
                                 Ficha del estudiante
                             </h2>
                             <p class="mt-3 text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">
                                 <strong style="color: var(--text-main);">
-                                    {{ trim($registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona) }}
+                                    {{ trim($registro->nombres_per . ' ' . $registro->segundo_nombre_per . ' ' . $registro->apellidos_per . ' ' . $registro->segundo_apellido_per) }}
                                 </strong>
                                 fue registrado en el sistema con la información detallada a continuación.
                             </p>
@@ -74,7 +74,7 @@
                                     Nombre completo
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ trim($registro->nombre_persona . ' ' . $registro->segundo_nombre_persona . ' ' . $registro->apellido_persona . ' ' . $registro->segundo_apellido_persona) }}
+                                    {{ trim($registro->nombres_per . ' ' . $registro->segundo_nombre_per . ' ' . $registro->apellidos_per . ' ' . $registro->segundo_apellido_per) }}
                                 </p>
                             </div>
 
@@ -84,7 +84,7 @@
                                         Cédula
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->cedula_persona ?? '—' }}
+                                        {{ $registro->cedula_per ?? '—' }}
                                     </p>
                                 </div>
                                 <div>
@@ -92,7 +92,7 @@
                                         Género
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->genero_persona ?? '—' }}
+                                        {{ $registro->genero_per ?? '—' }}
                                     </p>
                                 </div>
                             </div>
@@ -103,7 +103,7 @@
                                         Fecha de nacimiento
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ \Carbon\Carbon::parse($registro->fecha_nacimiento_persona)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($registro->fecha_nacimiento_per)->format('d/m/Y') }}
                                     </p>
                                 </div>
                                 <div>
@@ -138,7 +138,7 @@
                                     Teléfono
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ $registro->telefono_persona ?? '—' }}
+                                    {{ $registro->telefono_per ?? '—' }}
                                 </p>
                             </div>
 
@@ -147,7 +147,7 @@
                                     Correo electrónico
                                 </p>
                                 <p class="text-sm font-bold break-all" style="color: var(--text-main);">
-                                    {{ $registro->email_persona ?? '—' }}
+                                    {{ $registro->correo_per ?? '—' }}
                                 </p>
                             </div>
 
@@ -157,7 +157,7 @@
                                         PNF asociado
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->nombre_pnf ?? '—' }}
+                                        {{ $registro->nombre_prg ?? '—' }}
                                     </p>
                                 </div>
                                 <div>
@@ -165,7 +165,7 @@
                                         Semestre
                                     </p>
                                     <p class="text-sm font-bold" style="color: var(--text-main);">
-                                        {{ $registro->semestre_persona ?? '—' }}
+                                        {{ $registro->semestre_per ?? '—' }}
                                     </p>
                                 </div>
                             </div>
@@ -192,7 +192,7 @@
                                     Fecha de registro
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ \Carbon\Carbon::parse($registro->fecha_regis_diario_c)->format('d/m/Y') }}
+                                    {{ \Carbon\Carbon::parse($registro->fecha_comedor_rgc)->format('d/m/Y') }}
                                 </p>
                                 <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
                                     Información tomada del formulario enviado.
@@ -204,7 +204,7 @@
                                     Hora registrada
                                 </p>
                                 <p class="text-sm font-bold" style="color: var(--text-main);">
-                                    {{ $registro->hora ?? '—' }}
+                                    {{ $registro->hora_comedor_rgc ?? '—' }}
                                 </p>
                                 <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
                                     Corresponde a la hora exacta de creación.

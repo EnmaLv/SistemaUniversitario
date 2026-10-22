@@ -2,7 +2,7 @@
     $modelo = $modelo ?? null;
     $opcionesInit = old(
         'opciones',
-        $modelo?->opciones->map(fn ($o) => ['etiqueta' => $o->etiqueta, 'valor' => $o->valor])->toArray() ?? []
+        $modelo?->opciones->map(fn ($o) => ['etiqueta' => $o->etiqueta_opb, 'valor' => $o->valor_opb])->toArray() ?? []
     );
 
     $regexPresets = [
@@ -21,7 +21,7 @@
         'fecha_iso'        => ['label' => 'Fecha en formato YYYY-MM-DD',                  'pattern' => '/^\d{4}-\d{2}-\d{2}$/'],
     ];
 
-    $regexActual = old('regex', $modelo?->regex ?? '');
+    $regexActual = old('regex', $modelo?->regex_pgb ?? '');
 
     // Detecta si el regex del modelo coincide con algún preset
     $presetSeleccionado = '';
@@ -71,13 +71,13 @@
                             <select name="id_be_beneficio"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
-                                <option value="" disabled {{ old('id_be_beneficio', $modelo?->id_be_beneficio) ? '' : 'selected' }}>
+                                <option value="" disabled {{ old('id_be_beneficio', $modelo?->bes_id) ? '' : 'selected' }}>
                                     Seleccione un beneficio...
                                 </option>
                                 @foreach ($beneficios as $ben)
-                                    <option value="{{ $ben->id }}"
-                                        @selected(old('id_be_beneficio', $modelo?->id_be_beneficio) == $ben->id)>
-                                        {{ $ben->nombre_beneficio }}
+                                    <option value="{{ $ben->id_bes }}"
+                                        @selected(old('id_be_beneficio', $modelo?->bes_id) == $ben->id_bes)>
+                                        {{ $ben->nombre_beneficio_bes }}
                                     </option>
                                 @endforeach
                             </select>
@@ -98,7 +98,7 @@
                                 <i class="fas fa-key text-sm"></i>
                             </span>
                             <input type="text" name="codigo"
-                                value="{{ old('codigo', $modelo?->codigo) }}"
+                                value="{{ old('codigo', $modelo?->codigo_pgb) }}"
                                 placeholder="nota_promedio"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -122,7 +122,7 @@
                                 <i class="fas fa-sort-numeric-down text-sm"></i>
                             </span>
                             <input type="number" name="orden" min="0"
-                                value="{{ old('orden', $modelo?->orden ?? 0) }}"
+                                value="{{ old('orden', $modelo?->orden_pgb ?? 0) }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                         </div>
@@ -146,7 +146,7 @@
                                 <i class="fas fa-question text-sm"></i>
                             </span>
                             <input type="text" name="etiqueta"
-                                value="{{ old('etiqueta', $modelo?->etiqueta) }}"
+                                value="{{ old('etiqueta', $modelo?->etiqueta_pgb) }}"
                                 placeholder="¿Cuál es su índice académico?"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -167,7 +167,7 @@
                                 <i class="fas fa-info-circle text-sm"></i>
                             </span>
                             <input type="text" name="placeholder"
-                                value="{{ old('placeholder', $modelo?->placeholder) }}"
+                                value="{{ old('placeholder', $modelo?->placeholder_pgb) }}"
                                 placeholder="Ej: Entre 0 y 20"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -196,7 +196,7 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                                 @foreach ($tipos as $key => $label)
                                     <option value="{{ $key }}"
-                                        @selected(old('tipo', $modelo?->tipo ?? 'text') === $key)>
+                                        @selected(old('tipo', $modelo?->tipo_campo_pgb ?? 'text') === $key)>
                                         {{ $label }}
                                     </option>
                                 @endforeach
@@ -219,7 +219,7 @@
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="hidden" name="obligatoria" value="0">
                                 <input type="checkbox" name="obligatoria" value="1" class="sr-only peer"
-                                    {{ old('obligatoria', $modelo?->obligatoria ?? true) ? 'checked' : '' }}>
+                                    {{ old('obligatoria', $modelo?->obligatoria_pgb ?? true) ? 'checked' : '' }}>
                                 <div class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-checked:bg-sky-600 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4"></div>
                             </label>
                         </div>
@@ -240,7 +240,7 @@
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="hidden" name="activo" value="0">
                                 <input type="checkbox" name="activo" value="1" class="sr-only peer"
-                                    {{ old('activo', $modelo?->activo ?? true) ? 'checked' : '' }}>
+                                    {{ old('activo', $modelo?->estaActivo() ?? true) ? 'checked' : '' }}>
                                 <div class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4"></div>
                             </label>
                         </div>
@@ -263,7 +263,7 @@
                                 <i class="fas fa-arrow-down text-sm"></i>
                             </span>
                             <input type="number" name="valor_min" step="0.01"
-                                value="{{ old('valor_min', $modelo?->valor_min) }}"
+                                value="{{ old('valor_min', $modelo?->valor_min_pgb) }}"
                                 placeholder="Ej: 0"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -284,7 +284,7 @@
                                 <i class="fas fa-arrow-up text-sm"></i>
                             </span>
                             <input type="number" name="valor_max" step="0.01"
-                                value="{{ old('valor_max', $modelo?->valor_max) }}"
+                                value="{{ old('valor_max', $modelo?->valor_max_pgb) }}"
                                 placeholder="Ej: 20"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -308,7 +308,7 @@
                                 <i class="fas fa-text-width text-sm"></i>
                             </span>
                             <input type="number" name="min_length" min="0"
-                                value="{{ old('min_length', $modelo?->min_length) }}"
+                                value="{{ old('min_length', $modelo?->min_length_pgb) }}"
                                 placeholder="Ej: 3"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -329,7 +329,7 @@
                                 <i class="fas fa-text-width text-sm"></i>
                             </span>
                             <input type="number" name="max_length" min="0"
-                                value="{{ old('max_length', $modelo?->max_length) }}"
+                                value="{{ old('max_length', $modelo?->max_length_pgb) }}"
                                 placeholder="Ej: 255"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">

@@ -10,7 +10,7 @@
                         Lotes
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span>
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span>
                         · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -42,15 +42,17 @@
                             </div>
                         </div>
 
-                        <form action="{{ route('admin.movimientos.lotes.mermar') }}" method="POST" class="shrink-0">
-                            @csrf
-                            <button type="submit"
-                                onclick="confirmarMerma(event, this)"
-                                class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 hover:bg-red-800 text-white text-sm font-extrabold px-5 py-2.5 shadow-md active:scale-[0.98] transition-all">
-                                <i class="fas fa-trash-alt text-xs"></i>
-                                Mermar productos vencidos
-                            </button>
-                        </form>
+                        @canRoute('admin.movimientos.lotes.mermar')
+                            <form action="{{ route('admin.movimientos.lotes.mermar') }}" method="POST" class="shrink-0">
+                                @csrf
+                                <button type="submit"
+                                    onclick="confirmarMerma(event, this)"
+                                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 hover:bg-red-800 text-white text-sm font-extrabold px-5 py-2.5 shadow-md active:scale-[0.98] transition-all">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                    Mermar productos vencidos
+                                </button>
+                            </form>
+                        @endcanRoute
                     </div>
                 </div>
             @endif
@@ -73,6 +75,8 @@
                         </div>
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:ml-auto">
+
+                            <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" form="lotesSearchForm" :etiqueta="false" />
 
                             <div class="relative flex-1 sm:w-64">
                                 <i class="fas fa-search absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none text-sm"></i>
@@ -107,6 +111,7 @@
 
                     <div id="filtros-lotes" class="hidden mt-4">
                         <form action="{{ route('admin.movimientos.lotes.index') }}" method="GET">
+                            <input type="hidden" name="tipo" value="{{ \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto) }}">
                             <div class="rounded-xl border p-4"
                                 style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
 
@@ -204,7 +209,7 @@
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-black rounded-md border font-mono"
                                             style="border-color: var(--border-color); color: var(--text-main);">
                                             <i class="fas fa-barcode text-[10px] opacity-60"></i>
-                                            {{ $lote->codigo_lote }}
+                                            {{ $lote->codigo_lote_lot }}
                                         </span>
                                     </td>
 
@@ -213,22 +218,22 @@
                                             <span class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-500 flex items-center justify-center shrink-0">
                                                 <i class="fas fa-box text-xs"></i>
                                             </span>
-                                            <span class="font-bold">{{ $lote->producto->nombre ?? '—' }}</span>
+                                            <span class="font-bold">{{ $lote->producto->nombre_pdt ?? '—' }}</span>
                                         </div>
                                     </td>
 
                                     <td class="px-4 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $lote->proveedor->nombre ?? '—' }}
+                                        {{ $lote->proveedor->nombre_contacto_prv ?? '—' }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($lote->fecha_entrada)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($lote->fecha_entrada_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($lote->fecha_vencimiento)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($lote->fecha_vencimiento_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap">

@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('municipios', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre_municipio');
-            $table->boolean('status')->default(true);
-            $table->foreignId('estado_id')->constrained('estados')->cascadeOnDelete();
+        Schema::create('municipio', function (Blueprint $table) {
+            $table->id('id_mun');
+            $table->string('nombre_mun');
+            $table->foreignId('esd_id')->constrained('estado', 'id_esd')->cascadeOnDelete();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('municipios');
+        Schema::dropIfExists('municipio');
     }
 };

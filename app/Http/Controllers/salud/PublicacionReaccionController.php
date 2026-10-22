@@ -14,7 +14,7 @@ class PublicacionReaccionController extends Controller
     public function toggle($publicacionId)
     {
         /** @var Usuario $user */
-        $userId = Auth::user()->id_usuario ?? Auth::id();
+        $userId = Auth::user()->id_use ?? Auth::id();
 
         $publicacion = DB::table('publicaciones')->where('id', $publicacionId)->first();
         if (!$publicacion) {
@@ -61,8 +61,8 @@ class PublicacionReaccionController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first();
                 
-            $ultimoUsuario = Usuario::with('persona')->where('id_usuario', $ultimaReaccion->paciente_id)->first();
-            $nombreUltimo = ($ultimoUsuario && $ultimoUsuario->persona) ? $ultimoUsuario->persona->nombre_persona : 'Un usuario';
+            $ultimoUsuario = Usuario::with('persona')->where('id_use', $ultimaReaccion->paciente_id)->first();
+            $nombreUltimo = ($ultimoUsuario && $ultimoUsuario->persona) ? $ultimoUsuario->persona->nombres_per : 'Un usuario';
 
             if ($totalLikes == 1) {
                 $mensaje = "{$nombreUltimo} le dio me gusta a tu aviso.";

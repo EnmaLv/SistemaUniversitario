@@ -3,8 +3,14 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Configuration\Exceptions;
+use App\Http\Middleware\CerrarSesionPorInactividad;
 use App\Http\Middleware\CheckTasaActualizada;
 use App\Http\Middleware\IgnorarTasaHoy;
+use App\Http\Middleware\RegistrarActividad;
+use App\Http\Middleware\VerificarUsuarioBloqueado;
+use App\Support\Seguridad\AccesosDenegados;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,18 +23,33 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
 
         $middleware->append(IgnorarTasaHoy::class);
+        $middleware->append(\App\Http\Middleware\CabecerasSeguridad::class);
 
         $middleware->web(append: [
             CheckTasaActualizada::class,
+            CerrarSesionPorInactividad::class,
+            VerificarUsuarioBloqueado::class,
+            \App\Http\Middleware\EstablecerSedeActiva::class,
+            \App\Http\Middleware\ExigirCambioPassword::class,
+            RegistrarActividad::class,
+        ]);
+
+        $middleware->api(append: [
+            VerificarUsuarioBloqueado::class . ':sanctum',
+            \App\Http\Middleware\ExigirCambioPassword::class . ':sanctum',
         ]);
 
         $middleware->trustProxies(at: '*');
 
         $middleware->alias([
             'tasa.actualizada' => CheckTasaActualizada::class,
+            'permiso.api' => \App\Http\Middleware\VerificarPermisoApi::class,
+            'rol.psicologo' => \App\Http\Middleware\ExigirRolPsicologo::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
+            return AccesosDenegados::responder($e, $request);
+        });
     })
     ->create();

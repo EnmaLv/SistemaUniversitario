@@ -10,18 +10,23 @@ class DefaultRolesSeeder extends Seeder
     public function run()
     {
         Rol::updateOrCreate(
-            ['nombre' => 'Administrador'],
-            ['descripcion' => 'Rol por defecto Administrador']
+            ['nombre_rol' => 'Administrador'],
+            ['descripcion_rol' => 'Rol por defecto Administrador']
         );
 
         Rol::updateOrCreate(
-            ['nombre' => 'Secretaria De Bienestar'],
-            ['descripcion' => 'Rol por defecto Secretaria De Bienestar']
+            ['nombre_rol' => 'Secretaria De Bienestar'],
+            ['descripcion_rol' => 'Rol por defecto Secretaria De Bienestar']
         );
 
         Rol::updateOrCreate(
-            ['nombre' => 'Obrero'],
-            ['descripcion' => 'Rol por defecto Obrero']
+            ['nombre_rol' => 'Obrero'],
+            ['descripcion_rol' => 'Rol por defecto Obrero']
+        );
+
+        Rol::updateOrCreate(
+            ['nombre_rol' => 'Psicólogo'],
+            ['descripcion_rol' => 'Rol por defecto Psicólogo', 'slug_rol' => 'psicologo']
         );
     }
 }

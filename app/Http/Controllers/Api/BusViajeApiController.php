@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\BusGpsLog;
 use App\Models\BusViaje;
 use App\Services\Transporte\CalculoCombustibleService;
+use App\Services\Transporte\TrazadoRutaService;
+use App\Support\Transporte\FormatoApiTransporte;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,21 +16,24 @@ class BusViajeApiController extends Controller
 {
     protected CalculoCombustibleService $calculoCombustible;
 
-    public function __construct(CalculoCombustibleService $calculoCombustible)
+    protected TrazadoRutaService $trazado;
+
+    public function __construct(CalculoCombustibleService $calculoCombustible, TrazadoRutaService $trazado)
     {
         $this->calculoCombustible = $calculoCombustible;
+        $this->trazado = $trazado;
     }
 
     public function registrarGps(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ((int) $viaje->conductor_use_id !== (int) $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para registrar GPS en este viaje.',
             ], 403);
         }
 
-        if ($viaje->estado !== 'en_curso') {
+        if ($viaje->estado_viaje_vjt !== 'en_curso') {
             return response()->json([
                 'success' => false,
                 'message' => 'El viaje no está en curso; no se aceptan puntos GPS.',
@@ -45,24 +49,12 @@ class BusViajeApiController extends Controller
             'timestamp' => ['required', 'date'],
         ]);
 
-        $existente = BusGpsLog::where('local_id', $validated['local_id'])->first();
-
-        if ($existente) {
+        if ($this->trazado->procesarPunto($viaje, $validated)) {
             return response()->json([
                 'success' => true,
                 'duplicate' => true,
             ]);
         }
-
-        $viaje->gpsLogs()->create([
-            'local_id' => $validated['local_id'],
-            'lat' => $validated['lat'],
-            'lng' => $validated['lng'],
-            'velocidad' => $validated['velocidad'] ?? 0,
-            'heading' => $validated['heading'] ?? null,
-            'registrado_en' => Carbon::parse($validated['timestamp']),
-            'origen' => 'app_conductor',
-        ]);
 
         return response()->json([
             'success' => true,
@@ -72,21 +64,37 @@ class BusViajeApiController extends Controller
     public function obtenerPosicion(BusViaje $viaje): JsonResponse
     {
         $ultimoLog = $viaje->gpsLogs()
-            ->latest('id')
+            ->latest('id_lgt')
             ->first();
+
+        $recepcion = $viaje->ultima_recepcion_en_vjt;
+        $usarViaje = $viaje->ultima_lat_vjt !== null && $viaje->ultima_lng_vjt !== null && $recepcion !== null
+            && (! $ultimoLog || ! $ultimoLog->created_at || $recepcion->greaterThanOrEqualTo($ultimoLog->created_at));
+
+        if ($usarViaje) {
+            $latitud = (float) $viaje->ultima_lat_vjt;
+            $longitud = (float) $viaje->ultima_lng_vjt;
+            $velocidad = (float) ($viaje->ultima_velocidad_vjt ?? 0);
+            $fecha = $recepcion;
+        } else {
+            $latitud = $ultimoLog ? (float) $ultimoLog->lat_lgt : null;
+            $longitud = $ultimoLog ? (float) $ultimoLog->lng_lgt : null;
+            $velocidad = $ultimoLog ? (float) $ultimoLog->velocidad_lgt : 0;
+            $fecha = $ultimoLog?->created_at;
+        }
 
         return response()->json([
             'success' => true,
-            'latitud' => $ultimoLog ? (float) $ultimoLog->lat : null,
-            'longitud' => $ultimoLog ? (float) $ultimoLog->lng : null,
-            'velocidad' => $ultimoLog ? (float) $ultimoLog->velocidad : 0,
-            'pasajeros' => $viaje->pasajeros,
-            'distancia_km' => $viaje->distancia_km,
-            'litros_gastados' => $viaje->litros_gastados,
-            'estado' => $viaje->estado,
-            'fecha_registro' => $ultimoLog?->created_at?->toISOString(),
-            'actualizado_hace' => $ultimoLog
-                ? $ultimoLog->created_at->diffForHumans()
+            'latitud' => $latitud,
+            'longitud' => $longitud,
+            'velocidad' => $velocidad,
+            'pasajeros' => (int) $viaje->total_pasajeros_vjt,
+            'distancia_km' => FormatoApiTransporte::decimal($viaje->getAttributes()['distancia_km_vjt'] ?? null, 2),
+            'litros_gastados' => FormatoApiTransporte::decimal($viaje->getAttributes()['litros_gastados_vjt'] ?? null, 2),
+            'estado' => $viaje->estado_viaje_vjt,
+            'fecha_registro' => $fecha?->toISOString(),
+            'actualizado_hace' => $fecha
+                ? $fecha->diffForHumans()
                 : 'Sin registros',
         ]);
     }
@@ -95,11 +103,11 @@ class BusViajeApiController extends Controller
     {
         $usuario = $request->user();
 
-        $viaje = BusViaje::delConductor($usuario->id_usuario)
-            ->whereIn('estado', ['programado', 'en_curso'])
+        $viaje = BusViaje::where('conductor_use_id', $usuario->id_use)
+            ->whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
             ->with([
                 'vehiculo.tipoCombustible',
-                'busRuta.paradas' => fn ($q) => $q->orderBy('orden', 'asc'),
+                'busRuta.paradas' => fn ($q) => $q->orderBy('ruta_parada_transporte.orden_rpt', 'asc'),
             ])
             ->first();
 
@@ -113,23 +121,23 @@ class BusViajeApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $viaje,
+            'data' => FormatoApiTransporte::viaje($viaje),
         ]);
     }
 
     public function iniciar(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ((int) $viaje->conductor_use_id !== (int) $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para iniciar este viaje.',
             ], 403);
         }
 
-        if ($viaje->estado !== 'programado') {
+        if ($viaje->estado_viaje_vjt !== 'programado') {
             return response()->json([
                 'success' => false,
-                'message' => "No se puede iniciar el viaje porque su estado es '{$viaje->estado}'.",
+                'message' => "No se puede iniciar el viaje porque su estado es '{$viaje->estado_viaje_vjt}'.",
             ], 422);
         }
 
@@ -146,22 +154,22 @@ class BusViajeApiController extends Controller
             ], 422);
         }
 
-        $kmInicio = (float) ($viaje->vehiculo->km_actual ?? 0);
+        $kmInicio = (float) ($viaje->vehiculo->km_actual_vtr ?? 0);
 
         $viaje->update([
-            'estado' => 'en_curso',
-            'fecha_inicio' => now(),
-            'km_inicio' => $kmInicio,
-            'pasajeros' => $validated['pasajeros'] ?? $viaje->pasajeros,
+            'estado_viaje_vjt' => 'en_curso',
+            'fecha_inicio_vjt' => now(),
+            'km_inicio_vjt' => $kmInicio,
+            'total_pasajeros_vjt' => $validated['pasajeros'] ?? $viaje->total_pasajeros_vjt,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'El viaje ha iniciado correctamente.',
-            'data' => $viaje->fresh([
+            'data' => FormatoApiTransporte::viaje($viaje->fresh([
                 'vehiculo',
                 'busRuta.paradas',
-            ]),
+            ])),
         ]);
     }
 
@@ -184,23 +192,23 @@ class BusViajeApiController extends Controller
 
     public function finalizar(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ((int) $viaje->conductor_use_id !== (int) $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para finalizar este viaje.',
             ], 403);
         }
 
-        if ($viaje->estado === 'finalizado') {
+        if ($viaje->estado_viaje_vjt === 'finalizado') {
             return response()->json([
                 'success' => true,
                 'duplicate' => true,
                 'message' => 'El viaje ya estaba finalizado.',
-                'data' => $viaje,
+                'data' => FormatoApiTransporte::viaje($viaje),
             ]);
         }
 
-        if ($viaje->estado !== 'en_curso') {
+        if ($viaje->estado_viaje_vjt !== 'en_curso') {
             return response()->json([
                 'success' => false,
                 'message' => 'Solo se pueden finalizar viajes que estén en curso.',
@@ -227,41 +235,47 @@ class BusViajeApiController extends Controller
         );
 
         $viaje->update([
-            'estado' => 'finalizado',
+            'estado_viaje_vjt' => 'finalizado',
         ]);
 
         $viaje->vehiculo->update([
-            'estado' => 'disponible',
+            'estado_operativo_vtr' => 'disponible',
         ]);
 
-        $this->eliminarBusDeFirebase((string) $viaje->id);
+        try {
+            $this->trazado->generarReferenciaSiFalta($viaje);
+        } catch (\Throwable $e) {
+            Log::error("Error generando el trazado de referencia del viaje {$viaje->id_vjt}: {$e->getMessage()}");
+        }
+
+        $this->eliminarBusDeFirebase((string) $viaje->id_vjt);
 
         return response()->json([
             'success' => true,
             'message' => 'Viaje finalizado y combustible calculado.',
             'data' => array_merge($resultado, [
-                'viaje' => $viaje->fresh([
+                'viaje' => FormatoApiTransporte::viaje($viaje->fresh([
                     'vehiculo',
                     'busRuta.paradas',
-                ]),
-                'vehiculo' => $viaje->vehiculo->fresh(),
+                ])),
+                'vehiculo' => FormatoApiTransporte::vehiculo($viaje->vehiculo->fresh()),
             ]),
         ]);
     }
 
     public function cancelar(Request $request, BusViaje $viaje): JsonResponse
     {
-        if ($viaje->conductor_id !== $request->user()->id_usuario) {
+        if ((int) $viaje->conductor_use_id !== (int) $request->user()->id_use) {
             return response()->json([
                 'success' => false,
                 'message' => 'No tienes permiso para cancelar este viaje.',
             ], 403);
         }
 
-        if (!in_array($viaje->estado, ['programado', 'en_curso'], true)) {
+        if (!in_array($viaje->estado_viaje_vjt, ['programado', 'en_curso'], true)) {
             return response()->json([
                 'success' => false,
-                'message' => "No se puede cancelar el viaje porque su estado es '{$viaje->estado}'.",
+                'message' => "No se puede cancelar el viaje porque su estado es '{$viaje->estado_viaje_vjt}'.",
             ], 422);
         }
 
@@ -275,33 +289,33 @@ class BusViajeApiController extends Controller
         ]);
 
         $viaje->update([
-            'estado' => 'cancelado',
-            'motivo_cancelacion' => $validated['motivo_cancelacion'],
+            'estado_viaje_vjt' => 'cancelado',
         ]);
 
-        $this->eliminarBusDeFirebase((string) $viaje->id);
+        $this->eliminarBusDeFirebase((string) $viaje->id_vjt);
 
         if ($viaje->wasChanged() && $viaje->vehiculo) {
-            $viaje->vehiculo->update(['estado' => 'disponible']);
+            $viaje->vehiculo->update(['estado_operativo_vtr' => 'disponible']);
         }
 
         return response()->json([
             'success' => true,
             'message' => 'El viaje ha sido cancelado exitosamente.',
-            'data' => $viaje->fresh(),
+            'data' => FormatoApiTransporte::viaje($viaje->fresh()),
         ]);
     }
 
     public function historial(Request $request): JsonResponse
     {
-        $viajes = BusViaje::delConductor($request->user()->id_usuario)
-            ->where('estado', 'finalizado')
+        $viajes = BusViaje::where('conductor_use_id', $request->user()->id_use)
+            ->where('estado_viaje_vjt', 'finalizado')
             ->with([
                 'vehiculo',
                 'busRuta',
             ])
             ->orderBy('updated_at', 'desc')
-            ->paginate(15);
+            ->paginate(15)
+            ->through(fn ($viaje) => FormatoApiTransporte::viaje($viaje));
 
         return response()->json([
             'success' => true,
@@ -313,19 +327,21 @@ class BusViajeApiController extends Controller
     {
         $hoy = Carbon::today();
 
-        $viajes = BusViaje::whereIn('estado', ['en_curso', 'programado'])
+        $viajes = BusViaje::whereIn('estado_viaje_vjt', ['en_curso', 'programado'])
             ->where(function ($q) use ($hoy) {
                 $q->whereDate('created_at', $hoy)
-                    ->orWhereDate('fecha_inicio', $hoy);
+                    ->orWhereDate('fecha_inicio_vjt', $hoy);
             })
             ->with([
                 'vehiculo',
                 'busRuta',
                 'conductor',
             ])
-            ->orderByRaw("FIELD(estado, 'en_curso', 'programado')")
+            ->orderByRaw("CASE WHEN estado_viaje_vjt = 'en_curso' THEN 0 ELSE 1 END")
             ->orderBy('created_at', 'asc')
-            ->get();
+            ->get()
+            ->map(fn ($viaje) => FormatoApiTransporte::viaje($viaje))
+            ->values();
 
         return response()->json([
             'success' => true,

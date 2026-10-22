@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Becas\BecaBeneficiario;
+use App\Support\Cuentas\CuentasComunidad;
+use App\Traits\PerteneceASede;
 use App\Traits\ConvierteAMayusculasNoEloquent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -12,28 +13,45 @@ use Exception;
 class Persona extends Model
 {
     use ConvierteAMayusculasNoEloquent;
+    use PerteneceASede;
+
+    protected $columnaSede = 'sed_id';
+
+    protected $sedeSoloExplicita = true;
 
     protected $table = 'persona';
-    protected $primaryKey = 'id_persona';
+    protected $primaryKey = 'id_per';
     public $timestamps = true;
 
     protected $fillable = [
-        'nombre_persona',
-        'segundo_nombre_persona',
-        'apellido_persona',
-        'segundo_apellido_persona',
-        'cedula_persona',
-        'telefono_persona',
-        'genero_persona',
-        'edad_persona',
-        'fecha_nacimiento_persona',
-        'email_persona',
-        'semestre_persona',
-        'estado',
+        'nombres_per',
+        'segundo_nombre_per',
+        'apellidos_per',
+        'segundo_apellido_per',
+        'cedula_per',
+        'telefono_per',
+        'genero_per',
+        'fecha_nacimiento_per',
+        'correo_per',
+        'semestre_per',
+        'status_id',
         'id_perfil',
-        'id_sede',
-        
+        'sed_id',
     ];
+
+    protected static function booted(): void
+    {
+        static::updated(function (Persona $persona) {
+            if ($persona->wasChanged('id_perfil')) {
+                CuentasComunidad::sincronizarRolBecario(
+                    $persona->id_per,
+                    'cambio_perfil',
+                    [$persona->id_per => $persona->getOriginal('id_perfil')]
+                );
+            }
+        });
+    }
+
     private static function formatearTelefono($numero)
     {
         // 1. Limpiamos el valor por si trae espacios o caracteres extraños
@@ -64,55 +82,48 @@ class Persona extends Model
         DB::beginTransaction();
 
         try {
-            //Primero creamos la persona
-            $personaId = DB::table('persona')->insertGetId([
-                'cedula_persona' => $data['cedula'],
-                'nombre_persona' => $data['nombre'],
-                'segundo_nombre_persona' => $data['segundo_nombre'],
-                'apellido_persona' => $data['apellido'],
-                'segundo_apellido_persona' => $data['segundo_apellido'],
-                'telefono_persona' => $telefono,
-                'genero_persona' => $data['genero'],
-                'edad_persona' => Carbon::parse($data['fecha_nacimiento'])->age,
-                'fecha_nacimiento_persona' => $data['fecha_nacimiento'],
-                'email_persona' => $data['email'],
-                'semestre_persona' => $data['semestreId'],
-                'id_perfil' => 2,
-                'id_sede' => $data['sedeId'] ?? null,
-            ]);
+            $perfilId = (int) ($data['perfilId'] ?? Perfil::idEstudiante());
+            $esEstudiante = Perfil::esEstudiante($perfilId);
 
-            //Guardamos la direccion
+            $personaId = DB::table('persona')->insertGetId([
+                'cedula_per' => $data['cedula'],
+                'nombres_per' => $data['nombre'],
+                'segundo_nombre_per' => $data['segundo_nombre'],
+                'apellidos_per' => $data['apellido'],
+                'segundo_apellido_per' => $data['segundo_apellido'],
+                'telefono_per' => $telefono,
+                'genero_per' => $data['genero'],
+                'fecha_nacimiento_per' => $data['fecha_nacimiento'],
+                'correo_per' => $data['email'],
+                'semestre_per' => $esEstudiante ? ($data['semestreId'] ?? null) : null,
+                'id_perfil' => $perfilId,
+                'sed_id' => $data['sedeId'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ], 'id_per');
 
             DB::table('direccion')->insert([
-                'sector' => $data['sector'],
-                'calle' => $data['calle'],
-                'id_persona' => $personaId,
-                'id_localidad' => $data['parroquiaId'],
+                'sector_dir' => $data['sector'],
+                'calle_dir' => $data['calle'],
+                'per_id' => $personaId,
+                'par_id' => $data['parroquiaId'],
             ]);
 
-            //Guardamos el pnf y la sede si es un estudiante
-
-
-            //Asignar la sede
-            DB::table('persona')->where('id_persona', $personaId)->update([
-                'id_sede' => $data['sedeId'],
-            ]);
-
-
-            //Asignar el pnf 
-            DB::table('persona_pnf')->insert([
-                'id_persona' => $personaId,
-                'id_pnf' => $data['pnfId'],
-                'fecha_inicio' => Carbon::now(),
-                'fecha_fin' => Carbon::now(),
-            ]);
+            if ($esEstudiante && ! empty($data['pnfId'])) {
+                DB::table('persona_programa')->insert([
+                    'per_id' => $personaId,
+                    'prg_id' => $data['pnfId'],
+                    'fecha_inicio_pep' => Carbon::now(),
+                    'fecha_fin_pep' => Carbon::now(),
+                ]);
+            }
 
             DB::commit();
             return true;
         } 
         catch (Exception $e) {
             DB::rollBack();
-            dd($e->getMessage());
+            report($e);
             return false;
         }
     }
@@ -126,72 +137,76 @@ class Persona extends Model
         DB::beginTransaction();
 
         try {
-            // 1. Actualizar los datos básicos de la persona
-            DB::table('persona')->where('id_persona', $personaId)->update([
-                'nombre_persona'           => $data['nombre'],
-                'segundo_nombre_persona'   => $data['segundo_nombre'],
-                'apellido_persona'         => $data['apellido'],
-                'segundo_apellido_persona' => $data['segundo_apellido'],
-                'telefono_persona'         => $data['telefono'],
-                'genero_persona'           => $data['genero'],
-                'edad_persona'             => Carbon::parse($data['fecha_nacimiento'])->age,
-                'fecha_nacimiento_persona' => $data['fecha_nacimiento'],
-                'email_persona'            => $data['email'],
-                'semestre_persona'         => $data['semestreId'],
-                'id_sede'                  => $data['sedeId'] ?? null,
-            ]);
+            $persona = self::query()->findOrFail($personaId);
+            $perfilId = (int) ($data['perfilId'] ?? $persona->id_perfil);
+            $esEstudiante = Perfil::esEstudiante($perfilId);
 
-            $personaExistente = DB::table('persona')
-                ->where('cedula_persona', $data['cedula'])
-                ->where('id_persona', '!=', $personaId)
-                ->where(function ($query) {
-                    $query->where('id_perfil', '!=', 1)
-                        ->orWhereNull('id_perfil');
-                })
-                ->first();
+            $duplicada = DB::table('persona')
+                ->where('cedula_per', $data['cedula'])
+                ->where('id_per', '!=', $personaId)
+                ->exists();
 
-            if ($personaExistente) {
+            if ($duplicada) {
                 throw new Exception('Ya existe otra persona con esa cédula');
-            } else {
-                DB::table('persona')
-                    ->where('id_persona', $personaId)
-                    ->where(function ($query) {
-                        $query->where('id_perfil', '!=', 1)
-                              ->orWhereNull('id_perfil');
-                    })
-                    ->update([
-                        'cedula_persona' => $data['cedula']
-                    ]);
             }
+
+            $cambios = [
+                'nombres_per'          => $data['nombre'],
+                'segundo_nombre_per'   => $data['segundo_nombre'],
+                'apellidos_per'        => $data['apellido'],
+                'segundo_apellido_per' => $data['segundo_apellido'],
+                'telefono_per'         => $data['telefono'],
+                'genero_per'           => $data['genero'],
+                'fecha_nacimiento_per' => $data['fecha_nacimiento'],
+                'correo_per'           => $data['email'],
+                'sed_id'               => $data['sedeId'] ?? $persona->sed_id,
+                'id_perfil'            => $perfilId,
+            ];
+
+            if ($esEstudiante) {
+                $cambios['semestre_per'] = $data['semestreId'] ?? null;
+            }
+
+            if (! in_array((int) $persona->id_perfil, Perfil::idsInternos(), true)) {
+                $cambios['cedula_per'] = $data['cedula'];
+            }
+
+            $persona->fill($cambios)->save();
 
             // 2. Actualizar la dirección
             // Usamos updateOrInsert por si acaso la persona no tenía dirección previa
             DB::table('direccion')->updateOrInsert(
-                ['id_persona' => $personaId], // Condición de búsqueda
+                ['per_id' => $personaId], // Condición de búsqueda
                 [
-                    'sector'       => $data['sector'],
-                    'calle'        => $data['calle'],
-                    'id_localidad' => $data['parroquiaId'],
+                    'sector_dir'       => $data['sector'],
+                    'calle_dir'        => $data['calle'],
+                    'par_id' => $data['parroquiaId'],
                 ]
             );
 
 
-            // Actualizar o insertar el PNF relacionado
-            DB::table('persona_pnf')->updateOrInsert(
-                ['id_persona' => $personaId], // Condición
-                [
-                    'id_pnf'       => $data['pnfId'],
-                    'fecha_inicio' => Carbon::now(), // O mantener la original si fuera necesario
-                    'fecha_fin'    => Carbon::now(),
-                ]
-            );
+            if ($esEstudiante && ! empty($data['pnfId'])) {
+                DB::table('persona_programa')->updateOrInsert(
+                    ['per_id' => $personaId],
+                    [
+                        'prg_id'           => $data['pnfId'],
+                        'fecha_inicio_pep' => Carbon::now(),
+                        'fecha_fin_pep'    => Carbon::now(),
+                    ]
+                );
+            }
 
             DB::commit();
             return [true, null];
         } catch (Exception $e) {
             DB::rollBack();
-            return [false, $e->getMessage()];
+            return [false, \App\Support\Seguridad\MensajeError::de($e)];
         }
+    }
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class, 'sed_id', 'id_sed');
     }
 
     public function perfil()
@@ -201,16 +216,21 @@ class Persona extends Model
 
     public function usuarios()
     {
-        return $this->hasMany(Usuario::class, 'id_persona', 'id_persona');
-    }
-
-    public function becasBeneficiario()
-    {
-        return $this->hasMany(BecaBeneficiario::class, 'persona_id', 'id_persona');
+        return $this->hasMany(Usuario::class, 'per_id', 'id_per');
     }
 
     public function personaPnf()
     {
-        return $this->hasMany(PersonaPnf::class, 'id_persona', 'id_persona');
+        return $this->hasMany(PersonaPnf::class, 'per_id', 'id_per');
+    }
+
+    public function scopeEstudiantes($consulta)
+    {
+        return $consulta->where($this->qualifyColumn('id_perfil'), Perfil::idEstudiante() ?? 0);
+    }
+
+    public function esEstudiante(): bool
+    {
+        return Perfil::esEstudiante($this->id_perfil);
     }
 }

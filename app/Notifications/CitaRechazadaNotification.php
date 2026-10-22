@@ -32,10 +32,10 @@ class CitaRechazadaNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
-        $psicologoName = $this->cita->psicologo->persona->nombre_persona ?? 'Tu psicólogo';
+        $psicologoName = $this->cita->psicologo->persona->nombres_per ?? 'Tu psicólogo';
         return [
             'type_id' => 'cita_rechazada',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'psicologo_name' => $psicologoName,
             'body' => "El psicólogo {$psicologoName} ha rechazado tu cita.",
             'url' => route('admin.psicologia.maestros.citas.index'),

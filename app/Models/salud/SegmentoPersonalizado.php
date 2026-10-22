@@ -2,13 +2,40 @@
 
 namespace App\Models\salud;
 
+use App\Traits\RegistraAutoria;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 
-class SegmentoPersonalizado
+class SegmentoPersonalizado extends Model
 {
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'historia_segmento_personalizado';
+
+    protected $primaryKey = 'id_hsm';
+
+    protected $fillable = [
+        'hsp_id',
+        'titulo_hsm',
+        'subtitulo_hsm',
+        'icono_hsm',
+        'contenido_hsm',
+        'orden_hsm',
+        'status_id',
+    ];
+
+    public function seccion()
+    {
+        return $this->belongsTo(SeccionPersonalizada::class, 'hsp_id', 'id_hsp');
+    }
+
     public static function obtenerSeccion($seccionId)
     {
-        return DB::table('historia_secciones_personalizadas')->where('id', $seccionId)->first();
+        return DB::table('historia_seccion_personalizada')->where('id_hsp', $seccionId)->first();
     }
 
     public static function actualizarSegmentosExtra($segmentosExtra)
@@ -19,10 +46,10 @@ class SegmentoPersonalizado
             DB::beginTransaction();
             foreach ($segmentosExtra as $segmentoId => $contenido) {
                 if ($contenido !== null) {
-                    $encrypted = \Illuminate\Support\Facades\Crypt::encryptString($contenido);
-                    DB::table('historia_segmentos_personalizados')
-                        ->where('id', $segmentoId)
-                        ->update(['contenido' => $encrypted, 'updated_at' => now()]);
+                    $encrypted = Crypt::encryptString($contenido);
+                    DB::table('historia_segmento_personalizado')
+                        ->where('id_hsm', $segmentoId)
+                        ->update(['contenido_hsm' => $encrypted, 'updated_id' => Auth::id(), 'updated_at' => now()]);
                 }
             }
             DB::commit();
@@ -39,9 +66,9 @@ class SegmentoPersonalizado
         try {
             DB::beginTransaction();
             foreach ($metadata as $segmentoId => $meta) {
-                DB::table('historia_segmentos_personalizados')
-                    ->where('id', $segmentoId)
-                    ->update(['titulo' => $meta['titulo'] ?? null, 'updated_at' => now()]);
+                DB::table('historia_segmento_personalizado')
+                    ->where('id_hsm', $segmentoId)
+                    ->update(['titulo_hsm' => $meta['titulo'] ?? null, 'updated_id' => Auth::id(), 'updated_at' => now()]);
             }
             DB::commit();
         } catch (\Exception $e) {

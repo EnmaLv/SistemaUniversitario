@@ -19,6 +19,7 @@ use App\Services\Salud\DispensacionService;
 use App\Services\Salud\EstadisticasExportService;
 use App\Services\Salud\RecetaService;
 use App\Services\Salud\SaludHomeService;
+use App\Support\Auditoria\Bitacora;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Throwable;
@@ -34,10 +35,6 @@ class ConsultaController extends Controller
         private readonly RecetaService $recetas,
         private readonly DispensacionService $dispensaciones,
     ) {}
-
-    /* ══════════════════════════════════════════════════════════════
-     |  Listado
-     ══════════════════════════════════════════════════════════════ */
 
     public function index(ListarConsultasRequest $request)
     {
@@ -56,10 +53,6 @@ class ConsultaController extends Controller
         ]);
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Paso 1: Consulta
-     ══════════════════════════════════════════════════════════════ */
-
     public function create(?Consulta $consulta = null)
     {
         if ($consulta?->exists && !$consulta->esEditable()) {
@@ -74,7 +67,7 @@ class ConsultaController extends Controller
             'consulta'     => $consulta,
             'consultorios' => $this->consultoriosActivos(),
             'medicos'      => HorarioConsultorio::usuariosElegibles(),
-            'personas'     => Persona::where('estado', true)->orderBy('nombre_persona')->get(),
+            'personas'     => Persona::where('status_id', 1)->orderBy('nombres_per')->get(),
         ]);
     }
 
@@ -85,6 +78,8 @@ class ConsultaController extends Controller
             $request->enfermedadesIds(),
             auth()->id()
         );
+
+        $this->registrarAtencionTardia($consulta);
 
         return redirect()
             ->route(self::RUTA . '.recetacion', $consulta)
@@ -97,30 +92,39 @@ class ConsultaController extends Controller
             return $this->bloqueadaPorEntregas($consulta);
         }
 
+        $anteriores = [
+            'fecha_cme'                  => optional($consulta->fecha_cme)->toDateString(),
+            'motivo_registro_tardio_cme' => $consulta->motivo_registro_tardio_cme,
+        ];
+
         $consulta->actualizarConEnfermedades(
             $request->datosConsulta(),
             $request->enfermedadesIds()
         );
+
+        if ($anteriores['fecha_cme'] !== optional($consulta->fecha_cme)->toDateString()
+            || $anteriores['motivo_registro_tardio_cme'] !== $consulta->motivo_registro_tardio_cme) {
+            $this->registrarAtencionTardia($consulta, $anteriores);
+        }
 
         return redirect()
             ->route(self::RUTA . '.recetacion', $consulta)
             ->with('success', 'Consulta actualizada correctamente. Continúe con la recetación.');
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Paso 2: Receta
-     ══════════════════════════════════════════════════════════════ */
-
     public function recetacion(Consulta $consulta)
     {
         $consulta->load(Consulta::CARGA_RECETACION);
+        $unidadesDosis = $this->recetas->unidadesDosis();
+        $permitidas = $this->recetas->unidadesDosisPermitidas($consulta);
 
         return view(self::VISTA . '.recetacion', [
             'consulta'         => $consulta,
             'estadoInicial'    => $this->recetas->estadoInicialFormulario($consulta->receta),
             'tieneDatosReales' => $consulta->receta !== null,
-            'productos'        => $this->recetas->productosSalud(),
-            'unidades'         => $this->recetas->unidades(),
+            'productos'        => $this->recetas->productosParaFormulario($unidadesDosis),
+            'unidadesDosis'    => $unidadesDosis,
+            'unidadesExtra'    => array_values(array_diff($permitidas, $unidadesDosis->pluck('nombre_udo')->all())),
         ]);
     }
 
@@ -141,10 +145,6 @@ class ConsultaController extends Controller
             ->with('success', 'Receta guardada correctamente. Proceda con la dispensación.');
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Paso 3: Dispensación
-     ══════════════════════════════════════════════════════════════ */
-
     public function dispensacion(Consulta $consulta)
     {
         if (!$consulta->receta) {
@@ -160,6 +160,7 @@ class ConsultaController extends Controller
             'consulta'        => $consulta,
             'sedeId'          => $sedeId,
             'lotesPorDetalle' => $this->dispensaciones->lotesPorDetalle($consulta, $sedeId),
+            'factores'        => $this->dispensaciones->factoresPorDetalle($consulta),
         ]);
     }
 
@@ -177,7 +178,7 @@ class ConsultaController extends Controller
                 auth()->id()
             );
         } catch (StockInsuficienteException $e) {
-            return back()->withInput()->with('error', 'Error al dispensar: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al dispensar: ' . \App\Support\Seguridad\MensajeError::de($e));
         } catch (Throwable $e) {
             report($e);
 
@@ -188,10 +189,6 @@ class ConsultaController extends Controller
             ->route(self::RUTA . '.index')
             ->with('success', $this->dispensaciones->mensajeResultado($resultado));
     }
-
-    /* ══════════════════════════════════════════════════════════════
-     |  Histórico y PDF
-     ══════════════════════════════════════════════════════════════ */
 
     public function show(Consulta $consulta)
     {
@@ -213,18 +210,14 @@ class ConsultaController extends Controller
 
         $nombreArchivo = sprintf(
             'recipe-%s-%s.pdf',
-            $consulta->paciente->cedula_persona ?? 'sin-cedula',
-            $consulta->fecha->format('Y-m-d')
+            $consulta->paciente->cedula_per ?? 'sin-cedula',
+            optional($consulta->fecha_cme)->format('Y-m-d') ?? 'sin-fecha'
         );
 
         return Pdf::loadView(self::VISTA . '.recipe', compact('consulta'))
             ->setPaper('a5', 'portrait')
             ->stream($nombreArchivo);
     }
-
-    /* ══════════════════════════════════════════════════════════════
-     |  AJAX
-     ══════════════════════════════════════════════════════════════ */
 
     public function buscarEnfermedades(BusquedaRequest $request)
     {
@@ -235,12 +228,17 @@ class ConsultaController extends Controller
         $q = $request->termino();
 
         return response()->json(
-            Enfermedad::where('categoria', Enfermedad::TIPO_FISICA)
-                ->where('activo', 1)
-                ->where('nombre', 'like', "%{$q}%")
-                ->orderBy('nombre')
+            Enfermedad::where('categoria_efm', Enfermedad::TIPO_FISICA)
+                ->where('status_id', 1)
+                ->where('nombre_efm', 'like', "%{$q}%")
+                ->orderBy('nombre_efm')
                 ->limit(15)
-                ->get(['id', 'nombre', 'codigo'])
+                ->get(['id_efm', 'nombre_efm', 'codigo_efm'])
+                ->map(fn($enfermedad) => [
+                    'id'     => $enfermedad->id_efm,
+                    'nombre' => $enfermedad->nombre_efm,
+                    'codigo' => $enfermedad->codigo_efm,
+                ])
         );
     }
 
@@ -252,26 +250,22 @@ class ConsultaController extends Controller
 
         $q = $request->termino();
 
-        $personas = Persona::where(function ($query) use ($q) {
-            $query->where('nombre_persona', 'like', "%{$q}%")
-                ->orWhere('apellido_persona', 'like', "%{$q}%")
-                ->orWhere('cedula_persona', 'like', "%{$q}%");
+        $personas = Persona::deSedeActiva()->where(function ($query) use ($q) {
+            $query->where('nombres_per', 'like', "%{$q}%")
+                ->orWhere('apellidos_per', 'like', "%{$q}%")
+                ->orWhere('cedula_per', 'like', "%{$q}%");
         })
             ->limit(10)
             ->get()
             ->map(fn($persona) => [
-                'id_persona' => $persona->id_persona,
-                'nombre'     => ' ' . ($persona->cedula_persona ?? 'S/C')
-                    . ' ' . ($persona->nombre_persona ?? '')
-                    . ' ' . ($persona->apellido_persona ?? ''),
+                'per_id' => $persona->id_per,
+                'nombre'     => ' ' . ($persona->cedula_per ?? 'S/C')
+                    . ' ' . ($persona->nombres_per ?? '')
+                    . ' ' . ($persona->apellidos_per ?? ''),
             ]);
 
         return response()->json($personas);
     }
-
-    /* ══════════════════════════════════════════════════════════════
-     |  Estadísticas
-     ══════════════════════════════════════════════════════════════ */
 
     public function estadisticas(
         EstadisticasRequest $request,
@@ -293,13 +287,32 @@ class ConsultaController extends Controller
         };
     }
 
-    /* ══════════════════════════════════════════════════════════════
-     |  Helpers
-     ══════════════════════════════════════════════════════════════ */
+    private function registrarAtencionTardia(Consulta $consulta, ?array $anteriores = null): void
+    {
+        if (! $consulta->esRegistroTardio()) {
+            return;
+        }
+
+        Bitacora::registrar(
+            accion: 'consulta_registro_tardio',
+            modulo: 'salud',
+            tablaAfectada: 'consulta_medica',
+            registroId: $consulta->id_cme,
+            datosAnteriores: $anteriores,
+            datosModificados: [
+                'fecha_cme'                  => $consulta->fecha_cme->toDateString(),
+                'fecha_registro'             => $consulta->fechaRegistro(),
+                'motivo_registro_tardio_cme' => $consulta->motivo_registro_tardio_cme,
+            ],
+            observacion: 'Atención del ' . $consulta->fecha_cme->format('d/m/Y')
+                . ' registrada el ' . \Carbon\Carbon::parse($consulta->fechaRegistro())->format('d/m/Y')
+                . '. Motivo: ' . $consulta->motivo_registro_tardio_cme,
+        );
+    }
 
     private function consultoriosActivos()
     {
-        return Consultorio::where('activo', true)->orderBy('nombre')->get();
+        return Consultorio::where('status_id', 1)->orderBy('nombre_csr')->get();
     }
 
     private function sedeActual(): int

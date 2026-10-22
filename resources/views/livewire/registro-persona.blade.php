@@ -240,14 +240,85 @@
                 <div class="flex items-center gap-2 mb-4 pb-3 border-b" style="border-color: var(--border-color);">
                     <span
                         class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-700 dark:text-red-400">
-                        <i class="fas fa-graduation-cap text-sm"></i>
+                        <i class="fas fa-id-badge text-sm"></i>
                     </span>
                     <h3 class="text-xs font-black uppercase tracking-widest" style="color: var(--text-main);">
-                        Información académica
+                        Perfil e información institucional
                     </h3>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="perfilId"
+                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                            Perfil
+                        </label>
+                        <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-red-500 transition-all {{ $errors->has('perfilId') ? 'border-rose-400' : '' }}"
+                            style="border-color: {{ $errors->has('perfilId') ? '' : 'var(--border-color)' }};">
+                            <span
+                                class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                style="border-color: var(--border-color);">
+                                <i class="fas fa-id-badge text-sm"></i>
+                            </span>
+                            <select wire:model.live="perfilId" id="perfilId"
+                                {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
+                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
+                                <option value="">Seleccione perfil</option>
+                                @foreach ($perfiles as $opcionPerfil)
+                                    <option value="{{ $opcionPerfil['id'] }}">{{ $opcionPerfil['nombre'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @error('perfilId')
+                            <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="sedeId"
+                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                            Sede
+                        </label>
+                        <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-red-500 transition-all {{ $errors->has('sedeId') ? 'border-rose-400' : '' }}"
+                            style="border-color: {{ $errors->has('sedeId') ? '' : 'var(--border-color)' }};">
+                            <span
+                                class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                style="border-color: var(--border-color);">
+                                <i class="fas fa-building text-sm"></i>
+                            </span>
+                            <select wire:model="sedeId" id="sedeId"
+                                {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
+                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
+                                <option value="">Seleccione sede</option>
+                                @foreach ($sede as $sed)
+                                    <option value="{{ $sed->id_sed }}"
+                                        {{ old('sed_id', request('sed_id')) == $sed->id_sed ? 'selected' : '' }}>
+                                        {{ $sed->nombre_sed }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @error('sedeId')
+                            <p class="mt-1.5 text-xs font-semibold text-rose-500">La sede es obligatoria</p>
+                        @enderror
+
+                        @if (!$isEdit)
+                            @canRoute('admin.maestros.sedes.create')
+                                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    ¿No la encuentras?
+                                    <a href="{{ route('admin.maestros.sedes.create', ['from' => url()->current()]) }}"
+                                        onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
+                                        class="font-bold text-red-700 dark:text-red-400 hover:underline">
+                                        Créala aquí
+                                    </a>
+                                </p>
+                            @endcanRoute
+                        @endif
+                    </div>
+
+                    @if ($this->esEstudiante)
                     <div>
                         <label for="pnfId"
                             class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
@@ -266,9 +337,9 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione PNF</option>
                                 @foreach ($pnfs as $pnf)
-                                    <option value="{{ $pnf->id_pnf }}"
-                                        {{ old('pnf_id', request('pnf_id')) == $pnf->id_pnf ? 'selected' : '' }}>
-                                        {{ $pnf->nombre_pnf }}
+                                    <option value="{{ $pnf->id_prg }}"
+                                        {{ old('pnf_id', request('pnf_id')) == $pnf->id_prg ? 'selected' : '' }}>
+                                        {{ $pnf->nombre_prg }}
                                     </option>
                                 @endforeach
                             </select>
@@ -278,62 +349,23 @@
                         @enderror
 
                         @if (!$isEdit)
-                            <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                ¿No lo encuentras?
-                                <a href="{{ route('admin.maestros.pnf.index', ['from' => url()->previous()]) }}"
-                                    onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
-                                    class="font-bold text-red-700 dark:text-red-400 hover:underline">
-                                    Créalo aquí
-                                </a>
-                            </p>
-                        @endif
-                    </div>
-
-                    <div>
-                        <label for="sedeId"
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                            Sede del estudiante
-                        </label>
-                        <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-red-500 transition-all {{ $errors->has('sedeId') ? 'border-rose-400' : '' }}"
-                            style="border-color: {{ $errors->has('sedeId') ? '' : 'var(--border-color)' }};">
-                            <span
-                                class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
-                                style="border-color: var(--border-color);">
-                                <i class="fas fa-building text-sm"></i>
-                            </span>
-                            <select wire:model="sedeId" id="sedeId"
-                                {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
-                                style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
-                                class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
-                                <option value="">Seleccione sede</option>
-                                @foreach ($sede as $sed)
-                                    <option value="{{ $sed->id }}"
-                                        {{ old('sede_id', request('sede_id')) == $sed->id ? 'selected' : '' }}>
-                                        {{ $sed->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @error('sedeId')
-                            <p class="mt-1.5 text-xs font-semibold text-rose-500">La sede es obligatoria</p>
-                        @enderror
-
-                        @if (!$isEdit)
-                            <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                ¿No la encuentras?
-                                <a href="{{ route('admin.maestros.sedes.create', ['from' => url()->current()]) }}"
-                                    onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
-                                    class="font-bold text-red-700 dark:text-red-400 hover:underline">
-                                    Créala aquí
-                                </a>
-                            </p>
+                            @canRoute('admin.maestros.pnf.store')
+                                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    ¿No lo encuentras?
+                                    <a href="{{ route('admin.maestros.pnf.index', ['from' => url()->previous()]) }}"
+                                        onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
+                                        class="font-bold text-red-700 dark:text-red-400 hover:underline">
+                                        Créalo aquí
+                                    </a>
+                                </p>
+                            @endcanRoute
                         @endif
                     </div>
 
                     <div>
                         <label for="semestreId"
                             class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                            Semestre del estudiante
+                            Semestre
                         </label>
                         <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-red-500 transition-all {{ $errors->has('semestreId') ? 'border-rose-400' : '' }}"
                             style="border-color: {{ $errors->has('semestreId') ? '' : 'var(--border-color)' }};">
@@ -372,6 +404,7 @@
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">El semestre es obligatorio</p>
                         @enderror
                     </div>
+                    @endif
                 </div>
             </div>
 
@@ -400,13 +433,13 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-map text-sm"></i>
                             </span>
-                            <select wire:model.lazy="estadosVeId" name="estado_id" id="estadosVeId"
+                            <select wire:model.lazy="estadosVeId" name="esd_id" id="estadosVeId"
                                 {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione estado</option>
                                 @foreach ($estadosVE as $estado)
-                                    <option value="{{ $estado->id }}">{{ $estado->nombre_estado }}</option>
+                                    <option value="{{ $estado->id_esd }}">{{ $estado->nombre_esd }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -414,14 +447,16 @@
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
                         @if (!$isEdit)
-                            <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                ¿No está en la lista?
-                                <a href="{{ route('admin.estado.index', ['from' => url()->current()]) }}"
-                                    onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
-                                    class="font-bold text-red-700 dark:text-red-400 hover:underline">
-                                    Créalo aquí
-                                </a>
-                            </p>
+                            @canAction('ubicaciones_estados', 'crear')
+                                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    ¿No está en la lista?
+                                    <a href="{{ route('admin.estado.index', ['from' => url()->current()]) }}"
+                                        onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
+                                        class="font-bold text-red-700 dark:text-red-400 hover:underline">
+                                        Créalo aquí
+                                    </a>
+                                </p>
+                            @endcanAction
                         @endif
                     </div>
 
@@ -437,14 +472,14 @@
                                 style="border-color: var(--border-color);">
                                 <i class="fas fa-city text-sm"></i>
                             </span>
-                            <select wire:model.lazy="municipiosId" name="municipio_id" id="municipiosId"
+                            <select wire:model.lazy="municipiosId" name="mun_id" id="municipiosId"
                                 {{ $onlyShow || !$formHabilitado ? 'disabled' : '' }}
                                 @if (!$enabledMunicipio) disabled @endif
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione municipio</option>
                                 @foreach ($municipiosVE as $municipio)
-                                    <option value="{{ $municipio->id }}">{{ $municipio->nombre_municipio }}</option>
+                                    <option value="{{ $municipio->id_mun }}">{{ $municipio->nombre_mun }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -452,14 +487,16 @@
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
                         @if (!$isEdit)
-                            <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                ¿No está en la lista?
-                                <a href="{{ route('admin.municipio.index', ['from' => url()->current()]) }}"
-                                    onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
-                                    class="font-bold text-red-700 dark:text-red-400 hover:underline">
-                                    Créalo aquí
-                                </a>
-                            </p>
+                            @canAction('ubicaciones_municipios', 'crear')
+                                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    ¿No está en la lista?
+                                    <a href="{{ route('admin.municipio.index', ['from' => url()->current()]) }}"
+                                        onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
+                                        class="font-bold text-red-700 dark:text-red-400 hover:underline">
+                                        Créalo aquí
+                                    </a>
+                                </p>
+                            @endcanAction
                         @endif
                     </div>
 
@@ -482,7 +519,7 @@
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none disabled:opacity-50">
                                 <option value="">Seleccione localidad</option>
                                 @foreach ($parroquiasVE as $parroquia)
-                                    <option value="{{ $parroquia->id }}">{{ $parroquia->nombre_localidad }}</option>
+                                    <option value="{{ $parroquia->id_par }}">{{ $parroquia->nombre_par }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -490,14 +527,16 @@
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
                         @if (!$isEdit)
-                            <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                ¿No está en la lista?
-                                <a href="{{ route('admin.localidad.index', ['from' => url()->current()]) }}"
-                                    onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
-                                    class="font-bold text-red-700 dark:text-red-400 hover:underline">
-                                    Créala aquí
-                                </a>
-                            </p>
+                            @canAction('ubicaciones_localidades', 'crear')
+                                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    ¿No está en la lista?
+                                    <a href="{{ route('admin.localidad.index', ['from' => url()->current()]) }}"
+                                        onclick="return !{{ $onlyShow || !$formHabilitado ? 'true' : 'false' }};"
+                                        class="font-bold text-red-700 dark:text-red-400 hover:underline">
+                                        Créala aquí
+                                    </a>
+                                </p>
+                            @endcanAction
                         @endif
                     </div>
                 </div>
@@ -561,7 +600,7 @@
                     </button>
                     <button type="submit" {{ !$formHabilitado ? 'disabled' : '' }}
                         class="w-full sm:w-auto rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-white font-bold text-sm shadow-md active:scale-95 transition-all bg-red-800 hover:bg-red-900 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-save text-xs"></i> {{ $isEdit ? 'Actualizar' : 'Registrar' }} estudiante
+                        <i class="fas fa-save text-xs"></i> {{ $isEdit ? 'Actualizar' : 'Registrar' }} persona
                     </button>
                 </div>
             @endif
@@ -573,6 +612,11 @@
     <script>
         $wire.on('alert', (payload) => {
             const data = Array.isArray(payload) ? (payload[0] ?? {}) : payload;
+
+            if (typeof Swal === 'undefined') {
+                alert([data.title, data.text].filter(Boolean).join('\n'));
+                return;
+            }
 
             Swal.fire({
                 icon: data.type || 'info',
@@ -586,9 +630,16 @@
         $wire.on('confirm-reactivate', (payload) => {
             const data = Array.isArray(payload) ? (payload[0] ?? {}) : payload;
 
+            if (typeof Swal === 'undefined') {
+                if (confirm('Esta persona está inactiva. ¿Desea reactivarla?')) {
+                    $wire.reactivarPersona(data.cedula);
+                }
+                return;
+            }
+
             Swal.fire({
-                title: 'Estudiante inactivo detectado',
-                text: 'Este estudiante está inactivo. ¿Desea reactivarlo?',
+                title: 'Persona inactiva detectada',
+                text: 'Esta persona está inactiva. ¿Desea reactivarla?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Sí, reactivar',
@@ -597,7 +648,7 @@
                 cancelButtonColor: '#d33',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $wire.reactivarEstudiante(data.cedula);
+                    $wire.reactivarPersona(data.cedula);
                 }
             });
         });

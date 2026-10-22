@@ -2,24 +2,33 @@
 
 namespace App\Models\Becas;
 
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lapso extends Model
 {
-    protected $table = 'be_lapsos';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'lapso_academico';
+
+    protected $primaryKey = 'id_laa';
 
     protected $fillable = [
-        'codigo',
-        'fecha_inicio',
-        'fecha_fin',
-        'es_actual',
-        'permite_solicitudes',
+        'codigo_laa',
+        'fecha_inicio_laa',
+        'fecha_fin_laa',
+        'es_actual_laa',
+        'permite_solicitudes_laa',
+        'status_id',
     ];
 
     protected $casts = [
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
-        'es_actual' => 'boolean',
-        'permite_solicitudes' => 'boolean',
+        'fecha_inicio_laa'        => 'date',
+        'fecha_fin_laa'           => 'date',
+        'es_actual_laa'           => 'boolean',
+        'permite_solicitudes_laa' => 'boolean',
+        'status_id'               => 'integer',
     ];
 }

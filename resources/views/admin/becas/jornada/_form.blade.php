@@ -40,7 +40,7 @@
                                 <i class="fas fa-bullhorn text-sm"></i>
                             </span>
                             <input type="text" name="nombre_jornada"
-                                value="{{ old('nombre_jornada', $modelo?->nombre_jornada) }}"
+                                value="{{ old('nombre_jornada', $modelo?->nombre_jornada_jnb) }}"
                                 placeholder="Ej: Convocatoria Comedor"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
@@ -65,7 +65,7 @@
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="hidden" name="activa" value="0">
                                 <input type="checkbox" name="activa" value="1" class="sr-only peer"
-                                    {{ old('activa', $modelo?->activa ?? true) ? 'checked' : '' }}>
+                                    {{ old('activa', $modelo?->estaActivo() ?? true) ? 'checked' : '' }}>
                                 <div class="w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-4"></div>
                             </label>
                         </div>
@@ -82,7 +82,7 @@
                     <textarea name="descripcion_jornada" rows="2"
                         placeholder="Descripción breve de la convocatoria"
                         style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
-                        class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none">{{ old('descripcion_jornada', $modelo?->descripcion_jornada) }}</textarea>
+                        class="w-full px-3 py-2.5 rounded-xl border text-sm font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none">{{ old('descripcion_jornada', $modelo?->descripcion_jornada_jnb) }}</textarea>
                     @error('descripcion_jornada')
                         <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                     @enderror
@@ -103,13 +103,13 @@
                             <select name="beneficio_id" id="beneficio_id"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
-                                <option value="" disabled {{ old('beneficio_id', $modelo?->beneficio_id) ? '' : 'selected' }}>
+                                <option value="" disabled {{ old('beneficio_id', $modelo?->bes_id) ? '' : 'selected' }}>
                                     Seleccione un beneficio...
                                 </option>
                                 @foreach ($beneficios as $ben)
-                                    <option value="{{ $ben->id }}"
-                                        @selected(old('beneficio_id', $modelo?->beneficio_id) == $ben->id)>
-                                        {{ $ben->nombre_beneficio }}
+                                    <option value="{{ $ben->id_bes }}"
+                                        @selected(old('beneficio_id', $modelo?->bes_id) == $ben->id_bes)>
+                                        {{ $ben->nombre_beneficio_bes }}
                                     </option>
                                 @endforeach
                             </select>
@@ -132,13 +132,13 @@
                             <select name="lapsos_id"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
-                                <option value="" disabled {{ old('lapsos_id', $modelo?->lapsos_id) ? '' : 'selected' }}>
+                                <option value="" disabled {{ old('lapsos_id', $modelo?->laa_id) ? '' : 'selected' }}>
                                     Seleccione un lapso...
                                 </option>
                                 @foreach ($lapsos as $lap)
-                                    <option value="{{ $lap->id }}"
-                                        @selected(old('lapsos_id', $modelo?->lapsos_id) == $lap->id)>
-                                        {{ $lap->codigo }}
+                                    <option value="{{ $lap->id_laa }}"
+                                        @selected(old('lapsos_id', $modelo?->laa_id) == $lap->id_laa)>
+                                        {{ $lap->codigo_laa }}
                                     </option>
                                 @endforeach
                             </select>
@@ -162,7 +162,7 @@
                                 <i class="fas fa-calendar-day text-sm"></i>
                             </span>
                             <input type="date" name="fecha_inicio_solicitud"
-                                value="{{ old('fecha_inicio_solicitud', $modelo?->fecha_inicio_solicitud?->format('Y-m-d')) }}"
+                                value="{{ old('fecha_inicio_solicitud', $modelo?->fecha_inicio_solicitud_jnb?->format('Y-m-d')) }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                         </div>
@@ -182,7 +182,7 @@
                                 <i class="fas fa-calendar-check text-sm"></i>
                             </span>
                             <input type="date" name="fecha_fin_solicitud"
-                                value="{{ old('fecha_fin_solicitud', $modelo?->fecha_fin_solicitud?->format('Y-m-d')) }}"
+                                value="{{ old('fecha_fin_solicitud', $modelo?->fecha_fin_solicitud_jnb?->format('Y-m-d')) }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                         </div>
@@ -202,7 +202,7 @@
                                 <i class="fas fa-users text-sm"></i>
                             </span>
                             <input type="number" name="cupos_maximos" min="0"
-                                value="{{ old('cupos_maximos', $modelo?->cupos_maximos ?? 0) }}"
+                                value="{{ old('cupos_maximos', $modelo?->cupos_maximos_jnb ?? 0) }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                         </div>
@@ -222,7 +222,7 @@
                                 <i class="fas fa-user-check text-sm"></i>
                             </span>
                             <input type="text" disabled
-                                value="{{ $modelo?->cupos_asignados ?? 0 }}"
+                                value="{{ $modelo?->cupos_asignados_jnb ?? 0 }}"
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
                         </div>

@@ -10,8 +10,8 @@
 
         $segmentosIniciales = old('segmentos')
             ? array_values(old('segmentos'))
-            : (isset($plantilla->segmentos) && count($plantilla->segmentos) > 0
-                ? array_values($plantilla->segmentos)
+            : (isset($plantilla->segmentos_sph) && count($plantilla->segmentos_sph) > 0
+                ? array_values($plantilla->segmentos_sph)
                 : ['']);
     @endphp
     <div class="pt-8 pb-12 min-h-[calc(100vh-4rem)]">
@@ -27,7 +27,7 @@
                 </h1>
                 <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                     Modificación del instrumento clínico: <strong
-                        class="text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $plantilla->titulo }}</strong>
+                        class="text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $plantilla->titulo_sph }}</strong>
                 </p>
             </div>
             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
@@ -55,7 +55,7 @@
                     }
                 }">
 
-                <form action="{{ route('admin.psicologia.maestros.plantillas.update', $plantilla->id) }}"
+                <form action="{{ route('admin.psicologia.maestros.plantillas.update', $plantilla->id_sph) }}"
                     method="POST">
                     @csrf
                     @method('PUT')
@@ -66,7 +66,7 @@
                                 Título de la Sección <span class="text-red-500">*</span>
                             </label>
                             <input type="text" name="titulo" id="titulo"
-                                value="{{ old('titulo', $plantilla->titulo) }}" required
+                                value="{{ old('titulo', $plantilla->titulo_sph) }}" required
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-bold transition-all"
                                 placeholder="Ej: Prueba de Inteligencia...">
@@ -83,7 +83,7 @@
                                 Descripción General (Opcional)
                             </label>
                             <input type="text" name="descripcion_general" id="descripcion_general"
-                                value="{{ old('descripcion_general', $plantilla->descripcion_general) }}"
+                                value="{{ old('descripcion_general', $plantilla->descripcion_general_sph) }}"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass }} text-sm font-medium transition-all"
                                 placeholder="Ej: Evaluación cognitiva detallada...">

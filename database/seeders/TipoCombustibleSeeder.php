@@ -16,13 +16,13 @@ class TipoCombustibleSeeder extends Seeder
         ];
 
         foreach ($tipos as $tipo) {
-            DB::table('tipo_combustibles')->updateOrInsert(
-                ['nombre' => $tipo['nombre']],
+            DB::table('tipo_combustible')->updateOrInsert(
+                ['nombre_tcb' => $tipo['nombre']],
                 [
-                    'descripcion' => $tipo['descripcion'],
-                    'estado'      => 1,
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
+                    'descripcion_tcb' => $tipo['descripcion'],
+                    'status_id'       => 1,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
                 ]
             );
         }

@@ -24,6 +24,10 @@ return [
     'proveedores'            => ['admin.maestros.proveedores.*'],
     'pnf'                    => ['admin.maestros.pnf.*'],
     'persona'                => ['admin.configuracion.persona.*'],
+    'ubicaciones_estados'     => ['admin.estado.index', 'estado.verificar'],
+    'ubicaciones_municipios'  => ['admin.municipio.index', 'municipio.verificar'],
+    'ubicaciones_localidades' => ['admin.localidad.index', 'localidad.verificar'],
+    'reportes'               => ['admin.consultas.reportes.*'],
     'envases_primarios'      => ['admin.salud.maestros.envases_primarios.*'],
     'compras'                => ['admin.movimientos.compras.*'],
     'lotes'                  => ['admin.movimientos.lotes.*', 'admin.movimientos.lotes.mermar'],
@@ -35,6 +39,8 @@ return [
     'roles'                  => ['admin.configuracion.roles.*'],
     'permisos'               => ['admin.configuracion.permisos.*'],
     'archivos'               => ['admin.configuracion.archivos.*'],
+    'bitacora'               => ['admin.configuracion.bitacora.*'],
+    'seguridad_bloqueos'     => ['admin.configuracion.seguridad.bloqueos.*'],
 
         /* ═══════════════════ COMEDOR ═══════════════════ */
     'comedor'                 => ['home', 'admin.comedor.estadisticas'],
@@ -46,7 +52,6 @@ return [
     'comedor_productos'       => ['admin.maestros.productos.*'],
     'comedor_lotes'           => ['admin.movimientos.lotes.*'],
     'comedor_stock'           => ['admin.movimientos.sedes_lotes', 'admin.movimientos.sedes_lotes.show'],
-    'comedor_compras'         => ['admin.movimientos.compras.*'],
     'comedor_movimientos'     => ['admin.movimientos.historial_movimientos.*'],
     
     /* ═══════════════════ SALUD ═══════════════════ */
@@ -107,7 +112,19 @@ return [
     'bus_vehiculos'          => ['admin.transporte.maestros.bus_vehiculos.*'],
     'bus_rutas'              => ['admin.transporte.maestros.bus_rutas.*'],
     'bus_paradas'            => ['admin.transporte.maestros.bus_paradas.*'],
-    'bus_viajes'             => ['admin.transporte.maestros.bus_viajes.*'],
+    'bus_viajes'             => ['admin.transporte.maestros.bus_viajes.*', 'admin.transporte.viajes.estadisticas'],
     'bus_mantenimientos'     => ['admin.transporte.maestros.bus_mantenimientos.*'],
     'bus_carga_combustibles' => ['admin.transporte.maestros.bus_carga_combustibles.*'],
+
+    'deportes_espacios'      => ['admin.deportes.espacios.*'],
+    'deportes_actividades'   => ['admin.deportes.actividades.*'],
+    'deportes_calendarios'   => ['admin.deportes.calendarios.*'],
+    'deportes_horarios'      => ['admin.deportes.maestros.horarios.*'],
+    'deportes_torneos'       => ['admin.deportes.torneos.*'],
+    'deportes_inscripciones' => ['admin.deportes.inscripciones.*'],
+    'deportes_asistencia'    => ['admin.deportes.asistencia.*'],
+    'deportes_prestamos'     => ['admin.deportes.prestamos.*', 'admin.deportes.entregas.*'],
+    'deportes_sanciones'     => ['admin.deportes.sanciones.*'],
+    'deportes_solvencia'     => ['admin.deportes.solvencia.*'],
+    'implementos_materiales' => ['admin.deportes.implementos.*', 'admin.maestros.material_oficina.*'],
 ];

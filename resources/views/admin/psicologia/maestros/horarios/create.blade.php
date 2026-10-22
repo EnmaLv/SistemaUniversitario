@@ -30,7 +30,7 @@
                         · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                         @isset($grupoSeleccionado)
                             · Grupo: <span
-                                class="font-bold text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $grupoSeleccionado->nombre }}</span>
+                                class="font-bold text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400">{{ $grupoSeleccionado->nombre_gha }}</span>
                         @endisset
                     </p>
                 </div>

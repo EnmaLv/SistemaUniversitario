@@ -16,13 +16,13 @@
                     <input type="text"
                         class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400" style="color: var(--text-main);"
                         id="nombre_estado_editar"
-                        wire:model.defer="nombre_estado"
+                        wire:model.defer="nombre_esd"
                         inputmode="text"
                         maxlength="100"
                         placeholder="Edite el nombre del estado"
                         required>
                 </div>
-                @error('nombre_estado')
+                @error('nombre_esd')
                     <div class="mt-2 text-sm text-red-600">{{ $message }}</div>
                 @enderror
             </div>

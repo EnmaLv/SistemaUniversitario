@@ -7,18 +7,20 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('modulos', function (Blueprint $table) {
-            $table->id();
-            $table->string('key')->unique();
-            $table->string('nombre');
-            $table->text('descripcion')->nullable();
-            $table->boolean('activo')->default(true);
+        Schema::create('modulo', function (Blueprint $table) {
+            $table->id('id_mod');
+            $table->string('key_mod')->unique();
+            $table->string('nombre_mod');
+            $table->text('descripcion_mod')->nullable();
+            $table->string('icono_mod', 100)->nullable();
+            $table->integer('orden_mod')->default(0);
             $table->timestamps();
+            $table->auditoria();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('modulos');
+        Schema::dropIfExists('modulo');
     }
 };

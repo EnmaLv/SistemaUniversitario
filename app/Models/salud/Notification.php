@@ -46,8 +46,8 @@ class Notification extends Model
 
         $replacements = [];
         foreach ($psicologos as $psi) {
-            $nombres = trim($psi->persona->nombre_persona ?? '');
-            $apellidos = trim($psi->persona->apellido_persona ?? '');
+            $nombres = trim($psi->persona->nombres_per ?? '');
+            $apellidos = trim($psi->persona->apellidos_per ?? '');
             $fullName = trim($nombres . ' ' . $apellidos);
             if ($fullName) {
                 $firstName = explode(' ', $nombres)[0] ?? '';

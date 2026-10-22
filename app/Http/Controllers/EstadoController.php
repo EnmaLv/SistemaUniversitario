@@ -13,7 +13,7 @@ class EstadoController extends Controller
 
     public function index()
     {
-        $estados = Estado::orderBy('nombre_estado', 'asc')->Paginate(10)->withQueryString();
+        $estados = Estado::orderBy('nombre_esd', 'asc')->Paginate(10)->withQueryString();
 
         return view('admin.estado.index', compact('estados'));
     }
@@ -21,10 +21,10 @@ class EstadoController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre_estado' => 'required|string|max:255',
+            'nombre_esd' => 'required|string|max:255',
         ]);
-        $existe = Estado::where('nombre_estado', $validated['nombre_estado'])
-            ->where('status', true)
+        $existe = Estado::where('nombre_esd', $validated['nombre_esd'])
+            ->where('status_id', 1)
             ->exists();
 
         if ($existe) {
@@ -35,10 +35,10 @@ class EstadoController extends Controller
 
         try {
             $estado = new Estado();
-            $estado->nombre_estado = $validated['nombre_estado'];
-            $estado->status = true;
+            $estado->nombre_esd = $validated['nombre_esd'];
+            $estado->status_id = 1;
             $estado->save();
-            info('Se ha creado un nuevo estado: ' . $estado->nombre_estado);
+            info('Se ha creado un nuevo estado: ' . $estado->nombre_esd);
             return redirect()
                 ->route('admin.estado.index')
                 ->with('success', 'Estado creado exitosamente.');
@@ -46,7 +46,7 @@ class EstadoController extends Controller
             info('Error al crear un nuevo estado: ' . $e->getMessage());
             return redirect()
                 ->route('admin.estado.index')
-                ->with('error', 'Error al crear el estado: ' . $e->getMessage());
+                ->with('error', 'Error al crear el estado: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -54,11 +54,11 @@ class EstadoController extends Controller
     {
         $estado = Estado::findOrFail($id);
         $validated = $request->validate([
-            'nombre_estado' => 'required|string|max:255',
+            'nombre_esd' => 'required|string|max:255',
         ]);
-        $existe = Estado::where('nombre_estado', $validated['nombre_estado'])
-            ->where('status', true)
-            ->where('id', '!=', $estado->id)
+        $existe = Estado::where('nombre_esd', $validated['nombre_esd'])
+            ->where('status_id', 1)
+            ->where('id_esd', '!=', $estado->id_esd)
             ->exists();
         if ($existe) {
             return redirect()
@@ -67,7 +67,7 @@ class EstadoController extends Controller
         }
 
         try {
-            $estado->nombre_estado = $validated['nombre_estado'];
+            $estado->nombre_esd = $validated['nombre_esd'];
             $estado->save();
             info('El estado con ID ' . $id . ' ha sido actualizado Exitosamente.');
 
@@ -79,7 +79,7 @@ class EstadoController extends Controller
 
             return redirect()
                 ->route('admin.estado.index')
-                ->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
+                ->with('error', 'Error al actualizar el estado: ' . \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 
@@ -90,20 +90,22 @@ class EstadoController extends Controller
                 'nombre' => 'required|string|max:255',
             ]);
 
-            $existe = Estado::where('nombre_estado', $request->nombre)
-                ->where('status', true)
+            $existe = Estado::where('nombre_esd', $request->nombre)
+                ->where('status_id', 1)
                 ->exists();
 
             return response()->json([
                 'success' => true,
                 'existe' => $existe
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Error en verificarExistencia: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al verificar el estado',
-                'error' => $e->getMessage()
+                'error' => \App\Support\Seguridad\MensajeError::de($e)
             ], 500);
         }
     }
@@ -112,9 +114,9 @@ class EstadoController extends Controller
     {
         $estado = Estado::find($id);
         if ($estado) {
-            $estado->update(['status' => false]);
+            $estado->update(['status_id' => 2]);
 
-            info('El estado "' . $estado->nombre_estado . '" ha sido marcado como inactivo.');
+            info('El estado "' . $estado->nombre_esd . '" ha sido marcado como inactivo.');
 
             return redirect()
                 ->route('admin.estado.index')

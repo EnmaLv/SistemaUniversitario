@@ -14,11 +14,11 @@
                     <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Estado</label>
                     <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
                         <span class="text-slate-500"><i class="fas fa-globe"></i></span>
-                        <select name="estado_id" wire:model.live="estado_id" id="estado_id_editar" class="w-full border-0 bg-transparent text-sm outline-none" style="color: var(--text-main);" required>
+                        <select name="esd_id" wire:model.live="esd_id" id="estado_id_editar" class="w-full border-0 bg-transparent text-sm outline-none" style="color: var(--text-main);" required>
                             <option value="">Seleccione un estado</option>
                             @foreach ($estados as $estado)
-                                <option value="{{ $estado->id }}" {{ $estado_id == $estado->id ? 'selected' : '' }}>
-                                    {{ $estado->nombre_estado }}
+                                <option value="{{ $estado->id_esd }}" {{ $esd_id == $estado->id_esd ? 'selected' : '' }}>
+                                    {{ $estado->nombre_esd }}
                                 </option>
                             @endforeach
                         </select>
@@ -28,11 +28,11 @@
                     <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Municipio</label>
                     <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
                         <span class="text-slate-500"><i class="fas fa-city"></i></span>
-                        <select name="municipio_id" wire:model.live="municipio_id" id="municipio_id_editar" class="w-full border-0 bg-transparent text-sm outline-none" style="color: var(--text-main);" {{ empty($municipios) ? 'disabled' : '' }} required>
+                        <select name="mun_id" wire:model.live="mun_id" id="municipio_id_editar" class="w-full border-0 bg-transparent text-sm outline-none" style="color: var(--text-main);" {{ empty($municipios) ? 'disabled' : '' }} required>
                             <option value="">Seleccione un municipio</option>
                             @foreach ($municipios as $municipio)
-                                <option value="{{ $municipio->id }}" {{ $municipio_id == $municipio->id ? 'selected' : '' }}>
-                                    {{ $municipio->nombre_municipio }}
+                                <option value="{{ $municipio->id_mun }}" {{ $mun_id == $municipio->id_mun ? 'selected' : '' }}>
+                                    {{ $municipio->nombre_mun }}
                                 </option>
                             @endforeach
                         </select>
@@ -44,9 +44,9 @@
                 <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Nombre de la Localidad</label>
                 <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
                     <span class="text-slate-500"><i class="fas fa-hashtag"></i></span>
-                    <input type="text" class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400" style="color: var(--text-main);" id="nombre_localidad_editar" wire:model.defer="nombre_localidad" inputmode="text" maxlength="100" placeholder="Edite el nombre de la localidad" required>
+                    <input type="text" class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400" style="color: var(--text-main);" id="nombre_localidad_editar" wire:model.defer="nombre_par" inputmode="text" maxlength="100" placeholder="Edite el nombre de la localidad" required>
                 </div>
-                @error('nombre_localidad')
+                @error('nombre_par')
                     <div class="mt-2 text-sm text-red-600">{{ $message }}</div>
                 @enderror
             </div>

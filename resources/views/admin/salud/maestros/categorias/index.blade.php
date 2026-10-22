@@ -11,17 +11,19 @@
                         Categorías
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.salud.maestros.categorias.store')
                     <button type="button" onclick="abrirModalCrearCategoria()"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 shadow-sky-600/30 hover:shadow-sky-600/40 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nueva Categoría</span>
                     </button>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -78,7 +80,7 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($categorias as $categoria)
-                                <x-table-row :id="$categoria->id">
+                                <x-table-row :id="$categoria->id_cap">
                                     {{-- Numeración --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
@@ -90,18 +92,18 @@
                                     {{-- Nombre --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $categoria->nombre }}
+                                        {{ $categoria->nombre_cap }}
                                     </td>
 
                                     {{-- Descripción --}}
                                     <td
                                         class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $categoria->descripcion ?? '-' }}
+                                        {{ $categoria->descripcion_cap ?? '-' }}
                                     </td>
 
                                     {{-- Estado --}}
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($categoria->activo)
+                                        @if ($categoria->status_id == 1)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-check-circle"></i> Activo
@@ -115,11 +117,11 @@
                                     </td>
 
                                     {{-- Componente de Acciones --}}
-                                    <x-table-actions :id="$categoria->id" baseUrl="admin/salud/maestros/categorias"
-                                        :status="$categoria->activo" :show="false" :on-edit="'abrirModalEditarCategoria(' .
-                                            json_encode($categoria) .
+                                    <x-table-actions :id="$categoria->id_cap" baseUrl="admin/salud/maestros/categorias"
+                                        :status="$categoria->status_id == 1" :show="false" :on-edit="'abrirModalEditarCategoria(' .
+                                            json_encode($categoria, JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) .
                                             ', `' .
-                                            route('admin.salud.maestros.categorias.update', $categoria->id) .
+                                            route('admin.salud.maestros.categorias.update', $categoria->id_cap) .
                                             '`)'" />
 
                                 </x-table-row>

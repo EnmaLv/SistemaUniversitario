@@ -9,7 +9,7 @@
                         Editar Vehículo
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Placa: <span class="font-bold">{{ $busVehiculo->placa }}</span> ·
+                        Placa: <span class="font-bold">{{ $busVehiculo->placa_vtr }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>

@@ -27,11 +27,11 @@
                 <div>
                     <div class="flex items-center gap-3 flex-wrap">
                         <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
-                            {{ $busViaje->ruta->nombre ?? 'Ruta N/A' }}
+                            {{ $busViaje->ruta->nombre_rtr ?? 'Ruta N/A' }}
                         </h1>
-                        <span id="badgeEstado" data-estado="{{ $busViaje->estado }}"
+                        <span id="badgeEstado" data-estado="{{ $busViaje->estado_viaje_vjt }}"
                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider
-                            {{ match ($busViaje->estado) {
+                            {{ match ($busViaje->estado_viaje_vjt) {
                                 'programado' => 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
                                 'en_curso' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
                                 'finalizado' => 'bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400',
@@ -39,22 +39,22 @@
                                 default => 'bg-gray-100 text-gray-600',
                             } }}">
                             <span id="badgeEstadoDot"
-                                class="w-1.5 h-1.5 rounded-full {{ $busViaje->estado === 'en_curso' ? 'bg-emerald-500 animate-pulse' : 'bg-current' }}"></span>
-                            <span id="badgeEstadoTexto">{{ ucfirst(str_replace('_', ' ', $busViaje->estado)) }}</span>
+                                class="w-1.5 h-1.5 rounded-full {{ $busViaje->estado_viaje_vjt === 'en_curso' ? 'bg-emerald-500 animate-pulse' : 'bg-current' }}"></span>
+                            <span id="badgeEstadoTexto">{{ ucfirst(str_replace('_', ' ', $busViaje->estado_viaje_vjt)) }}</span>
                         </span>
-                        @if ($busViaje->hubo_desvio)
+                        @if ($busViaje->hubo_desvio_vjt)
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400">
                                 <i class="fas fa-exclamation-triangle"></i> Desvío reportado
                             </span>
                         @endif
                     </div>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        ID Firebase: <code class="font-bold text-sky-600 dark:text-sky-400">{{ $busViaje->firebase_id }}</code>
-                        &middot; Turno: <span class="font-bold capitalize">{{ $busViaje->turno }}</span>
+                        ID Firebase: <code class="font-bold text-sky-600 dark:text-sky-400">{{ $busViaje->firebase_id_vjt }}</code>
+                        &middot; Turno: <span class="font-bold capitalize">{{ $busViaje->turno_vjt }}</span>
                     </p>
-                    @if ($busViaje->hubo_desvio && $busViaje->motivo_desvio)
+                    @if ($busViaje->hubo_desvio_vjt && $busViaje->motivo_desvio_vjt)
                         <p class="mt-1 text-xs text-orange-600 dark:text-orange-400">
-                            <i class="fas fa-comment-dots mr-1"></i> Motivo reportado por el conductor: "{{ $busViaje->motivo_desvio }}"
+                            <i class="fas fa-comment-dots mr-1"></i> Motivo reportado por el conductor: "{{ $busViaje->motivo_desvio_vjt }}"
                         </p>
                     @endif
                 </div>
@@ -71,7 +71,7 @@
                     <span class="text-[11px] font-black uppercase tracking-wider text-gray-400">Pasajeros a bordo</span>
                     <div class="flex items-center justify-between mt-1">
                         <h3 id="metricPasajeros" class="text-2xl font-extrabold" style="color: var(--text-main);">
-                            {{ $busViaje->pasajeros ?? 0 }}
+                            {{ $busViaje->total_pasajeros_vjt ?? 0 }}
                         </h3>
                         <i class="fas fa-users text-sky-500/60 text-xl"></i>
                     </div>
@@ -82,7 +82,7 @@
                     <span class="text-[11px] font-black uppercase tracking-wider text-gray-400">Estado del viaje</span>
                     <div class="flex items-center justify-between mt-1">
                         <h3 id="metricEstadoTexto" class="text-lg font-extrabold" style="color: var(--text-main);">
-                            {{ ucfirst(str_replace('_', ' ', $busViaje->estado)) }}
+                            {{ ucfirst(str_replace('_', ' ', $busViaje->estado_viaje_vjt)) }}
                         </h3>
                         <i class="fas fa-route text-sky-500/60 text-xl"></i>
                     </div>
@@ -104,6 +104,12 @@
                             </small>
                         </div>
                         <div id="mapaGPS" style="height: 480px; width: 100%; z-index:1; background:#e5e7eb;"></div>
+                        <div class="px-4 py-2 flex flex-wrap items-center gap-4 text-[11px] font-semibold text-gray-400"
+                            style="border-top: 1px solid var(--border-color);">
+                            <span class="inline-flex items-center gap-1.5"><span class="inline-block w-5 h-1 rounded-full" style="background:#2563eb;"></span> Ruta de referencia</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="inline-block w-5 h-1 rounded-full" style="background:#f97316;"></span> Desvíos</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="inline-block w-5 h-1 rounded-full" style="background:#22c55e;"></span> Recorrido en vivo</span>
+                        </div>
                     </div>
 
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -134,6 +140,46 @@
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                         class="rounded-2xl border shadow-sm p-4 mb-4">
                         <h3 class="text-sm font-bold mb-3" style="color: var(--text-main);">
+                            <i class="fas fa-route text-sky-500 mr-1"></i> Ruta de referencia
+                        </h3>
+                        <div class="rounded-xl p-3 text-xs space-y-2"
+                            style="background-color: rgba(0,0,0,0.02); border: 1px solid var(--border-color);">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Versión vigente:</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $versionReferencia ?? 'Sin trazado' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Puntos recibidos:</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ (int) $busViaje->puntos_recibidos_vjt }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Tramos de desvío:</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ count($tramosDesvio) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Velocidad máx. / prom.:</span>
+                                <span class="font-bold" style="color: var(--text-main);">
+                                    {{ number_format((float) $busViaje->velocidad_max_vjt, 1) }} / {{ number_format((float) $busViaje->velocidad_promedio_vjt, 1) }} km/h
+                                </span>
+                            </div>
+                        </div>
+                        @if ($busViaje->estado_viaje_vjt === 'finalizado')
+                            @canRoute('admin.transporte.maestros.bus_viajes.marcar_referencia')
+                            <form id="formMarcarReferencia" method="POST"
+                                action="{{ route('admin.transporte.maestros.bus_viajes.marcar_referencia', $busViaje) }}" class="mt-3">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-800 hover:bg-red-900 text-white rounded-xl font-extrabold text-xs transition-all">
+                                    <i class="fas fa-flag"></i> Marcar como ruta de referencia
+                                </button>
+                            </form>
+                            @endcanRoute
+                        @endif
+                    </div>
+
+                    <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                        class="rounded-2xl border shadow-sm p-4 mb-4">
+                        <h3 class="text-sm font-bold mb-3" style="color: var(--text-main);">
                             <i class="fas fa-user-shield text-sky-500 mr-1"></i> Asignación de unidad
                         </h3>
 
@@ -144,11 +190,11 @@
                             </div>
                             <div class="min-w-0">
                                 <div class="font-bold text-sm truncate" style="color: var(--text-main);">
-                                    {{ $busViaje->conductor->persona->nombre_persona ?? 'Sin Asignar' }}
-                                    {{ $busViaje->conductor->persona->apellido_persona ?? '' }}
+                                    {{ $busViaje->conductor->persona->nombres_per ?? 'Sin Asignar' }}
+                                    {{ $busViaje->conductor->persona->apellidos_per ?? '' }}
                                 </div>
                                 <small class="text-xs text-gray-400">
-                                    C.I: {{ $busViaje->conductor->persona->cedula_persona ?? 'N/A' }}
+                                    C.I: {{ $busViaje->conductor->persona->cedula_per ?? 'N/A' }}
                                 </small>
                             </div>
                         </div>
@@ -157,11 +203,11 @@
                             style="background-color: rgba(0,0,0,0.02); border: 1px solid var(--border-color);">
                             <div class="flex justify-between">
                                 <span class="text-gray-400 font-semibold">Placa:</span>
-                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->placa ?? 'N/A' }}</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->placa_vtr ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-400 font-semibold">Combustible:</span>
-                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->tipoCombustible->nombre ?? 'N/A' }}</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $busViaje->vehiculo->tipoCombustible->nombre_tcb ?? 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
@@ -184,11 +230,11 @@
                                     </div>
                                     <div class="min-w-0">
                                         <div class="font-bold text-xs truncate" style="color: var(--text-main);">
-                                            {{ $parada->nombre }}
+                                            {{ $parada->nombre_ptr }}
                                         </div>
-                                        @if ($parada->lat && $parada->lng)
+                                        @if ($parada->lat_ptr && $parada->lng_ptr)
                                             <small class="text-[11px] text-gray-400">
-                                                {{ number_format((float) $parada->lat, 4) }}, {{ number_format((float) $parada->lng, 4) }}
+                                                {{ number_format((float) $parada->lat_ptr, 4) }}, {{ number_format((float) $parada->lng_ptr, 4) }}
                                             </small>
                                         @else
                                             <small class="text-[11px] font-bold text-rose-500">
@@ -212,9 +258,9 @@
 
     <script>
     (function () {
-        const viajeId = "{{ $busViaje->id }}";
+        const viajeId = "{{ $busViaje->id_vjt }}";
         const gpsLogsUrl = "{{ route('admin.transporte.maestros.bus_viajes.gps-logs', $busViaje) }}";
-        let estadoActual = "{{ $busViaje->estado }}";
+        let estadoActual = "{{ $busViaje->estado_viaje_vjt }}";
 
         let currentBusLat = 9.5468743;
         let currentBusLng = -69.1926348;
@@ -238,10 +284,27 @@
 
         let busMarker = L.marker([currentBusLat, currentBusLng], { icon: busIcon })
             .addTo(map)
-            .bindPopup(`<b>{{ $busViaje->vehiculo->placa ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
+            .bindPopup(`<b>{{ $busViaje->vehiculo->placa_vtr ?? 'Unidad' }}</b><br>Esperando señal GPS...`);
 
-        const paradasData = @json($busViaje->ruta->paradas ?? []);
+        @php($paradasData = ($busViaje->ruta?->paradas ?? collect())->map(fn ($parada) => ['id' => $parada->id_ptr, 'nombre' => $parada->nombre_ptr, 'lat' => $parada->lat_ptr, 'lng' => $parada->lng_ptr])->values())
+        const paradasData = @json($paradasData);
+        const trazadoReferencia = @json($trazadoReferencia);
+        const tramosDesvio = @json($tramosDesvio);
         const routePoints = [];
+
+        if (trazadoReferencia.length >= 2) {
+            const referenciaPolyline = L.polyline(trazadoReferencia, { color: '#2563eb', weight: 5, opacity: 0.7 }).addTo(map);
+            map.fitBounds(referenciaPolyline.getBounds(), { padding: [50, 50] });
+        }
+
+        tramosDesvio.forEach((tramo, idx) => {
+            const etiqueta = `<b>Desvío ${idx + 1}</b><br>${tramo.length} punto(s) fuera de la ruta`;
+            if (tramo.length >= 2) {
+                L.polyline(tramo, { color: '#f97316', weight: 5, opacity: 0.95 }).addTo(map).bindPopup(etiqueta);
+            } else if (tramo.length === 1) {
+                L.circleMarker(tramo[0], { radius: 6, color: '#f97316', fillColor: '#f97316', fillOpacity: 0.9 }).addTo(map).bindPopup(etiqueta);
+            }
+        });
 
         if (Array.isArray(paradasData) && paradasData.length > 0) {
             paradasData.forEach((parada, idx) => {
@@ -261,7 +324,7 @@
                 }
             });
 
-            if (routePoints.length >= 2) {
+            if (routePoints.length >= 2 && trazadoReferencia.length < 2) {
                 const osrmCoords = routePoints.map(p => `${p[1]},${p[0]}`).join(';');
                 fetch(`https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`)
                     .then(r => r.json())
@@ -331,7 +394,7 @@
 
             busMarker.getPopup().setContent(`
                 <div class="text-center">
-                    <strong class="text-sky-600">{{ $busViaje->vehiculo->placa ?? 'Autobús' }}</strong><br>
+                    <strong class="text-sky-600">{{ $busViaje->vehiculo->placa_vtr ?? 'Autobús' }}</strong><br>
                     Velocidad: <b>${parseFloat(velocidad).toFixed(1)} km/h</b>
                 </div>
             `);
@@ -352,7 +415,7 @@
 
         let pollingInterval;
         function consultarGPS() {
-            fetch(`/api/viajes/${viajeId}/posicion`, {
+            fetch(@json(route('admin.transporte.maestros.bus_viajes.posicion', $busViaje)), {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.json())
@@ -405,7 +468,10 @@
                     document.getElementById('playbackPuntos').textContent = `${logs.length} puntos registrados`;
 
                     const latLngs = logs.map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
-                    L.polyline(latLngs, { color: '#b91c1c', weight: 4, opacity: 0.5, dashArray: '6,6' }).addTo(map);
+                    const recorrido = logs.filter(l => !l.desvio).map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
+                    if (recorrido.length >= 2) {
+                        L.polyline(recorrido, { color: '#b91c1c', weight: 4, opacity: 0.5, dashArray: '6,6' }).addTo(map);
+                    }
 
                     if (playbackMarker) map.removeLayer(playbackMarker);
                     playbackMarker = L.marker(latLngs[0], { icon: busIcon }).addTo(map);
@@ -461,6 +527,35 @@
                 irAPunto(playbackIndex);
             }, 200);
         });
+
+        const formReferencia = document.getElementById('formMarcarReferencia');
+        if (formReferencia) {
+            formReferencia.addEventListener('submit', (evento) => {
+                evento.preventDefault();
+                const mensaje = 'El recorrido de este viaje reemplazará la ruta de referencia vigente (se crea una versión nueva).';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '¿Marcar como ruta de referencia?',
+                        text: mensaje,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#991b1b',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Sí, marcar',
+                        cancelButtonText: 'Cancelar',
+                        customClass: {
+                            popup: 'rounded-2xl dark:bg-gray-800 dark:text-white',
+                            confirmButton: 'rounded-xl',
+                            cancelButton: 'rounded-xl'
+                        }
+                    }).then((resultado) => {
+                        if (resultado.isConfirmed) formReferencia.submit();
+                    });
+                } else if (confirm(mensaje)) {
+                    formReferencia.submit();
+                }
+            });
+        }
     })();
     </script>
 </x-app-layout>

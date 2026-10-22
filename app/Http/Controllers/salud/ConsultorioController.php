@@ -17,7 +17,7 @@ class ConsultorioController extends Controller
             $request->input('activo', 1),
         );
 
-        $sedes = Sede::where('activo', 1)->get();
+        $sedes = Sede::where('status_id', 1)->get();
 
         return view('admin.salud.maestros.consultorios.index', compact('consultorios', 'sedes'));
     }
@@ -25,19 +25,19 @@ class ConsultorioController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sede_id' => 'required|exists:sede,id',
+            'sed_id' => 'required|exists:sede,id_sed',
             'nombre' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('consultorios', 'nombre')->where(function ($query) use ($request) {
-                    return $query->where('sede_id', $request->input('sede_id'));
+                Rule::unique('consultorio', 'nombre_csr')->where(function ($query) use ($request) {
+                    return $query->where('sed_id', $request->input('sed_id'))->whereNull('deleted_at');
                 }),
             ],
             'descripcion' => 'nullable|string|max:255',
         ], [
-            'sede_id.required' => 'Debe seleccionar una sede.',
-            'sede_id.exists'   => 'La sede seleccionada no es válida.',
+            'sed_id.required' => 'Debe seleccionar una sede.',
+            'sed_id.exists'   => 'La sede seleccionada no es válida.',
             'nombre.required'  => 'El nombre del consultorio es obligatorio.',
             'nombre.unique'    => 'Ya existe un consultorio con este nombre en la sede seleccionada.',
         ]);
@@ -51,19 +51,20 @@ class ConsultorioController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'sede_id' => 'required|exists:sede,id',
+            'sed_id' => 'required|exists:sede,id_sed',
             'nombre' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('consultorios', 'nombre')
-                    ->where('sede_id', $request->input('sede_id'))
-                    ->ignore($id),
+                Rule::unique('consultorio', 'nombre_csr')
+                    ->where('sed_id', $request->input('sed_id'))
+                    ->whereNull('deleted_at')
+                    ->ignore($id, 'id_csr'),
             ],
             'descripcion' => 'nullable|string|max:255',
         ], [
-            'sede_id.required' => 'Debe seleccionar una sede.',
-            'sede_id.exists'   => 'La sede seleccionada no es válida.',
+            'sed_id.required' => 'Debe seleccionar una sede.',
+            'sed_id.exists'   => 'La sede seleccionada no es válida.',
             'nombre.required'  => 'El nombre del consultorio es obligatorio.',
             'nombre.unique'    => 'Ya existe un consultorio con este nombre en la sede seleccionada.',
         ]);

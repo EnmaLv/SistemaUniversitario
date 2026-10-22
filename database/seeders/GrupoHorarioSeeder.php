@@ -12,10 +12,17 @@ class GrupoHorarioSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\salud\GrupoHorario::crear([
-            'user_id' => 1,
-            'nombre' => 'Horario Estándar',
-            'activo' => \App\Models\salud\GrupoHorario::STATUS_ACTIVE,
-        ]);
+        $psicologos = \Illuminate\Support\Facades\DB::table('usuario_rol')
+            ->join('rol', 'rol.id_rol', '=', 'usuario_rol.rol_id')
+            ->where('rol.slug_rol', 'psicologo')
+            ->pluck('usuario_rol.use_id');
+
+        foreach ($psicologos as $psicologoId) {
+            \App\Models\salud\GrupoHorario::crear([
+                'psicologo_use_id' => $psicologoId,
+                'nombre_gha' => 'Horario Estándar',
+                'status_id' => \App\Models\salud\GrupoHorario::STATUS_ACTIVE,
+            ]);
+        }
     }
 }

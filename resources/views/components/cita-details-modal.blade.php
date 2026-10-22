@@ -86,7 +86,7 @@
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="citaPrioridadRadios">
                             @foreach($prioridadesDisponibles as $prioridad)
                                 @php
-                                    $nombreLower = strtolower($prioridad->nombre);
+                                    $nombreLower = strtolower($prioridad->nombre_pat);
                                     $colorSeleccionado = match($nombreLower) {
                                         'crítica' => 'text-rose-600 dark:text-rose-400 border-rose-500 bg-rose-50 dark:bg-rose-950/40',
                                         'alta' => 'text-amber-600 dark:text-amber-400 border-amber-500 bg-amber-50 dark:bg-amber-950/40',
@@ -100,10 +100,10 @@
                                     has-[:checked]:{{ $colorSeleccionado }}" 
                                     style="background-color: var(--bg-card); border-color: var(--border-color);">
                                     
-                                    <input type="radio" name="prioridad" value="{{ $prioridad->nombre }}" class="prioridad-radio hidden">
+                                    <input type="radio" name="prioridad" value="{{ $prioridad->nombre_pat }}" class="prioridad-radio hidden">
                                     
                                     <span class="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider group-has-[:checked]:text-inherit">
-                                        {{ $prioridad->nombre }}
+                                        {{ $prioridad->nombre_pat }}
                                     </span>
                                 </label>
                             @endforeach
@@ -114,10 +114,12 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
                                 Guardado
                             </div>
+                            @canRoute('admin.psicologia.maestros.citas.update.prioridad')
                             <button id="guardarPrioridadBtn" class="flex items-center justify-center gap-2 {{ $btnClass ?? 'bg-sky-600 hover:bg-sky-700' }} text-white px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-wider shadow-sm transition-all active:scale-95">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
                                 Guardar Cambios
                             </button>
+                            @endcanRoute
                         </div>
                     </div>
                 </div>
@@ -143,10 +145,12 @@
                 </div>
 
                 <div id="citaPropuestaAcciones" class="flex gap-2 hidden">
+                    @canRoute('admin.psicologia.maestros.citas.enviar_propuesta')
                     <button type="button" id="enviarPropuestaBtn" class="flex items-center justify-center gap-2 {{ $btnClass ?? 'bg-sky-600 hover:bg-sky-700' }} text-white px-5 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-wider shadow-sm transition-all active:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                         Enviar propuesta al paciente
                     </button>
+                    @endcanRoute
                 </div>
             </div>
         </div>

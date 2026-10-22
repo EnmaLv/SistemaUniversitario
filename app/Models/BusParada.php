@@ -3,25 +3,31 @@
 namespace App\Models;
 
 use App\Traits\ConvierteAMayusculasNoEloquent;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusParada extends Model
 {
     use ConvierteAMayusculasNoEloquent;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table    = 'bus_paradas';
-    protected $fillable = ['nombre', 'lat', 'lng', 'direccion', 'estado'];
+    protected $table = 'parada_transporte';
 
-    protected $casts = [
-        'estado' => 'boolean',
-    ];
+    protected $primaryKey = 'id_ptr';
 
-    public function busRuta()
+    protected $fillable = ['nombre_ptr', 'lat_ptr', 'lng_ptr', 'direccion_ptr', 'status_id'];
+
+    public function rutas()
     {
-        return $this->belongsTo(BusRuta::class, 'bus_ruta_id');
+        return $this->belongsToMany(BusRuta::class, 'ruta_parada_transporte', 'ptr_id', 'rtr_id', 'id_ptr', 'id_rtr')
+            ->withPivot('orden_rpt')
+            ->withTimestamps()
+            ->wherePivotNull('deleted_at');
     }
 
-    public function getDireccionAttribute($value): string
+    public function getDireccionPtrAttribute($value): string
     {
         return $value ?? 'Ninguna';
     }
@@ -29,10 +35,11 @@ class BusParada extends Model
     public static function listarParadas($buscar = null, $estado = 1)
     {
         return self::query()
-            ->when($buscar, fn ($q) => $q->where('nombre', 'like', "%{$buscar}%")
-                ->orWhere('direccion', 'like', "%{$buscar}%"))
-            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('estado', $estado))
-            ->orderBy('nombre')
+            ->when($buscar, fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('nombre_ptr', 'like', "%{$buscar}%")
+                ->orWhere('direccion_ptr', 'like', "%{$buscar}%")))
+            ->when($estado !== null && $estado !== '', fn ($q) => $q->where('status_id', (int) $estado === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO))
+            ->orderBy('nombre_ptr')
             ->paginate(10)
             ->withQueryString();
     }
@@ -40,22 +47,23 @@ class BusParada extends Model
     public static function crearParada(array $datos)
     {
         return self::create([
-            'nombre'    => $datos['nombre'],
-            'lat'       => $datos['lat'] ?? null,
-            'lng'       => $datos['lng'] ?? null,
-            'direccion' => $datos['direccion'] ?? null,
-            'estado'    => 1,
+            'nombre_ptr'    => $datos['nombre'],
+            'lat_ptr'       => $datos['lat'] ?? null,
+            'lng_ptr'       => $datos['lng'] ?? null,
+            'direccion_ptr' => $datos['direccion'] ?? null,
+            'status_id'     => self::STATUS_ACTIVO,
         ]);
     }
 
     public static function actualizarParada(BusParada $parada, array $datos)
     {
         $parada->update([
-            'nombre'    => $datos['nombre'],
-            'lat'       => $datos['lat'] ?? null,
-            'lng'       => $datos['lng'] ?? null,
-            'direccion' => $datos['direccion'] ?? null,
+            'nombre_ptr'    => $datos['nombre'],
+            'lat_ptr'       => $datos['lat'] ?? null,
+            'lng_ptr'       => $datos['lng'] ?? null,
+            'direccion_ptr' => $datos['direccion'] ?? null,
         ]);
+
         return $parada;
     }
 }

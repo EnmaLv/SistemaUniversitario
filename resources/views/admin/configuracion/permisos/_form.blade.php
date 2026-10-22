@@ -11,7 +11,7 @@
             style="border-color: var(--border-color); background-color: rgba(0,0,0,0.015);">
 
             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
-                {{ strtoupper(mb_substr($usuario->nombre_completo ?? $usuario->username, 0, 2)) }}
+                {{ strtoupper(mb_substr($usuario->nombre_completo ?? $usuario->username_use, 0, 2)) }}
             </div>
 
             <div class="min-w-0 flex-1">
@@ -19,13 +19,13 @@
                     {{ $usuario->nombre_completo ?? 'Sin nombre' }}
                 </h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                    {{ $usuario->username }}
+                    {{ $usuario->username_use }}
                     @if ($usuario->roles->isNotEmpty())
                         ·
                         @foreach ($usuario->roles as $r)
                             <span class="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold ml-1 align-middle"
                                 style="border-color: var(--border-color); color: var(--text-main);">
-                                {{ $r->nombre }}
+                                {{ $r->nombre_rol }}
                             </span>
                         @endforeach
                     @endif
@@ -68,10 +68,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         @foreach ($modulos as $modulo)
                             @php
-                                $fromRole  = in_array($modulo->id, $roleModules);
-                                $fromExtra = in_array($modulo->id, $modulosExtra);
+                                $fromRole  = in_array($modulo->id_mod, $roleModules);
+                                $fromExtra = in_array($modulo->id_mod, $modulosExtra);
                                 $checked   = $fromRole || $fromExtra;
-                                $id        = 'modulo_' . $modulo->id;
+                                $id        = 'modulo_' . $modulo->id_mod;
                             @endphp
                             <label for="{{ $id }}"
                                 class="flex items-center gap-3 p-3 rounded-xl border transition-all group
@@ -79,17 +79,17 @@
                                         ? 'cursor-not-allowed bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-800/40'
                                         : 'cursor-pointer hover:border-red-300 hover:bg-red-50/40 dark:hover:bg-red-950/20' }}"
                                 @if (!$fromRole) style="border-color: var(--border-color);" @endif>
-                                <input type="checkbox" name="modulos[]" value="{{ $modulo->id }}"
+                                <input type="checkbox" name="modulos[]" value="{{ $modulo->id_mod }}"
                                     id="{{ $id }}"
                                     class="modulo-check w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-red-600 focus:ring-2 focus:ring-red-500/30 cursor-pointer"
                                     @checked($checked)
                                     @disabled($fromRole)>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                        {{ $modulo->nombre }}
+                                        {{ $modulo->nombre_mod }}
                                     </p>
                                     <p class="text-[10px] text-gray-400 font-mono truncate">
-                                        {{ $modulo->key }}
+                                        {{ $modulo->key_mod }}
                                     </p>
                                 </div>
                                 @if ($fromRole)

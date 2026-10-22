@@ -12,7 +12,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EnfermedadesSeeder::class,
             DepartamentoSeeder::class,
-            EstatusSeeder::class,
             UnidadSeeder::class,
             ModulosSeeder::class,
             TipoProductoSeeder::class,
@@ -25,6 +24,8 @@ class DatabaseSeeder extends Seeder
             PerfilSeeder::class,
             PnfSeeder::class,
             PersonaSeeder::class,
+            DeporteRolSeeder::class,
+            DeporteSeeder::class,
             ProductoSeeder::class,
             RecetaIngredienteSeeder::class,
             PrecioProductoSeeder::class,
@@ -39,17 +40,19 @@ class DatabaseSeeder extends Seeder
             EstadoAnimoSeeder::class,
             PlantillaGlobalSeeder::class,
             PrioridadesSeeder::class,
+            UnidadDosisSeeder::class,
             MedicamentoSeeder::class,
             ConsultorioSeeder::class,
             HorarioConsultoriosSeeder::class,
             MarcaSeeder::class,
             TipoCombustibleSeeder::class,
             ModeloSeeder::class,
-            
             VehiculoSeeder::class,
             BusParadaSeeder::class,
         ]);
         \App\Models\Proveedor::factory(1)->create();
+        $this->call(InventarioInicialSeeder::class);
+        \Illuminate\Support\Facades\Artisan::call('inventario:recalcular-totales');
         $this->call(PermisosSeeder::class);
     }
 }

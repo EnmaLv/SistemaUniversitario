@@ -9,13 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('historia_enfermedad', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('historia_clinica_id')->constrained('historia_clinicas')->onDelete('cascade');
-            $table->foreignId('enfermedad_id')->constrained('enfermedades')->onDelete('cascade');
-            $table->string('contexto')->nullable();
-            $table->tinyInteger('status')->default(1)->comment('1=activo, 0=desvinculado/eliminado (soft delete)');
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->nullable();
+            $table->id('id_hie');
+            $table->string('contexto_hie', 255)->nullable();
+            $table->foreignId('hcl_id')->constrained('historia_clinica', 'id_hcl')->cascadeOnDelete();
+            $table->foreignId('efm_id')->constrained('enfermedad', 'id_efm')->cascadeOnDelete();
+            $table->timestamps();
+            $table->auditoria();
         });
     }
 

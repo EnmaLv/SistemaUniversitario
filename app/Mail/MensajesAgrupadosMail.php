@@ -26,8 +26,8 @@ class MensajesAgrupadosMail extends Mailable implements ShouldQueue
     {
         $roleName = $this->remitente->role === 'psicologo' ? 'El psicólogo' : 'El paciente';
         $sujet = $this->cantidadMensajes > 1 
-            ? "{$roleName} {$this->remitente->persona->nombre_persona} te ha enviado {$this->cantidadMensajes} mensajes nuevos"
-            : "{$roleName} {$this->remitente->persona->nombre_persona} te ha enviado un mensaje nuevo";
+            ? "{$roleName} {$this->remitente->persona->nombres_per} te ha enviado {$this->cantidadMensajes} mensajes nuevos"
+            : "{$roleName} {$this->remitente->persona->nombres_per} te ha enviado un mensaje nuevo";
             
         return new Envelope(
             subject: $sujet,

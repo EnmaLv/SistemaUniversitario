@@ -35,14 +35,14 @@ class RespuestaPropuestaNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
-        $pacienteName = trim(($this->cita->paciente->persona->nombre_persona ?? '') . ' ' . ($this->cita->paciente->persona->apellido_persona ?? '')) ?: 'Un paciente';
+        $pacienteName = trim(($this->cita->paciente->persona->nombres_per ?? '') . ' ' . ($this->cita->paciente->persona->apellidos_per ?? '')) ?: 'Un paciente';
         $body = $this->respuesta === 'aceptada' 
             ? "$pacienteName ha aceptado tu propuesta de horario para su cita."
             : "$pacienteName ha rechazado tu propuesta de horario para su cita.";
 
         return [
             'type_id' => 'respuesta_propuesta_cita',
-            'cita_id' => $this->cita->id,
+            'cita_id' => $this->cita->id_cps,
             'body' => $body,
             'url' => route('admin.psicologia.maestros.agenda.index'),
         ];

@@ -5,7 +5,7 @@
         <div>
             <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl" style="font-size:1.4rem;">Editar Carga de Combustible</h1>
             <p class="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-                Bienvenido <strong>{{ auth()->user()->persona->nombre_persona }}</strong>.
+                Bienvenido <strong>{{ auth()->user()->persona->nombres_per }}</strong>.
             </p>
         </div>
         <div class="d-flex align-items-center" style="gap:14px;">
@@ -23,7 +23,7 @@
 @section('content')
     <div class="rd-card p-4">
         <div class="rd-card-header mb-3">
-            <h3 class="rd-title-sm">Editar Registro de Carga #{{ $busCargaCombustible->id }}</h3>
+            <h3 class="rd-title-sm">Editar Registro de Carga #{{ $busCargaCombustible->id_ccb }}</h3>
             <a href="{{ route('admin.transporte.maestros.bus_carga_combustibles.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition-all hover:bg-gray-100 dark:hover:bg-gray-800" style="border-color:var(--border-color);color:var(--text-main);">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
@@ -45,9 +45,9 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_vehiculo_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione VehÃ­culo --</option>
                                 @foreach($vehiculos as $v)
-                                    <option value="{{ $v->id }}"
-                                        {{ old('bus_vehiculo_id', $busCargaCombustible->bus_vehiculo_id) == $v->id ? 'selected' : '' }}>
-                                        {{ $v->placa }} â€ {{ $v->modelo->nombre ?? '' }} (KM: {{ number_format($v->km_actual, 0) }})
+                                    <option value="{{ $v->id_vtr }}"
+                                        {{ old('bus_vehiculo_id', $busCargaCombustible->vtr_id) == $v->id_vtr ? 'selected' : '' }}>
+                                        {{ $v->placa_vtr }} â€ {{ $v->modelo->nombre_mov ?? '' }} (KM: {{ number_format($v->km_actual_vtr, 0) }})
                                     </option>
                                 @endforeach
                             </select>
@@ -65,9 +65,9 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_viaje_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione Viaje --</option>
                                 @foreach($viajes as $viaje)
-                                    <option value="{{ $viaje->id }}"
-                                        {{ old('bus_viaje_id', $busCargaCombustible->bus_viaje_id) == $viaje->id ? 'selected' : '' }}>
-                                        #{{ $viaje->id }} | {{ $viaje->vehiculo->placa ?? '' }} - {{ $viaje->ruta->nombre ?? '' }} ({{ $viaje->fecha_inicio ? $viaje->fecha_inicio->format('d/m/Y') : 'Prog.' }})
+                                    <option value="{{ $viaje->id_vjt }}"
+                                        {{ old('bus_viaje_id', $busCargaCombustible->vjt_id) == $viaje->id_vjt ? 'selected' : '' }}>
+                                        #{{ $viaje->id_vjt }} | {{ $viaje->vehiculo->placa_vtr ?? '' }} - {{ $viaje->ruta->nombre_rtr ?? '' }} ({{ $viaje->fecha_inicio_vjt ? $viaje->fecha_inicio_vjt->format('d/m/Y') : 'Prog.' }})
                                     </option>
                                 @endforeach
                             </select>
@@ -85,9 +85,9 @@
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('bus_tipo_combustible_id') border-red-300 @enderror">
                                 <option value="">-- Seleccione Tipo --</option>
                                 @foreach($tipos as $tipo)
-                                    <option value="{{ $tipo->id }}"
-                                        {{ old('bus_tipo_combustible_id', $busCargaCombustible->bus_tipo_combustible_id) == $tipo->id ? 'selected' : '' }}>
-                                        {{ $tipo->nombre }}
+                                    <option value="{{ $tipo->id_tcb }}"
+                                        {{ old('bus_tipo_combustible_id', $busCargaCombustible->tcb_id) == $tipo->id_tcb ? 'selected' : '' }}>
+                                        {{ $tipo->nombre_tcb }}
                                     </option>
                                 @endforeach
                             </select>
@@ -106,7 +106,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-calendar-alt"></i></span>
                             <input type="date" name="fecha"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('fecha') border-red-300 @enderror"
-                                value="{{ old('fecha', $busCargaCombustible->fecha ? $busCargaCombustible->fecha->format('Y-m-d') : date('Y-m-d')) }}"
+                                value="{{ old('fecha', $busCargaCombustible->fecha_ccb ? $busCargaCombustible->fecha_ccb->format('Y-m-d') : date('Y-m-d')) }}"
                                 max="{{ date('Y-m-d') }}">
                         </div>
                         @error('fecha') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -133,7 +133,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-tachometer-alt"></i></span>
                             <input type="number" name="km_al_cargar" id="inputKmCargar" step="0.01"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('km_al_cargar') border-red-300 @enderror"
-                                value="{{ old('km_al_cargar', $busCargaCombustible->km_al_cargar) }}" min="0" max="9999999"
+                                value="{{ old('km_al_cargar', $busCargaCombustible->km_al_cargar_ccb) }}" min="0" max="9999999"
                                 oninput="this.value=this.value.replace(/[^0-9.]/g,'').slice(0,10)">
                         </div>
                         @error('km_al_cargar') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -150,7 +150,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-fill-drip"></i></span>
                             <input type="number" name="litros" id="inputLitros" step="0.01"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('litros') border-red-300 @enderror"
-                                value="{{ old('litros', $busCargaCombustible->litros) }}" min="0.1" max="1000"
+                                value="{{ old('litros', $busCargaCombustible->litros_ccb) }}" min="0.1" max="1000"
                                 oninput="calcularTotalCombustible()">
                         </div>
                         @error('litros') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -164,7 +164,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-dollar-sign"></i></span>
                             <input type="number" name="precio_litros" id="inputPrecio" step="0.01"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('precio_litros') border-red-300 @enderror"
-                                value="{{ old('precio_litros', $busCargaCombustible->precio_litros) }}" min="0.01" max="999999"
+                                value="{{ old('precio_litros', $busCargaCombustible->precio_litro_ccb) }}" min="0.01" max="999999"
                                 oninput="calcularTotalCombustible()">
                         </div>
                         @error('precio_litros') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
@@ -178,7 +178,7 @@
                             <span class="px-3 text-slate-500"><i class="fas fa-receipt"></i></span>
                             <input type="number" id="inputTotal" step="0.01"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input"
-                                value="{{ old('total', $busCargaCombustible->total) }}" readonly
+                                value="{{ old('total', $busCargaCombustible->total_ccb) }}" readonly
                                 style="background:#f8fafc;cursor:not-allowed;font-weight:700;color:var(--color-primary);">
                         </div>
                     </div>
@@ -195,8 +195,8 @@
                             placeholder="EstaciÃ³n de servicio, nÃºmero de factura o ticket..."
                             maxlength="2000"
                             oninput="this.value=this.value.slice(0,2000); document.getElementById('contadorObs').textContent=this.value.length"
-                            style="resize:none;">{{ old('observaciones', $busCargaCombustible->observaciones) }}</textarea>
-                        <small class="text-muted"><span id="contadorObs">{{ strlen($busCargaCombustible->observaciones ?? '') }}</span>/2000 caracteres</small>
+                            style="resize:none;">{{ old('observaciones', $busCargaCombustible->observaciones_ccb) }}</textarea>
+                        <small class="text-muted"><span id="contadorObs">{{ strlen($busCargaCombustible->observaciones_ccb ?? '') }}</span>/2000 caracteres</small>
                         @error('observaciones') <div class="text-danger mt-1"><b>{{ $message }}</b></div> @enderror
                     </div>
                 </div>

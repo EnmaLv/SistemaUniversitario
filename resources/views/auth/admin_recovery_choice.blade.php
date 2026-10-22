@@ -566,7 +566,7 @@
                             <input 
                                 class="input" 
                                 type="password"
-                                name="master_key" 
+                                name="master_key_use" 
                                 placeholder="Nueva llave maestra" 
                                 required
                             >

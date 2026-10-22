@@ -9,6 +9,7 @@ use App\Models\Proveedor;
 use App\Models\DetalleCompra;
 use App\Models\MovimientoInventario;
 use App\Models\Sede;
+use App\Support\Inventario\FiltroTipoProducto;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -16,43 +17,35 @@ class LoteController extends Controller
 {
     private function procesarLotesVencidos()
     {
-        DB::transaction(function () {
-            $lotesVencidos = Lote::with(['producto', 'inventarioSedeLotes'])
-                ->whereDate('fecha_vencimiento', '<=', now())
-                ->where('estado', 1)
+        $servicio = app(\App\Support\Inventario\ServicioInventario::class);
+        $sede = \App\Support\Sedes\SedeActiva::id();
+
+        DB::transaction(function () use ($servicio, $sede) {
+            $lotesVencidos = Lote::whereDate('fecha_vencimiento_lot', '<=', now())
+                ->where('status_id', Lote::STATUS_ACTIVO)
                 ->get();
 
             foreach ($lotesVencidos as $lote) {
-                $unidadId = $lote->producto->unidad_id;
+                $existencias = DB::table('inventario_sede_lote')
+                    ->where('lot_id', $lote->id_lot)
+                    ->when($sede !== null, fn ($consulta) => $consulta->where('sed_id', $sede))
+                    ->where('cantidad_isl', '>', 0)
+                    ->get();
 
-                foreach ($lote->inventarioSedeLotes as $inv) {
-                    if ($inv->cantidad_gramos <= 0) {
-                        continue;
-                    }
-
-                    MovimientoInventario::create([
-                        'producto_id'     => $lote->producto_id,
-                        'lote_id'         => $lote->id,
-                        'sede_id'         => $inv->sede_id,
-                        'tipo_movimiento' => 'MERMA',
-                        'unidad_id'       => $unidadId,
-                        'cantidad'        => 0,
-                        'cantidad_gramos' => $inv->cantidad_gramos,
-                        'fecha'           => now(),
-                        'observaciones'   => 'Producto vencido – merma manual'
-                    ]);
-
-                    $inv->update([
-                        'cantidad'        => 0,
-                        'cantidad_gramos' => 0
+                foreach ($existencias as $existencia) {
+                    $servicio->salida((int) $lote->id_lot, (int) $existencia->sed_id, (float) $existencia->cantidad_isl, (float) $existencia->cantidad_convertida_isl, [
+                        'tipo'                => \App\Support\Inventario\ServicioInventario::MERMA,
+                        'referencia_type_moi' => 'lote_vencido',
+                        'referencia_id_moi'   => $lote->id_lot,
+                        'observacion_moi'     => 'Producto vencido – merma manual',
                     ]);
                 }
 
-                $lote->update([
-                    'cantidad_inicial' => 0,
-                    'cantidad_actual'  => 0,
-                    'estado'           => 0
-                ]);
+                $quedaStock = DB::table('inventario_sede_lote')->where('lot_id', $lote->id_lot)->where('cantidad_isl', '>', 0)->exists();
+
+                if (! $quedaStock) {
+                    $lote->update(['status_id' => Lote::STATUS_INACTIVO]);
+                }
             }
         });
     }
@@ -71,61 +64,71 @@ class LoteController extends Controller
         $fecha_hasta = $request->input('fecha_hasta');
         $filtro      = $request->input('filtro');
 
-        $sedeId = 1;
+        $sedeId = \App\Support\Sedes\SedeActiva::idParaCrear();
 
         $query = Lote::with(['producto', 'proveedor'])
             ->addSelect([
-                'lotes.*',
-                'cantidad_sede' => DB::table('inventario_sede_lotes')
-                    ->selectRaw('COALESCE(SUM(cantidad), 0)')
-                    ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
-                    ->where('inventario_sede_lotes.sede_id', $sedeId),
-                'cantidad_gramos_sede' => DB::table('inventario_sede_lotes')
-                    ->selectRaw('COALESCE(SUM(cantidad_convertida), 0)')
-                    ->whereColumn('inventario_sede_lotes.lote_id', 'lotes.id')
-                    ->where('inventario_sede_lotes.sede_id', $sedeId)
+                'lote.*',
+                'cantidad_sede' => DB::table('inventario_sede_lote')
+                    ->selectRaw('COALESCE(SUM(cantidad_isl), 0)')
+                    ->whereColumn('inventario_sede_lote.lot_id', 'lote.id_lot')
+                    ->where('inventario_sede_lote.sed_id', $sedeId)
+                    ->whereNull('inventario_sede_lote.deleted_at'),
+                'cantidad_gramos_sede' => DB::table('inventario_sede_lote')
+                    ->selectRaw('COALESCE(SUM(cantidad_convertida_isl), 0)')
+                    ->whereColumn('inventario_sede_lote.lot_id', 'lote.id_lot')
+                    ->where('inventario_sede_lote.sed_id', $sedeId)
+                    ->whereNull('inventario_sede_lote.deleted_at')
             ]);
 
         if ($filtro === 'vencido') {
-            $query->whereDate('fecha_vencimiento', '<', now()->addDays(1));
+            $query->whereDate('fecha_vencimiento_lot', '<', now()->addDays(1));
         }
 
         if ($filtro === 'por_vencer') {
-            $query->whereDate('fecha_vencimiento', '>', now());
+            $query->whereDate('fecha_vencimiento_lot', '>', now());
         }
 
         if ($request->filled('estado')) {
-            $query->where('estado', (int) $estado);
+            $query->where('status_id', (int) $estado === 1 ? Lote::STATUS_ACTIVO : Lote::STATUS_INACTIVO);
         } else {
-            $query->where('estado', 1);
+            $query->where('status_id', Lote::STATUS_ACTIVO);
         }
 
         if ($buscar) {
-            $query->where('codigo_lote', 'like', "%{$buscar}%");
+            $query->where('codigo_lote_lot', 'like', "%{$buscar}%");
         }
+
+        $tipoProducto = FiltroTipoProducto::resolver($request);
+        FiltroTipoProducto::aplicar($query, $tipoProducto, 'lote.pdt_id');
 
         if ($fecha_desde && $fecha_hasta) {
-            $query->whereBetween('fecha_vencimiento', [$fecha_desde, $fecha_hasta]);
+            $query->whereBetween('fecha_vencimiento_lot', [$fecha_desde, $fecha_hasta]);
         } elseif ($fecha_desde) {
-            $query->where('fecha_entrada', '>=', $fecha_desde);
+            $query->where('fecha_entrada_lot', '>=', $fecha_desde);
         } elseif ($fecha_hasta) {
-            $query->where('fecha_vencimiento', '<=', $fecha_hasta);
+            $query->where('fecha_vencimiento_lot', '<=', $fecha_hasta);
         }
 
-        $lotes = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $lotes = $query->orderBy('id_lot', 'desc')
+            ->paginate(10)
+            ->withQueryString()
+            ->appends(FiltroTipoProducto::PARAMETRO, FiltroTipoProducto::valorUrl($tipoProducto));
 
         $lotes->each(function ($lote) {
-            $fecha = Carbon::parse($lote->fecha_vencimiento);
+            $fecha = Carbon::parse($lote->fecha_vencimiento_lot);
             $lote->is_expired      = $fecha->isPast();
             $lote->days_to_expire = now()->diffInDays($fecha, false);
         });
 
-        $hayLotesVencidosSinMerma = Lote::whereDate('fecha_vencimiento', '<=', now())
-            ->where('estado', 1)
+        $hayLotesVencidosSinMerma = Lote::whereDate('fecha_vencimiento_lot', '<=', now())
+            ->where('status_id', Lote::STATUS_ACTIVO)
             ->exists();
 
-        $sedeNombre = Sede::where('id', $sedeId)->value('nombre');
+        $sedeNombre = Sede::where('id_sed', $sedeId)->value('nombre_sed');
 
-        return view('admin.movimientos.lotes.index', compact('lotes', 'hayLotesVencidosSinMerma', 'sedeNombre'));
+        $tiposProducto = FiltroTipoProducto::opciones();
+
+        return view('admin.movimientos.lotes.index', compact('lotes', 'hayLotesVencidosSinMerma', 'sedeNombre', 'tipoProducto', 'tiposProducto'));
     }
 }

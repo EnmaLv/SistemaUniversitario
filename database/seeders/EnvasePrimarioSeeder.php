@@ -3,8 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Models\TipoProducto;
 
 class EnvasePrimarioSeeder extends Seeder
 {
@@ -30,16 +29,10 @@ class EnvasePrimarioSeeder extends Seeder
             'FRASCO DOSIFICADOR',
             'FRASCO SPRAY',
             'TIRA REACTIVA',
-            'CONTENEDOR PLÁSTICO'
+            'CONTENEDOR PLÁSTICO',
         ];
 
-        foreach ($envases as $envase) {
-            DB::table('envase_primarios')->insert([
-                'nombre' => $envase,
-                'estado' => 1,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
-        }
+        PresentacionAreaSeeder::sembrar([TipoProducto::MEDICAMENTO => $envases]);
+        (new PresentacionAreaSeeder())->run();
     }
 }

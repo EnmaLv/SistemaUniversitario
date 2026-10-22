@@ -40,7 +40,7 @@
                             style="background-color: var(--input-bg); border-color: var(--border-color);">
                             <span class="px-3 text-gray-400"><i class="fas fa-gift"></i></span>
                             <input id="nombre_beneficio" type="text" name="nombre_beneficio"
-                                value="{{ old('nombre_beneficio', $modelo?->nombre_beneficio ?? '') }}"
+                                value="{{ old('nombre_beneficio', $modelo?->nombre_beneficio_bes ?? '') }}"
                                 placeholder="Ej. Ayuda económica"
                                 class="w-full rounded-xl border-0 bg-transparent px-3 py-3 text-sm outline-none"
                                 style="color: var(--text-main);" required>
@@ -58,7 +58,7 @@
                         <textarea id="descripcion" name="descripcion" rows="4"
                             placeholder="Descripción del beneficio"
                             class="w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/30"
-                            style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main); resize: vertical;">{{ old('descripcion', $modelo?->descripcion ?? '') }}</textarea>
+                            style="background-color: var(--input-bg); border-color: var(--border-color); color: var(--text-main); resize: vertical;">{{ old('descripcion', $modelo?->descripcion_bes ?? '') }}</textarea>
                         @error('descripcion')
                             <p class="mt-2 text-xs font-semibold text-red-600">{{ $message }}</p>
                         @enderror
@@ -70,7 +70,7 @@
                         <label class="inline-flex cursor-pointer items-center gap-3">
                             <input type="hidden" name="status" value="0">
                             <input type="checkbox" id="status" name="status" value="1" class="peer sr-only"
-                                {{ old('status', $modelo?->status ?? true) ? 'checked' : '' }}>
+                                {{ old('status', $modelo?->estaActivo() ?? true) ? 'checked' : '' }}>
                             <span class="relative h-6 w-10 rounded-full bg-gray-300 transition peer-checked:bg-red-700 dark:bg-gray-700">
                                 <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span>
                             </span>
@@ -94,7 +94,7 @@
                                 <div class="flex items-center rounded-xl border opacity-60"
                                     style="background-color: var(--input-bg); border-color: var(--border-color);">
                                     <span class="px-3 text-gray-400"><i class="fas fa-link text-xs"></i></span>
-                                    <input type="text" value="{{ $modelo->slug }}" disabled
+                                    <input type="text" value="{{ $modelo->slug_bes }}" disabled
                                         class="w-full rounded-xl border-0 bg-transparent px-3 py-2.5 text-xs font-mono outline-none"
                                         style="color: var(--text-main);">
                                 </div>
@@ -110,7 +110,7 @@
                                 <div class="flex items-center rounded-xl border opacity-60"
                                     style="background-color: var(--input-bg); border-color: var(--border-color);">
                                     <span class="px-3 text-gray-400"><i class="fas fa-ticket text-xs"></i></span>
-                                    <input type="text" value="{{ $modelo->cupones_disponibles }}" disabled
+                                    <input type="text" value="{{ $modelo->cupones_disponibles_bes }}" disabled
                                         class="w-full rounded-xl border-0 bg-transparent px-3 py-2.5 text-xs font-mono outline-none"
                                         style="color: var(--text-main);">
                                 </div>
@@ -123,7 +123,7 @@
                                 <div class="flex items-center rounded-xl border opacity-60"
                                     style="background-color: var(--input-bg); border-color: var(--border-color);">
                                     <span class="px-3 text-gray-400"><i class="fas fa-ticket-simple text-xs"></i></span>
-                                    <input type="text" value="{{ $modelo->cupones_ocupados }}" disabled
+                                    <input type="text" value="{{ $modelo->cupones_ocupados_bes }}" disabled
                                         class="w-full rounded-xl border-0 bg-transparent px-3 py-2.5 text-xs font-mono outline-none"
                                         style="color: var(--text-main);">
                                 </div>

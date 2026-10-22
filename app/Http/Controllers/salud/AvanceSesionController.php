@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\salud\AvanceSesion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class AvanceSesionController extends Controller
 {
@@ -59,7 +58,7 @@ class AvanceSesionController extends Controller
             return redirect()->route('admin.psicologia.maestros.avances_sesion.index')
                 ->with('success', 'Avance de sesión registrado con éxito.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage())->withInput();
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e))->withInput();
         }
     }
 
@@ -67,7 +66,7 @@ class AvanceSesionController extends Controller
     {
         $this->verificarAcceso();
 
-        $avance = DB::table('avances_sesion')->where('id', $id)->first();
+        $avance = AvanceSesion::obtenerVisible($id, Auth::id());
         if (!$avance) {
             abort(404);
         }
@@ -92,7 +91,7 @@ class AvanceSesionController extends Controller
             return redirect()->route('admin.psicologia.maestros.avances_sesion.index')
                 ->with('success', 'Avance actualizado correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage())->withInput();
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e))->withInput();
         }
     }
 
@@ -106,7 +105,7 @@ class AvanceSesionController extends Controller
             return redirect()->route('admin.psicologia.maestros.avances_sesion.index')
                 ->with('success', 'Avance de sesión eliminado correctamente.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', \App\Support\Seguridad\MensajeError::de($e));
         }
     }
 }

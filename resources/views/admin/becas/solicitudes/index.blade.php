@@ -14,6 +14,7 @@
                     </p>
                 </div>
 
+                @canRoute('admin.becas.solicitudes.create')
                 <div class="flex items-center gap-3">
                     <a href="{{ route('admin.becas.solicitudes.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
@@ -21,6 +22,7 @@
                         <span>Registrar Solicitud</span>
                     </a>
                 </div>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -70,9 +72,9 @@
                                 class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                 <option value="">Todos los beneficios</option>
                                 @foreach ($beneficios as $ben)
-                                    <option value="{{ $ben->id }}"
-                                        @if (request('beneficio_id') == $ben->id) selected @endif>
-                                        {{ $ben->nombre_beneficio }}
+                                    <option value="{{ $ben->id_bes }}"
+                                        @if (request('beneficio_id') == $ben->id_bes) selected @endif>
+                                        {{ $ben->nombre_beneficio_bes }}
                                     </option>
                                 @endforeach
                             </select>
@@ -119,16 +121,16 @@
                         <div class="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                             <div>
                                 <h3 class="text-amber-800 dark:text-amber-500 font-bold text-sm mb-1 flex items-center gap-2">
-                                    <i class="fas fa-exclamation-triangle"></i> Faltan por Renovar: {{ $item['jornada']->beneficio->nombre_beneficio ?? 'Beca' }}
+                                    <i class="fas fa-exclamation-triangle"></i> Faltan por Renovar: {{ $item['jornada']->beneficio->nombre_beneficio_bes ?? 'Beca' }}
                                 </h3>
                                 <p class="text-amber-700 dark:text-amber-400/80 text-xs font-medium">
-                                    Hay {{ $item['personas']->count() }} estudiante(s) del lapso anterior que no han renovado su beca para la jornada "{{ $item['jornada']->nombre_jornada }}".
+                                    Hay {{ $item['personas']->count() }} estudiante(s) del lapso anterior que no han renovado su beca para la jornada "{{ $item['jornada']->nombre_jornada_jnb }}".
                                 </p>
                             </div>
-                            <div class="shrink-0 flex -space-x-2 overflow-hidden" title="{{ $item['personas']->pluck('nombre_persona')->implode(', ') }}">
+                            <div class="shrink-0 flex -space-x-2 overflow-hidden" title="{{ $item['personas']->pluck('nombres_per')->implode(', ') }}">
                                 @foreach($item['personas']->take(5) as $p)
                                     <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-900 bg-amber-200 dark:bg-amber-800 flex items-center justify-center text-[10px] font-bold text-amber-800 dark:text-amber-200">
-                                        {{ substr($p->nombre_persona, 0, 1) }}{{ substr($p->apellido_persona, 0, 1) }}
+                                        {{ substr($p->nombres_per, 0, 1) }}{{ substr($p->apellidos_per, 0, 1) }}
                                     </div>
                                 @endforeach
                                 @if($item['personas']->count() > 5)
@@ -161,7 +163,7 @@
 
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                             @forelse($solicitudes as $solicitud)
-                                <x-table-row :id="$solicitud->id">
+                                <x-table-row :id="$solicitud->id_sob">
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400 font-bold">
                                         {{ ($solicitudes->currentPage() - 1) * $solicitudes->perPage() + $loop->iteration }}
                                     </td>
@@ -169,33 +171,33 @@
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <div class="flex flex-col items-center gap-0.5">
                                             <span class="font-bold" style="color: var(--text-main);">
-                                                {{ $solicitud->persona->nombre_persona }}
-                                                {{ $solicitud->persona->apellido_persona }}
+                                                {{ $solicitud->persona->nombres_per }}
+                                                {{ $solicitud->persona->apellidos_per }}
                                             </span>
                                             <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800 font-mono">
-                                                {{ $solicitud->persona->cedula_persona }}
+                                                {{ $solicitud->persona->cedula_per }}
                                             </span>
                                         </div>
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color: var(--text-main);">
-                                        {{ $solicitud->beneficio->nombre_beneficio ?? '—' }}
+                                        {{ $solicitud->beneficio->nombre_beneficio_bes ?? '—' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <div class="flex flex-col items-center gap-0.5">
                                             <span class="font-semibold text-[11px]" style="color: var(--text-main);">
-                                                {{ $solicitud->jornada->nombre_jornada ?? '—' }}
+                                                {{ $solicitud->jornada->nombre_jornada_jnb ?? '—' }}
                                             </span>
                                             <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-black rounded-md text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-800 font-mono">
-                                                {{ $solicitud->lapso->codigo ?? '—' }}
+                                                {{ $solicitud->lapso->codigo_laa ?? '—' }}
                                             </span>
                                         </div>
                                     </td>
 
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if ($solicitud->tipo_solicitud === 'nueva')
+                                        @if ($solicitud->tipo_solicitud_sob === 'nueva')
                                             <span class="inline-flex items-center px-3 py-1 text-[10px] font-black rounded-lg uppercase tracking-wider
                                                 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400
                                                 border border-blue-200 dark:border-blue-900">
@@ -216,7 +218,7 @@
                                         </span>
                                     </td>
 
-                                    <x-table-actions :id="$solicitud->id" baseUrl="admin/becas/solicitudes"
+                                    <x-table-actions :id="$solicitud->id_sob" baseUrl="admin/becas/solicitudes"
                                         :status="1" :edit="false" :toggle="false"/>
                                 </x-table-row>
                             @empty

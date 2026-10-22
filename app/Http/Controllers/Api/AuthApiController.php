@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Services\AuthService;
+use App\Support\Auditoria\Bitacora;
+use App\Support\Seguridad\Bloqueos;
+use App\Support\Seguridad\ProteccionLogin;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -18,33 +20,38 @@ class AuthApiController extends Controller
             'password' => 'required|string',
         ]);
 
-        $authService = new AuthService();
-        $usuario = $authService->validateCredentials(
-            $request->input('email'),
-            $request->input('password')
+        $resultado = ProteccionLogin::intentar(
+            (string) $request->input('email'),
+            (string) $request->input('password'),
+            (string) $request->ip(),
+            'api'
         );
 
+        $usuario = $resultado['usuario'];
         if (! $usuario) {
             return response()->json([
                 'success' => false,
-                'message' => 'Credenciales inválidas.',
+                'message' => $resultado['mensaje'],
             ], 401);
         }
+
+        Bloqueos::registrarLoginExitoso($usuario, $request);
+        Bitacora::registrar(accion: 'login_exitoso', modulo: 'autenticacion', observacion: 'API (token)', usuario: $usuario);
 
         $usuario->tokens()->where('name', 'flutter-app')->delete();
         $token   = $usuario->createToken('flutter-app')->plainTextToken;
         $persona = $usuario->persona()->first();
-        $roles   = $usuario->roles()->select('rol.id_rol', 'rol.nombre', 'rol.slug')->get();
-        $modulos = $this->getModulosPermitidos($usuario->id_usuario);
+        $roles   = $usuario->roles()->select('rol.id_rol', 'rol.nombre_rol', 'rol.slug_rol')->get();
+        $modulos = $this->getModulosPermitidos($usuario->id_use);
 
         return response()->json([
             'success' => true,
             'token'   => $token,
             'usuario' => [
-                'id'       => $usuario->id_usuario,
-                'username' => $usuario->username,
-                'nombre'   => $persona ? trim("{$persona->nombre_persona} {$persona->apellido_persona}") : $usuario->username,
-                'email'    => $persona->email_persona ?? $usuario->username,
+                'id'       => $usuario->id_use,
+                'username' => $usuario->username_use,
+                'nombre'   => $persona ? trim("{$persona->nombres_per} {$persona->apellidos_per}") : $usuario->username_use,
+                'email'    => $persona->correo_per ?? $usuario->username_use,
             ],
             'roles'   => $roles,
             'modulos' => $modulos,
@@ -53,6 +60,7 @@ class AuthApiController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        Bitacora::registrar(accion: 'logout', modulo: 'autenticacion', observacion: 'API (token)', usuario: $request->user());
         $request->user()->currentAccessToken()->delete();
         return response()->json(['success' => true, 'message' => 'Sesión cerrada correctamente.']);
     }
@@ -61,16 +69,16 @@ class AuthApiController extends Controller
     {
         $usuario = $request->user();
         $persona = $usuario->persona()->first();
-        $roles   = $usuario->roles()->select('rol.id_rol', 'rol.nombre', 'rol.slug')->get();
-        $modulos = $this->getModulosPermitidos($usuario->id_usuario);
+        $roles   = $usuario->roles()->select('rol.id_rol', 'rol.nombre_rol', 'rol.slug_rol')->get();
+        $modulos = $this->getModulosPermitidos($usuario->id_use);
 
         return response()->json([
             'success' => true,
             'usuario' => [
-                'id'       => $usuario->id_usuario,
-                'username' => $usuario->username,
-                'nombre'   => $persona ? trim("{$persona->nombre_persona} {$persona->apellido_persona}") : $usuario->username,
-                'email'    => $persona->email_persona ?? $usuario->username,
+                'id'       => $usuario->id_use,
+                'username' => $usuario->username_use,
+                'nombre'   => $persona ? trim("{$persona->nombres_per} {$persona->apellidos_per}") : $usuario->username_use,
+                'email'    => $persona->correo_per ?? $usuario->username_use,
             ],
             'roles'   => $roles,
             'modulos' => $modulos,
@@ -81,18 +89,18 @@ class AuthApiController extends Controller
     {
         return response()->json([
             'success' => true,
-            'modulos' => $this->getModulosPermitidos($request->user()->id_usuario),
+            'modulos' => $this->getModulosPermitidos($request->user()->id_use),
         ]);
     }
 
     private function getModulosPermitidos(int $userId): array
     {
-        $t = Schema::hasTable('modulos') ? 'modulos' : 'modulo';
+        $t = Schema::hasTable('modulo') ? 'modulos' : 'modulo';
 
         // Tablas prefijadas en cada columna para evitar ambigüedad
-        $roleIds = DB::table('rol_usuario')
-            ->where('rol_usuario.id_usuario', $userId)
-            ->pluck('rol_usuario.id_rol')
+        $roleIds = DB::table('usuario_rol')
+            ->where('usuario_rol.use_id', $userId)
+            ->pluck('usuario_rol.rol_id')
             ->toArray();
 
         if (empty($roleIds)) {
@@ -102,8 +110,8 @@ class AuthApiController extends Controller
         $esAdmin = DB::table('rol')
             ->whereIn('rol.id_rol', $roleIds)
             ->where(function ($q) {
-                $q->where('rol.slug', 'administrador')
-                    ->orWhere('rol.nombre', 'Administrador');
+                $q->where('rol.slug_rol', 'administrador')
+                    ->orWhere('rol.nombre_rol', 'Administrador');
             })
             ->exists();
 
@@ -115,7 +123,7 @@ class AuthApiController extends Controller
         }
 
         return DB::table('rol_modulo')
-            ->join($t, "$t.id", '=', 'rol_modulo.modulo_id')
+            ->join($t, "$t.id", '=', 'rol_modulo.mod_id')
             ->whereIn('rol_modulo.rol_id', $roleIds)
             ->where("$t.activo", 1)
             ->distinct()

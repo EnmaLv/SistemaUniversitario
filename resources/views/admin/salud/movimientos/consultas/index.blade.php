@@ -16,11 +16,13 @@
                     </div>
 
                     <div class="flex items-center gap-3">
+                        @canRoute('admin.salud.movimientos.consultas.create')
                         <a href="{{ route('admin.salud.movimientos.consultas.create') }}"
                             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-sky-600 hover:bg-sky-700' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>Nueva Consulta</span>
                         </a>
+                        @endcanRoute
                     </div>
                 </div>
 
@@ -120,8 +122,8 @@
                                         class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                         <option value="">Todos los médicos</option>
                                         @foreach ($medicos as $medico)
-                                            <option value="{{ $medico->id_persona }}"
-                                                @if (request('medico_id') == $medico->id_persona) selected @endif>
+                                            <option value="{{ $medico->per_id }}"
+                                                @if (request('medico_id') == $medico->per_id) selected @endif>
                                                 {{ $medico->nombre_completo }}
                                             </option>
                                         @endforeach
@@ -147,9 +149,9 @@
                                         class="w-full px-3 py-2 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                                         <option value="">Todos los consultorios</option>
                                         @foreach ($consultorios as $consultorio)
-                                            <option value="{{ $consultorio->id }}"
-                                                @if (request('consultorio_id') == $consultorio->id) selected @endif>
-                                                {{ $consultorio->nombre }}
+                                            <option value="{{ $consultorio->id_csr }}"
+                                                @if (request('consultorio_id') == $consultorio->id_csr) selected @endif>
+                                                {{ $consultorio->nombre_csr }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -216,22 +218,22 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800/60 text-xs font-medium">
                                 @forelse ($consultas as $data)
-                                    <x-table-row :id="$data->id">
+                                    <x-table-row :id="$data->id_cme">
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ optional($data->fecha)->format('d/m/Y') }}
+                                            {{ optional($data->fecha_cme)->format('d/m/Y') }}
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                             style="color: var(--text-main);">
-                                            {{ trim(optional($data->paciente)->nombre_persona . ' ' . optional($data->paciente)->apellido_persona) ?: '—' }}
+                                            {{ trim(optional($data->paciente)->nombres_per . ' ' . optional($data->paciente)->apellidos_per) ?: '—' }}
                                         </td>
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ trim(optional($data->medico)->nombre_persona . ' ' . optional($data->medico)->apellido_persona) ?: '—' }}
+                                            {{ trim(optional($data->medico)->nombres_per . ' ' . optional($data->medico)->apellidos_per) ?: '—' }}
                                         </td>
                                         <td
                                             class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                            {{ optional($data->consultorio)->nombre ?? '—' }}
+                                            {{ optional($data->consultorio)->nombre_csr ?? '—' }}
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap">
                                             @php $paso = $data->paso_actual; @endphp
@@ -253,7 +255,7 @@
                                             @endif
                                         </td>
 
-                                        <x-table-actions :id="$data->id" :base-url="route('admin.salud.movimientos.consultas.index')" :show="!in_array($paso, ['receta', 'dispensacion'])"
+                                        <x-table-actions :id="$data->id_cme" :base-url="route('admin.salud.movimientos.consultas.index')" :show="!in_array($paso, ['receta', 'dispensacion'])"
                                             :edit="false" :toggle="false" :pending-url="in_array($paso, ['receta', 'dispensacion'])
                                                 ? route('admin.salud.movimientos.consultas.dispensacion', $data)
                                                 : null" :pdf-url="!in_array($paso, ['receta', 'dispensacion'])

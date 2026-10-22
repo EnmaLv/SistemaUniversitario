@@ -9,7 +9,7 @@
                         Registro Diario del Comedor
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -23,10 +23,12 @@
                             <p class="rd-blur-text">
                                 Selecciona primero la comida del día y la cantidad servida para poder registrar a los estudiantes.
                             </p>
-                            <a href="{{ route('admin.movimientos.registro_comida.index') }}"
-                                class="rd-btn rd-btn-primary rd-blur-btn">
-                                Ir a la sección de comida
-                            </a>
+                            @canRoute('admin.movimientos.registro_comida.index')
+                                <a href="{{ route('admin.movimientos.registro_comida.index') }}"
+                                    class="rd-btn rd-btn-primary rd-blur-btn">
+                                    Ir a la sección de comida
+                                </a>
+                            @endcanRoute
                         </div>
                     </div>
                 @endif

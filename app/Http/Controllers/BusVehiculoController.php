@@ -11,16 +11,16 @@ use Illuminate\Http\Request;
 
 class BusVehiculoController extends Controller
 {
-    private function rules(int $excludeId = null): array
+    private function rules(?int $excludeId = null): array
     {
         return [
-            'placa'                      => 'required|string|max:20|unique:vehiculos,placa,' . $excludeId,
-            'modelo_id'                  => 'required|exists:modelos,id',
+            'placa'                      => 'required|string|max:20|unique:vehiculo_transporte,placa_vtr,' . ($excludeId ?? 'NULL') . ',id_vtr',
+            'modelo_id'                  => 'required|exists:modelo_vehiculo,id_mov',
             'anio'                       => 'required|integer|min:1990|max:' . date('Y'),
             'color'                      => 'required|string|max:50',
             'cantidad_pasajeros'         => 'required|integer|min:1|max:150',
             'peso'                       => 'required|string|max:50',
-            'tipo_combustible_id'        => 'required|exists:tipo_combustibles,id',
+            'tipo_combustible_id'        => 'required|exists:tipo_combustible,id_tcb',
             'cantidad_cilindros'         => 'required|integer|min:1|max:10',
             'capacidad_tanque_litros'    => 'required|numeric|min:1|max:1000',
             'nivel_combustible_actual'   => 'required|numeric|min:0|lte:capacidad_tanque_litros',
@@ -30,7 +30,7 @@ class BusVehiculoController extends Controller
             'km_actual'                  => 'required|numeric|min:0|max:9999999',
             'km_proximo_mantenimiento'   => 'required|numeric|min:0|max:9999999',
             'estado'                     => 'required|in:disponible,en_ruta,mantenimiento,inactivo',
-            'sede_id'                    => 'nullable|exists:sede,id',
+            'sed_id'                    => 'nullable|exists:sede,id_sed',
         ];
     }
 
@@ -42,10 +42,10 @@ class BusVehiculoController extends Controller
 
     public function create()
     {
-        $modelos = BusModelo::where('estado', 1)->orderBy('nombre')->get();
-        $marcas  = BusMarca::where('estado', 1)->orderBy('nombre')->get();
-        $tipos   = BusTipoCombustible::where('estado', 1)->orderBy('nombre')->get();
-        $sedes   = Sede::where('activo', 1)->orderBy('nombre')->get();
+        $modelos = BusModelo::activos()->with('busMarca')->orderBy('nombre_mov')->get();
+        $marcas  = BusMarca::activos()->orderBy('nombre_mav')->get();
+        $tipos   = BusTipoCombustible::activos()->orderBy('nombre_tcb')->get();
+        $sedes   = Sede::where('status_id', 1)->orderBy('nombre_sed')->get();
         return view('admin.transporte.maestros.bus_vehiculos.create', compact('modelos', 'marcas', 'tipos', 'sedes'));
     }
 
@@ -60,16 +60,16 @@ class BusVehiculoController extends Controller
 
     public function edit(BusVehiculo $busVehiculo)
     {
-        $modelos = BusModelo::where('estado', 1)->orderBy('nombre')->get();
-        $marcas  = BusMarca::where('estado', 1)->orderBy('nombre')->get();
-        $tipos   = BusTipoCombustible::where('estado', 1)->orderBy('nombre')->get();
-        $sedes   = Sede::where('activo', 1)->orderBy('nombre')->get();
+        $modelos = BusModelo::activos()->with('busMarca')->orderBy('nombre_mov')->get();
+        $marcas  = BusMarca::activos()->orderBy('nombre_mav')->get();
+        $tipos   = BusTipoCombustible::activos()->orderBy('nombre_tcb')->get();
+        $sedes   = Sede::where('status_id', 1)->orderBy('nombre_sed')->get();
         return view('admin.transporte.maestros.bus_vehiculos.edit', compact('busVehiculo', 'modelos', 'marcas', 'tipos', 'sedes'));
     }
 
     public function update(Request $request, BusVehiculo $busVehiculo)
     {
-        $validated = $request->validate($this->rules($busVehiculo->id));
+        $validated = $request->validate($this->rules($busVehiculo->id_vtr));
         BusVehiculo::actualizarVehiculo($busVehiculo, $validated);
         return redirect()
             ->route('admin.transporte.maestros.bus_vehiculos.index')
@@ -78,7 +78,7 @@ class BusVehiculoController extends Controller
 
     public function destroy(BusVehiculo $busVehiculo)
     {
-        $busVehiculo->update(['activo' => 0, 'estado' => 'inactivo']);
+        $busVehiculo->update(['status_id' => BusVehiculo::STATUS_INACTIVO, 'estado_operativo_vtr' => 'inactivo']);
         return redirect()
             ->route('admin.transporte.maestros.bus_vehiculos.index')
             ->with('success', 'Vehículo inactivado correctamente.');
@@ -86,7 +86,7 @@ class BusVehiculoController extends Controller
 
     public function activar(BusVehiculo $busVehiculo)
     {
-        $busVehiculo->update(['activo' => 1, 'estado' => 'disponible']);
+        $busVehiculo->update(['status_id' => BusVehiculo::STATUS_ACTIVO, 'estado_operativo_vtr' => 'disponible']);
         return redirect()
             ->route('admin.transporte.maestros.bus_vehiculos.index')
             ->with('success', 'Vehículo activado correctamente.');
@@ -94,9 +94,9 @@ class BusVehiculoController extends Controller
 
     public function verificarPlaca(Request $request)
     {
-        $query = BusVehiculo::where('placa', strtoupper(trim($request->placa)));
+        $query = BusVehiculo::todasLasSedes()->withTrashed()->where('placa_vtr', strtoupper(trim($request->placa)));
         if ($request->exclude) {
-            $query->where('id', '!=', $request->exclude);
+            $query->where('id_vtr', '!=', $request->exclude);
         }
         return response()->json(['existe' => $query->exists()]);
     }

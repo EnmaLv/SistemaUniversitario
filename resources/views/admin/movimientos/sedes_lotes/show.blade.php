@@ -6,13 +6,13 @@
 
             @php
                 $sedeId = request()->segment(count(request()->segments()));
-                $sedeNombre = $sedes->firstWhere('id', $sedeId)?->nombre ?? 'Sede';
+                $sedeNombre = $sedes->firstWhere('id_sed', $sedeId)?->nombre_sed ?? 'Sede';
             @endphp
 
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <div class="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-400">
-                        <a href="{{ route('admin.movimientos.sedes_lotes') }}"
+                        <a href="{{ route('admin.movimientos.sedes_lotes', [\App\Support\Inventario\FiltroTipoProducto::PARAMETRO => \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto)]) }}"
                             class="transition hover:text-red-600">Existencia por sedes</a>
                         <i class="fas fa-chevron-right text-[9px]"></i>
                         <span>{{ $sedeNombre }}</span>
@@ -26,13 +26,52 @@
                     </p>
                 </div>
 
-                <a href="{{ route('admin.movimientos.sedes_lotes') }}"
+                <a href="{{ route('admin.movimientos.sedes_lotes', [\App\Support\Inventario\FiltroTipoProducto::PARAMETRO => \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto)]) }}"
                     class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-extrabold transition-all hover:border-red-500 hover:text-red-600"
                     style="border-color: var(--border-color); color: var(--text-main);">
                     <i class="fas fa-arrow-left text-xs"></i>
                     <span>Volver a sedes</span>
                 </a>
             </div>
+
+            @if ($totales->isNotEmpty())
+                <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                    class="rounded-2xl border shadow-sm overflow-hidden mb-6">
+                    <div class="p-5 sm:p-6 border-b" style="border-color: var(--border-color);">
+                        <h3 class="text-lg font-extrabold flex items-center gap-2" style="color: var(--text-main);">
+                            <i class="fas fa-boxes-stacked text-red-700 dark:text-red-500"></i>
+                            Total por producto
+                        </h3>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Consolidado de todos los lotes de la sede, comparado con el stock mínimo y máximo del producto.
+                        </p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="text-[11px] font-black uppercase tracking-wider border-b" style="border-color: var(--border-color); color: var(--text-muted);">
+                                    <th class="px-6 py-3">Producto</th>
+                                    <th class="px-6 py-3 text-center">Existencia</th>
+                                    <th class="px-6 py-3 text-center">Unidad base</th>
+                                    <th class="px-6 py-3 text-center">Mínimo / Máximo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($totales as $total)
+                                    <tr class="border-b" style="border-color: var(--border-color); color: var(--text-main);">
+                                        <td class="px-6 py-3 font-bold">{{ $total->producto->nombre_pdt ?? 'Producto' }}</td>
+                                        <td class="px-6 py-3 text-center">
+                                            <x-alerta-stock :total="$total->cantidad_total_int" :minimo="$total->producto?->stock_minimo_pdt" :maximo="$total->producto?->stock_maximo_pdt" />
+                                        </td>
+                                        <td class="px-6 py-3 text-center">{{ number_format($total->cantidad_convertida_total_int, 2, ',', '.') }}</td>
+                                        <td class="px-6 py-3 text-center">{{ $total->producto->stock_minimo_pdt ?? '—' }} / {{ $total->producto->stock_maximo_pdt ?? '—' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm overflow-hidden">
@@ -52,9 +91,16 @@
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:ml-auto">
 
+                            <form action="{{ route('admin.movimientos.sedes_lotes.show', $sedeId) }}" method="GET">
+                                <input type="hidden" name="estado" value="{{ $activo }}">
+                                <input type="hidden" name="buscar" value="{{ $buscar ?? '' }}">
+                                <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" :etiqueta="false" />
+                            </form>
+
                             <form action="{{ route('admin.movimientos.sedes_lotes.show', $sedeId) }}"
                                 method="GET" class="relative flex-1 sm:w-64">
                                 <input type="hidden" name="estado" value="{{ $activo }}">
+                                <input type="hidden" name="tipo" value="{{ \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto) }}">
                                 <i class="fas fa-search absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none text-sm"></i>
                                 <input type="text" name="buscar" value="{{ $buscar ?? '' }}"
                                     placeholder="Buscar lote o producto…"
@@ -97,13 +143,13 @@
                             @forelse ($sede as $loteSede)
                                 @php
                                     $lote = $loteSede->lote;
-                                    $fechaVencimiento = $lote?->fecha_vencimiento
-                                        ? \Carbon\Carbon::parse($lote->fecha_vencimiento)
+                                    $fechaVencimiento = $lote?->fecha_vencimiento_lot
+                                        ? \Carbon\Carbon::parse($lote->fecha_vencimiento_lot)
                                         : null;
 
                                     $estaVencido    = $fechaVencimiento && $fechaVencimiento->isPast();
-                                    $agotado        = $loteSede->cantidad_convertida <= 0;
-                                    $loteActivo     = (bool) ($lote?->estado ?? false);
+                                    $agotado        = $loteSede->cantidad_convertida_isl <= 0;
+                                    $loteActivo     = (int) ($lote?->status_id ?? 0) === 1;
                                     $diasParaVencer = $fechaVencimiento
                                         ? \Carbon\Carbon::now()->diffInDays($fechaVencimiento, false)
                                         : null;
@@ -129,7 +175,7 @@
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-black rounded-md border font-mono"
                                             style="border-color: var(--border-color); color: var(--text-main);">
                                             <i class="fas fa-barcode text-[10px] opacity-60"></i>
-                                            {{ $loteSede->lote->codigo_lote }}
+                                            {{ $loteSede->lote->codigo_lote_lot }}
                                         </span>
                                     </td>
 
@@ -138,32 +184,32 @@
                                             <span class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-500 flex items-center justify-center shrink-0">
                                                 <i class="fas fa-box text-xs"></i>
                                             </span>
-                                            <span class="font-bold">{{ $loteSede->lote->producto->nombre ?? '—' }}</span>
+                                            <span class="font-bold">{{ $loteSede->lote->producto->nombre_pdt ?? '—' }}</span>
                                         </div>
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
-                                        <span class="font-black tabular-nums">{{ number_format($loteSede->cantidad, 0) }}</span>
+                                        <span class="font-black tabular-nums">{{ number_format($loteSede->cantidad_isl, 0) }}</span>
                                         <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 ml-1">u</span>
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        <span class="tabular-nums">{{ number_format($loteSede->cantidad_convertida, 0) }}</span>
+                                        <span class="tabular-nums">{{ number_format($loteSede->cantidad_convertida_isl, 0) }}</span>
                                         <span class="text-[10px] font-black uppercase tracking-wider opacity-60 ml-1">g</span>
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_entrada)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_entrada_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
                                         <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_vencimiento)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_vencimiento_lot)->format('d/m/Y') }}
                                     </td>
 
                                     <td class="px-4 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $loteSede->lote->proveedor->nombre ?? '—' }}
+                                        {{ $loteSede->lote->proveedor->nombre_contacto_prv ?? '—' }}
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap">

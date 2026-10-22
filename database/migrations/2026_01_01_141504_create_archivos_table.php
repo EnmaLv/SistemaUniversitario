@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('archivos', function (Blueprint $table) {
             $table->id();
             $table->string('info_estudiantes');
+            $table->string('ruta_archivo')->nullable();
+            $table->string('nombre_original')->nullable();
+            $table->json('resumen')->nullable();
+            $table->unsignedBigInteger('usuario_id')->nullable()->index();
             $table->date('fecha');
             $table->string('estado');
             $table->timestamps();

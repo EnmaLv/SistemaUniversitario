@@ -112,15 +112,15 @@
 
             // Nombre
             const nombreInput = document.getElementById(targetModalId + 'Nombre');
-            if (nombreInput) nombreInput.value = data.nombre || '-';
+            if (nombreInput) nombreInput.value = data.nombre_csr || '-';
 
             // Sede
             const sedeInput = document.getElementById(targetModalId + 'Sede');
-            if (sedeInput) sedeInput.value = data.sede ? data.sede.nombre : '-';
+            if (sedeInput) sedeInput.value = data.sede ? data.sede.nombre_sed : '-';
 
             // Descripción
             const descTextarea = document.getElementById(targetModalId + 'Descripcion');
-            if (descTextarea) descTextarea.value = data.descripcion || 'Sin descripción registrada.';
+            if (descTextarea) descTextarea.value = data.descripcion_csr || 'Sin descripción registrada.';
 
             openModalShowConsultorio(targetModalId);
 

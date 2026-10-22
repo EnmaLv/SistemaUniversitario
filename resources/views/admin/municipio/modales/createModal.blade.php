@@ -13,10 +13,10 @@
                 <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Estado</label>
                 <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
                     <span class="text-slate-500"><i class="fas fa-globe"></i></span>
-                    <select name="estado_id" wire:model.defer="estado_id" id="estado_id" class="w-full border-0 bg-transparent text-sm outline-none" style="color: var(--text-main);" required>
+                    <select name="esd_id" wire:model.defer="esd_id" id="esd_id" class="w-full border-0 bg-transparent text-sm outline-none" style="color: var(--text-main);" required>
                         <option value="">Seleccione un estado</option>
                         @foreach ($estados as $estado)
-                            <option value="{{ $estado->id }}">{{ $estado->nombre_estado }}</option>
+                            <option value="{{ $estado->id_esd }}">{{ $estado->nombre_esd }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -26,9 +26,9 @@
                 <label class="mb-1 block text-sm font-medium" style="color: var(--text-main);">Nombre del Municipio</label>
                 <div class="flex items-center gap-2 rounded-xl border px-3 py-2" style="background-color: var(--input-bg); border-color: var(--border-color);">
                     <span class="text-slate-500"><i class="fas fa-city"></i></span>
-                    <input type="text" class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400" style="color: var(--text-main);" id="nombre_municipio_crear" wire:model.defer="nombre_municipio" inputmode="text" maxlength="100" placeholder="Ingrese el nombre del municipio" required>
+                    <input type="text" class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-gray-400" style="color: var(--text-main);" id="nombre_municipio_crear" wire:model.defer="nombre_mun" inputmode="text" maxlength="100" placeholder="Ingrese el nombre del municipio" required>
                 </div>
-                @error('nombre_municipio')
+                @error('nombre_mun')
                     <div class="mt-2 text-sm text-red-600">{{ $message }}</div>
                 @enderror
             </div>

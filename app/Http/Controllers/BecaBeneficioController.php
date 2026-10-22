@@ -63,7 +63,7 @@ class BecaBeneficioController extends Controller
         session(['modulo_activo' => 'beca']);
 
         $beneficio = $this->beneficioService->cambiarEstado($beneficio);
-        $mensaje = $beneficio->status ? 'Beneficio activado exitosamente.' : 'Beneficio desactivado exitosamente.';
+        $mensaje = $beneficio->estaActivo() ? 'Beneficio activado exitosamente.' : 'Beneficio desactivado exitosamente.';
 
         return back()->with('success', $mensaje);
     }

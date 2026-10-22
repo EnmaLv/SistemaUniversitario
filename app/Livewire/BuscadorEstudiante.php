@@ -22,8 +22,8 @@ class BuscadorEstudiante extends Component
     {
         $student = Persona::find($id);
         if ($student) {
-            $this->selectedId = $student->id_persona;
-            $this->selectedLabel = $student->nombre_persona . ' ' . $student->apellido_persona . ' — C.I. ' . $student->cedula_persona;
+            $this->selectedId = $student->per_id;
+            $this->selectedLabel = $student->nombres_per . ' ' . $student->apellidos_per . ' — C.I. ' . $student->cedula_per;
             $this->search = '';
         }
     }
@@ -37,18 +37,18 @@ class BuscadorEstudiante extends Component
 
     public function getEstudiantesProperty()
     {
-        $query = Persona::where('id_perfil', 2);
+        $query = Persona::estudiantes();
 
         if (strlen($this->search) >= 1) {
             $s = $this->search;
             $query->where(function ($q) use ($s) {
-                $q->where('cedula_persona', 'like', "%{$s}%")
-                  ->orWhere('nombre_persona', 'like', "%{$s}%")
-                  ->orWhere('apellido_persona', 'like', "%{$s}%");
+                $q->where('cedula_per', 'like', "%{$s}%")
+                  ->orWhere('nombres_per', 'like', "%{$s}%")
+                  ->orWhere('apellidos_per', 'like', "%{$s}%");
             });
         }
 
-        return $query->orderBy('nombre_persona')->limit(15)->get();
+        return $query->orderBy('nombres_per')->limit(15)->get();
     }
 
     public function render()

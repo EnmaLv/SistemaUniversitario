@@ -19,7 +19,7 @@
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Modifica los campos necesarios y guarda los cambios.</p>
                 </div>
 
-                <form action="{{ route('admin.maestros.recetas.update', $receta->id) }}" method="POST" class="space-y-6 p-6">
+                <form action="{{ route('admin.maestros.recetas.update', $receta->id_rct) }}" method="POST" class="space-y-6 p-6">
                     @csrf
                     @method('PUT')
 
@@ -27,7 +27,7 @@
                         <label for="nombre" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Nombre de la receta</label>
                         <div class="relative">
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400"><i class="fas fa-utensils"></i></span>
-                            <input id="nombre" name="nombre" type="text" value="{{ old('nombre', $receta->nombre) }}" required autofocus maxlength="255" placeholder="Ej. Arepa con pollo"
+                            <input id="nombre" name="nombre" type="text" value="{{ old('nombre', $receta->nombre_rct) }}" required autofocus maxlength="255" placeholder="Ej. Arepa con pollo"
                                 class="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">
                         </div>
                         @error('nombre') <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p> @enderror
@@ -36,7 +36,7 @@
                     <div>
                         <label for="descripcion" class="mb-2 block text-sm font-bold" style="color: var(--text-main);">Descripción <span class="font-normal text-gray-400">(opcional)</span></label>
                         <textarea id="descripcion" name="descripcion" rows="5" placeholder="Describe brevemente la receta"
-                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">{{ old('descripcion', $receta->descripcion) }}</textarea>
+                            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-100">{{ old('descripcion', $receta->descripcion_rct) }}</textarea>
                         @error('descripcion') <p class="mt-2 text-sm font-semibold text-red-600">{{ $message }}</p> @enderror
                     </div>
 

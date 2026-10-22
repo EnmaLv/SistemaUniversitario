@@ -7,21 +7,23 @@
         <div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">Programas de Formación</h1>
             <p class="mt-1 text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
-                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                 {{ \Carbon\Carbon::now()->format('d/m/Y') }}
             </p>
         </div>
-        <button type="button"
-            onclick="const modal = document.getElementById('modalCrearPnf'); modal?.classList.remove('hidden'); modal?.classList.add('flex'); document.querySelector('#modalCrearPnf input[name=&quot;nombre&quot;]')?.focus();"
-            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-            <i class="fas fa-plus text-xs"></i><span>Nuevo programa</span>
-        </button>
+        @canRoute('admin.maestros.pnf.store')
+            <button type="button"
+                onclick="const modal = document.getElementById('modalCrearPnf'); modal?.classList.remove('hidden'); modal?.classList.add('flex'); document.querySelector('#modalCrearPnf input[name=&quot;nombre&quot;]')?.focus();"
+                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                <i class="fas fa-plus text-xs"></i><span>Nuevo programa</span>
+            </button>
+        @endcanRoute
     </div>
     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
         class="p-2.5 rounded-2xl border shadow-sm mb-3 flex flex-col lg:flex-row lg:items-center gap-4"
         style="background-color: var(--bg-card); border-color: var(--border-color);">
         <form action="{{ route('admin.maestros.pnf.index') }}" method="GET" class="relative w-full">
-            <input type="hidden" name="id_estatus" value="{{ request('id_estatus', 1) }}">
+            <input type="hidden" name="status_id" value="{{ request('status_id', 1) }}">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400"><i class="fas fa-search text-sm"></i></div>
             <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Buscar programa de formación..."
                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500 transition-all"
@@ -33,11 +35,11 @@
             tabindex="0"
             onclick="window.location.href = this.dataset.url"
             onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href = this.dataset.url; }"
-            data-url="{{ request()->fullUrlWithQuery(['id_estatus' => (int) request('id_estatus', 1) === 1 ? 2 : 1]) }}">
+            data-url="{{ request()->fullUrlWithQuery(['status_id' => (int) request('status_id', 1) === 1 ? 2 : 1]) }}">
             <span class="text-[11px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Activos</span>
             <label class="relative inline-flex cursor-pointer items-center">
                 <input type="checkbox" id="estadoToggle" class="peer sr-only" tabindex="-1"
-                    {{ (int) request('id_estatus', 1) === 1 ? 'checked' : '' }}
+                    {{ (int) request('status_id', 1) === 1 ? 'checked' : '' }}
                     aria-label="Mostrar programas activos">
                 <span class="h-6 w-10 rounded-full bg-gray-300 transition peer-checked:bg-red-700 dark:bg-gray-700"></span>
                 <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-4"></span>
@@ -56,28 +58,34 @@
                 </thead>
                 <tbody class="text-xs font-medium">
                     @forelse($pnfs as $pnf)
-                        <x-table-row :id="$pnf->id_pnf">
+                        <x-table-row :id="$pnf->id_prg">
                             <td class="px-6 py-4 text-center whitespace-nowrap"><span class="inline-flex items-center px-3 py-1 text-[12px] font-black rounded-lg text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-800">{{ ($pnfs->currentPage() - 1) * $pnfs->perPage() + $loop->iteration }}</span></td>
-                            <td class="px-6 py-4 text-center whitespace-nowrap font-bold" style="color: var(--text-main);">{{ $pnf->nombre_pnf }}</td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap font-bold" style="color: var(--text-main);">{{ $pnf->nombre_prg }}</td>
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                @if ($pnf->id_estatus == 1)
+                                @if ($pnf->status_id == 1)
                                     <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fas fa-check-circle"></i> Activo</span>
                                 @else
                                     <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-black text-rose-600 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"><i class="fas fa-times-circle"></i> Inactivo</span>
                                 @endif
                             </td>
-                            <x-table-actions :id="$pnf->id_pnf" baseUrl="admin/maestros/pnf" :status="$pnf->id_estatus == 1" :show="false" :edit="false" :toggle="false">
-                                        <a href="{{ route('admin.maestros.pnf.edit', ['id' => $pnf->id_pnf]) }}" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50" title="Editar"><i class="fas fa-edit text-xs"></i></a>
-                                        @if ($pnf->id_estatus == 1)
-                                            <form action="{{ route('admin.maestros.pnf.destroy', ['id' => $pnf->id_pnf]) }}" method="POST" class="inline">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-rose-100 hover:text-rose-500 dark:hover:bg-rose-950/50" onclick="confirmDelete(event, this)" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>
-                                            </form>
+                            <x-table-actions :id="$pnf->id_prg" baseUrl="admin/maestros/pnf" :status="$pnf->status_id == 1" :show="false" :edit="false" :toggle="false">
+                                        @canRoute('admin.maestros.pnf.edit')
+                                            <a href="{{ route('admin.maestros.pnf.edit', ['id' => $pnf->id_prg]) }}" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50" title="Editar"><i class="fas fa-edit text-xs"></i></a>
+                                        @endcanRoute
+                                        @if ($pnf->status_id == 1)
+                                            @canRoute('admin.maestros.pnf.destroy')
+                                                <form action="{{ route('admin.maestros.pnf.destroy', ['id' => $pnf->id_prg]) }}" method="POST" class="inline">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-rose-100 hover:text-rose-500 dark:hover:bg-rose-950/50" onclick="confirmDelete(event, this)" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>
+                                                </form>
+                                            @endcanRoute
                                         @else
-                                            <form action="{{ route('admin.maestros.pnf.activar', $pnf->id_pnf) }}" method="POST" class="inline">
-                                                @csrf @method('PUT')
-                                                <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500 dark:hover:bg-emerald-950/50" onclick="confirmDelete(event, this)" title="Activar"><i class="fas fa-check text-xs"></i></button>
-                                            </form>
+                                            @canRoute('admin.maestros.pnf.activar')
+                                                <form action="{{ route('admin.maestros.pnf.activar', $pnf->id_prg) }}" method="POST" class="inline">
+                                                    @csrf @method('PUT')
+                                                    <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-emerald-100 hover:text-emerald-500 dark:hover:bg-emerald-950/50" onclick="confirmDelete(event, this)" title="Activar"><i class="fas fa-check text-xs"></i></button>
+                                                </form>
+                                            @endcanRoute
                                         @endif
                             </x-table-actions>
                         </x-table-row>

@@ -6,6 +6,8 @@ use App\Models\BusRuta;
 use App\Models\BusVehiculo;
 use App\Models\BusViaje;
 use App\Models\Usuario;
+use App\Services\Transporte\TrazadoRutaService;
+use App\Support\Auditoria\Bitacora;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -20,21 +22,21 @@ class BusViajeController extends Controller
         ]);
 
         if ($request->filled('estado') && $request->estado !== 'todos') {
-            $query->where('estado', $request->estado);
+            $query->where('estado_viaje_vjt', $request->estado);
         }
 
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
                 $q->whereHas('vehiculo', function ($v) use ($buscar) {
-                    $v->where('placa', 'like', "%{$buscar}%");
+                    $v->where('placa_vtr', 'like', "%{$buscar}%");
                 })
                     ->orWhereHas('ruta', function ($r) use ($buscar) {
-                        $r->where('nombre', 'like', "%{$buscar}%");
+                        $r->where('nombre_rtr', 'like', "%{$buscar}%");
                     })
                     ->orWhereHas('conductor.persona', function ($p) use ($buscar) {
-                        $p->where('nombre_persona', 'like', "%{$buscar}%")
-                            ->orWhere('apellido_persona', 'like', "%{$buscar}%");
+                        $p->where('nombres_per', 'like', "%{$buscar}%")
+                            ->orWhere('apellidos_per', 'like', "%{$buscar}%");
                     });
             });
         }
@@ -48,20 +50,21 @@ class BusViajeController extends Controller
 
     public function create()
     {
-        $vehiculosOcupados = BusViaje::whereIn('estado', ['programado', 'en_curso'])
-            ->pluck('vehiculo_id');
+        $vehiculosOcupados = BusViaje::whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
+            ->pluck('vtr_id');
 
-        $vehiculos = BusVehiculo::where('estado', 1)
-            ->whereNotIn('id', $vehiculosOcupados)
+        $vehiculos = BusVehiculo::activos()
+            ->where('estado_operativo_vtr', 'disponible')
+            ->whereNotIn('id_vtr', $vehiculosOcupados)
             ->get();
 
-        $rutas = BusRuta::where('estado', 1)->with('horarios')->get();   // ← cambio
-        $conductoresOcupados = BusViaje::whereIn('estado', ['programado', 'en_curso'])
-            ->whereNotNull('conductor_id')
-            ->pluck('conductor_id');
+        $rutas = BusRuta::activos()->with(['horarios', 'paradas'])->get();
+        $conductoresOcupados = BusViaje::whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
+            ->whereNotNull('conductor_use_id')
+            ->pluck('conductor_use_id');
 
         $conductores = Usuario::with('persona')
-            ->whereNotIn('id_usuario', $conductoresOcupados)
+            ->whereNotIn('id_use', $conductoresOcupados)
             ->get();
 
         $turnoSugerido = BusViaje::calcularTurnoActual();
@@ -73,9 +76,9 @@ class BusViajeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'vehiculo_id'  => ['required', 'exists:vehiculos,id'],
-            'bus_ruta_id'  => ['required', 'exists:bus_rutas,id'],
-            'conductor_id' => ['required', 'exists:usuario,id_usuario'],
+            'vehiculo_id'  => ['required', 'exists:vehiculo_transporte,id_vtr'],
+            'bus_ruta_id'  => ['required', 'exists:ruta_transporte,id_rtr'],
+            'conductor_id' => ['required', 'exists:user,id_use'],
             'turno'        => ['required', Rule::in(['mañana', 'tarde', 'noche'])],
         ], [
             'vehiculo_id.required'  => 'Debe seleccionar un autobús.',
@@ -84,8 +87,8 @@ class BusViajeController extends Controller
             'turno.required'        => 'Debe especificar el turno del viaje.',
         ]);
 
-        $vehiculoEnUso = BusViaje::where('vehiculo_id', $request->vehiculo_id)
-            ->whereIn('estado', ['programado', 'en_curso'])
+        $vehiculoEnUso = BusViaje::where('vtr_id', $request->vehiculo_id)
+            ->whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
             ->exists();
 
         if ($vehiculoEnUso) {
@@ -94,8 +97,8 @@ class BusViajeController extends Controller
                 ->with('error', 'El vehículo seleccionado ya cuenta con un viaje activo o programado.');
         }
 
-        $conductorEnUso = BusViaje::where('conductor_id', $request->conductor_id)
-            ->whereIn('estado', ['programado', 'en_curso'])
+        $conductorEnUso = BusViaje::where('conductor_use_id', $request->conductor_id)
+            ->whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
             ->exists();
 
         if ($conductorEnUso) {
@@ -105,21 +108,21 @@ class BusViajeController extends Controller
         }
 
         $viaje = BusViaje::create([
-            'vehiculo_id'  => $request->vehiculo_id,
-            'bus_ruta_id'  => $request->bus_ruta_id,
-            'conductor_id' => $request->conductor_id,
-            'turno'        => $request->turno,
-            'estado'       => 'programado',
-            'km_inicio'    => 0,
-            'km_fin'       => 0,
-            'distancia_km' => 0,
-            'litros_gastados' => 0,
-            'pasajeros'    => 0,
-            'hubo_desvio'  => false,
+            'vtr_id'              => $request->vehiculo_id,
+            'rtr_id'              => $request->bus_ruta_id,
+            'conductor_use_id'    => $request->conductor_id,
+            'turno_vjt'           => $request->turno,
+            'estado_viaje_vjt'    => 'programado',
+            'km_inicio_vjt'       => 0,
+            'km_fin_vjt'          => 0,
+            'distancia_km_vjt'    => 0,
+            'litros_gastados_vjt' => 0,
+            'total_pasajeros_vjt' => 0,
+            'hubo_desvio_vjt'     => false,
         ]);
 
         $viaje->update([
-            'firebase_id' => 'viaje_' . $viaje->id,
+            'firebase_id_vjt' => 'viaje_' . $viaje->id_vjt,
         ]);
 
         return redirect()->route('admin.transporte.maestros.bus_viajes.index')
@@ -128,23 +131,24 @@ class BusViajeController extends Controller
 
     public function edit(BusViaje $busViaje)
     {
-        $vehiculosOcupados = BusViaje::where('id', '!=', $busViaje->id)
-            ->whereIn('estado', ['programado', 'en_curso'])
-            ->pluck('vehiculo_id');
+        $vehiculosOcupados = BusViaje::where('id_vjt', '!=', $busViaje->id_vjt)
+            ->whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
+            ->pluck('vtr_id');
 
-        $vehiculos = BusVehiculo::where('estado', 1)
-            ->whereNotIn('id', $vehiculosOcupados)
+        $vehiculos = BusVehiculo::activos()
+            ->where(fn ($q) => $q->where('estado_operativo_vtr', 'disponible')->orWhere('id_vtr', $busViaje->vtr_id))
+            ->whereNotIn('id_vtr', $vehiculosOcupados)
             ->get();
 
-        $rutas = BusRuta::where('estado', 1)->with('horarios')->get();   // ← cambio
+        $rutas = BusRuta::activos()->with(['horarios', 'paradas'])->get();
 
-        $conductoresOcupados = BusViaje::where('id', '!=', $busViaje->id)
-            ->whereIn('estado', ['programado', 'en_curso'])
-            ->whereNotNull('conductor_id')
-            ->pluck('conductor_id');
+        $conductoresOcupados = BusViaje::where('id_vjt', '!=', $busViaje->id_vjt)
+            ->whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
+            ->whereNotNull('conductor_use_id')
+            ->pluck('conductor_use_id');
 
         $conductores = Usuario::with('persona')
-            ->whereNotIn('id_usuario', $conductoresOcupados)
+            ->whereNotIn('id_use', $conductoresOcupados)
             ->get();
 
         return view('admin.transporte.maestros.bus_viajes.edit',
@@ -154,9 +158,9 @@ class BusViajeController extends Controller
     public function update(Request $request, BusViaje $busViaje)
     {
         $request->validate([
-            'vehiculo_id'  => ['required', 'exists:vehiculos,id'],
-            'bus_ruta_id'  => ['required', 'exists:bus_rutas,id'],
-            'conductor_id' => ['required', 'exists:usuario,id_usuario'],
+            'vehiculo_id'  => ['required', 'exists:vehiculo_transporte,id_vtr'],
+            'bus_ruta_id'  => ['required', 'exists:ruta_transporte,id_rtr'],
+            'conductor_id' => ['required', 'exists:user,id_use'],
             'turno'        => ['required', Rule::in(['mañana', 'tarde', 'noche'])],
         ], [
             'vehiculo_id.required'  => 'Debe seleccionar un autobús.',
@@ -165,9 +169,9 @@ class BusViajeController extends Controller
             'turno.required'        => 'Debe especificar el turno del viaje.',
         ]);
 
-        $vehiculoEnUso = BusViaje::where('id', '!=', $busViaje->id)
-            ->where('vehiculo_id', $request->vehiculo_id)
-            ->whereIn('estado', ['programado', 'en_curso'])
+        $vehiculoEnUso = BusViaje::where('id_vjt', '!=', $busViaje->id_vjt)
+            ->where('vtr_id', $request->vehiculo_id)
+            ->whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
             ->exists();
 
         if ($vehiculoEnUso) {
@@ -176,9 +180,9 @@ class BusViajeController extends Controller
                 ->with('error', 'El vehículo seleccionado ya cuenta con otro viaje activo o programado.');
         }
 
-        $conductorEnUso = BusViaje::where('id', '!=', $busViaje->id)
-            ->where('conductor_id', $request->conductor_id)
-            ->whereIn('estado', ['programado', 'en_curso'])
+        $conductorEnUso = BusViaje::where('id_vjt', '!=', $busViaje->id_vjt)
+            ->where('conductor_use_id', $request->conductor_id)
+            ->whereIn('estado_viaje_vjt', ['programado', 'en_curso'])
             ->exists();
 
         if ($conductorEnUso) {
@@ -188,14 +192,19 @@ class BusViajeController extends Controller
         }
 
         $busViaje->update([
-            'vehiculo_id'  => $request->vehiculo_id,
-            'bus_ruta_id'  => $request->bus_ruta_id,
-            'conductor_id' => $request->conductor_id,
-            'turno'        => $request->turno,
+            'vtr_id'           => $request->vehiculo_id,
+            'rtr_id'           => $request->bus_ruta_id,
+            'conductor_use_id' => $request->conductor_id,
+            'turno_vjt'        => $request->turno,
         ]);
 
         return redirect()->route('admin.transporte.maestros.bus_viajes.index')
             ->with('success', 'El viaje se ha actualizado exitosamente.');
+    }
+
+    public function posicion(BusViaje $busViaje)
+    {
+        return app(\App\Http\Controllers\Api\BusViajeApiController::class)->obtenerPosicion($busViaje);
     }
 
     public function show(BusViaje $busViaje)
@@ -203,18 +212,60 @@ class BusViajeController extends Controller
         $busViaje->load([
             'vehiculo',
             'ruta.paradas' => function ($query) {
-                $query->orderBy('orden', 'asc');
+                $query->orderBy('ruta_parada_transporte.orden_rpt', 'asc');
             },
             'conductor.persona'
         ]);
 
-        return view('admin.transporte.maestros.bus_viajes.show', compact('busViaje'));
+        $trazado = app(TrazadoRutaService::class);
+        $rutaId = (int) $busViaje->rtr_id;
+        $trazadoReferencia = $trazado->puntosVigentes($rutaId);
+        $versionReferencia = $trazado->versionVigente($rutaId);
+        $tramosDesvio = $trazado->tramosDesvio((int) $busViaje->id_vjt);
+
+        return view('admin.transporte.maestros.bus_viajes.show', compact(
+            'busViaje',
+            'trazadoReferencia',
+            'versionReferencia',
+            'tramosDesvio'
+        ));
+    }
+
+    public function marcarReferencia(BusViaje $busViaje, TrazadoRutaService $trazado)
+    {
+        if ($busViaje->estado_viaje_vjt !== 'finalizado') {
+            return redirect()->route('admin.transporte.maestros.bus_viajes.show', $busViaje)
+                ->with('error', 'Solo el recorrido de un viaje finalizado puede marcarse como referencia.');
+        }
+
+        try {
+            $resultado = $trazado->marcarComoReferencia($busViaje);
+        } catch (\RuntimeException $e) {
+            return redirect()->route('admin.transporte.maestros.bus_viajes.show', $busViaje)
+                ->with('error', $e->getMessage());
+        }
+
+        Bitacora::registrar(
+            accion: 'trazado_referencia_marcado',
+            modulo: 'transporte',
+            tablaAfectada: 'ruta_transporte',
+            registroId: (int) $busViaje->rtr_id,
+            datosAnteriores: ['version_vigente' => $resultado['version_anterior']],
+            datosModificados: [
+                'version_vigente' => $resultado['version'],
+                'vjt_id'          => (int) $busViaje->id_vjt,
+                'puntos'          => $resultado['puntos'],
+            ],
+        );
+
+        return redirect()->route('admin.transporte.maestros.bus_viajes.show', $busViaje)
+            ->with('success', "El recorrido del viaje es ahora la referencia de la ruta (versión {$resultado['version']}).");
     }
 
     public function destroy(BusViaje $busViaje)
     {
         $busViaje->update([
-            'estado' => 'inactivo'
+            'estado_viaje_vjt' => 'inactivo',
         ]);
 
         return redirect()->route('admin.transporte.maestros.bus_viajes.index')->with('success', 'El viaje ha sido desactivado correctamente.');
@@ -230,8 +281,7 @@ class BusViajeController extends Controller
         ]);
 
         $busViaje->update([
-            'estado'             => 'cancelado',
-            'motivo_cancelacion' => $request->motivo_cancelacion,
+            'estado_viaje_vjt' => 'cancelado',
         ]);
 
         return redirect()->route('admin.transporte.maestros.bus_viajes.index')->with('success', 'El viaje ha sido cancelado exitosamente.');
@@ -240,8 +290,16 @@ class BusViajeController extends Controller
     public function gpsLogs(BusViaje $busViaje)
     {
         $logs = $busViaje->gpsLogs()
-            ->orderBy('id')
-            ->get(['lat', 'lng', 'velocidad', 'heading', 'created_at']);
+            ->orderBy('id_lgt')
+            ->get(['lat_lgt', 'lng_lgt', 'velocidad_lgt', 'heading_lgt', 'es_desvio_lgt', 'created_at'])
+            ->map(fn ($log) => [
+                'lat'        => $log->lat_lgt,
+                'lng'        => $log->lng_lgt,
+                'velocidad'  => $log->velocidad_lgt,
+                'heading'    => $log->heading_lgt,
+                'desvio'     => (bool) $log->es_desvio_lgt,
+                'created_at' => $log->created_at,
+            ]);
 
         return response()->json([
             'success' => true,

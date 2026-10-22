@@ -14,13 +14,20 @@ class RolModuloSeeder extends Seeder
     public function run(): void
     {
         DB::table('rol_modulo')->insert([
-            ['rol_id' => 3, 'modulo_id' => 2],
-            ['rol_id' => 4, 'modulo_id' => 1],
-            ['rol_id' => 5, 'modulo_id' => 1],
-            ['rol_id' => 6, 'modulo_id' => 4],
-            ['rol_id' => 7, 'modulo_id' => 6],
-            ['rol_id' => 8, 'modulo_id' => 1],
-            ['rol_id' => 9, 'modulo_id' => 4],
+            ['rol_id' => 3, 'mod_id' => 2],
+            ['rol_id' => 4, 'mod_id' => 1],
+            ['rol_id' => 5, 'mod_id' => 1],
+            ['rol_id' => 6, 'mod_id' => 4],
+            ['rol_id' => 7, 'mod_id' => 6],
+            ['rol_id' => 8, 'mod_id' => 1],
+            ['rol_id' => 9, 'mod_id' => 4],
         ]);
+
+        $rolPsicologo = DB::table('rol')->where('slug_rol', 'psicologo')->value('id_rol');
+        $moduloPsicologia = DB::table('modulo')->where('key_mod', 'psicologia')->value('id_mod');
+
+        if ($rolPsicologo && $moduloPsicologia) {
+            DB::table('rol_modulo')->insert(['rol_id' => $rolPsicologo, 'mod_id' => $moduloPsicologia]);
+        }
     }
 }

@@ -11,7 +11,7 @@
                         Editar Medicamento
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
@@ -24,8 +24,8 @@
 
             {{-- Formulario --}}
             @include('admin.maestros.productos._form', [
-                'titulo'         => 'Editar medicamento: ' . $medicamento->nombre,
-                'action'         => route('admin.salud.maestros.medicamentos.update', $medicamento->id),
+                'titulo'         => 'Editar medicamento: ' . $medicamento->nombre_pdt,
+                'action'         => route('admin.salud.maestros.medicamentos.update', $medicamento->id_pdt),
                 'metodo'         => 'PUT',
                 'rutaVolver'     => route('admin.salud.maestros.medicamentos.index'),
                 'categorias'     => $categorias,

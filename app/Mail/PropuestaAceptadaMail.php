@@ -26,9 +26,9 @@ class PropuestaAceptadaMail extends Mailable implements ShouldQueue
         return $this->subject('Contrapropuesta Aceptada')
             ->view('emails.propuesta_aceptada')
             ->with([
-                'paciente' => optional($this->paciente->persona)->nombre_persona ?: 'Paciente',
-                'fecha' => $this->cita->fecha ? Carbon::parse($this->cita->fecha)->translatedFormat('l d \d\e F \d\e Y') : 'una fecha por definir',
-                'hora' => $this->cita->hora ? Carbon::parse($this->cita->hora)->format('g:i A') : 'una hora por definir'
+                'paciente' => optional($this->paciente->persona)->nombres_per ?: 'Paciente',
+                'fecha' => $this->cita->fecha_cps ? Carbon::parse($this->cita->fecha_cps)->translatedFormat('l d \d\e F \d\e Y') : 'una fecha por definir',
+                'hora' => $this->cita->hora_cps ? Carbon::parse($this->cita->hora_cps)->format('g:i A') : 'una hora por definir'
             ]);
     }
 }

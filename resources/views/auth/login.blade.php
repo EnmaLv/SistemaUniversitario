@@ -417,13 +417,15 @@
                 <p class="subtitle">Ingresa tus credenciales para continuar</p>
 
                 @if ($errors->any())
-                    <div style="color:#b71c1c;margin-bottom:12px">{{ $errors->first() }}</div>
+                    <div role="alert" style="color:#b71c1c;margin-bottom:12px">{{ $errors->first() }}</div>
+                @elseif (session('status'))
+                    <div role="status" style="color:#166534;margin-bottom:12px">{{ session('status') }}</div>
                 @endif
 
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group">
-                        <input class="input" type="email" name="email" placeholder="Correo electrónico" required
+                        <input class="input" type="text" name="email" placeholder="Cédula o correo electrónico" autocomplete="username" required
                             autofocus>
                     </div>
 

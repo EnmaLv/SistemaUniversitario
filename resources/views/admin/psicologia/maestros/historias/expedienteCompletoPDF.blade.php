@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Expediente Completo - {{ $paciente->persona->nombre_persona }}</title>
+    <title>Expediente Completo - {{ $paciente->persona->nombres_per }}</title>
     <style>
         @page { margin: 80px 18mm 80px 18mm; }
         header { position: fixed; top: -60px; left: 0px; right: 0px; height: 50px; text-align: center; }
@@ -227,17 +227,17 @@
             </td>
             <td style="width: 50%;" class="doc-info">
                 <div class="doc-title">Expediente Clínico General</div>
-                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombre_persona . ' ' . Auth::user()->persona->apellido_persona) }} | PSICÓLOGO</div>
+                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombres_per . ' ' . Auth::user()->persona->apellidos_per) }} | PSICÓLOGO</div>
                 <div class="doc-subtitle">Fecha: {{ date('d/m/Y') }}</div>
             </td>
         </tr>
     </table>
 
     <div class="patient-card">
-        <div class="patient-name">{{ $paciente->persona->nombre_persona }} {{ $paciente->persona->apellido_persona }}</div>
+        <div class="patient-name">{{ $paciente->persona->nombres_per }} {{ $paciente->persona->apellidos_per }}</div>
         <div class="patient-meta">
             <span>Sesiones Totales: {{ $stats['realizadas'] }}</span>
-            <span>N° Expediente: {{ $historia->id }}</span>
+            <span>N° Expediente: {{ $historia->id_hcl }}</span>
         </div>
     </div>
 
@@ -245,21 +245,21 @@
     <table class="info-grid">
         <tr>
             <td>
-                <div class="info-label">Cédula: {{ $paciente->persona->cedula_persona ?? 'No registrada' }}</div>
+                <div class="info-label">Cédula: {{ $paciente->persona->cedula_per ?? 'No registrada' }}</div>
             </td>
             <td>
-                <div class="info-label">Teléfono: {{ $paciente->persona->telefono_persona ?? 'No registrado' }}</div>
+                <div class="info-label">Teléfono: {{ $paciente->persona->telefono_per ?? 'No registrado' }}</div>
             </td>
         </tr>
         <tr>
             <td>
                 @php
                     $edad = 'No registrada';
-                    if(!empty($paciente->fecha_nacimiento)) {
-                        $edad = \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->age . ' años';
+                    if(!empty($paciente->persona->fecha_nacimiento_per)) {
+                        $edad = \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->age . ' años';
                     }
                 @endphp
-                <div class="info-label">Edad y Nacimiento: {{ $edad }} ({{ !empty($paciente->persona->fecha_nacimiento_persona) ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_persona)->format('d/m/Y') : 'N/A' }})</div>
+                <div class="info-label">Edad y Nacimiento: {{ $edad }} ({{ !empty($paciente->persona->fecha_nacimiento_per) ? \Carbon\Carbon::parse($paciente->persona->fecha_nacimiento_per)->format('d/m/Y') : 'N/A' }})</div>
             </td>
             <td>
                 <div class="info-label">Perfil Académico / PNF: {{ $paciente->perfil_academico ?? 'No registrado' }}
@@ -271,7 +271,7 @@
         </tr>
         <tr>
             <td>
-                <div class="info-label">Género / Estado Civil: {{ $paciente->persona->genero_persona ?? 'N/A' }} / {{ $paciente->estado_civil ?? 'N/A' }}</div>
+                <div class="info-label">Género / Estado Civil: {{ $paciente->persona->genero_per ?? 'N/A' }} / {{ $paciente->estado_civil ?? 'N/A' }}</div>
             </td>
             <td>
                 <div class="info-label">Discapacidad: {{ ($paciente->discapacidad ?? 'No') == 'Si' ? 'Sí — ' . ($paciente->tipo_discapacidad ?? '') : 'Ninguna' }}</div>
@@ -280,16 +280,16 @@
     </table>
 
     @foreach($seccionesPersonalizadas as $seccion)
-        <div class="section-title">{{ $seccion->titulo }}</div>
-        @if($seccion->descripcion_general)
-            <div style="font-size: 9px; color: #6b7280; margin-bottom: 8px;">{{ $seccion->descripcion_general }}</div>
+        <div class="section-title">{{ $seccion->titulo_hsp }}</div>
+        @if($seccion->descripcion_general_hsp)
+            <div style="font-size: 9px; color: #6b7280; margin-bottom: 8px;">{{ $seccion->descripcion_general_hsp }}</div>
         @endif
         @foreach($seccion->segmentos as $segmento)
-            <div class="segment-title">{{ $segmento->titulo }}</div>
+            <div class="segment-title">{{ $segmento->titulo_hsm }}</div>
             <div class="segment-content">
-                {!! nl2br(e(strip_tags($segmento->contenido ?? 'Sin información registrada.'))) !!}
+                {!! nl2br(e(strip_tags($segmento->contenido_hsm ?? 'Sin información registrada.'))) !!}
                 @php
-                    $contextoSeg = 'seg_' . $segmento->id;
+                    $contextoSeg = 'seg_' . $segmento->id_hsm;
                     $enfermedadesSeg = $enfermedadesVinculadas[$contextoSeg] ?? [];
                 @endphp
                 @if(count($enfermedadesSeg) > 0)
@@ -297,7 +297,7 @@
                         <strong>Trastornos o Condiciones Presentes:</strong>
                         <div class="disease-list">
                             @foreach($enfermedadesSeg as $enf)
-                                <span class="disease-tag">{{ $enf->nombre }}</span>
+                                <span class="disease-tag">{{ $enf->nombre_efm }}</span>
                             @endforeach
                         </div>
                     </div>
@@ -315,7 +315,7 @@
             </td>
             <td style="width: 50%;" class="doc-info">
                 <div class="doc-title">Notas de Evolución</div>
-                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombre_persona . ' ' . Auth::user()->persona->apellido_persona) }} | PSICÓLOGO</div>
+                <div class="doc-subtitle">DR. {{ strtoupper(Auth::user()->persona->nombres_per . ' ' . Auth::user()->persona->apellidos_per) }} | PSICÓLOGO</div>
                 <div class="doc-subtitle">Fecha: {{ date('d/m/Y') }}</div>
             </td>
         </tr>
@@ -330,11 +330,11 @@
         @foreach($citasSeleccionadas as $cita)
             @php
                 $sesionNum++;
-                $fechaStr = $cita->fecha ? $cita->fecha->translatedFormat('d M Y') : 'Sin fecha';
-                $motivo = $cita->motivo ?? 'Consulta General';
+                $fechaStr = $cita->fecha_cps ? $cita->fecha_cps->translatedFormat('d M Y') : 'Sin fecha';
+                $motivo = $cita->motivo_cps ?? 'Consulta General';
                 $notasData = null;
-                if ($cita->notas) {
-                    $notasData = json_decode($cita->notas, true);
+                if ($cita->notas_cps) {
+                    $notasData = json_decode($cita->notas_cps, true);
                     if (json_last_error() !== JSON_ERROR_NONE) $notasData = null;
                 }
             @endphp
@@ -346,12 +346,12 @@
                 <div class="timeline-body">
                     @if($notasData && is_array($notasData))
                         @php
-                            $camposDinamicos = \App\Models\salud\CitaNotaEvolucion::obtenerPorCita($cita->id);
+                            $camposDinamicos = \App\Models\salud\CitaNotaEvolucion::obtenerPorCita($cita->id_cps);
                         @endphp
                         
                         @foreach($camposDinamicos as $campo)
-                            @if(!empty(trim($campo->contenido)))
-                                <strong>{{ $campo->titulo }}:</strong> {{ trim($campo->contenido) }}<br>
+                            @if(!empty(trim($campo->contenido_cno)))
+                                <strong>{{ $campo->titulo_cne }}:</strong> {{ trim($campo->contenido_cno) }}<br>
                             @endif
                         @endforeach
 

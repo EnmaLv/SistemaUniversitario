@@ -423,7 +423,7 @@
                 setInterval(() => {
                     if (this.selectedContact) {
                         axios.post('/mensajes/ping', {
-                            chat_activo_user_id: this.selectedContact.id
+                            chat_activo_use_id: this.selectedContact.id
                         }).catch(() => {});
                     }
                 }, 30000);
@@ -464,7 +464,7 @@
                 this.isLoading = true;
                 if (this.currentEchoChannel) window.Echo.leave(this.currentEchoChannel);
 
-                axios.post('/mensajes/ping', { chat_activo_user_id: this.selectedContact.id }).catch(() => {});
+                axios.post('/mensajes/ping', { chat_activo_use_id: this.selectedContact.id }).catch(() => {});
                 axios.get(`/mensajes/${this.selectedContact.id}`)
                     .then(response => {
                         this.messages = response.data.messages;

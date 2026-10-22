@@ -11,11 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class BusCargaCombustibleController extends Controller
 {
-    private function rules(int $excludeId = null): array
+    private function rules(?int $excludeId = null): array
     {
         return [
-            'bus_vehiculo_id'         => 'required|exists:bus_vehiculos,id',
-            'bus_viaje_id'            => 'required|exists:bus_viajes,id',
+            'bus_vehiculo_id'         => 'required|exists:vehiculo_transporte,id_vtr',
+            'bus_viaje_id'            => 'required|exists:viaje_transporte,id_vjt',
+            'bus_tipo_combustible_id' => 'nullable|exists:tipo_combustible,id_tcb',
             'fecha'                   => 'required|date|before_or_equal:today',
             'litros'                  => 'required|numeric|min:0.1|max:1000',
             'precio_litros'           => 'required|numeric|min:0.01|max:999999',
@@ -27,15 +28,15 @@ class BusCargaCombustibleController extends Controller
     public function index(Request $request)
     {
         $cargas    = BusCargaCombustible::listarCargas($request->buscar, $request->input('vehiculo_id'));
-        $vehiculos = BusVehiculo::where('activo', 1)->orderBy('placa')->get();
+        $vehiculos = BusVehiculo::activos()->with('modelo')->orderBy('placa_vtr')->get();
         return view('admin.transporte.maestros.bus_carga_combustibles.index', compact('cargas', 'vehiculos'));
     }
 
     public function create()
     {
-        $vehiculos = BusVehiculo::where('activo', 1)->orderBy('placa')->get();
+        $vehiculos = BusVehiculo::activos()->with('modelo')->orderBy('placa_vtr')->get();
         $viajes    = BusViaje::with(['vehiculo', 'ruta'])->orderBy('created_at', 'desc')->take(50)->get();
-        $tipos     = BusTipoCombustible::where('estado', 1)->orderBy('nombre')->get();
+        $tipos     = BusTipoCombustible::activos()->orderBy('nombre_tcb')->get();
         return view('admin.transporte.maestros.bus_carga_combustibles.create', compact('vehiculos', 'viajes', 'tipos'));
     }
 
@@ -47,8 +48,8 @@ class BusCargaCombustibleController extends Controller
             BusCargaCombustible::crearCarga($validated);
 
             $vehiculo = BusVehiculo::find($validated['bus_vehiculo_id']);
-            if ($vehiculo && $validated['km_al_cargar'] > $vehiculo->km_actual) {
-                $vehiculo->update(['km_actual' => $validated['km_al_cargar']]);
+            if ($vehiculo && $validated['km_al_cargar'] > $vehiculo->km_actual_vtr) {
+                $vehiculo->update(['km_actual_vtr' => $validated['km_al_cargar']]);
             }
         });
 
@@ -59,23 +60,23 @@ class BusCargaCombustibleController extends Controller
 
     public function edit(BusCargaCombustible $busCargaCombustible)
     {
-        $vehiculos = BusVehiculo::where('activo', 1)->orderBy('placa')->get();
+        $vehiculos = BusVehiculo::activos()->with('modelo')->orderBy('placa_vtr')->get();
         $viajes    = BusViaje::with(['vehiculo', 'ruta'])->orderBy('created_at', 'desc')->take(50)->get();
-        $tipos     = BusTipoCombustible::where('estado', 1)->orderBy('nombre')->get();
+        $tipos     = BusTipoCombustible::activos()->orderBy('nombre_tcb')->get();
         return view('admin.transporte.maestros.bus_carga_combustibles.edit',
             compact('busCargaCombustible', 'vehiculos', 'viajes', 'tipos'));
     }
 
     public function update(Request $request, BusCargaCombustible $busCargaCombustible)
     {
-        $validated = $request->validate($this->rules($busCargaCombustible->id));
+        $validated = $request->validate($this->rules($busCargaCombustible->id_ccb));
 
         DB::transaction(function () use ($busCargaCombustible, $validated) {
             BusCargaCombustible::actualizarCarga($busCargaCombustible, $validated);
 
             $vehiculo = BusVehiculo::find($validated['bus_vehiculo_id']);
-            if ($vehiculo && $validated['km_al_cargar'] > $vehiculo->km_actual) {
-                $vehiculo->update(['km_actual' => $validated['km_al_cargar']]);
+            if ($vehiculo && $validated['km_al_cargar'] > $vehiculo->km_actual_vtr) {
+                $vehiculo->update(['km_actual_vtr' => $validated['km_al_cargar']]);
             }
         });
 

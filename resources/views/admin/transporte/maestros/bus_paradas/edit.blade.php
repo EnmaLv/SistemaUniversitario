@@ -17,7 +17,7 @@
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-5">
                 <div class="lg:col-span-2">
                     <div class="route-card rounded-2xl border p-5 shadow-sm">
-                <form id="formEditar" action="{{ route('admin.transporte.maestros.bus_paradas.update', $busParada->id) }}"
+                <form id="formEditar" action="{{ route('admin.transporte.maestros.bus_paradas.update', $busParada->id_ptr) }}"
                     method="POST">
                     @csrf
                     @method('PUT')
@@ -31,7 +31,7 @@
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-map-pin"></i></span>
                             <input type="text" name="nombre" id="crearNombre"
-                                value="{{ old('nombre', $busParada->nombre) }}"
+                                value="{{ old('nombre', $busParada->nombre_ptr) }}"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('nombre') border-red-300 @enderror"
                                 placeholder="Ej: Hiper Sol Acarigua" maxlength="100" required autofocus>
                         </div>
@@ -45,7 +45,7 @@
                         <label class="rd-label">Dirección descriptiva</label>
                         <div class="flex items-center rounded-xl border border-slate-200 bg-slate-50 mt-1">
                             <span class="px-3 text-slate-500"><i class="fas fa-map-marker-alt"></i></span>
-                            <input type="text" name="direccion" value="{{ old('direccion', $busParada->direccion) }}"
+                            <input type="text" name="direccion" value="{{ old('direccion', $busParada->getRawOriginal('direccion_ptr')) }}"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('direccion') border-red-300 @enderror"
                                 placeholder="Ej: Av. Circunvalación, frente al centro comercial">
                         </div>
@@ -59,7 +59,7 @@
                             <div class="form-group">
                                 <label class="rd-label">Latitud</label>
                                 <input type="text" id="latInput" name="lat"
-                                    value="{{ old('lat', $busParada->lat) }}"
+                                    value="{{ old('lat', $busParada->lat_ptr) }}"
                                     class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('lat') border-red-300 @enderror" readonly
                                     placeholder="Haga clic en el mapa" required>
                                 @error('lat')
@@ -71,7 +71,7 @@
                             <div class="form-group">
                                 <label class="rd-label">Longitud</label>
                                 <input type="text" id="lngInput" name="lng"
-                                    value="{{ old('lng', $busParada->lng) }}"
+                                    value="{{ old('lng', $busParada->lng_ptr) }}"
                                     class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-red-500 focus:ring-2 focus:ring-red-500/20 rd-filter-input @error('lng') border-red-300 @enderror" readonly
                                     placeholder="Haga clic en el mapa" required>
                                 @error('lng')
@@ -140,7 +140,7 @@
         let map;
         let marker = null;
         const BASE_URL = '/admin/transporte/maestros/bus_paradas';
-        const busParadaId = @json($busParada->id);
+        const busParadaId = @json($busParada->id_ptr);
 
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
@@ -153,8 +153,8 @@
             // Prioriza las coordenadas antiguas por si falló la validación.
             const oldLat = "{{ old('lat') }}";
             const oldLng = "{{ old('lng') }}";
-            const dbLat = "{{ $busParada->lat }}";
-            const dbLng = "{{ $busParada->lng }}";
+            const dbLat = "{{ $busParada->lat_ptr }}";
+            const dbLng = "{{ $busParada->lng_ptr }}";
 
             let initialLat = oldLat ? parseFloat(oldLat) : parseFloat(dbLat);
             let initialLng = oldLng ? parseFloat(oldLng) : parseFloat(dbLng);

@@ -9,15 +9,17 @@
                         Sedes y anexos
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombre_persona ?? auth()->user()->name }}</span> ·
+                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per ?? auth()->user()->name }}</span> ·
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
-                <a href="{{ route('admin.maestros.sedes.create') }}"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                    <i class="fas fa-plus text-xs"></i>
-                    <span>Nueva sede</span>
-                </a>
+                @canRoute('admin.maestros.sedes.create')
+                    <a href="{{ route('admin.maestros.sedes.create') }}"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span>Nueva sede</span>
+                    </a>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -68,7 +70,7 @@
                         </thead>
                         <tbody class="text-xs font-medium">
                             @forelse($sedes as $sede)
-                                <x-table-row :id="$sede->id" class="border-b"
+                                <x-table-row :id="$sede->id_sed" class="border-b"
                                     style="border-color: var(--border-color);">
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
                                         <span
@@ -78,16 +80,16 @@
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap font-bold"
                                         style="color:var(--text-main);">
-                                        {{ $sede->nombre }}
+                                        {{ $sede->nombre_sed }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $sede->direccion ?: 'Sin dirección' }}
+                                        {{ $sede->direccion_sed ?: 'Sin dirección' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        {{ $sede->telefono ?: 'Sin teléfono' }}
+                                        {{ $sede->telefono_sed ?: 'Sin teléfono' }}
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        @if($sede->activo)
+                                        @if((int) $sede->status_id === 1)
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                                 <i class="fas fa-check-circle"></i> Activo
@@ -99,8 +101,8 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <x-table-actions :id="$sede->id" baseUrl="admin/maestros/sedes"
-                                        :status="$sede->activo" :show="false" />
+                                    <x-table-actions :id="$sede->id_sed" baseUrl="admin/maestros/sedes"
+                                        :status="(int) $sede->status_id === 1" :show="false" />
                                 </x-table-row>
                             @empty
                                 <tr>

@@ -11,12 +11,12 @@
                     Editar Campo de Evolución
                 </h1>
                 <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Modificar la información del campo <strong class="text-indigo-600 dark:text-indigo-400">{{ $campo->titulo }}</strong>.
+                    Modificar la información del campo <strong class="text-indigo-600 dark:text-indigo-400">{{ $campo->titulo_cne }}</strong>.
                 </p>
             </div>
             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                 class="rounded-2xl border shadow-sm overflow-hidden p-6 sm:p-8">
-                <form action="{{ route('admin.psicologia.maestros.campos_evolucion.update', $campo->id) }}" method="POST">
+                <form action="{{ route('admin.psicologia.maestros.campos_evolucion.update', $campo->id_cne) }}" method="POST">
                     @csrf
                     @method('PATCH')
                     <div class="space-y-6">
@@ -25,7 +25,7 @@
                                 class="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-2">
                                 Título del Campo <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="titulo" id="titulo" value="{{ old('titulo', $campo->titulo) }}"
+                            <input type="text" name="titulo" id="titulo" value="{{ old('titulo', $campo->titulo_cne) }}"
                                 style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
                                 class="w-full h-11 px-4 border rounded-xl focus:outline-none focus:ring-2 {{ $focusRingClass ?? 'focus:ring-indigo-500' }} text-sm font-medium transition-all"
                                 placeholder="Ej: Hábitos de sueño, Estado afectivo..." required>

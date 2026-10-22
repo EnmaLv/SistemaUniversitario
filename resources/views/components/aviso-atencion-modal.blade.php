@@ -1,6 +1,6 @@
 @if (request()->has('avisoAtencionCita'))
     @php
-        $citaAviso = \App\Models\salud\Cita::find(request('avisoAtencionCita'));
+        $citaAviso = \App\Models\salud\Cita::where('psicologo_use_id', auth()->id())->find(request('avisoAtencionCita'));
     @endphp
     @if ($citaAviso && $citaAviso->paciente)
         <div id="avisoAtencionModal"
@@ -27,7 +27,7 @@
                     <div class="text-gray-600 dark:text-gray-300 space-y-3 mb-8 text-center px-2">
                         <p class="text-base font-medium">
                             Has <strong class="font-black text-gray-900 dark:text-white">rechazado o cancelado</strong> múltiples citas relacionadas al paciente <strong
-                                class="font-black text-sky-600 dark:text-sky-400">{{ $citaAviso->paciente->name }}</strong>.
+                                class="font-black text-sky-600 dark:text-sky-400">{{ $citaAviso->paciente->nombre_completo }}</strong>.
                         </p>
                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">
                             Este es un recordatorio opcional del sistema. Si consideras que el paciente merece
@@ -42,15 +42,18 @@
                     </div>
 
                     <div class="flex sm:flex-row flex-col justify-center gap-3 mt-8">
-                        <form method="POST" action="{{ route('citas.update_alerta_prioridad', $citaAviso) }}"
+                        @canRoute('admin.psicologia.maestros.citas.update.prioridad')
+                        <form method="POST" action="{{ route('admin.psicologia.maestros.citas.update.prioridad', $citaAviso->id_cps) }}"
                             class="w-full sm:w-1/2">
                             @csrf
+                            @method('PATCH')
                             <input type="hidden" name="prioridad" value="alta">
                             <button type="submit"
                                 class="w-full px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm active:scale-95">
                                 Sí, cambiar a Alta
                             </button>
                         </form>
+                        @endcanRoute
 
                         <button type="button"
                             onclick="document.getElementById('avisoAtencionModal').style.display='none'"

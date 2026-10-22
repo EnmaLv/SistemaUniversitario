@@ -2,7 +2,6 @@
 
 namespace App\Services\Transporte;
 
-use App\Models\BusGpsLog;
 use App\Models\BusViaje;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -20,6 +19,10 @@ class CalculoCombustibleService
         'puntos_gps_usados'      => 0,
     ];
 
+    public function __construct(private TrazadoRutaService $trazado)
+    {
+    }
+
     public function calcularParaViaje(BusViaje $viaje): array
     {
         $vehiculo = $viaje->vehiculo;
@@ -29,24 +32,36 @@ class CalculoCombustibleService
         }
 
         $puntos = $viaje->gpsLogs()
-            ->orderBy('registrado_en')
-            ->orderBy('id')
-            ->get(['lat', 'lng', 'velocidad', 'registrado_en']);
+            ->orderBy('registrado_en_lgt')
+            ->orderBy('id_lgt')
+            ->get(['lat_lgt', 'lng_lgt', 'velocidad_lgt', 'registrado_en_lgt']);
 
-        if ($puntos->count() < 2) {
+        $puntosRecibidos = (int) $viaje->puntos_recibidos_vjt;
+
+        if ($puntosRecibidos > $puntos->count()) {
+            $distanciaUrbana = (float) $viaje->distancia_urbana_km_vjt;
+            $distanciaCarretera = (float) $viaje->distancia_carretera_km_vjt;
+            $tiempoRalentiHoras = (float) $viaje->ralenti_horas_vjt;
+            $puntosUsados = $puntosRecibidos;
+
+            if ($distanciaUrbana + $distanciaCarretera + $tiempoRalentiHoras <= 0) {
+                return $this->calcularConRutaPlanificada($viaje, $vehiculo);
+            }
+        } elseif ($puntos->count() < 2) {
             return $this->calcularConRutaPlanificada($viaje, $vehiculo);
+        } else {
+            [$distanciaUrbana, $distanciaCarretera, $tiempoRalentiHoras] = $this->analizarTramos($puntos);
+            $puntosUsados = $puntos->count();
         }
-
-        [$distanciaUrbana, $distanciaCarretera, $tiempoRalentiHoras] = $this->analizarTramos($puntos);
 
         $distanciaTotal = $distanciaUrbana + $distanciaCarretera;
 
-        $litrosPorDistancia = ($distanciaUrbana * (float) $vehiculo->consumo_urbano)
-            + ($distanciaCarretera * (float) $vehiculo->consumo_carretera);
+        $litrosPorDistancia = ($distanciaUrbana * (float) $vehiculo->consumo_urbano_vtr)
+            + ($distanciaCarretera * (float) $vehiculo->consumo_carretera_vtr);
 
-        $litrosPorRalenti = $tiempoRalentiHoras * (float) $vehiculo->consumo_relenti;
+        $litrosPorRalenti = $tiempoRalentiHoras * (float) $vehiculo->consumo_ralenti_vtr;
 
-        $factorCarga = $this->calcularFactorCarga($vehiculo, (int) $viaje->pasajeros);
+        $factorCarga = $this->calcularFactorCarga($vehiculo, (int) $viaje->total_pasajeros_vjt);
 
         $litrosGastados = max(0, ($litrosPorDistancia + $litrosPorRalenti) * $factorCarga);
 
@@ -58,17 +73,20 @@ class CalculoCombustibleService
             'litros_gastados'        => round($litrosGastados, 2),
             'factor_carga'           => round($factorCarga, 4),
             'fuente'                 => 'gps',
-            'puntos_gps_usados'      => $puntos->count(),
+            'puntos_gps_usados'      => $puntosUsados,
         ];
     }
 
     private function calcularConRutaPlanificada(BusViaje $viaje, $vehiculo): array
     {
-        $distanciaPlanificada = (float) ($viaje->ruta->distancia_km ?? 0);
+        $distanciaReferencia = $this->trazado->longitudReferenciaKm((int) $viaje->rtr_id);
+        $distanciaPlanificada = $distanciaReferencia > 0
+            ? $distanciaReferencia
+            : (float) ($viaje->ruta->distancia_km_rtr ?? 0);
 
-        $factorCarga = $this->calcularFactorCarga($vehiculo, (int) $viaje->pasajeros);
+        $factorCarga = $this->calcularFactorCarga($vehiculo, (int) $viaje->total_pasajeros_vjt);
 
-        $litrosGastados = max(0, $distanciaPlanificada * (float) $vehiculo->consumo_carretera * $factorCarga);
+        $litrosGastados = max(0, $distanciaPlanificada * (float) $vehiculo->consumo_carretera_vtr * $factorCarga);
 
         return [
             'distancia_km'           => round($distanciaPlanificada, 2),
@@ -100,20 +118,20 @@ class CalculoCombustibleService
                 continue;
             }
 
-            $velAnterior = (float) ($anterior->velocidad ?? 0);
-            $velActual   = (float) ($punto->velocidad ?? 0);
+            $velAnterior = (float) ($anterior->velocidad_lgt ?? 0);
+            $velActual   = (float) ($punto->velocidad_lgt ?? 0);
 
             $esRalenti = $velAnterior <= $umbralRalenti && $velActual <= $umbralRalenti;
 
             if ($esRalenti) {
-                $horas = $this->horasEntre($anterior->registrado_en, $punto->registrado_en);
+                $horas = $this->horasEntre($anterior->registrado_en_lgt, $punto->registrado_en_lgt);
                 $ralentiHoras += min($horas, $topeGapHoras);
             } else {
                 $tramoKm = $this->distanciaHaversineKm(
-                    (float) $anterior->lat,
-                    (float) $anterior->lng,
-                    (float) $punto->lat,
-                    (float) $punto->lng
+                    (float) $anterior->lat_lgt,
+                    (float) $anterior->lng_lgt,
+                    (float) $punto->lat_lgt,
+                    (float) $punto->lng_lgt
                 );
 
                 $velocidadPromedioTramo = ($velAnterior + $velActual) / 2;
@@ -162,7 +180,7 @@ class CalculoCombustibleService
 
     private function calcularFactorCarga($vehiculo, int $pasajeros): float
     {
-        $pesoVehiculo = (float) $vehiculo->peso;
+        $pesoVehiculo = (float) $vehiculo->peso_vtr;
 
         if ($pesoVehiculo <= 0) {
             return 1.0;
@@ -180,18 +198,18 @@ class CalculoCombustibleService
     {
         $vehiculo = $viaje->vehiculo;
 
-        $nivelResultante = (float) $vehiculo->nivel_combustible_actual - $resultado['litros_gastados'];
-        $nivelResultante = max(0, min($nivelResultante, (float) $vehiculo->capacidad_tanque_litros));
+        $nivelResultante = (float) $vehiculo->nivel_combustible_actual_vtr - $resultado['litros_gastados'];
+        $nivelResultante = max(0, min($nivelResultante, (float) $vehiculo->capacidad_tanque_litros_vtr));
 
         $vehiculo->update([
-            'nivel_combustible_actual' => $nivelResultante,
-            'km_actual'                => (float) $vehiculo->km_actual + $resultado['distancia_km'],
+            'nivel_combustible_actual_vtr' => $nivelResultante,
+            'km_actual_vtr'                => (float) $vehiculo->km_actual_vtr + $resultado['distancia_km'],
         ]);
 
         $viaje->update([
-            'km_fin'          => (float) $viaje->km_inicio + $resultado['distancia_km'],
-            'distancia_km'    => $resultado['distancia_km'],
-            'litros_gastados' => $resultado['litros_gastados'],
+            'km_fin_vjt'          => (float) $viaje->km_inicio_vjt + $resultado['distancia_km'],
+            'distancia_km_vjt'    => $resultado['distancia_km'],
+            'litros_gastados_vjt' => $resultado['litros_gastados'],
         ]);
     }
 }

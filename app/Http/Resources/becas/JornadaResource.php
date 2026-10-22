@@ -15,25 +15,25 @@ class JornadaResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'nombre' => $this->nombre_jornada,
-            'descripcion' => $this->descripcion_jornada ?? 'Sin descripción disponible',
+            'id' => $this->id_jnb,
+            'nombre' => $this->nombre_jornada_jnb,
+            'descripcion' => $this->descripcion_jornada_jnb ?? 'Sin descripción disponible',
             
             // Agrupamos las fechas de solicitud
             'periodo_solicitud' => [
-                'inicio' => $this->fecha_inicio_solicitud,
-                'fin' => $this->fecha_fin_solicitud,
+                'inicio' => $this->fecha_inicio_solicitud_jnb,
+                'fin' => $this->fecha_fin_solicitud_jnb,
             ],
             
             // Manejo de los contadores de cupos
             'cupos' => [
-                'maximos' => (int) $this->cupos_maximos,
-                'asignados' => (int) $this->cupos_asignados,
-                'disponibles' => (int) ($this->cupos_maximos - $this->cupos_asignados),
+                'maximos' => (int) $this->cupos_maximos_jnb,
+                'asignados' => (int) $this->cupos_asignados_jnb,
+                'disponibles' => (int) ($this->cupos_maximos_jnb - $this->cupos_asignados_jnb),
             ],
             
             // Convertimos el tinyint(1) a un booleano real de PHP
-            'esta_activa' => (bool) $this->activa,
+            'esta_activa' => $this->estaActivo(),
             
             // Relaciones opcionales (Solo se incluirán si las cargas en el controlador con ->load())
             'beneficio' => $this->whenLoaded('beneficio'), 

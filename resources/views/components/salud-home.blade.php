@@ -4,6 +4,8 @@
     $medicoId = $saludData['medicoId'];
     $consultorios = $saludData['consultorios'];
     $medicos = $saludData['medicos'];
+    $tiposPersona = $saludData['tiposPersona'] ?? collect();
+    $programas = $saludData['programas'] ?? collect();
 
     $themeColor = 'sky';
     $btnClass = 'bg-sky-600 hover:bg-sky-700';
@@ -59,6 +61,7 @@
         </div>
 
         {{-- Exportar --}}
+        @canAction('consultas', 'exportar')
         <div x-data="{ openExport: false }" class="relative z-20">
             <button @click="openExport = !openExport" @click.away="openExport = false"
                 style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
@@ -93,6 +96,7 @@
                 
             </div>
         </div>
+        @endcanAction
     </div>
 </div>
 
@@ -130,7 +134,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($consultorios as $c)
-                <option value="{{ $c->id }}">{{ $c->nombre }}</option>
+                <option value="{{ $c->id_csr }}">{{ $c->nombre_csr }}</option>
             @endforeach
         </select>
     </div>
@@ -141,7 +145,7 @@
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
             @foreach ($medicos as $m)
-                <option value="{{ $m->id_persona }}">
+                <option value="{{ $m->per_id }}">
                     {{ $m->nombre_completo }} — {{ $m->nombre_rol }}
                 </option>
             @endforeach
@@ -213,17 +217,14 @@
         </select>
     </div>
     <div>
-        <label class="block mb-1 text-[10px] font-black text-gray-400 uppercase tracking-wider">Rol Inst.</label>
+        <label class="block mb-1 text-[10px] font-black text-gray-400 uppercase tracking-wider">Tipo de persona</label>
         <select id="filterPerfilAcademico" onchange="window.dashboardApp.recargar()"
             style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
-            <option value="Estudiante">Estudiante</option>
-            <option value="Profesor">Profesor</option>
-            <option value="Obrero">Obrero</option>
-            <option value="Administrativo">Administrativo</option>
-            <option value="Pre-escolar">Pre-escolar</option>
-            <option value="Otros">Otros</option>
+            @foreach ($tiposPersona as $tipoPersona)
+                <option value="{{ $tipoPersona }}">{{ $tipoPersona }}</option>
+            @endforeach
         </select>
     </div>
     <div>
@@ -233,16 +234,9 @@
             style="background-color: rgba(0,0,0,0.02); border-color: var(--border-color); color: var(--text-main);"
             class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
             <option value="">Todos</option>
-            <option value="ADMINISTRACION">Administración</option>
-            <option value="MECANICA">Mecánica</option>
-            <option value="MANTENIMIENTO">Mantenimiento</option>
-            <option value="ELECTRICIDAD">Electricidad</option>
-            <option value="VETERINARIA">Veterinaria</option>
-            <option value="INFORMATICA">Informática</option>
-            <option value="PROC_Y_DIST_DE_ALIMENTOS">PDA</option>
-            <option value="DISTRIBUCIÓN_LOGÍSTICA">Distribución y Logística</option>
-            <option value="AGROALIMENTACION">Agroalimentación</option>
-            <option value="SEGURIDAD_ALIMENTARIA">Seguridad Alimentaria</option>
+            @foreach ($programas as $programa)
+                <option value="{{ $programa }}">{{ $programa }}</option>
+            @endforeach
         </select>
     </div>
 </div>
@@ -301,8 +295,8 @@
     </div>
     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
         class="p-6 rounded-2xl border shadow-sm">
-        <h4 class="text-xs font-black uppercase tracking-wider mb-4 text-gray-500 dark:text-gray-400">Distribución
-            de Edades</h4>
+        <h4 class="text-xs font-black uppercase tracking-wider mb-4 text-gray-500 dark:text-gray-400">Consultas por
+            edad del paciente al consultar</h4>
         <div class="relative" style="height: 280px;">
             <canvas id="chartEdades"></canvas>
         </div>
@@ -318,6 +312,25 @@
             <div class="flex items-center justify-center" style="height: 250px;">
                 <canvas id="chartEstadoRecetas"></canvas>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+        class="p-6 rounded-2xl border shadow-sm">
+        <h4 class="text-xs font-black uppercase tracking-wider mb-4 text-gray-500 dark:text-gray-400">Consultas por
+            PNF del paciente</h4>
+        <div class="relative" style="height: 280px;">
+            <canvas id="chartPnfConsulta"></canvas>
+        </div>
+    </div>
+    <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+        class="p-6 rounded-2xl border shadow-sm">
+        <h4 class="text-xs font-black uppercase tracking-wider mb-4 text-gray-500 dark:text-gray-400">Consultas por
+            tipo de persona</h4>
+        <div class="relative" style="height: 280px;">
+            <canvas id="chartTipoPersona"></canvas>
         </div>
     </div>
 </div>
@@ -655,15 +668,14 @@
                     resumen.comparativa_consultas || 0) + '%'],
             ];
 
-            rows.push(['<strong>ROLES INSTITUCIONALES</strong>', '']);
-            if (resumen.perfil_academico) {
-                Object.entries(resumen.perfil_academico).forEach(([rol, cant]) => rows.push([rol, cant]));
-            }
+            rows.push(['<strong>CONSULTAS POR EDAD AL CONSULTAR</strong>', '']);
+            Object.entries(resumen.edad_consulta || {}).forEach(([rango, cant]) => rows.push([rango, cant]));
 
-            rows.push(['<strong>PACIENTES POR PNF / CARRERA</strong>', '']);
-            if (resumen.pnf) {
-                Object.entries(resumen.pnf).forEach(([k, v]) => rows.push([k, v]));
-            }
+            rows.push(['<strong>CONSULTAS POR TIPO DE PERSONA</strong>', '']);
+            Object.entries(resumen.tipo_persona_consulta || {}).forEach(([tipo, cant]) => rows.push([tipo, cant]));
+
+            rows.push(['<strong>CONSULTAS POR PNF</strong>', '']);
+            Object.entries(resumen.pnf_consulta || {}).forEach(([pnf, cant]) => rows.push([pnf, cant]));
 
             rows.push(['<strong>ENFERMEDADES MÁS FRECUENTES</strong>', '']);
             if (resumen.enfermedades) {
@@ -818,14 +830,14 @@
 
             // Edades
             destroyChart('edades');
-            const barColors = [COLORS.indigo, COLORS.sky, COLORS.emerald, COLORS.amber, COLORS.rose];
+            const barColors = [COLORS.indigo, COLORS.sky, COLORS.emerald, COLORS.amber, COLORS.rose, COLORS.violet, COLORS.cyan];
             charts.edades = new Chart(document.getElementById('chartEdades'), {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(resumen.edades?.rangos || {}).map(l => l + ' años'),
+                    labels: Object.keys(resumen.edad_consulta || {}),
                     datasets: [{
-                        label: 'Pacientes',
-                        data: Object.values(resumen.edades?.rangos || {}),
+                        label: 'Consultas',
+                        data: Object.values(resumen.edad_consulta || {}),
                         backgroundColor: barColors.map(c => c.bg),
                         borderColor: barColors.map(c => c.border),
                         borderWidth: 2,
@@ -866,6 +878,94 @@
                                     weight: 'bold',
                                     size: 12
                                 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            destroyChart('pnfConsulta');
+            charts.pnfConsulta = new Chart(document.getElementById('chartPnfConsulta'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(resumen.pnf_consulta || {}).slice(0, 10),
+                    datasets: [{
+                        label: 'Consultas',
+                        data: Object.values(resumen.pnf_consulta || {}).slice(0, 10),
+                        backgroundColor: COLORS.sky.bg,
+                        borderColor: COLORS.sky.border,
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: tickColor,
+                                stepSize: 1,
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: tickColor,
+                                font: {
+                                    weight: 'bold',
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            destroyChart('tipoPersona');
+            charts.tipoPersona = new Chart(document.getElementById('chartTipoPersona'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(resumen.tipo_persona_consulta || {}),
+                    datasets: [{
+                        data: Object.values(resumen.tipo_persona_consulta || {}),
+                        backgroundColor: PALETTE.slice(0, Object.keys(resumen.tipo_persona_consulta || {}).length),
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 10,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: {
+                                    weight: 'bold',
+                                    size: 10
+                                },
+                                color: tickColor
                             }
                         }
                     }

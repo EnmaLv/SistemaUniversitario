@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 
 class EnfermedadesSeeder extends Seeder
 {
@@ -25,9 +26,8 @@ class EnfermedadesSeeder extends Seeder
             return;
         }
 
-        // Desactivar temporalmente revisión de claves foráneas para acelerar la inserción
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('enfermedades')->truncate();
+        Schema::disableForeignKeyConstraints();
+        DB::table('enfermedad')->truncate();
 
         // Dividir los 12k registros en lotes de 1.000
         $chunks = array_chunk($enfermedades, 1000);
@@ -42,20 +42,20 @@ class EnfermedadesSeeder extends Seeder
                 $esMental = str_starts_with($codigo, 'F') || str_contains($codigo, 'F00') || str_contains($codigo, 'F99');
 
                 $insertData[] = [
-                    'codigo'     => $codigo ?: null,
-                    'nombre'     => trim($item['description'] ?? ''),
-                    'categoria'  => $esMental ? 'mental' : 'fisica',
-                    'nivel'      => $item['level'] ?? 0,
-                    'activo'     => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'codigo_efm'         => $codigo ?: null,
+                    'nombre_efm'         => trim($item['description'] ?? ''),
+                    'categoria_efm'      => $esMental ? 'mental' : 'fisica',
+                    'nivel_gravedad_efm' => $item['level'] ?? 0,
+                    'status_id'          => 1,
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
                 ];
             }
 
-            DB::table('enfermedades')->insert($insertData);
+            DB::table('enfermedad')->insert($insertData);
         }
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-        $this->command->info('¡Tabla enfermedades poblada exitosamente con CIE-10!');
+        Schema::enableForeignKeyConstraints();
+        $this->command->info('¡Tabla enfermedad poblada exitosamente con CIE-10!');
     }
 }

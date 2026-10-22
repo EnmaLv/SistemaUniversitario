@@ -52,12 +52,14 @@
                 </div>
 
                 {{-- Exportar PDF --}}
+                @canRoute('admin.psicologia.estadisticas.generales')
                 <button onclick="window.psicoAdminApp.exportar('pdf')"
                     style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-sm shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
                     <i class="fas fa-file-pdf text-rose-500"></i>
                     <span>PDF</span>
                 </button>
+                @endcanRoute
             </div>
         </div>
 
@@ -105,7 +107,7 @@
                     class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
                     <option value="">Todos</option>
                     @foreach ($avances as $avance)
-                        <option value="{{ $avance->id }}">{{ $avance->nombre }}</option>
+                        <option value="{{ $avance->id_avs }}">{{ $avance->nombre_avs }}</option>
                     @endforeach
                 </select>
             </div>
@@ -116,7 +118,7 @@
                     class="w-full rounded-xl border text-xs font-medium focus:outline-none focus:ring-2 {{ $focusRingClass }} transition-all px-3 py-2">
                     <option value="">Todos</option>
                     @foreach ($estadosAnimo as $animo)
-                        <option value="{{ $animo->id }}">{{ $animo->valor }} - {{ $animo->nombre }}</option>
+                        <option value="{{ $animo->id_esa }}">{{ $animo->valor_esa }} - {{ $animo->nombre_esa }}</option>
                     @endforeach
                 </select>
             </div>
@@ -330,7 +332,7 @@
             const map = {
                 psicoAdminFilterEstado:  'estado',
                 psicoAdminFilterAvance:  'avance_id',
-                psicoAdminFilterAnimo:   'estado_animo_id',
+                psicoAdminFilterAnimo:   'esa_id',
                 psicoAdminFilterPerfil:  'perfil_academico',
                 psicoAdminFilterPnf:     'pnf',
             };

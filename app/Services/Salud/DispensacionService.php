@@ -5,12 +5,11 @@ namespace App\Services\Salud;
 use App\Exceptions\Salud\StockInsuficienteException;
 use App\Models\InventarioSedeLote;
 use App\Models\Lote;
-use App\Models\MovimientoInventario;
-use App\Models\Unidad;
 use App\Models\salud\Consulta;
 use App\Models\salud\DetalleRecetasMedica;
 use App\Models\salud\Dispensacion;
 use App\Models\salud\RecetasMedica;
+use App\Support\Inventario\ServicioInventario;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -21,13 +20,14 @@ class DispensacionService
 {
     public const SEDE_POR_DEFECTO = 1;
 
-    /* ──────────────────────────────────────────────────────────────
-     |  Utilidades
-     ────────────────────────────────────────────────────────────── */
+    public function __construct(
+        private readonly ConversorDosis $conversor,
+        private readonly ServicioInventario $inventario,
+    ) {}
 
     public static function sedeDelUsuario($usuario): int
     {
-        return (int) ($usuario?->persona?->sede_id ?? self::SEDE_POR_DEFECTO);
+        return (int) (\App\Support\Sedes\SedeActiva::idParaCrear() ?? self::SEDE_POR_DEFECTO);
     }
 
     /**
@@ -43,22 +43,18 @@ class DispensacionService
      */
     public function lotesDisponiblesQuery(int $productoId, int $sedeId): Builder
     {
-        return Lote::where('producto_id', $productoId)
+        return Lote::where('pdt_id', $productoId)
             ->where(function ($q) {
-                $q->whereNull('fecha_vencimiento')
-                    ->orWhere('fecha_vencimiento', '>=', now()->toDateString());
+                $q->whereNull('fecha_vencimiento_lot')
+                    ->orWhere('fecha_vencimiento_lot', '>=', now()->toDateString());
             })
             ->whereHas('inventarioSedeLotes', function ($q) use ($sedeId) {
-                $q->where('sede_id', $sedeId)->where('cantidad', '>', 0);
+                $q->where('sed_id', $sedeId)->where('cantidad_convertida_isl', '>', 0);
             })
-            ->orderByRaw('fecha_vencimiento IS NULL ASC')
-            ->orderBy('fecha_vencimiento', 'asc')
-            ->orderBy('id', 'asc');
+            ->orderByRaw('fecha_vencimiento_lot IS NULL ASC')
+            ->orderBy('fecha_vencimiento_lot', 'asc')
+            ->orderBy('id_lot', 'asc');
     }
-
-    /* ──────────────────────────────────────────────────────────────
-     |  Vista
-     ────────────────────────────────────────────────────────────── */
 
     /**
      * Lotes FIFO por cada detalle con cantidad pendiente.
@@ -74,17 +70,38 @@ class DispensacionService
                 continue;
             }
 
-            $lotesPorDetalle[$detalle->id] = $this->lotesDisponiblesQuery($detalle->producto_id, $sedeId)
-                ->with(['inventarioSedeLotes' => fn($q) => $q->where('sede_id', $sedeId)])
+            $lotesPorDetalle[$detalle->id_drm] = $this->lotesDisponiblesQuery($detalle->pdt_id, $sedeId)
+                ->with(['inventarioSedeLotes' => fn($q) => $q->where('sed_id', $sedeId)])
                 ->get();
         }
 
         return $lotesPorDetalle;
     }
 
-    /* ──────────────────────────────────────────────────────────────
-     |  Registro
-     ────────────────────────────────────────────────────────────── */
+    /**
+     * Unidades de inventario que equivalen a una unidad de dosis del detalle (null si no hay conversión).
+     *
+     * @return array<int, float|null>
+     */
+    public function factoresPorDetalle(Consulta $consulta): array
+    {
+        return $consulta->receta->detalles
+            ->mapWithKeys(fn ($detalle) => [$detalle->id_drm => $this->conversor->factorDetalle($detalle)])
+            ->all();
+    }
+
+    public function cantidadInventario(DetalleRecetasMedica $detalle, float $cantidadDosis, $cantidadIndicada = null): ?float
+    {
+        $convertida = $this->conversor->aInventario($detalle, $cantidadDosis);
+
+        if ($convertida !== null && $convertida > 0) {
+            return $convertida;
+        }
+
+        $indicada = is_numeric($cantidadIndicada) ? round((float) $cantidadIndicada, 2) : 0.0;
+
+        return $indicada > 0 ? $indicada : null;
+    }
 
     /**
      * Registra las entregas, descuenta inventario y actualiza el estado de la receta.
@@ -100,13 +117,13 @@ class DispensacionService
         $creados = 0;
 
         DB::transaction(function () use ($consulta, $receta, $items, $sedeId, $usuarioId, &$creados) {
-            $detalles = DetalleRecetasMedica::with('producto')
-                ->where('receta_id', $receta->id)
+            $detalles = DetalleRecetasMedica::with('producto.unidad')
+                ->where('rme_id', $receta->id_rme)
                 ->lockForUpdate()
                 ->get();
 
             foreach ($detalles as $detalle) {
-                $item          = $items[$detalle->id] ?? [];
+                $item          = $items[$detalle->id_drm] ?? [];
                 $cantidadInput = (float) ($item['cantidad'] ?? 0);
 
                 if (!self::marcadoParaDispensar($item) || $cantidadInput <= 0) {
@@ -119,11 +136,18 @@ class DispensacionService
                     continue;
                 }
 
+                $cantidadInventario = $this->cantidadInventario($detalle, $cantidad, $item['cantidad_inventario'] ?? null);
+
+                if ($cantidadInventario === null) {
+                    throw StockInsuficienteException::sinCantidadInventario($detalle->producto->nombre_pdt ?? 'producto');
+                }
+
                 $this->dispensarDetalle(
                     $consulta,
                     $receta,
                     $detalle,
                     $cantidad,
+                    $cantidadInventario,
                     $item['observaciones'] ?? null,
                     $sedeId,
                     $usuarioId
@@ -141,20 +165,21 @@ class DispensacionService
 
     /**
      * Entrega un detalle consumiendo lotes en orden FIFO.
+     * La cantidad de dosis se acumula en el detalle; el inventario se descuenta en su unidad base.
      */
     private function dispensarDetalle(
         Consulta $consulta,
         RecetasMedica $receta,
         DetalleRecetasMedica $detalle,
-        float $cantidad,
+        float $cantidadDosis,
+        float $cantidadInventario,
         ?string $observaciones,
         int $sedeId,
         int $usuarioId
     ): void {
-        $nombreProducto = $detalle->producto->nombre ?? 'producto';
+        $nombreProducto = $detalle->producto->nombre_pdt ?? 'producto';
 
-        $lotes = $this->lotesDisponiblesQuery($detalle->producto_id, $sedeId)
-            ->where('cantidad_actual', '>', 0)
+        $lotes = $this->lotesDisponiblesQuery($detalle->pdt_id, $sedeId)
             ->lockForUpdate()
             ->get();
 
@@ -162,29 +187,23 @@ class DispensacionService
             throw StockInsuficienteException::sinStock($nombreProducto, $sedeId);
         }
 
-        $factor    = (float) (Unidad::find($detalle->unidad_id)?->factor_a_gramo ?? 1);
-        $restante  = $cantidad;
-        $entregado = 0;
+        $restante = $cantidadInventario;
 
         foreach ($lotes as $lote) {
             if ($restante <= 0) {
                 break;
             }
 
-            $tomado = $this->descontarDeLote(
+            $restante = round($restante - $this->descontarDeLote(
                 $consulta,
                 $receta,
                 $detalle,
                 $lote,
                 $restante,
-                $factor,
                 $observaciones,
                 $sedeId,
                 $usuarioId
-            );
-
-            $entregado += $tomado;
-            $restante  -= $tomado;
+            ), 2);
         }
 
         if ($restante > 0) {
@@ -192,14 +211,14 @@ class DispensacionService
         }
 
         $detalle->update([
-            'cantidad' => (float) $detalle->cantidad + $entregado,
+            'cantidad_drm' => round((float) $detalle->cantidad_drm + $cantidadDosis, 2),
         ]);
     }
 
     /**
-     * Descuenta de un lote lo que pueda y registra dispensación + movimiento.
+     * Descuenta de un lote lo que pueda (en unidad base) y registra dispensación + movimiento.
      *
-     * @return float Cantidad tomada de este lote (0 si no tenía stock en la sede)
+     * @return float Cantidad base tomada de este lote (0 si no tenía stock en la sede)
      */
     private function descontarDeLote(
         Consulta $consulta,
@@ -207,67 +226,46 @@ class DispensacionService
         DetalleRecetasMedica $detalle,
         Lote $lote,
         float $restante,
-        float $factor,
         ?string $observaciones,
         int $sedeId,
         int $usuarioId
     ): float {
-        $inventario = InventarioSedeLote::where('lote_id', $lote->id)
-            ->where('sede_id', $sedeId)
+        $existencia = InventarioSedeLote::where('lot_id', $lote->id_lot)
+            ->where('sed_id', $sedeId)
             ->lockForUpdate()
             ->first();
 
-        if (!$inventario || (float) $inventario->cantidad <= 0) {
-            return 0;
-        }
-
-        $cantidad = min((float) $inventario->cantidad, $restante);
+        $disponible = round((float) ($existencia->cantidad_convertida_isl ?? 0), 2);
+        $cantidad = round(min($disponible, $restante), 2);
 
         if ($cantidad <= 0) {
             return 0;
         }
 
-        $cantidadConvertida = round($cantidad * $factor, 2);
-        $cantAntes          = (float) $inventario->cantidad;
-        $cantDespues        = $cantAntes - $cantidad;
+        $unidadInventario = $detalle->producto->unm_id ?? $detalle->unm_id;
 
-        $inventario->update([
-            'cantidad'            => $cantDespues,
-            'cantidad_convertida' => max(0, (float) $inventario->cantidad_convertida - $cantidadConvertida),
+        $dispensacion = Dispensacion::create([
+            'rme_id'                 => $receta->id_rme,
+            'drm_id'                 => $detalle->id_drm,
+            'pdt_id'                 => $detalle->pdt_id,
+            'paciente_per_id'        => $consulta->paciente_per_id,
+            'lot_id'                 => $lote->id_lot,
+            'cantidad_dsm'           => $cantidad,
+            'unm_id'                 => $unidadInventario,
+            'sed_id'                 => $sedeId,
+            'use_id'                 => $usuarioId,
+            'fecha_dispensacion_dsm' => now()->toDateString(),
+            'observaciones_dsm'      => $observaciones,
         ]);
 
-        $lote->update([
-            'cantidad_actual' => max(0, (float) $lote->cantidad_actual - $cantidad),
-        ]);
-
-        Dispensacion::create([
-            'receta_medica_id'         => $receta->id,
-            'detalle_receta_medica_id' => $detalle->id,
-            'producto_id'              => $detalle->producto_id,
-            'id_persona'               => $consulta->id_persona,
-            'lote_id'                  => $lote->id,
-            'cantidad'                 => $cantidad,
-            'unidad_id'                => $detalle->unidad_id,
-            'sede_id'                  => $sedeId,
-            'usuario_id'               => $usuarioId,
-            'fecha'                    => now()->toDateString(),
-            'observaciones'            => $observaciones,
-        ]);
-
-        MovimientoInventario::create([
-            'producto_id'         => $detalle->producto_id,
-            'lote_id'             => $lote->id,
-            'sede_id'             => $sedeId,
-            'modulo_origen_id'    => null,
-            'tipo_movimiento'     => 'SALIDA',
-            'unidad_id'           => $detalle->unidad_id,
-            'cantidad'            => $cantidad,
-            'cantidad_convertida' => $cantidadConvertida,
-            'cantidad_anterior'   => $cantAntes,
-            'cantidad_final'      => $cantDespues,
-            'referencia_type'     => 'Dispensacion',
-            'fecha'               => now()->toDateString(),
-            'observaciones'       => 'Dispensación en consulta #' . $consulta->id . ' · Lote ' . $lote->codigo_lote,
+        $this->inventario->salidaPorConvertida($lote->id_lot, $sedeId, $cantidad, [
+            'unm_id'              => $unidadInventario,
+            'referencia_type_moi' => 'Dispensacion',
+            'referencia_id_moi'   => $dispensacion->id_dsm,
+            'use_id'              => $usuarioId,
+            'observacion_moi'     => 'Dispensación en consulta #' . $consulta->id_cme . ' · Lote ' . $lote->codigo_lote_lot
+                . ' · ' . rtrim(rtrim(number_format((float) $detalle->cantidad_prescrita_drm, 2, '.', ''), '0'), '.')
+                . ' ' . mb_strtolower((string) $detalle->unidad_prescrita_drm) . ' recetadas',
         ]);
 
         return $cantidad;
@@ -281,7 +279,7 @@ class DispensacionService
      */
     private function actualizarEstadoReceta(RecetasMedica $receta, int $creados): int
     {
-        $quedanPendientes = DetalleRecetasMedica::where('receta_id', $receta->id)
+        $quedanPendientes = DetalleRecetasMedica::where('rme_id', $receta->id_rme)
             ->get()
             ->contains(fn($d) => $d->cantidad_pendiente > 0);
 
@@ -289,7 +287,7 @@ class DispensacionService
             ? Consulta::RECETA_ABIERTA
             : Consulta::RECETA_CERRADA;
 
-        $receta->update(['estado' => $estado]);
+        $receta->update(['estado_rme' => $estado]);
 
         return $estado;
     }

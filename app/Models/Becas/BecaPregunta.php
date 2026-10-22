@@ -2,39 +2,53 @@
 
 namespace App\Models\Becas;
 
-use App\Models\Becas\Beneficio;
+use App\Traits\RegistraAutoria;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BecaPregunta extends Model
 {
-    protected $table = 'be_beca_preguntas';
+    use RegistraAutoria;
+    use SoftDeletes;
+
+    protected $table = 'pregunta_beneficio';
+
+    protected $primaryKey = 'id_pgb';
 
     protected $fillable = [
-        'id_be_beneficio',
-        'codigo',
-        'etiqueta',
-        'placeholder',
-        'tipo',
-        'obligatoria',
-        'valor_min',
-        'valor_max',
-        'min_length',
-        'max_length',
-        'regex',
-        'orden',
-        'activo',
+        'bes_id',
+        'codigo_pgb',
+        'etiqueta_pgb',
+        'placeholder_pgb',
+        'ayuda_pgb',
+        'tipo_campo_pgb',
+        'obligatoria_pgb',
+        'valor_min_pgb',
+        'valor_max_pgb',
+        'min_length_pgb',
+        'max_length_pgb',
+        'regex_pgb',
+        'orden_pgb',
+        'status_id',
     ];
 
-    public function beca() {
-        return $this->belongsTo(Beneficio::class, 'id_be_beneficio');
+    protected $casts = [
+        'obligatoria_pgb' => 'boolean',
+        'status_id'       => 'integer',
+    ];
+
+    public function beca()
+    {
+        return $this->belongsTo(Beneficio::class, 'bes_id', 'id_bes');
     }
 
-    public function opciones() {
-        return $this->hasMany(BecaPreguntaOpciones::class, 'id_pregunta')->orderBy('orden');
+    public function opciones()
+    {
+        return $this->hasMany(BecaPreguntaOpciones::class, 'pgb_id', 'id_pgb')->orderBy('orden_opb');
     }
-    
+
     public function criterios()
     {
-        return $this->hasMany(JornadaCriterio::class, 'id_pregunta');
+        return $this->hasMany(JornadaCriterio::class, 'pgb_id', 'id_pgb');
     }
 }

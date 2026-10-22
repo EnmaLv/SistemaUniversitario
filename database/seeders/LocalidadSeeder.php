@@ -27,22 +27,22 @@ class LocalidadSeeder extends Seeder
         foreach ($data as $item) {
             // Buscamos el ID del municipio por su nombre
             // Importante: también validamos el estado para evitar conflictos si hay nombres repetidos
-            $municipio = DB::table('municipios')
-                ->join('estados', 'municipios.estado_id', '=', 'estados.id')
-                ->where('municipios.nombre_municipio', $item['municipio'])
-                ->where('estados.nombre_estado', $item['estado'])
-                ->select('municipios.id')
+            $municipio = DB::table('municipio')
+                ->join('estado', 'municipio.esd_id', '=', 'estado.id_esd')
+                ->where('municipio.nombre_mun', $item['municipio'])
+                ->where('estado.nombre_esd', $item['estado'])
+                ->select('municipio.id_mun')
                 ->first();
 
             if ($municipio) {
                 // Insertar en la tabla 'localidads' (nombre exacto de tu imagen)
-                DB::table('localidads')->updateOrInsert(
+                DB::table('parroquia')->updateOrInsert(
                     [
-                        'nombre_localidad' => $item['parroquia'],
-                        'municipio_id'     => $municipio->id,
+                        'nombre_par' => $item['parroquia'],
+                        'mun_id'     => $municipio->id_mun,
                     ],
                     [
-                        'status'           => 1,
+                        'status_id'        => 1,
                         'created_at'       => now(),
                         'updated_at'       => now(),
                     ]

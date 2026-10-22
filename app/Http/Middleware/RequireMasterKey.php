@@ -15,7 +15,7 @@ class RequireMasterKey
             $isAdmin = false;
             if (method_exists($user, 'roles')) {
                 try {
-                    $isAdmin = $user->roles()->where('nombre', 'Administrador')->exists();
+                    $isAdmin = $user->roles()->where('nombre_rol', 'Administrador')->exists();
                 } catch (\Exception $e) {
                     $isAdmin = false;
                 }
@@ -30,6 +30,9 @@ class RequireMasterKey
             ];
 
                 if (!session('master_key_validated') && !in_array($request->path(), $allowed)) {
+                    if ($request->isMethod('GET') && ! $request->expectsJson()) {
+                        session()->put('url.intended', $request->fullUrl());
+                    }
                     return redirect()->route('admin.configuracion.master_key.form');
                 }
             }

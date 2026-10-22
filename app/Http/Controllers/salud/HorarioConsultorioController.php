@@ -14,9 +14,9 @@ class HorarioConsultorioController extends Controller
 {
     public function index(Request $request)
     {
-        $consultorios = Consultorio::where('activo', true)->orderBy('nombre')->get();
+        $consultorios = Consultorio::where('status_id', Consultorio::STATUS_ACTIVO)->orderBy('nombre_csr')->get();
 
-        $consultorioId = (int) $request->input('consultorio_id', optional($consultorios->first())->id);
+        $consultorioId = (int) $request->input('consultorio_id', optional($consultorios->first())->id_csr);
         $estadoFilter  = $request->input('estado', 'todos');
 
         $horarios = $consultorioId
@@ -37,7 +37,7 @@ class HorarioConsultorioController extends Controller
      */
     public function create(Request $request)
     {
-        $consultorios = Consultorio::where('activo', true)->orderBy('nombre')->get();
+        $consultorios = Consultorio::where('status_id', Consultorio::STATUS_ACTIVO)->orderBy('nombre_csr')->get();
         $consultorioSeleccionado = $request->input('consultorio_id');
         $ocupadosPorConsultorio = HorarioConsultorio::ocupadosPorConsultorio();
 
@@ -47,16 +47,16 @@ class HorarioConsultorioController extends Controller
 
         if ($consultorioSeleccionado) {
             $horariosActuales = HorarioConsultorio::with('rolUsuario.usuario.persona', 'rolUsuario.rol')
-                ->where('consultorio_id', $consultorioSeleccionado)
-                ->where('activo', true)
+                ->where('csr_id', $consultorioSeleccionado)
+                ->where('status_id', HorarioConsultorio::STATUS_ACTIVO)
                 ->get()
                 ->map(function ($h) {
-                    $dia = strtolower(trim($h->dia));
+                    $dia = strtolower(trim($h->dia_hrc));
                     $dia = str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $dia);
 
                     return [
-                        'clave_simple'   => "{$dia}|{$h->hora_inicio}|{$h->hora_fin}",
-                        'id_rol_usuario' => $h->id_rol_usuario,
+                        'clave_simple'   => "{$dia}|{$h->hora_inicio_hrc}|{$h->hora_fin_hrc}",
+                        'usr_id' => $h->usr_id,
                         'nombre_usuario' => $h->nombre_personal,
                         'rol_usuario'    => $h->nombre_rol_asignado,
                     ];
@@ -75,7 +75,7 @@ class HorarioConsultorioController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'consultorio_id' => ['required', 'exists:consultorios,id'],
+            'consultorio_id' => ['required', 'exists:consultorio,id_csr'],
             'horarios'       => ['nullable', 'array'],
             'horarios.*'     => ['string'],
         ], [
@@ -85,12 +85,12 @@ class HorarioConsultorioController extends Controller
         $consultorioId = $validated['consultorio_id'];
         $seleccionados = $request->input('horarios', []);
 
-        $existentes = HorarioConsultorio::where('consultorio_id', $consultorioId)->get();
+        $existentes = HorarioConsultorio::where('csr_id', $consultorioId)->get();
 
         $existentesMap = $existentes->keyBy(function ($h) {
-            $dia = strtolower(trim($h->dia));
+            $dia = strtolower(trim($h->dia_hrc));
             $dia = str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $dia);
-            return "{$dia}|{$h->hora_inicio}|{$h->hora_fin}|{$h->id_rol_usuario}";
+            return "{$dia}|{$h->hora_inicio_hrc}|{$h->hora_fin_hrc}|{$h->usr_id}";
         });
 
         $clavesProcesadas = [];
@@ -116,28 +116,28 @@ class HorarioConsultorioController extends Controller
 
             if ($existentesMap->has($key)) {
                 $horario = $existentesMap->get($key);
-                if (!$horario->activo) {
-                    $horario->update(['activo' => true]);
+                if (!$horario->estaActivo()) {
+                    $horario->update(['status_id' => HorarioConsultorio::STATUS_ACTIVO]);
                 }
             } else {
                 HorarioConsultorio::create([
-                    'consultorio_id' => $consultorioId,
-                    'id_rol_usuario' => $idRolUsuario,
-                    'dia'            => $dia,
-                    'hora_inicio'    => $inicio,
-                    'hora_fin'       => $fin,
-                    'activo'         => true,
+                    'csr_id'          => $consultorioId,
+                    'usr_id'          => $idRolUsuario,
+                    'dia_hrc'         => $dia,
+                    'hora_inicio_hrc' => $inicio,
+                    'hora_fin_hrc'    => $fin,
+                    'status_id'       => HorarioConsultorio::STATUS_ACTIVO,
                 ]);
             }
         }
 
         foreach ($existentes as $horario) {
-            $dia = strtolower(trim($horario->dia));
+            $dia = strtolower(trim($horario->dia_hrc));
             $dia = str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $dia);
-            $key = "{$dia}|{$horario->hora_inicio}|{$horario->hora_fin}|{$horario->id_rol_usuario}";
+            $key = "{$dia}|{$horario->hora_inicio_hrc}|{$horario->hora_fin_hrc}|{$horario->usr_id}";
 
-            if (!in_array($key, $clavesProcesadas) && $horario->activo) {
-                $horario->update(['activo' => false]);
+            if (!in_array($key, $clavesProcesadas) && $horario->estaActivo()) {
+                $horario->update(['status_id' => HorarioConsultorio::STATUS_INACTIVO]);
             }
         }
 
@@ -148,8 +148,8 @@ class HorarioConsultorioController extends Controller
 
     public function destroy(HorarioConsultorio $horario)
     {
-        $consultorioId = $horario->consultorio_id;
-        $horario->update(['activo' => false]);
+        $consultorioId = $horario->csr_id;
+        $horario->update(['status_id' => HorarioConsultorio::STATUS_INACTIVO]);
 
         return redirect()
             ->route('admin.salud.movimientos.horarios.index', ['consultorio_id' => $consultorioId])
@@ -160,26 +160,26 @@ class HorarioConsultorioController extends Controller
     {
         ini_set('memory_limit', '512M');
 
-        $consultorios = Consultorio::where('activo', true)->orderBy('nombre')->get();
-        $consultorioId = (int) $request->input('consultorio_id', optional($consultorios->first())->id);
+        $consultorios = Consultorio::where('status_id', Consultorio::STATUS_ACTIVO)->orderBy('nombre_csr')->get();
+        $consultorioId = (int) $request->input('consultorio_id', optional($consultorios->first())->id_csr);
 
         $consultorio = Consultorio::findOrFail($consultorioId);
 
         $horariosActivos = HorarioConsultorio::with('rolUsuario.usuario.persona', 'rolUsuario.rol')
-            ->where('consultorio_id', $consultorioId)
-            ->where('activo', true)
+            ->where('csr_id', $consultorioId)
+            ->where('status_id', HorarioConsultorio::STATUS_ACTIVO)
             ->get();
 
         $activosMap = [];
         foreach ($horariosActivos as $h) {
-            $dia = strtolower(trim($h->dia));
-            $inicioKey = Carbon::parse($h->hora_inicio)->format('H:i');
-            $finKey = Carbon::parse($h->hora_fin)->format('H:i');
+            $dia = strtolower(trim($h->dia_hrc));
+            $inicioKey = Carbon::parse($h->hora_inicio_hrc)->format('H:i');
+            $finKey = Carbon::parse($h->hora_fin_hrc)->format('H:i');
             $activosMap["{$dia}|{$inicioKey}|{$finKey}"][] = $h;
         }
 
         // Agrupar asignaciones por persona para el detalle de la página 2
-        $personalAsignado = $horariosActivos->groupBy('id_rol_usuario');
+        $personalAsignado = $horariosActivos->groupBy('usr_id');
 
         $bloquesJornadas = HorarioConsultorio::BLOQUES;
         $dias = HorarioConsultorio::DIAS;
@@ -192,6 +192,6 @@ class HorarioConsultorioController extends Controller
             'dias'
         ))->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Horario_Consultorio_' . Str::slug($consultorio->nombre) . '.pdf');
+        return $pdf->stream('Horario_Consultorio_' . Str::slug($consultorio->nombre_csr) . '.pdf');
     }
 }

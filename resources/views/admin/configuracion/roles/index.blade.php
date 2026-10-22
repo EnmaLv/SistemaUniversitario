@@ -12,9 +12,11 @@
                         Definición de permisos y accesos · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
+                @canRoute('admin.configuracion.roles.create')
                 <a href="{{ route('admin.configuracion.roles.create') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                     <i class="fas fa-plus text-xs"></i> Crear rol
                 </a>
+                @endcanRoute
             </div>
 
     <div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">
@@ -57,12 +59,12 @@
                             <td class="px-6 py-4 font-bold" style="color:var(--text-main);">
                                 <span class="inline-flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-extrabold uppercase tracking-wide" style="border-color:var(--border-color);color:var(--color-primary);">
                                     <i class="fas fa-user-tag"></i>
-                                    {{ strtoupper($rol->nombre) }}
+                                    {{ strtoupper($rol->nombre_rol) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
-                                <span style="color:var(--text-muted);" title="{{ $rol->descripcion }}">
-                                    {{ \Illuminate\Support\Str::limit($rol->descripcion, 80) ?? 'Sin descripción' }}
+                                <span style="color:var(--text-muted);" title="{{ $rol->descripcion_rol }}">
+                                    {{ \Illuminate\Support\Str::limit($rol->descripcion_rol, 80) ?? 'Sin descripción' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-center">
@@ -73,10 +75,11 @@
                             </td>
                             @php
                                 $protected = ['Empleado', 'Obrero', 'Administrador'];
-                                $isProtected = in_array(strtolower($rol->nombre ?? ''), array_map('strtolower', $protected));
+                                $isProtected = in_array(strtolower($rol->nombre_rol ?? ''), array_map('strtolower', $protected));
                             @endphp
                             @if (!$isProtected)
                                 <x-table-actions :id="$rol->id_rol" baseUrl="admin/configuracion/roles" :show="false" :toggle="false">
+                                    @canRoute('admin.configuracion.roles.destroy')
                                     <form action="{{ route('admin.configuracion.roles.destroy', $rol->id_rol) }}"
                                         method="POST" class="inline delete-form">
                                         @csrf
@@ -87,6 +90,7 @@
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </form>
+                                    @endcanRoute
                                 </x-table-actions>
                             @else
                                 <td class="px-6 py-4 text-center">

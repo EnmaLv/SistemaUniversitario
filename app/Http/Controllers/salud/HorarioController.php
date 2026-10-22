@@ -24,18 +24,18 @@ class HorarioController extends Controller
         if ($grupoId) {
             $grupoSeleccionado = GrupoHorario::obtenerPorIdYUsuario($grupoId, $userId);
 
-            if ($grupoActivo && $grupoSeleccionado && $grupoActivo->id === $grupoSeleccionado->id) {
+            if ($grupoActivo && $grupoSeleccionado && (int) $grupoActivo->id_gha === (int) $grupoSeleccionado->id_gha) {
                 $request->session()->reflash();
                 return redirect()->route('admin.psicologia.maestros.horarios.index', $filtroDia ? ['dia' => $filtroDia] : []);
             }
         }
 
-        $currentGrupoId = $grupoSeleccionado ? $grupoSeleccionado->id : ($grupoActivo ? $grupoActivo->id : null);
+        $currentGrupoId = $grupoSeleccionado ? $grupoSeleccionado->id_gha : ($grupoActivo ? $grupoActivo->id_gha : null);
         $horarios = Horario::obtenerPorFiltros($userId, $currentGrupoId, $filtroDia);
 
         $horariosPorDia = [];
         foreach ($dias as $dia) {
-            $horariosPorDia[$dia] = $horarios->where('dia', $dia);
+            $horariosPorDia[$dia] = $horarios->where('dia_hpr', $dia);
         }
 
         $tieneCitasPendientes = Horario::hasPendingCitas($userId);
@@ -59,17 +59,17 @@ class HorarioController extends Controller
         }
 
         $currentGrupoId = $grupoSeleccionado
-            ? $grupoSeleccionado->id
-            : ($grupoActivo ? $grupoActivo->id : null);
+            ? $grupoSeleccionado->id_gha
+            : ($grupoActivo ? $grupoActivo->id_gha : null);
 
         // Bloques existentes para el contexto actual
         $horariosExistentes = Horario::obtenerPorFiltros($userId, $currentGrupoId, null);
 
         $horariosSeleccionadosIniciales = [];
         foreach ($horariosExistentes as $h) {
-            $inicio = \Carbon\Carbon::parse($h->hora_inicio)->format('H:i');
-            $fin    = \Carbon\Carbon::parse($h->hora_fin)->format('H:i');
-            $horariosSeleccionadosIniciales[] = "{$h->dia}|{$inicio}|{$fin}";
+            $inicio = \Carbon\Carbon::parse($h->hora_inicio_hpr)->format('H:i');
+            $fin    = \Carbon\Carbon::parse($h->hora_fin_hpr)->format('H:i');
+            $horariosSeleccionadosIniciales[] = "{$h->dia_hpr}|{$inicio}|{$fin}";
         }
 
         return view('admin.psicologia.maestros.horarios.create', compact(
@@ -85,14 +85,14 @@ class HorarioController extends Controller
     public function edit(Request $request, $id)
     {
         $horario = Horario::obtenerPorId($id);
-        abort_if(!$horario || $horario->user_id !== Auth::id(), 403);
+        abort_if(!$horario || $horario->deleted_at !== null || (int) $horario->psicologo_use_id !== (int) Auth::id(), 403);
 
         if (Horario::hasPendingCitas(Auth::id())) {
             return redirect()->route('admin.psicologia.maestros.horarios.index')->with('error', 'No puedes modificar bloques de horario mientras tengas citas pendientes o confirmadas.');
         }
 
         $dias = Horario::diasSemana();
-        $grupoRetorno = $request->query('grupo', $horario->grupo_horario_id);
+        $grupoRetorno = $request->query('grupo', $horario->gha_id);
 
         return view('admin.psicologia.maestros.horarios.edit', compact('horario', 'dias', 'grupoRetorno'));
     }
@@ -106,7 +106,7 @@ class HorarioController extends Controller
         }
 
         $validated = $request->validate([
-            'grupo_id'   => 'nullable|exists:grupos_horarios,id',
+            'grupo_id'   => 'nullable|exists:grupo_horario_atencion,id_gha',
             'horarios'   => 'nullable|array',
             'horarios.*' => 'string',
         ]);
@@ -116,14 +116,14 @@ class HorarioController extends Controller
 
         if ($grupoEspecificoId) {
             $grupoAModificar = GrupoHorario::obtenerPorIdYUsuario($grupoEspecificoId, $userId);
-            $activoPorDefecto = ($grupoAModificar && $grupoAModificar->activo == GrupoHorario::STATUS_ACTIVE)
+            $activoPorDefecto = ($grupoAModificar && (int) $grupoAModificar->status_id === GrupoHorario::STATUS_ACTIVE)
                 ? Horario::STATUS_ACTIVE
                 : Horario::STATUS_INACTIVE;
-            $grupoAsignarId = $grupoAModificar ? $grupoAModificar->id : null;
+            $grupoAsignarId = $grupoAModificar ? $grupoAModificar->id_gha : null;
         } else {
             $grupoActivo = GrupoHorario::obtenerActivoPorPsicologo($userId);
             $activoPorDefecto = $grupoActivo ? Horario::STATUS_ACTIVE : Horario::STATUS_INACTIVE;
-            $grupoAsignarId = $grupoActivo ? $grupoActivo->id : null;
+            $grupoAsignarId = $grupoActivo ? $grupoActivo->id_gha : null;
         }
 
         // Normalizar seleccionados
@@ -148,9 +148,9 @@ class HorarioController extends Controller
         $existentes = Horario::obtenerPorFiltros($userId, $grupoAsignarId, null);
         $clavesExistentes = [];
         foreach ($existentes as $h) {
-            $inicio = \Carbon\Carbon::parse($h->hora_inicio)->format('H:i');
-            $fin    = \Carbon\Carbon::parse($h->hora_fin)->format('H:i');
-            $clavesExistentes["{$h->dia}|{$inicio}|{$fin}"] = $h;
+            $inicio = \Carbon\Carbon::parse($h->hora_inicio_hpr)->format('H:i');
+            $fin    = \Carbon\Carbon::parse($h->hora_fin_hpr)->format('H:i');
+            $clavesExistentes["{$h->dia_hpr}|{$inicio}|{$fin}"] = $h;
         }
 
         $creados = 0;
@@ -159,7 +159,7 @@ class HorarioController extends Controller
         // Eliminar los que ya no están seleccionados
         foreach ($clavesExistentes as $clave => $h) {
             if (!isset($clavesSeleccionadas[$clave])) {
-                Horario::eliminar($h->id);
+                Horario::eliminar($h->id_hpr);
                 $eliminados++;
             }
         }
@@ -168,13 +168,13 @@ class HorarioController extends Controller
         foreach ($clavesSeleccionadas as $clave => $data) {
             if (!isset($clavesExistentes[$clave])) {
                 Horario::crear([
-                    'user_id'          => $userId,
-                    'dia'              => $data['dia'],
-                    'hora_inicio'      => $data['inicio'],
-                    'hora_fin'         => $data['fin'],
-                    'descripcion'      => null,
-                    'activo'           => $activoPorDefecto,
-                    'grupo_horario_id' => $grupoAsignarId,
+                    'psicologo_use_id' => $userId,
+                    'dia_hpr'          => $data['dia'],
+                    'hora_inicio_hpr'  => $data['inicio'],
+                    'hora_fin_hpr'     => $data['fin'],
+                    'descripcion_hpr'  => null,
+                    'status_id'        => $activoPorDefecto,
+                    'gha_id'           => $grupoAsignarId,
                 ]);
                 $creados++;
             }
@@ -193,8 +193,8 @@ class HorarioController extends Controller
     public function show(Request $request, $id)
     {
         $horario = Horario::obtenerPorId($id);
-        abort_if(!$horario || $horario->user_id !== Auth::id(), 403);
-        $grupoRetorno = $request->query('grupo', $horario->grupo_horario_id);
+        abort_if(!$horario || $horario->deleted_at !== null || (int) $horario->psicologo_use_id !== (int) Auth::id(), 403);
+        $grupoRetorno = $request->query('grupo', $horario->gha_id);
 
         return view('admin.psicologia.maestros.horarios.show', compact('horario', 'grupoRetorno'));
     }
@@ -202,7 +202,7 @@ class HorarioController extends Controller
     public function update(Request $request, $id)
     {
         $horario = Horario::obtenerPorId($id);
-        abort_if(!$horario || $horario->user_id !== Auth::id(), 403);
+        abort_if(!$horario || $horario->deleted_at !== null || (int) $horario->psicologo_use_id !== (int) Auth::id(), 403);
 
         if (Horario::hasPendingCitas(Auth::id())) {
             return redirect()->route('admin.psicologia.maestros.horarios.index')->with('error', 'No puedes modificar bloques de horario mientras tengas citas pendientes o confirmadas.');
@@ -231,28 +231,28 @@ class HorarioController extends Controller
             'descripcion' => 'nullable|string',
         ]);
 
-        if (Horario::overlaps(Auth::id(), $validated['dia'], $validated['hora_inicio'], $validated['hora_fin'], $horario->id, $horario->grupo_horario_id)) {
+        if (Horario::overlaps(Auth::id(), $validated['dia'], $validated['hora_inicio'], $validated['hora_fin'], $horario->id_hpr, $horario->gha_id)) {
             return back()
                 ->withErrors(['hora_inicio' => 'El bloque de horario se superpone con otro existente.'])
                 ->withInput();
         }
 
-        Horario::actualizar($horario->id, [
-            'dia' => $validated['dia'],
-            'hora_inicio' => $validated['hora_inicio'],
-            'hora_fin' => $validated['hora_fin'],
-            'descripcion' => $validated['descripcion'],
+        Horario::actualizar($horario->id_hpr, [
+            'dia_hpr' => $validated['dia'],
+            'hora_inicio_hpr' => $validated['hora_inicio'],
+            'hora_fin_hpr' => $validated['hora_fin'],
+            'descripcion_hpr' => $validated['descripcion'],
         ]);
 
         return redirect()
-            ->route('admin.psicologia.maestros.horarios.index', $horario->grupo_horario_id ? ['grupo' => $horario->grupo_horario_id] : [])
+            ->route('admin.psicologia.maestros.horarios.index', $horario->gha_id ? ['grupo' => $horario->gha_id] : [])
             ->with('success', 'Bloque de tiempo actualizado correctamente.');
     }
 
     public function destroy(Request $request, $id)
     {
         $horario = Horario::obtenerPorId($id);
-        abort_if(!$horario || $horario->user_id !== Auth::id(), 403);
+        abort_if(!$horario || $horario->deleted_at !== null || (int) $horario->psicologo_use_id !== (int) Auth::id(), 403);
 
         if (Horario::hasPendingCitas(Auth::id())) {
             if ($request->wantsJson() || $request->ajax()) {
@@ -264,11 +264,11 @@ class HorarioController extends Controller
             return redirect()->route('admin.psicologia.maestros.horarios.index')->with('error', 'No puedes modificar bloques de horario mientras tengas citas pendientes o confirmadas.');
         }
 
-        $grupoId = $horario->grupo_horario_id;
+        $grupoId = $horario->gha_id;
         if ($grupoId) {
-            $count = DB::table('horarios')
-                ->where('grupo_horario_id', $grupoId)
-                ->where('activo', '!=', Horario::STATUS_DELETED)
+            $count = DB::table('horario_profesional')
+                ->where('gha_id', $grupoId)
+                ->whereNull('deleted_at')
                 ->count();
             if ($count <= 2) {
                 if ($request->wantsJson() || $request->ajax()) {
@@ -282,7 +282,7 @@ class HorarioController extends Controller
             }
         }
 
-        Horario::eliminar($horario->id);
+        Horario::eliminar($horario->id_hpr);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -300,13 +300,13 @@ class HorarioController extends Controller
     public function activate($id)
     {
         $horario = Horario::obtenerPorId($id);
-        abort_if(!$horario || $horario->user_id !== Auth::id(), 403);
+        abort_if(!$horario || $horario->deleted_at !== null || (int) $horario->psicologo_use_id !== (int) Auth::id(), 403);
 
         if (Horario::hasPendingCitas(Auth::id())) {
             return redirect()->route('admin.psicologia.maestros.horarios.index')->with('error', 'No puedes modificar bloques de horario mientras tengas citas pendientes o confirmadas.');
         }
 
-        Horario::actualizar($horario->id, ['activo' => Horario::STATUS_ACTIVE]);
+        Horario::actualizar($horario->id_hpr, ['status_id' => Horario::STATUS_ACTIVE]);
 
         return redirect()->route('admin.psicologia.maestros.horarios.index')->with('success', 'Bloque de tiempo activado.');
     }
@@ -314,13 +314,13 @@ class HorarioController extends Controller
     public function deactivate($id)
     {
         $horario = Horario::obtenerPorId($id);
-        abort_if(!$horario || $horario->user_id !== Auth::id(), 403);
+        abort_if(!$horario || $horario->deleted_at !== null || (int) $horario->psicologo_use_id !== (int) Auth::id(), 403);
 
         if (Horario::hasPendingCitas(Auth::id())) {
             return redirect()->route('admin.psicologia.maestros.horarios.index')->with('error', 'No puedes modificar bloques de horario mientras tengas citas pendientes o confirmadas.');
         }
 
-        Horario::actualizar($horario->id, ['activo' => Horario::STATUS_INACTIVE]);
+        Horario::actualizar($horario->id_hpr, ['status_id' => Horario::STATUS_INACTIVE]);
 
         return redirect()->route('admin.psicologia.maestros.horarios.index')->with('success', 'Bloque de tiempo desactivado.');
     }
@@ -353,13 +353,13 @@ class HorarioController extends Controller
         if ($grupoId) {
             $grupoSeleccionado = GrupoHorario::obtenerPorIdYUsuario($grupoId, $userId);
         }
-        $currentGrupoId = $grupoSeleccionado ? $grupoSeleccionado->id : ($grupoActivo ? $grupoActivo->id : null);
+        $currentGrupoId = $grupoSeleccionado ? $grupoSeleccionado->id_gha : ($grupoActivo ? $grupoActivo->id_gha : null);
 
         $horarios = Horario::obtenerPorFiltros($userId, $currentGrupoId, null);
 
         $horariosPorDia = [];
         foreach ($dias as $dia) {
-            $horariosPorDia[$dia] = $horarios->where('dia', $dia);
+            $horariosPorDia[$dia] = $horarios->where('dia_hpr', $dia);
         }
 
         $psicologo = \App\Models\Usuario::obtenerUsuarioPorId($userId);

@@ -2,157 +2,152 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
-use Livewire\WithPagination;
-use App\Models\PrecioProducto;
 use App\Models\salud\EnvasePrimario;
 use App\Traits\ConvierteAMayusculasNoEloquent;
+use App\Traits\RegistraAutoria;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Producto extends Model
 {
     use ConvierteAMayusculasNoEloquent;
     use HasFactory;
-    use WithPagination;
+    use RegistraAutoria;
+    use SoftDeletes;
 
-    protected $table = 'productos';
+    protected $table = 'producto';
+
+    protected $primaryKey = 'id_pdt';
 
     protected $fillable = [
-        'codigo',
-        'nombre',
-        'descripcion',
-        'imagen',
-        'precio_compra',
-        'stock_minimo',
-        'stock_maximo',
-        'peso_contenido',
-        'unidades_por_presentacion',
-        'presentacion_dispensacion',
-        'unidad_id',
-        'presentacion_id',
-        'estado',
-        'categoria_id',
-        'envase_primario_id',
-        'requiere_receta_medica'
+        'codigo_pdt',
+        'nombre_pdt',
+        'descripcion_pdt',
+        'imagen_pdt',
+        'precio_compra_pdt',
+        'stock_minimo_pdt',
+        'stock_maximo_pdt',
+        'peso_contenido_pdt',
+        'unidades_presentacion_pdt',
+        'presentacion_dispensacion_pdt',
+        'cap_id',
+        'unm_id',
+        'enp_id',
+        'status_id',
     ];
 
     public function unidad()
     {
-        return $this->belongsTo(Unidad::class);
+        return $this->belongsTo(Unidad::class, 'unm_id', 'id_unm');
     }
 
     public function categoria()
     {
-        return $this->belongsTo(Categoria::class);
+        return $this->belongsTo(Categoria::class, 'cap_id', 'id_cap');
     }
 
     public function presentacion()
     {
-        return $this->belongsTo(EnvasePrimario::class, 'presentacion_id');
+        return $this->belongsTo(EnvasePrimario::class, 'enp_id', 'id_enp');
     }
 
     public function precioProducto()
     {
-        return $this->hasOne(PrecioProducto::class)->latestOfMany();
+        return $this->hasOne(PrecioProducto::class, 'pdt_id', 'id_pdt')->latestOfMany('id_ppr');
     }
 
     public function lotes()
     {
-        return $this->hasMany(Lote::class);
+        return $this->hasMany(Lote::class, 'pdt_id', 'id_pdt');
     }
 
-    public function inventarioSedeAcarigua()
+    public function totales()
     {
-        return $this->hasManyThrough(
-            InventarioSedeLote::class,
-            Lote::class,
-            'producto_id',
-            'lote_id',
-            'id',
-            'id'
-        )->where('inventario_sede_lotes.sede_id', 1);
+        return $this->hasMany(InventarioTotal::class, 'pdt_id', 'id_pdt');
     }
 
     public function movimientos()
     {
-        return $this->hasMany(MovimientoInventario::class);
+        return $this->hasMany(MovimientoInventario::class, 'pdt_id', 'id_pdt');
     }
 
     public function detalleCompras()
     {
-        return $this->hasMany(DetalleCompra::class);
+        return $this->hasMany(DetalleCompra::class, 'pdt_id', 'id_pdt');
     }
 
     public function recetaIngredientes()
     {
-        return $this->hasMany(RecetaIngrediente::class);
+        return $this->hasMany(RecetaIngrediente::class, 'pdt_id', 'id_pdt');
     }
 
     public static function listarProductos($buscar = null, $activo = 1, $categoria = null, $perPage = 10, $cantidadMin = null, $cantidadMax = null, $tipoProductoId = null)
     {
         $query = self::with(['categoria', 'unidad'])
-            ->select('productos.*')
-            ->join('categorias', 'productos.categoria_id', '=', 'categorias.id')
-            ->withSum([
-                'inventarioSedeAcarigua as cantidad_actual' => function ($query) {}
-            ], 'cantidad_convertida');
+            ->select('producto.*')
+            ->join('categoria_producto', 'producto.cap_id', '=', 'categoria_producto.id_cap')
+            ->withSum('totales as existencia_convertida', 'cantidad_convertida_total_int')
+            ->withSum('totales as total_presentacion', 'cantidad_total_int');
 
         if ($tipoProductoId !== null) {
-            $query->where('categorias.tipo_producto_id', $tipoProductoId);
+            $query->where('categoria_producto.tpr_id', $tipoProductoId);
         }
 
         if (!empty($buscar)) {
             $query->where(function ($q) use ($buscar) {
-                $q->where('productos.codigo', 'like', "%{$buscar}%")
-                    ->orWhere('productos.nombre', 'like', "%{$buscar}%");
+                $q->where('producto.codigo_pdt', 'like', "%{$buscar}%")
+                    ->orWhere('producto.nombre_pdt', 'like', "%{$buscar}%");
             });
         }
 
         if ($activo !== null && $activo !== '') {
-            $query->where('productos.estado', (int)$activo);
+            $query->where('producto.status_id', (int) $activo === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO);
         } else {
-            $query->where('productos.estado', 1);
+            $query->where('producto.status_id', self::STATUS_ACTIVO);
         }
 
         if ($cantidadMin !== null) {
-            $query->having('cantidad_actual', '>=', $cantidadMin);
+            $query->having('existencia_convertida', '>=', $cantidadMin);
         }
         if ($cantidadMax !== null) {
-            $query->having('cantidad_actual', '<=', $cantidadMax);
+            $query->having('existencia_convertida', '<=', $cantidadMax);
         }
 
         if ($categoria !== null && $categoria !== '') {
-            $query->where('productos.categoria_id', $categoria);
+            $query->where('producto.cap_id', $categoria);
         }
 
-        return $query->orderByDesc('cantidad_actual')->paginate($perPage)->withQueryString();
+        return $query->orderByDesc('existencia_convertida')->paginate($perPage)->withQueryString();
     }
 
     public function getCantidadEnSede($sedeId)
     {
-        return DB::table('inventario_sede_lotes')
-            ->join('lotes', 'lotes.id', '=', 'inventario_sede_lotes.lote_id')
-            ->where('lotes.producto_id', $this->id)
-            ->where('inventario_sede_lotes.sede_id', $sedeId)
-            ->sum('inventario_sede_lotes.cantidad_convertida');
+        return DB::table('inventario_sede_lote')
+            ->join('lote', 'lote.id_lot', '=', 'inventario_sede_lote.lot_id')
+            ->where('lote.pdt_id', $this->id_pdt)
+            ->where('inventario_sede_lote.sed_id', $sedeId)
+            ->sum('inventario_sede_lote.cantidad_convertida_isl');
     }
 
     public static function getDatosFormulario(?int $tipoProductoId = null)
     {
-        $query = DB::table('categorias')
-            ->select('id', 'nombre')
-            ->where('activo', 1)
-            ->orderBy('nombre', 'asc');
+        $query = DB::table('categoria_producto')
+            ->select('id_cap', 'nombre_cap')
+            ->where('status_id', self::STATUS_ACTIVO)
+            ->whereNull('deleted_at')
+            ->orderBy('nombre_cap', 'asc');
 
         if ($tipoProductoId !== null) {
-            $query->where('tipo_producto_id', $tipoProductoId);
+            $query->where('tpr_id', $tipoProductoId);
         }
 
         return [
             'categorias' => $query->get(),
-            'unidades'   => DB::table('unidades')->select('id', 'nombre', 'abreviatura')->orderBy('nombre', 'asc')->get(),
-            'envases'    => DB::table('envase_primarios')->select('id', 'nombre')->orderBy('nombre', 'asc')->get(),
+            'unidades'   => DB::table('unidad_medida')->select('id_unm', 'nombre_unm', 'abreviatura_unm')->whereNull('deleted_at')->orderBy('nombre_unm', 'asc')->get(),
+            'envases'    => $tipoProductoId === null ? collect() : EnvasePrimario::deTipos([$tipoProductoId])->get(),
         ];
     }
 
@@ -164,9 +159,9 @@ class Producto extends Model
         return DB::transaction(function () use ($data) {
 
             if (empty($data['codigo'])) {
-                $categoriaNombre = DB::table('categorias')
-                    ->where('id', $data['categoria_id'])
-                    ->value('nombre') ?? 'CAT';
+                $categoriaNombre = DB::table('categoria_producto')
+                    ->where('id_cap', $data['categoria_id'])
+                    ->value('nombre_cap') ?? 'CAT';
 
                 $data['codigo'] = self::generarCodigoProducto(
                     $categoriaNombre,
@@ -177,42 +172,38 @@ class Producto extends Model
             }
 
             $unidadId = $data['unidad_id'] ?? null;
-            $unidad   = $unidadId
-                ? DB::table('unidades')->where('id', $unidadId)->first()
-                : null;
-
-            $pesoBase = isset($data['peso_contenido']) && $unidad
-                ? $data['peso_contenido'] * ($unidad->factor_a_base ?? 1)
+            $pesoBase = isset($data['peso_contenido_pdt']) && $unidadId
+                ? $data['peso_contenido_pdt']
                 : 0;
 
-            // El form puede mandar 'presentacion_id' o 'envase_primario_id'
             $presentacionId = $data['presentacion_id']
                 ?? $data['envase_primario_id']
                 ?? null;
 
-            $productoId = DB::table('productos')->insertGetId([
-                'categoria_id'  => $data['categoria_id'],
-                'codigo'        => $data['codigo'],
-                'nombre'        => $data['nombre'],
-                'descripcion'   => $data['descripcion'] ?? null,
-                'imagen'        => $data['imagen'] ?? 'imagenes/productos/product-defect.webp',
-                'precio_compra' => 0,
-                'stock_minimo'  => $data['stock_minimo'] ?? 0,
-                'stock_maximo'  => $data['stock_maximo'] ?? 0,
-                'peso_contenido'            => $pesoBase,
-                'unidades_por_presentacion' => $data['unidades_por_presentacion'] ?? 1,
-                'presentacion_dispensacion' => $data['presentacion_dispensacion'] ?? null,
-                'unidad_id'      => $unidadId,
-                'presentacion_id' => $presentacionId,
-                'estado'        => isset($data['estado']) ? (int)$data['estado'] : 1,
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ]);
+            $productoId = DB::table('producto')->insertGetId([
+                'cap_id'                        => $data['categoria_id'],
+                'codigo_pdt'                    => $data['codigo'],
+                'nombre_pdt'                    => $data['nombre'],
+                'descripcion_pdt'               => $data['descripcion'] ?? null,
+                'imagen_pdt'                    => $data['imagen'] ?? 'imagenes/productos/product-defect.webp',
+                'precio_compra_pdt'             => 0,
+                'stock_minimo_pdt'              => $data['stock_minimo_pdt'] ?? 0,
+                'stock_maximo_pdt'              => $data['stock_maximo_pdt'] ?? 0,
+                'peso_contenido_pdt'            => $pesoBase,
+                'unidades_presentacion_pdt'     => $data['unidades_presentacion_pdt'] ?? 1,
+                'presentacion_dispensacion_pdt' => $data['presentacion_dispensacion_pdt'] ?? null,
+                'unm_id'                        => $unidadId,
+                'enp_id'                        => $presentacionId,
+                'status_id'                     => self::statusDesde($data['estado'] ?? 1),
+                'created_id'                    => Auth::id(),
+                'created_at'                    => now(),
+                'updated_at'                    => now(),
+            ], 'id_pdt');
 
             PrecioProducto::create([
-                'producto_id' => $productoId,
-                'costo_usd'  => $data['costo_usd'],
-                'margen'      => $data['margen'] ?? 0
+                'pdt_id'        => $productoId,
+                'costo_usd_ppr' => $data['costo_usd_ppr'],
+                'margen_ppr'    => $data['margen'] ?? 0,
             ]);
 
             return $productoId;
@@ -221,27 +212,27 @@ class Producto extends Model
 
     public static function obtenerProducto($id)
     {
-        $producto = DB::table('productos')
+        $producto = DB::table('producto')
             ->select(
-                'productos.*',
-                'categorias.nombre as categoria_nombre',
-                'unidades.nombre as unidad_nombre',
-                'unidades.abreviatura as unidad_abreviatura'
+                'producto.*',
+                'categoria_producto.nombre_cap as categoria_nombre',
+                'unidad_medida.nombre_unm as unidad_nombre',
+                'unidad_medida.abreviatura_unm as unidad_abreviatura'
             )
-            ->leftJoin('categorias', 'productos.categoria_id', '=', 'categorias.id')
-            ->leftJoin('unidades', 'productos.unidad_id', '=', 'unidades.id')
-            ->where('productos.id', $id)
+            ->leftJoin('categoria_producto', 'producto.cap_id', '=', 'categoria_producto.id_cap')
+            ->leftJoin('unidad_medida', 'producto.unm_id', '=', 'unidad_medida.id_unm')
+            ->where('producto.id_pdt', $id)
             ->first();
 
         if (!$producto) return null;
 
-        $producto->categoria = (object)[
-            'nombre' => $producto->categoria_nombre
+        $producto->categoria = (object) [
+            'nombre_cap' => $producto->categoria_nombre,
         ];
 
-        $producto->unidad = (object)[
-            'nombre'       => $producto->unidad_nombre,
-            'abreviatura'  => $producto->unidad_abreviatura
+        $producto->unidad = (object) [
+            'nombre_unm'      => $producto->unidad_nombre,
+            'abreviatura_unm' => $producto->unidad_abreviatura,
         ];
 
         return $producto;
@@ -253,23 +244,21 @@ class Producto extends Model
 
         $data = $helper->convertirCamposAMayusculas($data, ['nombre', 'descripcion']);
         $unidadId = $data['unidad_id'] ?? null;
-        $unidad = $unidadId ? DB::table('unidades')->where('id', $unidadId)->first() : null;
-
-        $pesoBase = isset($data['peso_contenido']) && $unidad
-            ? $data['peso_contenido'] * ($unidad->factor_a_base ?? 1)
+        $pesoBase = isset($data['peso_contenido_pdt']) && $unidadId
+            ? $data['peso_contenido_pdt']
             : 0;
 
-        $precioUsd = $data['costo_usd'] ?? $data['precio_compra'] ?? 0;
-        $productoAntiguo = DB::table('productos')->where('id', $id)->first();
-        $codigoFinal = $productoAntiguo->codigo;
+        $precioUsd = $data['costo_usd_ppr'] ?? $data['precio_compra'] ?? 0;
+        $productoAntiguo = DB::table('producto')->where('id_pdt', $id)->first();
+        $codigoFinal = $productoAntiguo->codigo_pdt;
 
         if (!empty($data['codigo'])) {
             $codigoFinal = strtoupper($data['codigo']);
-        } else if ($productoAntiguo->nombre !== $data['nombre'] || $productoAntiguo->categoria_id != $data['categoria_id']) {
+        } else if ($productoAntiguo->nombre_pdt !== $data['nombre'] || $productoAntiguo->cap_id != $data['categoria_id']) {
 
-            $categoriaNombre = DB::table('categorias')
-                ->where('id', $data['categoria_id'])
-                ->value('nombre') ?? 'CAT';
+            $categoriaNombre = DB::table('categoria_producto')
+                ->where('id_cap', $data['categoria_id'])
+                ->value('nombre_cap') ?? 'CAT';
 
             $codigoFinal = self::generarCodigoProducto(
                 $categoriaNombre,
@@ -282,58 +271,66 @@ class Producto extends Model
             ?? null;
 
         $update = [
-            'codigo'          => $codigoFinal,
-            'categoria_id'    => $data['categoria_id'],
-            'nombre'          => $data['nombre'],
-            'descripcion'     => $data['descripcion'] ?? null,
-            'precio_compra'   => $precioUsd,
-            'stock_minimo'    => $data['stock_minimo'] ?? 0,
-            'stock_maximo'    => $data['stock_maximo'] ?? 0,
-            'peso_contenido'  => $pesoBase,
-            'unidad_id'       => $unidadId,
-            'unidades_por_presentacion' => $data['unidades_por_presentacion'] ?? 1,
-            'presentacion_dispensacion' => $data['presentacion_dispensacion'] ?? null,
-            'presentacion_id' => $presentacionId,
-            'estado'          => isset($data['estado']) ? (int)$data['estado'] : 1,
-            'updated_at'      => now(),
+            'codigo_pdt'                    => $codigoFinal,
+            'cap_id'                        => $data['categoria_id'],
+            'nombre_pdt'                    => $data['nombre'],
+            'descripcion_pdt'               => $data['descripcion'] ?? null,
+            'precio_compra_pdt'             => $precioUsd,
+            'stock_minimo_pdt'              => $data['stock_minimo_pdt'] ?? 0,
+            'stock_maximo_pdt'              => $data['stock_maximo_pdt'] ?? 0,
+            'peso_contenido_pdt'            => $pesoBase,
+            'unm_id'                        => $unidadId,
+            'unidades_presentacion_pdt'     => $data['unidades_presentacion_pdt'] ?? 1,
+            'presentacion_dispensacion_pdt' => $data['presentacion_dispensacion_pdt'] ?? null,
+            'enp_id'                        => $presentacionId,
+            'status_id'                     => self::statusDesde($data['estado'] ?? 1),
+            'updated_id'                    => Auth::id(),
+            'updated_at'                    => now(),
         ];
 
         if (!empty($data['imagen'])) {
-            $update['imagen'] = $data['imagen'];
+            $update['imagen_pdt'] = $data['imagen'];
         }
 
-        $ultimoPrecio = PrecioProducto::where('producto_id', $id)->latest()->first();
+        $ultimoPrecio = PrecioProducto::where('pdt_id', $id)->latest('id_ppr')->first();
         $margenRequest = $data['margen'] ?? 0;
 
-        if (!$ultimoPrecio || $ultimoPrecio->costo_usd != $precioUsd || $ultimoPrecio->margen != $margenRequest) {
+        if (!$ultimoPrecio || $ultimoPrecio->costo_usd_ppr != $precioUsd || $ultimoPrecio->margen_ppr != $margenRequest) {
             PrecioProducto::create([
-                'producto_id' => $id,
-                'costo_usd'   => $precioUsd,
-                'margen'      => $margenRequest,
+                'pdt_id'        => $id,
+                'costo_usd_ppr' => $precioUsd,
+                'margen_ppr'    => $margenRequest,
             ]);
         }
 
-        return DB::table('productos')->where('id', $id)->update($update);
+        return DB::table('producto')->where('id_pdt', $id)->update($update);
     }
 
     public static function eliminarProducto($id)
     {
-        return DB::table('productos')
-            ->where('id', $id)
+        return DB::table('producto')
+            ->where('id_pdt', $id)
             ->update([
-                'estado' => 0,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_INACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
     }
 
     public static function activarProducto($id)
     {
-        return DB::table('productos')
-            ->where('id', $id)
+        return DB::table('producto')
+            ->where('id_pdt', $id)
             ->update([
-                'estado' => 1,
-                'updated_at' => now()
+                'status_id'  => self::STATUS_ACTIVO,
+                'updated_id' => Auth::id(),
+                'updated_at' => now(),
             ]);
+    }
+
+    protected static function statusDesde($estado): int
+    {
+        return (int) $estado === 1 ? self::STATUS_ACTIVO : self::STATUS_INACTIVO;
     }
 
     protected static function generarCodigoProducto($categoriaNombre, $nombreProducto)
@@ -344,7 +341,7 @@ class Producto extends Model
         $suf = 1;
         do {
             $codigo = "{$base}-" . str_pad($suf, 3, '0', STR_PAD_LEFT);
-            $exists = DB::table('productos')->where('codigo', $codigo)->exists();
+            $exists = DB::table('producto')->where('codigo_pdt', $codigo)->exists();
             $suf++;
         } while ($exists && $suf < 999);
 
@@ -357,20 +354,11 @@ class Producto extends Model
 
     public static function tieneInventarioEnAcarigua($productoId)
     {
-        return DB::table('inventario_sede_lotes as isl')
-            ->join('lotes as l', 'l.id', '=', 'isl.lote_id')
-            ->where('l.producto_id', $productoId)
-            ->where('isl.sede_id', 1)
-            ->where('isl.cantidad_convertida', '>', 0)
-            ->exists();
+        return InventarioTotal::where('pdt_id', $productoId)->where('cantidad_convertida_total_int', '>', 0)->exists();
     }
 
     public static function cantidadEnAcarigua($productoId)
     {
-        return DB::table('inventario_sede_lotes as isl')
-            ->join('lotes as l', 'l.id', '=', 'isl.lote_id')
-            ->where('l.producto_id', $productoId)
-            ->where('isl.sede_id', 1)
-            ->sum('isl.cantidad_convertida');
+        return (float) InventarioTotal::where('pdt_id', $productoId)->sum('cantidad_convertida_total_int');
     }
 }

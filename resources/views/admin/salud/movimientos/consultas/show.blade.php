@@ -9,18 +9,18 @@
                 $recetaCompleta = $tieneReceta && !$consulta->receta->tieneItemsPendientes();
                 $pacienteNombre =
                     trim(
-                        optional($consulta->paciente)->cedula_persona .
+                        optional($consulta->paciente)->cedula_per .
                             ' ' .
-                            optional($consulta->paciente)->nombre_persona .
+                            optional($consulta->paciente)->nombres_per .
                             ' ' .
-                            optional($consulta->paciente)->apellido_persona,
+                            optional($consulta->paciente)->apellidos_per,
                     ) ?:
                     '—';
                 $medicoNombre =
                     trim(
-                        optional($consulta->medico)->nombre_persona .
+                        optional($consulta->medico)->nombres_per .
                             ' ' .
-                            optional($consulta->medico)->apellido_persona,
+                            optional($consulta->medico)->apellidos_per,
                     ) ?:
                     '—';
             @endphp
@@ -38,11 +38,11 @@
                         </h1>
                         <p
                             class="mt-0.5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2 flex-wrap">
-                            <span class="font-bold" style="color: var(--text-main);">Consulta #{{ $consulta->id }}</span>
+                            <span class="font-bold" style="color: var(--text-main);">Consulta #{{ $consulta->id_cme }}</span>
                             <span class="text-gray-300 dark:text-gray-700">·</span>
                             <span>{{ $pacienteNombre }}</span>
                             <span class="text-gray-300 dark:text-gray-700">·</span>
-                            <span>{{ optional($consulta->fecha)->translatedFormat('d \d\e F, Y') }}</span>
+                            <span>Atendida el {{ optional($consulta->fecha_cme)->translatedFormat('d \d\e F, Y') }}</span>
                         </p>
                     </div>
                 </div>
@@ -163,10 +163,54 @@
                                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Consultorio
                                     </p>
                                     <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                        {{ optional($consulta->consultorio)->nombre ?? '—' }}
+                                        {{ optional($consulta->consultorio)->nombre_csr ?? '—' }}
                                     </p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-calendar-check text-sky-600 dark:text-sky-400 text-sm"></i>
+                                </div>
+                                <div class="min-w-0 pt-0.5">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Fecha de
+                                        atención</p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ optional($consulta->fecha_cme)->format('d/m/Y') ?? '—' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-keyboard text-sky-600 dark:text-sky-400 text-sm"></i>
+                                </div>
+                                <div class="min-w-0 pt-0.5">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Fecha de registro</p>
+                                    <p class="text-sm font-bold" style="color: var(--text-main);">
+                                        {{ optional($consulta->created_at)->format('d/m/Y h:i A') ?? '—' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if ($consulta->esRegistroTardio())
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-clock-rotate-left text-amber-600 dark:text-amber-400 text-sm"></i>
+                                    </div>
+                                    <div class="min-w-0 pt-0.5">
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Motivo del registro tardío</p>
+                                        <p class="text-sm font-medium" style="color: var(--text-main);">
+                                            {{ $consulta->motivo_registro_tardio_cme ?: 'No indicado' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <div>
@@ -181,7 +225,7 @@
                                     @if ($consulta->enfermedades->isNotEmpty())
                                         <div class="flex flex-wrap gap-1.5">
                                             @foreach ($consulta->enfermedades as $enfermedad)
-                                                {{ $enfermedad->nombre }}
+                                                {{ $enfermedad->nombre_efm }}
                                                 @if ($consulta->enfermedades->count() > 1)
                                                     <span> · </span>
                                                 @endif
@@ -207,7 +251,7 @@
                                 <div class="p-5 rounded-2xl border shadow-inner"
                                     style="background-color: rgba(0,0,0,0.015); border-color: var(--border-color);">
                                     <p class="text-sm leading-relaxed" style="color: var(--text-main);">
-                                        {{ $consulta->motivo }}
+                                        {{ $consulta->motivo_cme }}
                                     </p>
                                 </div>
                             </div>
@@ -219,9 +263,9 @@
                                 </h4>
                                 <div class="p-5 rounded-2xl border shadow-inner"
                                     style="background-color: rgba(0,0,0,0.015); border-color: var(--border-color);">
-                                    <p class="text-sm leading-relaxed {{ $consulta->observaciones ? '' : 'italic text-gray-400' }}"
-                                        style="{{ $consulta->observaciones ? 'color: var(--text-main);' : '' }}">
-                                        {{ $consulta->observaciones ?: 'No se registraron observaciones adicionales durante la atención.' }}
+                                    <p class="text-sm leading-relaxed {{ $consulta->observaciones_cme ? '' : 'italic text-gray-400' }}"
+                                        style="{{ $consulta->observaciones_cme ? 'color: var(--text-main);' : '' }}">
+                                        {{ $consulta->observaciones_cme ?: 'No se registraron observaciones adicionales durante la atención.' }}
                                     </p>
                                 </div>
                             </div>
@@ -239,7 +283,7 @@
                                 style="background-color: rgba(16, 185, 129, 0.03); border-color: var(--border-color);">
                                 <p class="text-sm md:text-base font-medium leading-relaxed"
                                     style="color: var(--text-main);">
-                                    {{ $consulta->diagnostico }}
+                                    {{ $consulta->diagnostico_cme }}
                                 </p>
                             </div>
                         </div>
@@ -270,7 +314,7 @@
                                         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Vigencia
                                             hasta</p>
                                         <p class="text-sm font-bold truncate" style="color: var(--text-main);">
-                                            {{ optional($consulta->receta->vigencia)->format('d/m/Y') }}
+                                            {{ optional($consulta->receta->fecha_vigencia_rme)->format('d/m/Y') }}
                                         </p>
                                     </div>
                                 </div>
@@ -286,7 +330,7 @@
                                             Indicaciones Generales</p>
                                         <p class="text-sm font-medium leading-relaxed"
                                             style="color: var(--text-main);">
-                                            {{ $consulta->receta->descripcion ?: 'No se registraron indicaciones adicionales.' }}
+                                            {{ $consulta->receta->descripcion_rme ?: 'No se registraron indicaciones adicionales.' }}
                                         </p>
                                     </div>
                                 </div>
@@ -317,23 +361,23 @@
                                                 <tr
                                                     class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                                                     <td class="px-5 py-4 text-sm " style="color: var(--text-main);">
-                                                        {{ optional($detalle->producto)->nombre ?? '—' }}
+                                                        {{ optional($detalle->producto)->nombre_pdt ?? '—' }}
                                                     </td>
                                                     <td class="px-5 py-4 text-sm font-mono font-medium"
                                                         style="color: var(--text-main);">
-                                                        {{ $detalle->cantidad }}
+                                                        {{ floatval($detalle->cantidad_prescrita_drm) }}
                                                         <span
-                                                            class="text-gray-400 text-xs font-sans ">{{ optional($detalle->unidad)->nombre }}</span>
+                                                            class="text-gray-400 text-xs font-sans ">{{ $detalle->unidad_prescrita_drm ?: optional($detalle->unidad)->nombre_unm }}</span>
                                                     </td>
                                                     <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
-                                                        {{ $detalle->frecuencia }}
+                                                        {{ $detalle->frecuencia_drm }}
                                                     </td>
                                                     <td
                                                         class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                                        {{ \Carbon\Carbon::parse($detalle->fecha_inicio)->format('d/m/y') }}
+                                                        {{ \Carbon\Carbon::parse($detalle->fecha_inicio_drm)->format('d/m/y') }}
                                                         <i
                                                             class="fas fa-arrow-right-long mx-1.5 text-gray-300 dark:text-gray-600 text-xs"></i>
-                                                        {{ \Carbon\Carbon::parse($detalle->fecha_fin)->format('d/m/y') }}
+                                                        {{ \Carbon\Carbon::parse($detalle->fecha_fin_drm)->format('d/m/y') }}
                                                     </td>
                                                     <td class="px-5 py-4 text-center">
                                                         @if ($detalle->cantidad_pendiente <= 0)
@@ -402,25 +446,25 @@
                                                             class="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                                                             <td class="px-5 py-4 text-sm "
                                                                 style="color: var(--text-main);">
-                                                                {{ optional($disp->fecha)->format('d/m/Y') }}
+                                                                {{ optional($disp->fecha_dispensacion_dsm)->format('d/m/Y') }}
                                                             </td>
                                                             <td
                                                                 class="px-5 py-4 text-sm font-semibold text-gray-600 dark:text-gray-300">
-                                                                {{ optional($detalle->producto)->nombre ?? '—' }}
+                                                                {{ optional($detalle->producto)->nombre_pdt ?? '—' }}
                                                             </td>
                                                             <td class="px-5 py-4 text-sm text-center"
                                                                 style="color: var(--text-main);">
                                                                 <span
-                                                                    class="font-bold">{{ $disp->cantidad }}</span>
+                                                                    class="font-bold">{{ $disp->cantidad_dsm }}</span>
                                                                 <span
-                                                                    class="text-gray-400 text-xs font-sans ml-0.5">{{ optional($detalle->unidad)->nombre }}</span>
+                                                                    class="text-gray-400 text-xs font-sans ml-0.5">{{ optional($detalle->unidad)->nombre_unm }}</span>
                                                             </td>
                                                             <td class="px-5 py-4 text-sm">
                                                                 <div class="flex flex-col gap-0.5">
                                                                     <span class="font-medium"
                                                                         style="color: var(--text-main);">
                                                                         Lote:
-                                                                        {{ optional($disp->lote)->numero_lote ?? (optional($disp->lote)->codigo_lote ?? '—') }}
+                                                                        {{ optional($disp->lote)->codigo_lote_lot ?? '—' }}
                                                                     </span>
                                                                 </div>
                                                             </td>
@@ -428,7 +472,7 @@
                                                                 <div class="flex items-center justify-end gap-3">
                                                                     <span
                                                                         class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                                                        {{ optional(optional($disp->usuario)->persona)->nombre_persona .' '. optional(optional($disp->usuario)->persona)->apellido_persona ?? (optional($disp->usuario)->username ?? '—') }}
+                                                                        {{ optional(optional($disp->usuario)->persona)->nombres_per .' '. optional(optional($disp->usuario)->persona)->apellidos_per ?? (optional($disp->usuario)->username ?? '—') }}
                                                                     </span>
                                                                 </div>
                                                             </td>

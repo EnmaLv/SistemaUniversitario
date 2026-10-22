@@ -43,7 +43,7 @@
     // Mapa de bloques existentes para búsqueda rápida
     $horariosMap = [];
     foreach ($horarios as $h) {
-        $key = $h->dia . '|' . Carbon::parse($h->hora_inicio)->format('H:i') . '|' . Carbon::parse($h->hora_fin)->format('H:i');
+        $key = $h->dia_hpr . '|' . Carbon::parse($h->hora_inicio_hpr)->format('H:i') . '|' . Carbon::parse($h->hora_fin_hpr)->format('H:i');
         $horariosMap[$key] = $h;
     }
 @endphp
@@ -74,20 +74,24 @@
 
                 <div class="flex items-center gap-2 flex-wrap">
                     {{-- PDF --}}
-                    <a href="{{ route('admin.psicologia.maestros.horarios.exportarPdf', isset($grupoActivo) ? ['grupo' => $grupoActivo->id] : []) }}"
+                    @canRoute('admin.psicologia.maestros.horarios.exportarPdf')
+                    <a href="{{ route('admin.psicologia.maestros.horarios.exportarPdf', isset($grupoActivo) ? ['grupo' => $grupoActivo->id_gha] : []) }}"
                         target="_blank"
                         class="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center"
                         title="Descargar PDF">
                         <i class="fas fa-file-pdf text-sm"></i>
                     </a>
+                    @endcanRoute
 
                     {{-- Guardar como grupo --}}
+                    @canRoute('admin.psicologia.maestros.grupos_horarios.store_from_horarios')
                     <button id="openGroupModal" type="button"
                         {{ isset($grupoActivo) || !empty($tieneCitasPendientes) ? 'disabled' : '' }}
                         class="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                         title="Guardar como grupo de horarios">
                         <i class="fas fa-save text-sm"></i>
                     </button>
+                    @endcanRoute
 
                     {{-- Ver grupos --}}
                     <a href="{{ route('admin.psicologia.maestros.grupos_horarios.index') }}"
@@ -97,11 +101,13 @@
                     </a>
 
                     {{-- Gestionar Horarios (Crear / Editar) --}}
-                    <a href="{{ route('admin.psicologia.maestros.horarios.create', isset($grupoSeleccionado) ? ['grupo' => $grupoSeleccionado->id] : []) }}"
+                    @canRoute('admin.psicologia.maestros.horarios.create')
+                    <a href="{{ route('admin.psicologia.maestros.horarios.create', isset($grupoSeleccionado) ? ['grupo' => $grupoSeleccionado->id_gha] : []) }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-calendar-plus text-xs"></i>
                         <span>Gestionar Horarios</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -125,7 +131,7 @@
                         </div>
                         <span class="text-xs sm:text-sm font-medium text-{{ $themeColor }}-900 dark:text-{{ $themeColor }}-300">
                             Estás viendo los bloques del grupo <strong
-                                class="font-bold uppercase">{{ $grupoSeleccionado->nombre }}</strong>.
+                                class="font-bold uppercase">{{ $grupoSeleccionado->nombre_gha }}</strong>.
                         </span>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
@@ -144,7 +150,7 @@
                         <span
                             class="inline-flex items-center px-3 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider">
                             <i class="fas fa-check-circle me-1 text-[10px]"></i> Horario activo:
-                            {{ $grupoActivo->nombre }}
+                            {{ $grupoActivo->nombre_gha }}
                         </span>
                     </div>
                 @else
@@ -257,9 +263,9 @@
                                                         </span>
                                                         <span
                                                             class="block text-[10px] font-medium text-{{ $themeColor }}-600 dark:text-{{ $themeColor }}-400 truncate">
-                                                            {{ \Carbon\Carbon::parse($registro->hora_inicio)->format('g:i A') }}
+                                                            {{ \Carbon\Carbon::parse($registro->hora_inicio_hpr)->format('g:i A') }}
                                                             -
-                                                            {{ \Carbon\Carbon::parse($registro->hora_fin)->format('g:i A') }}
+                                                            {{ \Carbon\Carbon::parse($registro->hora_fin_hpr)->format('g:i A') }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -308,7 +314,7 @@
                             @if (isset($grupoActivo))
                                 <p class="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
                                     Existe un grupo activo llamado <strong
-                                        class="text-gray-800 dark:text-gray-200 font-bold">"{{ $grupoActivo->nombre }}"</strong>.
+                                        class="text-gray-800 dark:text-gray-200 font-bold">"{{ $grupoActivo->nombre_gha }}"</strong>.
                                     Los cambios se aplicarán directamente ahí.
                                 </p>
                             @else

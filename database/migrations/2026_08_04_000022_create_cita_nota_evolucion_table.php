@@ -9,11 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('cita_nota_evolucion', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('cita_id')->constrained('citas')->onDelete('cascade');
-            $table->foreignId('campo_id')->constrained('nota_evolucion_campos')->onDelete('cascade');
-            $table->text('contenido')->nullable();
+            $table->id('id_cno');
+            $table->text('contenido_cno')->nullable();
+            $table->foreignId('cps_id')->constrained('cita_psicologica', 'id_cps')->cascadeOnDelete();
+            $table->foreignId('cne_id')->constrained('campo_nota_evolucion', 'id_cne')->cascadeOnDelete();
             $table->timestamps();
+            $table->auditoria();
         });
     }
 

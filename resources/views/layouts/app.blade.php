@@ -2,38 +2,6 @@
     $moduloActivo = session('modulo_activo', 'general');
     $esPsicologia = in_array($moduloActivo, ['psicologia', 'salud']);
     $primaryColorHex = $esPsicologia ? '#2563eb' : '#dc2626';
-    $diagnosticUser = auth()->user();
-    $authMenuDiagnostic = [
-        'path' => request()->path(),
-        'user' => $diagnosticUser
-            ? [
-                'guard_id' => auth()->id(),
-                'model_id' => $diagnosticUser->getAuthIdentifier(),
-                'username' => $diagnosticUser->username,
-                'name' => $diagnosticUser->persona?->nombre_persona,
-                'legacy_role' => $diagnosticUser->getAttribute('role'),
-                'roles' => $diagnosticUser->roles
-                    ->map(
-                        fn($role) => [
-                            'id' => $role->id_rol,
-                            'name' => $role->nombre,
-                            'slug' => $role->slug,
-                            'menu_permissions' => $role->menu_permissions,
-                        ],
-                    )
-                    ->values()
-                    ->all(),
-            ]
-            : null,
-        'session_permissions' => [
-            'user_id' => session('permisos_usuario_id'),
-            'version' => session('permisos_version'),
-            'is_admin' => session('es_admin'),
-            'modules' => session('modulos_permitidos', []),
-            'menu_permissions' => session('menu_permissions_user', []),
-            'active_module' => session('modulo_activo'),
-        ],
-    ];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-modulo="{{ $moduloActivo }}">
@@ -539,18 +507,9 @@
         </div>
     </div>
 
+    @include('components.aviso-inactividad')
+
     <script>
-        const logAuthMenuDiagnostic = () => {
-            console.groupCollapsed(`[Auth/Menu Diagnostic] ${@json($authMenuDiagnostic['path'])}`);
-            console.log(@json($authMenuDiagnostic));
-            console.groupEnd();
-        };
-
-        document.addEventListener('DOMContentLoaded', logAuthMenuDiagnostic, {
-            once: true
-        });
-        document.addEventListener('livewire:navigated', logAuthMenuDiagnostic);
-
         document.addEventListener('DOMContentLoaded', function() {
             const primaryColor = '{{ $primaryColorHex }}';
 
@@ -607,7 +566,7 @@
                 window.Toast.fire({
                     icon: 'success',
                     title: '¡Operación Exitosa!',
-                    html: {!! json_encode(session('success')) !!}
+                    text: @json(session('success'))
                 });
             @endif
 
@@ -615,7 +574,7 @@
                 window.Toast.fire({
                     icon: 'error',
                     title: 'Atención',
-                    html: {!! json_encode(session('error')) !!}
+                    text: @json(session('error'))
                 });
             @endif
 
@@ -623,7 +582,7 @@
                 window.Toast.fire({
                     icon: 'info',
                     title: 'Información',
-                    html: {!! json_encode(session('info')) !!}
+                    text: @json(session('info'))
                 });
             @endif
 
@@ -631,7 +590,7 @@
                 window.Toast.fire({
                     icon: 'error',
                     title: 'Error de Validación',
-                    html: {!! json_encode($errors->first()) !!}
+                    text: @json($errors->first())
                 });
             @endif
         });
