@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Categoria;
+use App\Models\TipoProducto;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +20,7 @@ class ProductoRequest extends FormRequest
         $productoId = is_object($productoParam) ? $productoParam->id_pdt : $productoParam;
 
         return [
-            'categoria_id' => 'required|exists:categoria_producto,id_cap',
+            'categoria_id' => ['required', Categoria::reglaDeTipos(array_filter([$this->tipoEsperado($productoId)]))],
             'codigo' => 'nullable|string|max:255',
             'nombre' => [
                 'required',
@@ -46,6 +48,33 @@ class ProductoRequest extends FormRequest
     {
         return [
             'nombre.unique' => 'Ya existe un producto con este nombre',
+            'categoria_id.required' => 'Elige una categoría.',
+            'categoria_id.exists' => 'Elige una categoría de la lista: solo se aceptan las de este tipo de producto.',
         ];
+    }
+
+    public static function tipoFormulario($tipo): ?int
+    {
+        return TipoProducto::idPorNombre($tipo === 'medicamento' ? TipoProducto::MEDICAMENTO : TipoProducto::ALIMENTO);
+    }
+
+    public static function tiposFormulario($usuario): array
+    {
+        $tipos = array_values(array_filter([
+            TipoProducto::idPorNombre(TipoProducto::ALIMENTO),
+            TipoProducto::idPorNombre(TipoProducto::MEDICAMENTO),
+        ]));
+        $permitidos = TipoProducto::idsVisiblesEnProductos($usuario);
+
+        return $permitidos === null ? $tipos : array_values(array_intersect($tipos, $permitidos));
+    }
+
+    private function tipoEsperado($productoId): ?int
+    {
+        $tipo = $productoId
+            ? TipoProducto::idDeProducto((int) $productoId)
+            : self::tipoFormulario($this->input('tipo'));
+
+        return in_array($tipo, self::tiposFormulario($this->user()), true) ? $tipo : null;
     }
 }

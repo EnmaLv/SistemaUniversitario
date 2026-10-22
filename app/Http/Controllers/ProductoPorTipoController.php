@@ -160,7 +160,7 @@ abstract class ProductoPorTipoController extends Controller
     {
         $datos = $request->validate([
             'nombre'                    => ['required', 'string', 'max:255', Rule::unique('producto', 'nombre_pdt')->ignore($productoId, 'id_pdt')],
-            'categoria_id'              => ['required', Rule::exists('categoria_producto', 'id_cap')->where('tpr_id', $this->tipoId())],
+            'categoria_id'              => ['required', Categoria::reglaDeTipos([$this->tipoId()])],
             'unidad_id'                 => 'required|exists:unidad_medida,id_unm',
             'presentacion_id'           => 'nullable|exists:envase_primario,id_enp',
             'unidades_presentacion_pdt' => 'nullable|required_with:presentacion_id|integer|min:1',
@@ -173,7 +173,7 @@ abstract class ProductoPorTipoController extends Controller
             'nombre.required'                         => 'Escribe el nombre.',
             'nombre.unique'                           => 'Ya existe un producto con ese nombre.',
             'categoria_id.required'                   => 'Elige una categoría.',
-            'categoria_id.exists'                     => 'Elige una categoría de la lista.',
+            'categoria_id.exists'                     => 'Elige una categoría de la lista: solo se aceptan las de ' . mb_strtolower($this->config()['plural']) . '.',
             'unidad_id.required'                      => 'Elige la unidad de medida.',
             'unidades_presentacion_pdt.required_with' => 'Indica cuántas unidades trae cada caja o paquete.',
             'unidades_presentacion_pdt.integer'       => 'Las unidades por caja deben ser un número entero.',

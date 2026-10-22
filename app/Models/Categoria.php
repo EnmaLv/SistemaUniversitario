@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class Categoria extends Model
 {
@@ -172,5 +174,12 @@ class Categoria extends Model
     public function tipoProducto()
     {
         return $this->belongsTo(TipoProducto::class, 'tpr_id', 'id_tpr');
+    }
+
+    public static function reglaDeTipos(array $tipoIds): Exists
+    {
+        return Rule::exists('categoria_producto', 'id_cap')
+            ->whereIn('tpr_id', array_map('intval', $tipoIds))
+            ->whereNull('deleted_at');
     }
 }

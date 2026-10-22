@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\TipoProducto;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +12,7 @@ class MedicamentoSeeder extends Seeder
     {
         $productos = [
             [
-                'cap_id'                     => 22,
+                'categoria'                  => 'ANTIPIRÉTICOS',
                 'codigo_pdt'                 => 'ANT-ACE-001',
                 'nombre_pdt'                 => 'ACETAMINOFEN 500 MG',
                 'descripcion_pdt'            => 'ANALGÉSICO Y ANTIPIRÉTICO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
@@ -20,13 +21,13 @@ class MedicamentoSeeder extends Seeder
                 'stock_minimo_pdt'           => 15,
                 'stock_maximo_pdt'           => 60,
                 'peso_contenido_pdt'         => 10,
-                'unm_id'                     => 1,
+                'unidad'                     => 'Unidad',
                 'unidades_presentacion_pdt'  => 10,
-                'enp_id'                     => 1,
+                'envase'                     => 'BLISTER',
                 'status_id'                  => 1,
             ],
             [
-                'cap_id'                     => 21,
+                'categoria'                  => 'ANTIHISTAMÍNICOS',
                 'codigo_pdt'                 => 'ANT-LOR-006',
                 'nombre_pdt'                 => 'LORATADINA 10 MG',
                 'descripcion_pdt'            => 'ANTIHISTAMÍNICO UTILIZADO PARA ALIVIAR LOS SÍNTOMAS ALÉRGICOS.',
@@ -35,13 +36,13 @@ class MedicamentoSeeder extends Seeder
                 'stock_minimo_pdt'           => 10,
                 'stock_maximo_pdt'           => 40,
                 'peso_contenido_pdt'         => 8,
-                'unm_id'                     => 1,
+                'unidad'                     => 'Unidad',
                 'unidades_presentacion_pdt'  => 10,
-                'enp_id'                     => 1,
+                'envase'                     => 'BLISTER',
                 'status_id'                  => 1,
             ],
             [
-                'cap_id'                     => 15,
+                'categoria'                  => 'ANTIINFLAMATORIOS',
                 'codigo_pdt'                 => 'ANT-IBU-008',
                 'nombre_pdt'                 => 'IBUPROFENO 800 MG',
                 'descripcion_pdt'            => 'ANTIINFLAMATORIO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
@@ -50,13 +51,13 @@ class MedicamentoSeeder extends Seeder
                 'stock_minimo_pdt'           => 10,
                 'stock_maximo_pdt'           => 50,
                 'peso_contenido_pdt'         => 15,
-                'unm_id'                     => 1,
+                'unidad'                     => 'Unidad',
                 'unidades_presentacion_pdt'  => 10,
-                'enp_id'                     => 1,
+                'envase'                     => 'BLISTER',
                 'status_id'                  => 1,
             ],
             [
-                'cap_id'                     => 14,
+                'categoria'                  => 'ANALGÉSICOS',
                 'codigo_pdt'                 => 'ANA-ATA-001',
                 'nombre_pdt'                 => 'ATAMEL 500 MG',
                 'descripcion_pdt'            => 'ANALGÉSICO Y ANTIPIRÉTICO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
@@ -65,13 +66,13 @@ class MedicamentoSeeder extends Seeder
                 'stock_minimo_pdt'           => 10,
                 'stock_maximo_pdt'           => 50,
                 'peso_contenido_pdt'         => 10,
-                'unm_id'                     => 1,
+                'unidad'                     => 'Unidad',
                 'unidades_presentacion_pdt'  => 10,
-                'enp_id'                     => 1,
+                'envase'                     => 'BLISTER',
                 'status_id'                  => 1,
             ],
             [
-                'cap_id'                     => 15,
+                'categoria'                  => 'ANTIINFLAMATORIOS',
                 'codigo_pdt'                 => 'ANT-BRU-002',
                 'nombre_pdt'                 => 'BRUGESIC 400 MG',
                 'descripcion_pdt'            => 'ANTIINFLAMATORIO UTILIZADO PARA ALIVIAR EL DOLOR Y REDUCIR LA FIEBRE.',
@@ -80,9 +81,9 @@ class MedicamentoSeeder extends Seeder
                 'stock_minimo_pdt'           => 10,
                 'stock_maximo_pdt'           => 50,
                 'peso_contenido_pdt'         => 12,
-                'unm_id'                     => 1,
+                'unidad'                     => 'Unidad',
                 'unidades_presentacion_pdt'  => 10,
-                'enp_id'                     => 1,
+                'envase'                     => 'BLISTER',
                 'status_id'                  => 1,
             ],
         ];
@@ -96,8 +97,16 @@ class MedicamentoSeeder extends Seeder
         ];
 
         foreach ($productos as $p) {
+            if (DB::table('producto')->where('codigo_pdt', $p['codigo_pdt'])->exists()) {
+                continue;
+            }
+
+            $p['cap_id'] = ProductoSeeder::categoria(TipoProducto::MEDICAMENTO, $p['categoria']);
+            $p['unm_id'] = ProductoSeeder::unidad($p['unidad']);
+            $p['enp_id'] = DB::table('envase_primario')->where('nombre_enp', $p['envase'])->value('id_enp');
             $p['created_at'] = now();
             $p['updated_at'] = now();
+            unset($p['categoria'], $p['unidad'], $p['envase']);
 
             $id = DB::table('producto')->insertGetId($p, 'id_pdt');
 

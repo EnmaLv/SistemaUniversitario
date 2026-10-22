@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\ExchangeRates;
 use App\Models\Producto;
+use App\Models\TipoProducto;
 use Illuminate\Support\Facades\Http;
 
 class MedicamentoController extends Controller
@@ -22,11 +23,12 @@ class MedicamentoController extends Controller
         $activo = $request->input('activo', 1);
         $categoria = $request->input('categoria', null);
 
-        $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, 2);
+        $tipoId = $this->tipoId();
+        $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, $tipoId);
 
         $categorias = Categoria::select('id_cap', 'nombre_cap')
             ->where('status_id', Categoria::STATUS_ACTIVO)
-            ->where('tpr_id', 2)
+            ->where('tpr_id', $tipoId)
             ->get();
 
         $sedeId = \App\Support\Sedes\SedeActiva::id();
@@ -39,7 +41,7 @@ class MedicamentoController extends Controller
 
     public function create()
     {
-        $datos = Producto::getDatosFormulario(2);
+        $datos = Producto::getDatosFormulario($this->tipoId());
 
         $datos['envases'] = DB::table('envase_primario')
             ->select('id_enp', 'nombre_enp')
@@ -175,7 +177,7 @@ class MedicamentoController extends Controller
      */
     public function show($id)
     {
-        $medicamento = Producto::with(['categoria', 'unidad', 'presentacion'])->findOrFail($id);
+        $medicamento = Producto::with(['categoria', 'unidad', 'presentacion'])->findOrFail($this->buscarMedicamento($id)->id_pdt);
 
         return view('admin.salud.maestros.medicamentos.show', compact('medicamento'));
     }
@@ -185,9 +187,9 @@ class MedicamentoController extends Controller
      */
     public function edit($id)
     {
-        $medicamento = Producto::findOrFail($id);
+        $medicamento = $this->buscarMedicamento($id);
 
-        $datos = Producto::getDatosFormulario(2);
+        $datos = Producto::getDatosFormulario($this->tipoId());
 
         $datos['envases'] = DB::table('envase_primario')
             ->select('id_enp', 'nombre_enp')
@@ -205,6 +207,8 @@ class MedicamentoController extends Controller
      */
     public function update(MedicamentoRequest $request, $id)
     {
+        $id = $this->buscarMedicamento($id)->id_pdt;
+
         DB::beginTransaction();
 
         try {
@@ -240,7 +244,7 @@ class MedicamentoController extends Controller
      */
     public function destroy($id)
     {
-        Producto::eliminarProducto($id);
+        Producto::eliminarProducto($this->buscarMedicamento($id)->id_pdt);
 
         return redirect()
             ->route('admin.salud.maestros.medicamentos.index')
@@ -250,8 +254,26 @@ class MedicamentoController extends Controller
 
     public function activar($id)
     {
-        Producto::activarProducto($id);
+        Producto::activarProducto($this->buscarMedicamento($id)->id_pdt);
         return redirect()->route('admin.salud.maestros.medicamentos.index')->with('success', 'Medicamento activado exitosamente.');
+    }
+
+    private function tipoId(): int
+    {
+        $id = TipoProducto::idPorNombre(TipoProducto::MEDICAMENTO);
+
+        abort_if($id === null, 404, 'El tipo de producto "' . TipoProducto::MEDICAMENTO . '" no está registrado.');
+
+        return $id;
+    }
+
+    private function buscarMedicamento($id): Producto
+    {
+        $producto = Producto::findOrFail((int) $id);
+
+        abort_unless(TipoProducto::idDeProducto((int) $producto->id_pdt) === $this->tipoId(), 404);
+
+        return $producto;
     }
 
     private function procesarTasaYPrecios(?int $productoId = null)

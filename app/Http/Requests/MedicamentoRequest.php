@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Categoria;
 use App\Models\Producto;
+use App\Models\TipoProducto;
 use Illuminate\Foundation\Http\FormRequest;
 
 class MedicamentoRequest extends FormRequest
@@ -15,7 +17,7 @@ class MedicamentoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'categoria_id' => 'required|exists:categoria_producto,id_cap',
+            'categoria_id' => ['required', Categoria::reglaDeTipos(array_filter([TipoProducto::idPorNombre(TipoProducto::MEDICAMENTO)]))],
             'codigo' => 'nullable|string|max:255',
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -39,6 +41,7 @@ class MedicamentoRequest extends FormRequest
         return [
             'nombre.unique' => 'Ya existe un producto con este nombre',
             'categoria_id.required' => 'La categoría es obligatoria.',
+            'categoria_id.exists' => 'Elige una categoría de medicamentos de la lista.',
             'costo_usd_ppr.required' => 'El costo en USD es obligatorio.'
         ];
     }

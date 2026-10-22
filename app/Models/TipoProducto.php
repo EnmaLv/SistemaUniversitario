@@ -89,6 +89,25 @@ class TipoProducto extends Model
         return $id === null ? null : (int) $id;
     }
 
+    public static function idDeProducto(int $productoId): ?int
+    {
+        $id = DB::table('producto')
+            ->join('categoria_producto', 'categoria_producto.id_cap', '=', 'producto.cap_id')
+            ->where('producto.id_pdt', $productoId)
+            ->value('categoria_producto.tpr_id');
+
+        return $id === null ? null : (int) $id;
+    }
+
+    public static function idsVisiblesEnProductos($usuario): ?array
+    {
+        if (! $usuario instanceof Usuario || $usuario->puede('productos')) {
+            return null;
+        }
+
+        return array_values(array_filter([static::idPorNombre(self::ALIMENTO)]));
+    }
+
     public static function productoEsDeTipo(int $productoId, string $nombre): bool
     {
         return static::productosDeTipos([$nombre])->where('producto.id_pdt', $productoId)->exists();

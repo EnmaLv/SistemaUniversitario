@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\TipoProducto;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -22,15 +23,7 @@ class CategoriaSeeder extends Seeder
     public function run(): void
     {
         $this->sembrar(self::ALIMENTOS);
-
-        $medicamentosSembrados = DB::table('categoria_producto')
-            ->join('tipo_producto', 'tipo_producto.id_tpr', '=', 'categoria_producto.tpr_id')
-            ->where('tipo_producto.nombre_tpr', 'Medicamento')
-            ->exists();
-
-        if ($medicamentosSembrados) {
-            $this->sembrarComplementarias();
-        }
+        $this->sembrarComplementarias();
     }
 
     public function sembrarComplementarias(): void
@@ -38,10 +31,10 @@ class CategoriaSeeder extends Seeder
         $this->sembrar(self::COMPLEMENTARIAS);
     }
 
-    private function sembrar(array $porTipo): void
+    public function sembrar(array $porTipo): void
     {
         foreach ($porTipo as $tipo => $categorias) {
-            $tipoId = DB::table('tipo_producto')->where('nombre_tpr', $tipo)->value('id_tpr');
+            $tipoId = TipoProducto::idPorNombre($tipo);
 
             if (! $tipoId) {
                 continue;
@@ -49,7 +42,7 @@ class CategoriaSeeder extends Seeder
 
             foreach ($categorias as $nombre) {
                 $existe = DB::table('categoria_producto')
-                    ->where('nombre_cap', $nombre)
+                    ->where(DB::raw('LOWER(nombre_cap)'), mb_strtolower($nombre))
                     ->where('tpr_id', $tipoId)
                     ->exists();
 

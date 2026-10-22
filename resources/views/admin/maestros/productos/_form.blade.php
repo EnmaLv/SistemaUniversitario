@@ -22,6 +22,7 @@
         @endif
 
         <input type="hidden" name="from" value="{{ request('from') }}">
+        <input type="hidden" name="tipo" value="{{ $esMedicamento ? 'medicamento' : 'alimento' }}">
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6">
             <div class="lg:col-span-9 flex flex-col gap-6">

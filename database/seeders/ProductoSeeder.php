@@ -2,49 +2,104 @@
 
 namespace Database\Seeders;
 
+use App\Models\TipoProducto;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class ProductoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    private const PRODUCTOS = [
+        ['CER-HAR-001', 'Harina', 'Cereales', 'Kilo', 1000, 5, 100],
+        ['EMB-MOR-002', 'Mortadela', 'Embutidos', 'Kilo', 1000, 5, 100],
+        ['CAR-AZU-003', 'Azucar', 'Carbohidrato', 'Kilo', 1000, 5, 100],
+        ['FRU-PUL-004', 'Pulpa de Mora', 'Frutas', 'Kilo', 1000, 5, 100],
+        ['GRA-MAN-005', 'Mantequilla 1k', 'Grasas', 'Kilo', 1000, 5, 100],
+        ['GRA-MAN-005-1', 'Mantequilla 500g', 'Grasas', 'Unidad', 500, 5, 100],
+        ['CAR-CAR-006', 'Carne Molida', 'Carnes', 'Kilo', 1000, 5, 100],
+        ['VER-PAP-007', 'Papa', 'Verduras', 'Kilo', 1000, 5, 100],
+        ['VER-ZAN-008', 'Zanahoria', 'Verduras', 'Kilo', 1000, 5, 100],
+        ['VER-ALI-009', 'Aliños Verdes', 'Verduras', 'Kilo', 1000, 5, 100],
+        ['VER-CEB-010', 'Cebolla', 'Verduras', 'Kilo', 1000, 5, 100],
+        ['FRU-TOM-011', 'Tomate', 'Frutas', 'Kilo', 1000, 5, 100],
+        ['VER-AJO-012', 'Ajo', 'Verduras', 'Kilo', 1000, 5, 100],
+        ['EMB-SAL-013', 'Salchicha', 'Embutidos', 'Kilo', 1000, 5, 100],
+        ['CAR-POL-014', 'Pollo', 'Carnes', 'Kilo', 1000, 5, 100],
+        ['LAC-QUE-015', 'Queso Blanco', 'Lácteos', 'Kilo', 1000, 5, 100],
+        ['LAC-QUE-015-1', 'Queso Amarillo', 'Lácteos', 'Unidad', 300, 5, 100],
+        ['CAR-RES-016', 'Carne de Res', 'Carnes', 'Kilo', 1000, 5, 80],
+        ['CAR-CER-017', 'Carne de Cerdo', 'Carnes', 'Kilo', 1000, 5, 80],
+        ['FRU-MAN-018', 'Manzana', 'Frutas', 'Kilo', 1000, 10, 150],
+        ['FRU-BAN-019', 'Cambur', 'Frutas', 'Kilo', 1000, 10, 150],
+        ['VER-LEC-020', 'Lechuga', 'Verduras', 'Unidad', 500, 5, 60],
+        ['VER-PIM-021', 'Pimentón', 'Verduras', 'Unidad', 500, 5, 60],
+        ['CER-ARR-022', 'Arroz', 'Cereales', 'Kilo', 1000, 10, 200],
+        ['CAR-PAST-023', 'Pasta', 'Carbohidrato', 'Unidad', 500, 10, 200],
+        ['LAC-LEC-024', 'Leche', 'Lácteos', 'Litro', 1000, 10, 120],
+        ['LAC-YOG-025', 'Yogurt', 'Lácteos', 'Unidad', 500, 10, 80],
+        ['BEB-AGU-026', 'Agua Mineral', 'Bebidas', 'Litro', 1500, 20, 300],
+        ['BEB-REF-027', 'Refresco', 'Bebidas', 'Litro', 2000, 20, 300],
+        ['CON-PIM-028', 'Pimienta', 'Condimentos', 'Unidad', 100, 5, 40],
+        ['CON-COM-029', 'Comino', 'Condimentos', 'Unidad', 100, 5, 40],
+    ];
+
     public function run(): void
     {
-        DB::table('producto')->insert([
-            ['cap_id' => 7, 'codigo_pdt' => 'CER-HAR-001', 'nombre_pdt' => 'Harina', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 1, 'codigo_pdt' => 'EMB-MOR-002', 'nombre_pdt' => 'Mortadela', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 9, 'codigo_pdt' => 'CAR-AZU-003', 'nombre_pdt' => 'Azucar', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 2, 'codigo_pdt' => 'FRU-PUL-004', 'nombre_pdt' => 'Pulpa de Mora', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 10, 'codigo_pdt' => 'GRA-MAN-005', 'nombre_pdt' => 'Mantequilla 1k', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 10, 'codigo_pdt' => 'GRA-MAN-005-1', 'nombre_pdt' => 'Mantequilla 500g', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 500, 'unm_id' => 1,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 5, 'codigo_pdt' => 'CAR-CAR-006', 'nombre_pdt' => 'Carne Molida', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 3, 'codigo_pdt' => 'VER-PAP-007', 'nombre_pdt' => 'Papa', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 3, 'codigo_pdt' => 'VER-ZAN-008', 'nombre_pdt' => 'Zanahoria', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 3, 'codigo_pdt' => 'VER-ALI-009', 'nombre_pdt' => 'Aliños Verdes', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 3, 'codigo_pdt' => 'VER-CEB-010', 'nombre_pdt' => 'Cebolla', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 2, 'codigo_pdt' => 'FRU-TOM-011', 'nombre_pdt' => 'Tomate', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 3, 'codigo_pdt' => 'VER-AJO-012', 'nombre_pdt' => 'Ajo', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 1, 'codigo_pdt' => 'EMB-SAL-013', 'nombre_pdt' => 'Salchicha', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 5, 'codigo_pdt' => 'CAR-POL-014', 'nombre_pdt' => 'Pollo', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 6, 'codigo_pdt' => 'LAC-QUE-015', 'nombre_pdt' => 'Queso Blanco', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 6, 'codigo_pdt' => 'LAC-QUE-015-1', 'nombre_pdt' => 'Queso Amarillo', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 100, 'peso_contenido_pdt' => 300, 'unm_id' => 1,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 5, 'codigo_pdt' => 'CAR-RES-016', 'nombre_pdt' => 'Carne de Res', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 80, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 5, 'codigo_pdt' => 'CAR-CER-017', 'nombre_pdt' => 'Carne de Cerdo', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 80, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 2, 'codigo_pdt' => 'FRU-MAN-018', 'nombre_pdt' => 'Manzana', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 10, 'stock_maximo_pdt' => 150, 'peso_contenido_pdt' => 1000, 'unm_id' => 3, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 2, 'codigo_pdt' => 'FRU-BAN-019', 'nombre_pdt' => 'Cambur', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 10, 'stock_maximo_pdt' => 150, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 3, 'codigo_pdt' => 'VER-LEC-020', 'nombre_pdt' => 'Lechuga', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 60, 'peso_contenido_pdt' => 500, 'unm_id' => 1,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 3, 'codigo_pdt' => 'VER-PIM-021', 'nombre_pdt' => 'Pimentón', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 60, 'peso_contenido_pdt' => 500, 'unm_id' => 1,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 7, 'codigo_pdt' => 'CER-ARR-022', 'nombre_pdt' => 'Arroz', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 10, 'stock_maximo_pdt' => 200, 'peso_contenido_pdt' => 1000, 'unm_id' => 3,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 9, 'codigo_pdt' => 'CAR-PAST-023', 'nombre_pdt' => 'Pasta', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 10, 'stock_maximo_pdt' => 200, 'peso_contenido_pdt' => 500, 'unm_id' => 1,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 6, 'codigo_pdt' => 'LAC-LEC-024', 'nombre_pdt' => 'Leche', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 10, 'stock_maximo_pdt' => 120, 'peso_contenido_pdt' => 1000, 'unm_id' => 5,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 6, 'codigo_pdt' => 'LAC-YOG-025', 'nombre_pdt' => 'Yogurt', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 10, 'stock_maximo_pdt' => 80, 'peso_contenido_pdt' => 500, 'unm_id' => 1, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 11, 'codigo_pdt' => 'BEB-AGU-026', 'nombre_pdt' => 'Agua Mineral', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 20, 'stock_maximo_pdt' => 300, 'peso_contenido_pdt' => 1500, 'unm_id' => 5,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 11, 'codigo_pdt' => 'BEB-REF-027', 'nombre_pdt' => 'Refresco', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 20, 'stock_maximo_pdt' => 300, 'peso_contenido_pdt' => 2000, 'unm_id' => 5,'enp_id' => null, 'status_id' => 1],
-            ['cap_id' => 13, 'codigo_pdt' => 'CON-PIM-028', 'nombre_pdt' => 'Pimienta', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 40, 'peso_contenido_pdt' => 100, 'unm_id' => 1, 'enp_id' => null,'status_id' => 1],
-            ['cap_id' => 13, 'codigo_pdt' => 'CON-COM-029', 'nombre_pdt' => 'Comino', 'descripcion_pdt' => null, 'imagen_pdt' => null, 'stock_minimo_pdt' => 5, 'stock_maximo_pdt' => 40, 'peso_contenido_pdt' => 100, 'unm_id' => 1,'enp_id' => null, 'status_id' => 1],
+        foreach (self::PRODUCTOS as [$codigo, $nombre, $categoria, $unidad, $peso, $minimo, $maximo]) {
+            if (DB::table('producto')->where('codigo_pdt', $codigo)->exists()) {
+                continue;
+            }
 
-        ]);
+            DB::table('producto')->insert([
+                'cap_id'             => self::categoria(TipoProducto::ALIMENTO, $categoria),
+                'codigo_pdt'         => $codigo,
+                'nombre_pdt'         => $nombre,
+                'descripcion_pdt'    => null,
+                'imagen_pdt'         => null,
+                'stock_minimo_pdt'   => $minimo,
+                'stock_maximo_pdt'   => $maximo,
+                'peso_contenido_pdt' => $peso,
+                'unm_id'             => self::unidad($unidad),
+                'enp_id'             => null,
+                'status_id'          => 1,
+            ]);
+        }
+    }
+
+    public static function categoria(string $tipo, string $nombre): int
+    {
+        $id = DB::table('categoria_producto as c')
+            ->join('tipo_producto as t', 't.id_tpr', '=', 'c.tpr_id')
+            ->where(DB::raw('LOWER(t.nombre_tpr)'), mb_strtolower($tipo))
+            ->where(DB::raw('LOWER(c.nombre_cap)'), mb_strtolower($nombre))
+            ->whereNull('c.deleted_at')
+            ->value('c.id_cap');
+
+        if ($id === null) {
+            throw new \RuntimeException("No existe la categoría \"{$nombre}\" del tipo \"{$tipo}\". Ejecuta antes el seeder de categorías.");
+        }
+
+        return (int) $id;
+    }
+
+    public static function unidad(string $nombre): int
+    {
+        $id = DB::table('unidad_medida')->where('nombre_unm', $nombre)->value('id_unm');
+
+        if ($id === null) {
+            throw new \RuntimeException("No existe la unidad de medida \"{$nombre}\".");
+        }
+
+        return (int) $id;
+    }
+
+    public static function producto(string $codigo): int
+    {
+        $id = DB::table('producto')->where('codigo_pdt', $codigo)->value('id_pdt');
+
+        if ($id === null) {
+            throw new \RuntimeException("No existe el producto con código \"{$codigo}\".");
+        }
+
+        return (int) $id;
     }
 }

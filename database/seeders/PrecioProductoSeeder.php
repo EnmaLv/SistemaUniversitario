@@ -7,44 +7,49 @@ use Illuminate\Support\Facades\DB;
 
 class PrecioProductoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    private const PRECIOS = [
+        'CER-HAR-001' => [1.44, 20],
+        'EMB-MOR-002' => [1.20, 15],
+        'CAR-AZU-003' => [1.25, 25],
+        'FRU-PUL-004' => [5.99, 18],
+        'GRA-MAN-005' => [5.20, 10],
+        'GRA-MAN-005-1' => [2.60, 12],
+        'CAR-CAR-006' => [8.73, 20],
+        'VER-PAP-007' => [1.82, 15],
+        'VER-ZAN-008' => [1.50, 22],
+        'VER-ALI-009' => [1.00, 18],
+        'VER-CEB-010' => [1.80, 18],
+        'FRU-TOM-011' => [2.01, 18],
+        'VER-AJO-012' => [2.50, 18],
+        'EMB-SAL-013' => [4.00, 18],
+        'CAR-POL-014' => [6.08, 18],
+        'LAC-QUE-015' => [6.18, 18],
+        'LAC-QUE-015-1' => [7.60, 18],
+        'CAR-RES-016' => [3.00, 20],
+        'CAR-CER-017' => [5.06, 18],
+        'FRU-MAN-018' => [1.43, 25],
+        'FRU-BAN-019' => [1.32, 30],
+        'VER-LEC-020' => [1.10, 25],
+        'VER-PIM-021' => [1.47, 25],
+        'CER-ARR-022' => [1.20, 20],
+        'CAR-PAST-023' => [0.75, 22],
+        'LAC-LEC-024' => [1.70, 18],
+        'LAC-YOG-025' => [2.00, 20],
+        'BEB-AGU-026' => [1.00, 30],
+        'BEB-REF-027' => [2.82, 35],
+        'CON-PIM-028' => [0.55, 40],
+        'CON-COM-029' => [0.50, 40],
+    ];
+
     public function run(): void
     {
-        DB::table('precio_producto')->insert([
-            ['pdt_id' => 1, 'costo_usd_ppr' => 1.44, 'margen_ppr' => 20, 'precio_usd_ppr' => null],
-            ['pdt_id' => 2, 'costo_usd_ppr' => 1.20, 'margen_ppr' => 15, 'precio_usd_ppr' => null],
-            ['pdt_id' => 3, 'costo_usd_ppr' => 1.25, 'margen_ppr' => 25, 'precio_usd_ppr' => null],
-            ['pdt_id' => 4, 'costo_usd_ppr' => 5.99, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 5, 'costo_usd_ppr' => 5.20, 'margen_ppr' => 10, 'precio_usd_ppr' => null],
-            ['pdt_id' => 6, 'costo_usd_ppr' => 2.60, 'margen_ppr' => 12, 'precio_usd_ppr' => null],
-            ['pdt_id' => 7, 'costo_usd_ppr' => 8.73, 'margen_ppr' => 20, 'precio_usd_ppr' => null],
-            ['pdt_id' => 8, 'costo_usd_ppr' => 1.82, 'margen_ppr' => 15, 'precio_usd_ppr' => null],
-            ['pdt_id' => 9, 'costo_usd_ppr' => 1.50, 'margen_ppr' => 22, 'precio_usd_ppr' => null],
-            ['pdt_id' => 10, 'costo_usd_ppr' => 1.00, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 11, 'costo_usd_ppr' => 1.80, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 12, 'costo_usd_ppr' => 2.01, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 13, 'costo_usd_ppr' => 2.50, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 14, 'costo_usd_ppr' => 4.00, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 15, 'costo_usd_ppr' => 6.08, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 16, 'costo_usd_ppr' => 6.18, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 17, 'costo_usd_ppr' => 7.60, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 18, 'costo_usd_ppr' => 3.00, 'margen_ppr' => 20, 'precio_usd_ppr' => null],
-            ['pdt_id' => 19, 'costo_usd_ppr' => 5.06, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 20, 'costo_usd_ppr' => 1.43, 'margen_ppr' => 25, 'precio_usd_ppr' => null],
-            ['pdt_id' => 21, 'costo_usd_ppr' => 1.32, 'margen_ppr' => 30, 'precio_usd_ppr' => null],
-            ['pdt_id' => 22, 'costo_usd_ppr' => 1.10, 'margen_ppr' => 25, 'precio_usd_ppr' => null],
-            ['pdt_id' => 23, 'costo_usd_ppr' => 1.47, 'margen_ppr' => 25, 'precio_usd_ppr' => null],
-            ['pdt_id' => 24, 'costo_usd_ppr' => 1.20, 'margen_ppr' => 20, 'precio_usd_ppr' => null],
-            ['pdt_id' => 25, 'costo_usd_ppr' => 0.75, 'margen_ppr' => 22, 'precio_usd_ppr' => null],
-            ['pdt_id' => 26, 'costo_usd_ppr' => 1.70, 'margen_ppr' => 18, 'precio_usd_ppr' => null],
-            ['pdt_id' => 27, 'costo_usd_ppr' => 2.00, 'margen_ppr' => 20, 'precio_usd_ppr' => null],
-            ['pdt_id' => 28, 'costo_usd_ppr' => 1.00, 'margen_ppr' => 30, 'precio_usd_ppr' => null],
-            ['pdt_id' => 29, 'costo_usd_ppr' => 2.82, 'margen_ppr' => 35, 'precio_usd_ppr' => null],
-            ['pdt_id' => 30, 'costo_usd_ppr' => 0.55, 'margen_ppr' => 40, 'precio_usd_ppr' => null],
-            ['pdt_id' => 31, 'costo_usd_ppr' => 0.50, 'margen_ppr' => 40, 'precio_usd_ppr' => null],
-        ]);
-
+        foreach (self::PRECIOS as $codigo => [$costo, $margen]) {
+            DB::table('precio_producto')->insert([
+                'pdt_id'         => ProductoSeeder::producto($codigo),
+                'costo_usd_ppr'  => $costo,
+                'margen_ppr'     => $margen,
+                'precio_usd_ppr' => null,
+            ]);
+        }
     }
 }

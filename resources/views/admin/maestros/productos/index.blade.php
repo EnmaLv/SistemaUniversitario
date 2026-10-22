@@ -46,7 +46,11 @@
                 </form>
 
                 <div class="flex items-center gap-3 shrink-0">
-                    <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" form="productosBuscarForm" :etiqueta="false" />
+                    @if ($tiposProducto->count() > 1)
+                        <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" form="productosBuscarForm" :etiqueta="false" />
+                    @else
+                        <input type="hidden" name="tipo" form="productosBuscarForm" value="{{ \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto) }}">
+                    @endif
 
                     {{-- Toggle estado --}}
                     <div class="flex items-center gap-2 px-3 py-2 rounded-xl border "
