@@ -525,24 +525,9 @@ Breadcrumbs::for('admin.enfermedades.index', function (Trail $trail) {
     $trail->push('Enfermedades', route('admin.enfermedades.index'));
 });
 
-Breadcrumbs::for('admin.maestros.material_oficina.index', function (Trail $trail) {
-    $trail->parent('home');
-    $trail->push('Material de oficina', route('admin.maestros.material_oficina.index'));
-});
-
-Breadcrumbs::for('admin.maestros.material_oficina.create', function (Trail $trail) {
-    $trail->parent('admin.maestros.material_oficina.index');
-    $trail->push('Crear', route('admin.maestros.material_oficina.create'));
-});
-
-Breadcrumbs::for('admin.maestros.material_oficina.edit', function (Trail $trail, $producto) {
-    $trail->parent('admin.maestros.material_oficina.index');
-    $trail->push('Editar', route('admin.maestros.material_oficina.edit', $producto));
-});
-
 Breadcrumbs::for('admin.deportes.implementos.index', function (Trail $trail) {
     $trail->parent('home');
-    $trail->push('Implementos deportivos', route('admin.deportes.implementos.index'));
+    $trail->push('Implementos y materiales', route('admin.deportes.implementos.index'));
 });
 
 Breadcrumbs::for('admin.deportes.implementos.create', function (Trail $trail) {

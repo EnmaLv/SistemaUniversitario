@@ -84,7 +84,7 @@ Route::prefix('/deportes')->name('admin.deportes.')->group(function () {
     Route::get('/entregas/{id}', [\App\Http\Controllers\Deporte\EntregaMaterialController::class, 'show'])->whereNumber('id')->name('entregas.show');
 });
 
-Route::prefix('/deportes/implementos')->name('admin.deportes.implementos.')->controller(\App\Http\Controllers\ImplementoDeportivoController::class)->group(function () {
+Route::prefix('/deportes/implementos')->name('admin.deportes.implementos.')->controller(\App\Http\Controllers\ImplementoMaterialController::class)->group(function () {
     Route::get('/', 'index')->name('index');
     Route::get('/create', 'create')->name('create');
     Route::post('/', 'store')->name('store');

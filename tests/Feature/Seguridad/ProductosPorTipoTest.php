@@ -128,20 +128,26 @@ class ProductosPorTipoTest extends SeguridadTestCase
         $this->get(route('admin.deportes.implementos.index', ['buscar' => $this->sufijo]))
             ->assertOk()
             ->assertSee('PTT BALON ' . $this->sufijo)
+            ->assertSee('PTT LAPIZ ' . $this->sufijo)
+            ->assertDontSee('PTT MEDICINA ' . $this->sufijo);
+
+        $this->get(route('admin.deportes.implementos.index', ['buscar' => $this->sufijo, 'tipo' => 'deportivo']))
+            ->assertOk()
+            ->assertSee('PTT BALON ' . $this->sufijo)
             ->assertDontSee('PTT MEDICINA ' . $this->sufijo)
             ->assertDontSee('PTT LAPIZ ' . $this->sufijo);
+
+        $this->get(route('admin.deportes.implementos.index', ['buscar' => $this->sufijo, 'tipo' => 'oficina']))
+            ->assertOk()
+            ->assertSee('PTT LAPIZ ' . $this->sufijo)
+            ->assertDontSee('PTT MEDICINA ' . $this->sufijo)
+            ->assertDontSee('PTT BALON ' . $this->sufijo);
 
         $this->get(route('admin.salud.maestros.medicamentos.index', ['buscar' => $this->sufijo]))
             ->assertOk()
             ->assertSee('PTT MEDICINA ' . $this->sufijo)
             ->assertDontSee('PTT BALON ' . $this->sufijo)
             ->assertDontSee('PTT LAPIZ ' . $this->sufijo);
-
-        $this->get(route('admin.maestros.material_oficina.index', ['buscar' => $this->sufijo]))
-            ->assertOk()
-            ->assertSee('PTT LAPIZ ' . $this->sufijo)
-            ->assertDontSee('PTT MEDICINA ' . $this->sufijo)
-            ->assertDontSee('PTT BALON ' . $this->sufijo);
     }
 
     public function test_al_crear_se_rechaza_una_categoria_de_otro_tipo(): void
@@ -150,11 +156,11 @@ class ProductosPorTipoTest extends SeguridadTestCase
         $implemento = $this->categoria(TipoProducto::IMPLEMENTO_DEPORTIVO);
         $alimento = $this->categoria(TipoProducto::ALIMENTO);
 
-        $this->post(route('admin.deportes.implementos.store'), $this->datosArea($medicamento, 'PTT IMPL MAL'))
+        $this->post(route('admin.deportes.implementos.store'), $this->datosArea($medicamento, 'PTT IMPL MAL') + ['tipo' => 'deportivo'])
             ->assertSessionHasErrors('categoria_id');
         $this->assertFalse($this->existe('PTT IMPL MAL'));
 
-        $this->post(route('admin.deportes.implementos.store'), $this->datosArea($implemento, 'PTT IMPL BIEN'))
+        $this->post(route('admin.deportes.implementos.store'), $this->datosArea($implemento, 'PTT IMPL BIEN') + ['tipo' => 'deportivo'])
             ->assertSessionHasNoErrors();
         $this->assertTrue($this->existe('PTT IMPL BIEN'));
 
@@ -184,7 +190,7 @@ class ProductosPorTipoTest extends SeguridadTestCase
 
         $balon = $this->producto(TipoProducto::IMPLEMENTO_DEPORTIVO, 'PTT BALON');
         $categoriaBalon = DB::table('producto')->where('id_pdt', $balon)->value('cap_id');
-        $this->put(route('admin.deportes.implementos.update', $balon), $this->datosArea($medicamento, 'PTT BALON'))
+        $this->put(route('admin.deportes.implementos.update', $balon), $this->datosArea($medicamento, 'PTT BALON') + ['tipo' => 'deportivo'])
             ->assertSessionHasErrors('categoria_id');
         $this->assertSame((int) $categoriaBalon, (int) DB::table('producto')->where('id_pdt', $balon)->value('cap_id'));
 

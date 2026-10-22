@@ -16,8 +16,8 @@ class CategoriaSeeder extends Seeder
     ];
 
     public const COMPLEMENTARIAS = [
-        'Implemento deportivo' => ['Balones', 'Raquetas y mallas'],
-        'Material de oficina'  => ['Papelería', 'Escritura'],
+        'Implemento deportivo' => ['Balones', 'Raquetas y mallas', 'Equipos', 'Uniformes y petos', 'Accesorios de entrenamiento'],
+        'Material de oficina'  => ['Escritura', 'Papelería', 'Marcadores', 'Carpetas y archivo', 'Adhesivos y corte'],
     ];
 
     public function run(): void

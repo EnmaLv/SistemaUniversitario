@@ -38,7 +38,7 @@
                 </div>
                 @if ($productos->isEmpty())
                     <p class="mt-1.5 text-xs font-semibold text-amber-600">
-                        No hay productos activos para el área de esta requisición. Regístralos primero en su catálogo (Productos, Medicamentos, Implementos deportivos o Material de oficina).
+                        No hay productos activos para el área de esta requisición. Regístralos primero en su catálogo (Productos, Medicamentos o Implementos y materiales).
                     </p>
                 @endif
                 @error('productoId')

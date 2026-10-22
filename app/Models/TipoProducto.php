@@ -28,7 +28,8 @@ class TipoProducto extends Model
     public const UNIDAD_DEL_AREA = 'Unidad';
 
     public const ADICIONALES_POR_MODULO = [
-        'deporte' => [self::IMPLEMENTO_DEPORTIVO, self::MATERIAL_OFICINA],
+        'deporte'        => [self::IMPLEMENTO_DEPORTIVO, self::MATERIAL_OFICINA],
+        'administracion' => [self::IMPLEMENTO_DEPORTIVO, self::MATERIAL_OFICINA],
     ];
 
     protected $table = 'tipo_producto';

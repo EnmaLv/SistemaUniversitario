@@ -5,35 +5,67 @@
     $costo = old('costo_usd_ppr', $producto?->precioProducto?->costo_usd_ppr);
     $envaseElegido = old('presentacion_id', $producto?->enp_id);
     $porCaja = old('unidades_presentacion_pdt', $producto && $producto->enp_id ? (int) $producto->unidades_presentacion_pdt : null);
+    $tipoElegido = old('tipo', $tipoInicial ?? null);
+    $tipoElegido = is_string($tipoElegido) && isset($tipos[$tipoElegido]) ? $tipoElegido : '';
+    $categoriaElegida = old('categoria_id', $producto?->cap_id);
+    $categoriasPorTipo = collect($tipos)->map(fn ($tipo) => $categorias->where('tpr_id', $tipo['id'])->values());
+    $ejemplos = collect($tipos)->map(fn ($tipo) => $tipo['ejemplo'] ?? '');
 @endphp
 
 <form action="{{ $action }}" method="POST" enctype="multipart/form-data" class="rd-prevent-double-submit"
-    x-data="{ conCaja: {{ $envaseElegido ? 'true' : 'false' }} }">
+    x-data="{ tipo: @js($tipoElegido), conCaja: {{ $envaseElegido ? 'true' : 'false' }}, ejemplos: @js($ejemplos) }">
     @csrf
     @if ($producto)
         @method('PUT')
     @endif
 
-    <div class="rounded-2xl border shadow-sm p-5 sm:p-6" style="background-color:var(--bg-card);border-color:var(--border-color);">
+    <div class="rounded-2xl border shadow-sm p-5 sm:p-6 mb-4" style="background-color:var(--bg-card);border-color:var(--border-color);">
+        <p class="{{ $claseEtiqueta }}" style="color:var(--text-main);">1. ¿Qué vas a registrar?</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @foreach ($tipos as $clave => $tipo)
+                <label class="flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all"
+                    x-bind:class="tipo === @js($clave) ? 'border-red-800 ring-2 ring-red-800/20' : ''"
+                    style="border-color:var(--border-color);">
+                    <input type="radio" name="tipo" value="{{ $clave }}" x-model="tipo" class="mt-1 text-red-800 focus:ring-red-800" @checked($tipoElegido === $clave) required>
+                    <span>
+                        <span class="flex items-center gap-2 text-sm font-extrabold" style="color:var(--text-main);">
+                            <i class="fas {{ $tipo['icono'] }}" style="color:var(--color-primary)"></i> {{ $tipo['etiqueta'] }}
+                        </span>
+                        <span class="block mt-0.5 text-xs" style="color:var(--text-muted);">{{ $tipo['ayuda'] }}</span>
+                    </span>
+                </label>
+            @endforeach
+        </div>
+        @error('tipo') <p class="mt-2 text-xs font-semibold text-rose-500">{{ $message }}</p> @enderror
+        <p class="mt-3 text-xs" style="color:var(--text-muted);" x-show="!tipo">Elige una opción para ver el resto del formulario.</p>
+    </div>
+
+    <div class="rounded-2xl border shadow-sm p-5 sm:p-6" style="background-color:var(--bg-card);border-color:var(--border-color);" x-show="tipo" x-cloak>
+        <p class="{{ $claseEtiqueta }}" style="color:var(--text-main);">2. Datos del producto</p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
                 <label for="nombre" class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Nombre</label>
-                <input type="text" id="nombre" name="nombre" value="{{ old('nombre', $producto?->nombre_pdt) }}" placeholder="{{ $config['ejemplo'] }}"
+                <input type="text" id="nombre" name="nombre" value="{{ old('nombre', $producto?->nombre_pdt) }}" x-bind:placeholder="ejemplos[tipo] || ''"
                     class="{{ $claseCampo }}" style="{{ $estiloCampo }}" required maxlength="255">
                 @error('nombre') <p class="mt-1 text-xs font-semibold text-rose-500">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label for="categoria_id" class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Categoría</label>
-                <select id="categoria_id" name="categoria_id" class="{{ $claseCampo }}" style="{{ $estiloCampo }}" required>
-                    <option value="">Seleccione...</option>
-                    @foreach ($categorias as $categoria)
-                        <option value="{{ $categoria->id_cap }}" @selected(old('categoria_id', $producto?->cap_id) == $categoria->id_cap)>{{ $categoria->nombre_cap }}</option>
-                    @endforeach
-                </select>
-                @if ($categorias->isEmpty())
-                    <p class="mt-1 text-xs font-semibold text-amber-600">No hay categorías para este tipo. Créalas primero en Categorías.</p>
-                @endif
+                <label for="categoria_{{ $tipoElegido ?: 'tipo' }}" class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Categoría</label>
+                @foreach ($tipos as $clave => $tipo)
+                    <div x-show="tipo === @js($clave)">
+                        <select id="categoria_{{ $clave }}" name="categoria_id" class="{{ $claseCampo }}" style="{{ $estiloCampo }}"
+                            x-bind:disabled="tipo !== @js($clave)" @disabled($tipoElegido !== $clave) required>
+                            <option value="">Seleccione...</option>
+                            @foreach ($categoriasPorTipo[$clave] as $categoria)
+                                <option value="{{ $categoria->id_cap }}" @selected($categoriaElegida == $categoria->id_cap)>{{ $categoria->nombre_cap }}</option>
+                            @endforeach
+                        </select>
+                        @if ($categoriasPorTipo[$clave]->isEmpty())
+                            <p class="mt-1 text-xs font-semibold text-amber-600">No hay categorías de {{ mb_strtolower($tipo['etiqueta']) }}. Créalas primero en Categorías.</p>
+                        @endif
+                    </div>
+                @endforeach
                 @error('categoria_id') <p class="mt-1 text-xs font-semibold text-rose-500">{{ $message }}</p> @enderror
             </div>
 
@@ -61,16 +93,21 @@
                 </label>
                 <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4" x-show="conCaja" x-cloak>
                     <div>
-                        <label for="presentacion_id" class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Tipo de caja o paquete</label>
-                        <select id="presentacion_id" name="presentacion_id" class="{{ $claseCampo }}" style="{{ $estiloCampo }}" x-bind:disabled="!conCaja">
-                            <option value="">Seleccione...</option>
-                            @foreach ($envases as $envase)
-                                <option value="{{ $envase->id_enp }}" @selected($envaseElegido == $envase->id_enp)>{{ $envase->nombre_enp }}</option>
-                            @endforeach
-                        </select>
-                        @if ($envases->isEmpty())
-                            <p class="mt-1 text-xs font-semibold text-amber-600">No hay cajas ni paquetes registrados para este tipo. Pide al administrador que los cargue.</p>
-                        @endif
+                        <label for="presentacion_{{ $tipoElegido ?: 'tipo' }}" class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Tipo de caja o paquete</label>
+                        @foreach ($tipos as $clave => $tipo)
+                            <div x-show="tipo === @js($clave)">
+                                <select id="presentacion_{{ $clave }}" name="presentacion_id" class="{{ $claseCampo }}" style="{{ $estiloCampo }}"
+                                    x-bind:disabled="!conCaja || tipo !== @js($clave)" @disabled(! $envaseElegido || $tipoElegido !== $clave)>
+                                    <option value="">Seleccione...</option>
+                                    @foreach ($envases[$clave] as $envase)
+                                        <option value="{{ $envase->id_enp }}" @selected($envaseElegido == $envase->id_enp)>{{ $envase->nombre_enp }}</option>
+                                    @endforeach
+                                </select>
+                                @if ($envases[$clave]->isEmpty())
+                                    <p class="mt-1 text-xs font-semibold text-amber-600">No hay cajas ni paquetes registrados para este tipo. Pide al administrador que los cargue.</p>
+                                @endif
+                            </div>
+                        @endforeach
                         @error('presentacion_id') <p class="mt-1 text-xs font-semibold text-rose-500">{{ $message }}</p> @enderror
                     </div>
                     <div>

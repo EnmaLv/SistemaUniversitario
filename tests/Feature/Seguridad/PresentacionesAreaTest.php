@@ -52,6 +52,7 @@ class PresentacionesAreaTest extends SeguridadTestCase
     private function datos(string $nombre, array $extra = []): array
     {
         return array_merge([
+            'tipo'             => 'deportivo',
             'nombre'           => $nombre . ' ' . $this->sufijo,
             'categoria_id'     => $this->categoria(TipoProducto::IMPLEMENTO_DEPORTIVO),
             'costo_usd_ppr'    => 4,
@@ -108,9 +109,13 @@ class PresentacionesAreaTest extends SeguridadTestCase
     public function test_cada_formulario_muestra_solo_sus_presentaciones(): void
     {
         $area = $this->get(route('admin.deportes.implementos.create'))->assertOk();
-        $nombresArea = collect($area->viewData('envases'))->pluck('nombre_enp')->map(fn ($n) => mb_strtoupper($n));
+        $nombresArea = collect($area->viewData('envases')['deportivo'])->pluck('nombre_enp')->map(fn ($n) => mb_strtoupper($n));
         $this->assertTrue($nombresArea->contains('CAJA'));
         $this->assertFalse($nombresArea->contains('BLISTER'));
+        $this->assertFalse($nombresArea->contains('RESMA'));
+        $nombresOficina = collect($area->viewData('envases')['oficina'])->pluck('nombre_enp')->map(fn ($n) => mb_strtoupper($n));
+        $this->assertTrue($nombresOficina->contains('RESMA'));
+        $this->assertFalse($nombresOficina->contains('BLISTER'));
         $this->assertStringNotContainsString('name="unidad_id"', $area->getContent());
 
         $salud = $this->get(route('admin.salud.maestros.medicamentos.create'))->assertOk();
@@ -173,7 +178,8 @@ class PresentacionesAreaTest extends SeguridadTestCase
     {
         [$a, $b] = $this->dejarDosSedes();
 
-        $this->post(route('admin.maestros.material_oficina.store'), $this->datos('PRS LAPIZ', [
+        $this->post(route('admin.deportes.implementos.store'), $this->datos('PRS LAPIZ', [
+            'tipo'                      => 'oficina',
             'categoria_id'              => $this->categoria(TipoProducto::MATERIAL_OFICINA),
             'presentacion_id'           => $this->envase('CAJA'),
             'unidades_presentacion_pdt' => 12,

@@ -75,5 +75,7 @@ return [
 
     'claves_obsoletas' => [
         'admin/modulos/seleccionar',
+        'deportes_implementos',
+        'material_oficina',
     ],
 ];

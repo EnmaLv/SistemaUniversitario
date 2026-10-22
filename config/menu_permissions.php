@@ -38,7 +38,6 @@ return [
             'categorias'        => 'Categorías',
             'productos'         => 'Productos',
             'proveedores'       => 'Proveedores',
-            'material_oficina'  => 'Material de oficina',
             'pnf'               => 'PNF',
             'persona'           => 'Personas',
             'ubicaciones_estados'     => 'Estados',
@@ -193,7 +192,7 @@ return [
             'deportes_sanciones'     => 'Sanciones deportivas',
             'deportes_solvencia'     => 'Solvencia',
             'deportes_entregas'      => 'Entregas de material',
-            'deportes_implementos'   => 'Implementos deportivos',
+            'implementos_materiales' => 'Implementos y materiales',
         ],
     ],
 ];

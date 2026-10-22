@@ -3,7 +3,7 @@
         'compras',
         'sedes',
         'proveedores',
-        'material_oficina',
+        'implementos_materiales',
         'ubicaciones',
         'ubicaciones_estados',
         'ubicaciones_municipios',
@@ -38,7 +38,7 @@
 {{-- ==========================================
         SECCIÓN 1: CONFIGURACIÓN INSTITUCIONAL
     ========================================== --}}
-@canMenu(['sedes', 'proveedores', 'material_oficina', 'ubicaciones_estados', 'ubicaciones_municipios', 'ubicaciones_localidades', 'pnf',
+@canMenu(['sedes', 'proveedores', 'implementos_materiales', 'ubicaciones_estados', 'ubicaciones_municipios', 'ubicaciones_localidades', 'pnf',
 'persona'])
 <div class="pt-3 pb-1" :class="sidebarOpen ? 'block' : 'hidden'">
     <span class="px-3 text-[11px] font-bold uppercase tracking-wider text-white/50">
@@ -86,8 +86,8 @@
         </a>
         @endcanMenu
 
-        @canMenu('material_oficina')
-        <a href="{{ route('admin.maestros.material_oficina.index') }}"
+        @canMenu('implementos_materiales')
+        <a href="{{ route('admin.deportes.implementos.index', ['tipo' => 'oficina']) }}"
             class="flex items-center gap-2 py-1.5 px-2 text-xs rounded-lg text-white/80 hover:text-white hover:bg-[#623739] truncate"
             title="Material de oficina">
             <i class="fas fa-paperclip w-4 text-center flex-shrink-0"></i>

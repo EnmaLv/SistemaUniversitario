@@ -18,7 +18,7 @@ class ProductoController extends Controller
 
     private const PANTALLA_POR_TIPO = [
         TipoProducto::IMPLEMENTO_DEPORTIVO => 'admin.deportes.implementos.edit',
-        TipoProducto::MATERIAL_OFICINA     => 'admin.maestros.material_oficina.edit',
+        TipoProducto::MATERIAL_OFICINA     => 'admin.deportes.implementos.edit',
     ];
 
     public function index(Request $request)

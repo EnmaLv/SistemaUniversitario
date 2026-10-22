@@ -5,6 +5,8 @@
     @php
         $formato = fn ($valor) => \App\Support\Inventario\UnidadCompra::numero((float) $valor);
         $activos = (int) request('activo', 1) === 1;
+        $etiquetaTipo = collect($tipos)->mapWithKeys(fn ($tipo) => [$tipo['id'] => $tipo]);
+        $filtrosTipo = ['' => 'Todos'] + collect($tipos)->map(fn ($tipo) => $tipo['filtro'])->all();
     @endphp
 
     <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
@@ -18,7 +20,7 @@
                     </p>
                 </div>
                 @canRoute($config['ruta'] . '.create')
-                    <a href="{{ route($config['ruta'] . '.create') }}"
+                    <a href="{{ route($config['ruta'] . '.create', array_filter(['tipo' => $tipoElegido])) }}"
                         class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                         <i class="fas fa-plus text-xs"></i> {{ $config['nuevo'] }}
                     </a>
@@ -27,8 +29,20 @@
 
             <div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">
                 <div class="p-3 border-b" style="border-color:var(--border-color);">
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
+                        <span class="text-[11px] font-black uppercase tracking-wider" style="color:var(--text-muted);">Tipo:</span>
+                        @foreach ($filtrosTipo as $clave => $texto)
+                            @php $marcado = (string) $tipoElegido === (string) $clave; @endphp
+                            <a href="{{ route($config['ruta'] . '.index', array_filter(array_merge(request()->except(['page', 'categoria', 'tipo']), ['tipo' => $clave]), fn ($valor) => $valor !== '' && $valor !== null)) }}"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold border {{ $marcado ? 'bg-red-800 text-white border-red-800' : '' }}"
+                                style="{{ $marcado ? '' : 'border-color:var(--border-color);color:var(--text-main);' }}">{{ $texto }}</a>
+                        @endforeach
+                    </div>
                     <form action="{{ route($config['ruta'] . '.index') }}" method="GET">
                         <input type="hidden" name="activo" value="{{ $activos ? 1 : 0 }}">
+                        @if ($tipoElegido)
+                            <input type="hidden" name="tipo" value="{{ $tipoElegido }}">
+                        @endif
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
                             <div class="flex-1 flex items-center gap-2">
                                 <a href="{{ route($config['ruta'] . '.index', array_merge(request()->except('page'), ['activo' => 1])) }}"
@@ -43,7 +57,7 @@
                                     style="background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);">
                                     <option value="">Todas las categorías</option>
                                     @foreach ($categorias as $categoria)
-                                        <option value="{{ $categoria->id_cap }}" @selected(request('categoria') == $categoria->id_cap)>{{ $categoria->nombre_cap }}</option>
+                                        <option value="{{ $categoria->id_cap }}" @selected($categoriaElegida === (int) $categoria->id_cap)>{{ $categoria->nombre_cap }}@if (! $tipoElegido) ({{ $etiquetaTipo[(int) $categoria->tpr_id]['filtro'] ?? '' }})@endif</option>
                                     @endforeach
                                 </select>
                                 <div class="flex min-w-0 flex-1 items-center gap-2 rounded-xl border px-3 py-2.5 lg:w-80" style="background-color:var(--input-bg);border-color:var(--input-border);">
@@ -65,10 +79,10 @@
                             <tr class="border-b text-[13px] font-black uppercase tracking-wider" style="background-color:var(--bg-card);border-color:var(--border-color);color:var(--text-main);">
                                 <th class="px-6 py-4 text-center">Código</th>
                                 <th class="px-6 py-4">Nombre</th>
-                                <th class="px-6 py-4">Categoría</th>
+                                <th class="px-6 py-4">Tipo y categoría</th>
                                 <th class="px-6 py-4 text-center">Se compra por</th>
                                 <th class="px-6 py-4 text-center">Precio vigente</th>
-                                <th class="px-6 py-4 text-center">Existencia</th>
+                                <th class="px-6 py-4 text-center">Existencia en {{ $sedeNombre }}</th>
                                 <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
                         </thead>
@@ -92,7 +106,13 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 font-bold text-sm" style="color:var(--text-main);">{{ $producto->nombre_pdt }}</td>
-                                    <td class="px-6 py-4 text-xs" style="color:var(--text-muted);">{{ $producto->categoria->nombre_cap ?? '—' }}</td>
+                                    <td class="px-6 py-4 text-xs" style="color:var(--text-muted);">
+                                        @php $tipoFila = $etiquetaTipo[(int) ($producto->categoria->tpr_id ?? 0)] ?? null; @endphp
+                                        @if ($tipoFila)
+                                            <span class="inline-flex items-center gap-1 font-bold" style="color:var(--text-main);"><i class="fas {{ $tipoFila['icono'] }} text-[10px]"></i> {{ $tipoFila['etiqueta'] }}</span>
+                                        @endif
+                                        <span class="block">{{ $producto->categoria->nombre_cap ?? '—' }}</span>
+                                    </td>
                                     <td class="px-6 py-4 text-center text-xs whitespace-nowrap" style="color:var(--text-main);">
                                         {{ $unidadCompra->unidad }}
                                         @if ($unidadCompra->modo === \App\Support\Inventario\UnidadCompra::MODO_ENVASE)
@@ -124,8 +144,8 @@
                                 <tr>
                                     <td colspan="7" class="px-6 py-12 text-center text-sm" style="color:var(--text-muted);">
                                         <i class="fas {{ $config['icono'] }} text-3xl mb-3 block opacity-40"></i>
-                                        @if (request()->filled('buscar') || request()->filled('categoria') || ! $activos)
-                                            No hay resultados con estos filtros. Cambia la búsqueda o vuelve a "Activos".
+                                        @if (request()->filled('buscar') || request()->filled('categoria') || $tipoElegido || ! $activos)
+                                            No hay resultados con estos filtros. Cambia la búsqueda, elige "Todos" o vuelve a "Activos".
                                         @else
                                             {{ $config['vacio'] }}
                                         @endif

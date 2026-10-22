@@ -10,7 +10,7 @@
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium" style="color:var(--text-muted);">
                         <i class="fas {{ $config['icono'] }} mr-1" style="color:var(--color-primary)"></i>
-                        Completa los datos y guarda; el producto quedará disponible en Compras.
+                        Primero elige si es un implemento deportivo o material de oficina; luego completa los datos y guarda. Quedará disponible en Compras.
                     </p>
                 </div>
                 <a href="{{ route($config['ruta'] . '.index') }}"

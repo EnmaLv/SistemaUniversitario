@@ -127,6 +127,5 @@ return [
     'deportes_sanciones'     => ['admin.deportes.sanciones.*'],
     'deportes_solvencia'     => ['admin.deportes.solvencia.*'],
     'deportes_entregas'      => ['admin.deportes.entregas.*'],
-    'deportes_implementos'   => ['admin.deportes.implementos.*'],
-    'material_oficina'       => ['admin.maestros.material_oficina.*'],
+    'implementos_materiales' => ['admin.deportes.implementos.*', 'admin.maestros.material_oficina.*'],
 ];

@@ -32,7 +32,7 @@ class PermisosSeeder extends Seeder
             'deportes_espacios', 'deportes_actividades', 'deportes_calendarios', 'deportes_horarios',
             'deportes_torneos', 'deportes_inscripciones', 'deportes_asistencia',
             'deportes_prestamos', 'deportes_sanciones', 'deportes_solvencia', 'deportes_entregas',
-            'deportes_implementos',
+            'implementos_materiales',
             'categorias'             => ['ver'],
             'inventario_sedes_lotes' => ['ver'],
             'lotes'                  => ['ver'],
