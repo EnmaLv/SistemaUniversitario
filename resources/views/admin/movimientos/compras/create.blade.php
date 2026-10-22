@@ -8,8 +8,7 @@
                         Crear Nueva Requisición
                     </h1>
                     <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Bienvenido <span class="font-bold">{{ auth()->user()->persona->nombres_per }}</span> ·
-                        {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                        Elige el proveedor y el área para la que compras; en el siguiente paso agregarás los productos.
                     </p>
                 </div>
                 <a href="{{ url('admin/movimientos/compras') }}"
@@ -27,6 +26,22 @@
                 };
             @endphp
             <x-compra-stepper :step="$pasoActual" />
+            @if ($sedePrincipal ?? null)
+                <div class="mb-4 p-4 rounded-2xl border flex items-start gap-3 text-xs"
+                    style="background-color: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.25); color: var(--text-main);">
+                    <i class="fas fa-store-alt text-sky-600 mt-0.5"></i>
+                    <span>
+                        La compra se registra a nombre de la sede principal (<strong>{{ $sedePrincipal->nombre_sed }}</strong>).
+                        Al recibirla, los productos se reparten en partes iguales entre todas las sedes activas.
+                    </span>
+                </div>
+            @endif
+            @if ($proveedores->isEmpty())
+                <div class="mb-4 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300 text-xs">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    No hay proveedores activos. Registra uno con el enlace "+ Nuevo" junto al campo Proveedor para poder crear la requisición.
+                </div>
+            @endif
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="rounded-2xl border shadow-sm p-4 sm:p-6 mb-8">
                 <form action="{{ route('admin.movimientos.compras.store') }}" method="POST"

@@ -52,7 +52,6 @@ return [
     'comedor_productos'       => ['admin.maestros.productos.*'],
     'comedor_lotes'           => ['admin.movimientos.lotes.*'],
     'comedor_stock'           => ['admin.movimientos.sedes_lotes', 'admin.movimientos.sedes_lotes.show'],
-    'comedor_compras'         => ['admin.movimientos.compras.*'],
     'comedor_movimientos'     => ['admin.movimientos.historial_movimientos.*'],
     
     /* ═══════════════════ SALUD ═══════════════════ */
@@ -128,4 +127,6 @@ return [
     'deportes_sanciones'     => ['admin.deportes.sanciones.*'],
     'deportes_solvencia'     => ['admin.deportes.solvencia.*'],
     'deportes_entregas'      => ['admin.deportes.entregas.*'],
+    'deportes_implementos'   => ['admin.deportes.implementos.*'],
+    'material_oficina'       => ['admin.maestros.material_oficina.*'],
 ];

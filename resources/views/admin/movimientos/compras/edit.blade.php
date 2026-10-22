@@ -2,17 +2,20 @@
     @include('components.alert')
 
     @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
-            <strong>Error:</strong>
-            <ul class="mb-0">
+        <div class="mb-4 p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300 text-sm">
+            <p class="font-bold flex items-center gap-2"><i class="fas fa-exclamation-circle"></i> Revisa lo siguiente:</p>
+            <ul class="mt-1 list-disc list-inside text-xs">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
+        </div>
+    @endif
 
-            <button type="button" class="close" data-dismiss="alert">
-                &times;
-            </button>
+    @if ($motivoSinCompra && $compra->estado_compra_cmp !== \App\Models\Compra::ESTADO_FINALIZADA)
+        <div class="mb-4 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300 text-sm flex items-start gap-3">
+            <i class="fas fa-store-alt mt-0.5"></i>
+            <span>{{ $motivoSinCompra }}</span>
         </div>
     @endif
 
@@ -36,7 +39,7 @@
                         Requisición #{{ $compra->id_cmp }}
                     </h1>
                     <p class="mt-0.5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Gestiona los pasos de la requisición
+                        Agrega los productos, envía el pedido al proveedor y, cuando llegue, recíbelo para repartirlo entre las sedes
                         <span class="mx-1">·</span>
                         {{ \Carbon\Carbon::parse($compra->fecha_compra_cmp)->format('d/m/Y') }}
                     </p>
@@ -79,6 +82,13 @@
                             </button>
                         </form>
                     @endcanRoute
+                @elseif ($compra->estado_compra_cmp === \App\Models\Compra::ESTADO_FINALIZADA)
+                    <a href="{{ route('admin.movimientos.compras.show', $compra->id_cmp) }}"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all hover:bg-gray-50 dark:hover:bg-white/5"
+                        style="border-color: var(--border-color); color: var(--text-main);">
+                        <i class="fas fa-eye text-[10px]"></i>
+                        Ver cómo se repartió
+                    </a>
                 @elseif ($compra->estado_compra_cmp == 'Enviado al proveedor')
                     <a
                         href="{{ url('admin/movimientos/compras') }}"
@@ -314,11 +324,11 @@
                                 <h3
                                     class="text-sm font-extrabold tracking-tight"
                                     style="color: var(--text-main);">
-                                    Paso 3 · Vencimientos
+                                    Paso 3 · Recepción
                                 </h3>
 
                                 <p class="text-[11px] text-gray-400 font-medium">
-                                    Registra las fechas de vencimiento de los productos
+                                    Cuando llegue el pedido: escribe los vencimientos (si aplican) y recíbelo para repartirlo
                                 </p>
                             </div>
                         </div>
@@ -338,21 +348,27 @@
                             method="POST"
                             class="rd-prevent-double-submit mt-6">
                             @csrf
-                            <div class="mx-5 sm:mx-6 mb-5 p-4 rounded-xl border flex items-start gap-3"
-                                style="
-                                    background-color: rgba(59,130,246,0.06);
-                                    border-color: rgba(59,130,246,0.25);
-                                ">
-                                <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
-                                    <i class="fas fa-info-circle text-xs"></i>
+                            <div class="mb-5">
+                                <div class="flex items-start gap-3 mb-3">
+                                    <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-random text-xs"></i>
+                                    </div>
+                                    <div class="text-xs" style="color: var(--text-main);">
+                                        <p class="font-bold mb-1">Vista previa: así se repartirá la compra</p>
+                                        <p style="color: var(--text-muted);" class="leading-relaxed">
+                                            Al recibirla, cada producto se divide en partes iguales entre todas las sedes activas.
+                                            Lo que no alcanza para repartir parejo queda en la sede principal.
+                                            Los productos por peso o volumen se reparten con decimales; los que se cuentan (envases, unidades), en cantidades enteras.
+                                        </p>
+                                    </div>
                                 </div>
-                                <div class="text-xs" style="color: var(--text-main);">
-                                    <p class="font-bold mb-1">¿A qué sede entra?</p>
-                                    <p class="text-gray-500 dark:text-gray-400 leading-relaxed">
-                                        Al finalizar, los productos entran completos al inventario de la <strong>sede de la requisición</strong>.
-                                        Para enviar existencias a otra sede se registra una <strong>transferencia interna</strong>.
-                                    </p>
-                                </div>
+                                @if ($errorReparto)
+                                    <div class="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-300 text-xs font-semibold">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i> {{ $errorReparto }}
+                                    </div>
+                                @else
+                                    @include('admin.movimientos.compras._reparto', ['reparto' => $reparto, 'vacio' => 'La compra no tiene productos para repartir.'])
+                                @endif
                             </div>
                             <div
                                 class="pt-5 border-t flex flex-col sm:flex-row items-center justify-between gap-4"
@@ -361,17 +377,19 @@
                                 <div class="flex items-center gap-2 text-xs text-gray-400">
                                     <i class="fas fa-info-circle"></i>
                                     <span>
-                                        Verifica las fechas antes de finalizar la requisición.
+                                        Guarda las fechas de vencimiento y revisa el reparto antes de recibir la compra.
                                     </span>
                                 </div>
                                 @canRoute('admin.movimientos.compras.finalizarCompra')
                                     <button
                                         type="submit"
-                                        class="rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all">
+                                        @disabled($errorReparto || $motivoSinCompra)
+                                        onclick="if (!confirm('¿Recibir la compra y repartirla entre las sedes como muestra la vista previa? Esto no se puede deshacer.')) { event.preventDefault(); }"
+                                        class="rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
 
                                         <i class="fas fa-check text-xs"></i>
 
-                                        Finalizar requisición
+                                        Recibir y repartir
                                     </button>
                                 @endcanRoute
                             </div>

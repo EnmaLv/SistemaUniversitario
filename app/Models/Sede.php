@@ -31,8 +31,30 @@ class Sede extends Model
         'correo_sed',
         'uni_id',
         'loc_id',
+        'es_principal_sed',
         'status_id',
     ];
+
+    protected $casts = [
+        'es_principal_sed' => 'boolean',
+    ];
+
+    public static function principal(): ?self
+    {
+        return static::query()->where('es_principal_sed', true)->orderBy('id_sed')->first();
+    }
+
+    public static function idPrincipal(): ?int
+    {
+        $id = static::query()->where('es_principal_sed', true)->orderBy('id_sed')->value('id_sed');
+
+        return $id === null ? null : (int) $id;
+    }
+
+    public static function esPrincipal(?int $sedeId): bool
+    {
+        return $sedeId !== null && $sedeId === static::idPrincipal();
+    }
 
     public function universidad()
     {

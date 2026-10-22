@@ -131,7 +131,10 @@
                                 class="px-6 py-12 text-center text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider">
                                 <i
                                     class="fas fa-clipboard-list text-3xl mb-3 block text-gray-300 dark:text-gray-700"></i>
-                                No hay Requisiciones registradas
+                                No hay requisiciones que mostrar
+                                <span class="block mt-1 normal-case tracking-normal font-medium">
+                                    Si buscaste algo, limpia la búsqueda. Para registrar una compra nueva usa "Crear Requisición" (solo desde la sede principal).
+                                </span>
                             </td>
                         </tr>
                     @endforelse

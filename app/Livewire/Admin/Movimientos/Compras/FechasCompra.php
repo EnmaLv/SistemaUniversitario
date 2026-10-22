@@ -38,12 +38,25 @@ class FechasCompra extends Component
     {
         $this->resetErrorBag();
 
+        $usuario = auth()->user();
+        $motivo = ! $usuario instanceof \App\Models\Usuario || ! $usuario->puede('compras', 'editar')
+            ? 'No tienes permiso para cambiar las fechas de vencimiento de las compras.'
+            : ($this->compra->estado_compra_cmp === Compra::ESTADO_FINALIZADA
+                ? 'Esta compra ya fue recibida; sus fechas ya no se pueden cambiar aquí.'
+                : \App\Support\Sedes\SedeCompradora::motivoParaNoComprar());
+
+        if ($motivo) {
+            $this->dispatch('swal', icon: 'error', title: 'No se guardaron las fechas', text: $motivo);
+
+            return;
+        }
+
         foreach ($this->fechas as $detalleId => $datos) {
             $this->validate([
                 "fechas.$detalleId.fecha_vencimiento_lot" => 'required|date|after:today',
             ], [
-                "fechas.$detalleId.fecha_vencimiento_lot.required" => 'La fecha es obligatoria.',
-                "fechas.$detalleId.fecha_vencimiento_lot.after" => 'Debe ser mayor a hoy.',
+                "fechas.$detalleId.fecha_vencimiento_lot.required" => 'Escribe la fecha de vencimiento.',
+                "fechas.$detalleId.fecha_vencimiento_lot.after" => 'La fecha de vencimiento debe ser posterior a hoy.',
             ]);
         }
 

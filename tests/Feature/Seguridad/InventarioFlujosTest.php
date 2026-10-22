@@ -75,8 +75,14 @@ class InventarioFlujosTest extends SeguridadTestCase
         return DB::table('movimiento_inventario')->where('pdt_id', $producto)->orderByDesc('id_moi')->first();
     }
 
-    public function test_compra_finalizada_entra_a_la_sede_de_la_compra(): void
+    public function test_compra_finalizada_se_reparte_entre_las_sedes_activas(): void
     {
+        DB::table('sede')->update(['es_principal_sed' => false]);
+        DB::table('sede')->where('id_sed', $this->sedeA())->update(['es_principal_sed' => true, 'status_id' => 1]);
+        $sedes = DB::table('sede')->where('status_id', 1)->whereNull('deleted_at')->pluck('id_sed')->map(fn ($id) => (int) $id)->all();
+        $otras = count($sedes) - 1;
+        $porSede = intdiv(400, count($sedes)) / 100;
+
         $producto = $this->producto(1, 'Harina compra');
         $proveedor = DB::table('proveedor')->insertGetId(['telefono_prv' => '0424', 'email_prv' => 'p' . random_int(1, 99999) . '@x.test', 'created_at' => now(), 'updated_at' => now()], 'id_prv');
         $compra = Compra::find(Compra::crearCompra(['proveedor_id' => $proveedor, 'fecha' => now(), 'sed_id' => $this->sedeA()]));
@@ -85,16 +91,22 @@ class InventarioFlujosTest extends SeguridadTestCase
 
         Compra::finalizarCompraDistribuida($compra);
 
-        $mov = $this->ultimoMovimiento($producto);
-        $this->assertSame(ServicioInventario::ENTRADA, $mov->tipo_movimiento_moi);
-        $this->assertSame($this->sedeA(), (int) $mov->sed_id);
-        $this->assertSame('compra', $mov->referencia_type_moi);
-        $this->assertSame($compra->id_cmp, (int) $mov->referencia_id_moi);
-        $this->assertEquals(0, (float) $mov->cantidad_anterior_moi);
-        $this->assertEquals(4, (float) $mov->cantidad_final_moi);
-        $this->assertSame($this->admin->id_use, (int) $mov->use_id);
-        $this->assertFalse(DB::table('inventario_sede_lote')->where('lot_id', $lote->id_lot)->where('sed_id', $this->sedeB())->exists());
-        $this->assertCuadra($producto, $this->sedeA());
+        $movimientos = DB::table('movimiento_inventario')->where('pdt_id', $producto)->get();
+        $this->assertCount(count($sedes), $movimientos);
+        $this->assertEqualsCanonicalizing($sedes, $movimientos->pluck('sed_id')->map(fn ($id) => (int) $id)->all());
+
+        foreach ($movimientos as $mov) {
+            $this->assertSame(ServicioInventario::ENTRADA, $mov->tipo_movimiento_moi);
+            $this->assertSame('compra', $mov->referencia_type_moi);
+            $this->assertSame($compra->id_cmp, (int) $mov->referencia_id_moi);
+            $this->assertSame($this->admin->id_use, (int) $mov->use_id);
+            $esperado = (int) $mov->sed_id === $this->sedeA() ? round(4 - $porSede * $otras, 2) : $porSede;
+            $this->assertEqualsWithDelta($esperado, (float) $mov->cantidad_final_moi, 0.001);
+            $this->assertCuadra($producto, (int) $mov->sed_id);
+        }
+
+        $this->assertEqualsWithDelta(4, (float) DB::table('inventario_sede_lote')->where('lot_id', $lote->id_lot)->sum('cantidad_isl'), 0.001);
+        $this->assertEqualsWithDelta(4000, (float) DB::table('inventario_sede_lote')->where('lot_id', $lote->id_lot)->sum('cantidad_convertida_isl'), 0.01);
     }
 
     public function test_servir_comida_descuenta_ingredientes_por_fefo(): void

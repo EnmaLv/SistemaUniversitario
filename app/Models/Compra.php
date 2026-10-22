@@ -140,7 +140,7 @@ class Compra extends Model
         return DB::table('compra')->insertGetId([
             'prv_id'            => $data['proveedor_id'],
             'mod_id'            => $data['modulo_id'] ?? null,
-            'sed_id'            => $data['sed_id'] ?? \App\Support\Sedes\SedeActiva::idParaCrear(),
+            'sed_id'            => $data['sed_id'] ?? Sede::idPrincipal() ?? \App\Support\Sedes\SedeActiva::idParaCrear(),
             'use_id'            => Auth::id(),
             'fecha_compra_cmp'  => $data['fecha'],
             'observacion_cmp'   => $data['observaciones'] ?? null,
@@ -172,16 +172,9 @@ class Compra extends Model
             ->get();
     }
 
-    public static function obtenerSedeDestino($compra_id)
+    public static function obtenerRepartoAplicado($compra_id)
     {
-        return DB::table('movimiento_inventario')
-            ->join('sede', 'sede.id_sed', '=', 'movimiento_inventario.sed_id')
-            ->join('detalle_compra', 'detalle_compra.lot_id', '=', 'movimiento_inventario.lot_id')
-            ->where('detalle_compra.cmp_id', $compra_id)
-            ->where('movimiento_inventario.referencia_type_moi', 'compra')
-            ->where('movimiento_inventario.referencia_id_moi', $compra_id)
-            ->select('sede.id_sed', 'sede.nombre_sed')
-            ->first();
+        return app(\App\Support\Inventario\RepartoCompra::class)->aplicado((int) $compra_id);
     }
 
     public static function obtenerCompra($id)
@@ -265,43 +258,6 @@ class Compra extends Model
 
     public static function finalizarCompraDistribuida($compra)
     {
-        return DB::transaction(function () use ($compra) {
-            $registro = DB::table('compra')->where('id_cmp', $compra->id_cmp)->lockForUpdate()->first();
-
-            if (! $registro) {
-                throw new \Exception('La requisición no existe.');
-            }
-
-            if ($registro->estado_compra_cmp === self::ESTADO_FINALIZADA) {
-                throw new \Exception('La requisición ya fue finalizada.');
-            }
-
-            $sedeId = (int) ($registro->sed_id ?: \App\Support\Sedes\SedeActiva::idParaCrear());
-            $servicio = app(\App\Support\Inventario\ServicioInventario::class);
-
-            $detalles = DB::table('detalle_compra')->where('cmp_id', $registro->id_cmp)->whereNull('deleted_at')->get();
-
-            foreach ($detalles as $detalle) {
-                if ((float) $detalle->cantidad_dcm <= 0) {
-                    continue;
-                }
-
-                $servicio->entrada((int) $detalle->lot_id, $sedeId, (float) $detalle->cantidad_dcm, (float) $detalle->cantidad_convertida_dcm, [
-                    'unm_id'              => $detalle->unm_id,
-                    'mod_id'              => $registro->mod_id,
-                    'referencia_type_moi' => 'compra',
-                    'referencia_id_moi'   => $registro->id_cmp,
-                    'observacion_moi'     => 'Entrada por requisición #' . $registro->id_cmp,
-                ]);
-            }
-
-            DB::table('compra')->where('id_cmp', $registro->id_cmp)->update([
-                'estado_compra_cmp' => self::ESTADO_FINALIZADA,
-                'updated_id'        => Auth::id(),
-                'updated_at'        => now(),
-            ]);
-
-            return true;
-        });
+        return app(\App\Support\Inventario\RepartoCompra::class)->aplicar($compra instanceof self ? $compra : (int) $compra);
     }
 }

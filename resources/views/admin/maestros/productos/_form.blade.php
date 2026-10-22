@@ -324,6 +324,9 @@
                                 style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
                                 class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none transition-all">
                         </div>
+                        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                            {{ $esMedicamento ? 'Costo de compra de un envase (caja, frasco…), en dólares.' : 'Costo de compra por kilo o litro (o por unidad si se cuenta por piezas), en dólares. Compras lo trae solo.' }}
+                        </p>
                         @error('costo_usd_ppr')
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror

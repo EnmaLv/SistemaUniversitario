@@ -13,6 +13,10 @@ class TipoProducto extends Model
     use RegistraAutoria;
     use SoftDeletes;
 
+    public const ALIMENTO = 'Alimento';
+
+    public const MEDICAMENTO = 'Medicamento';
+
     public const IMPLEMENTO_DEPORTIVO = 'Implemento deportivo';
 
     public const MATERIAL_OFICINA = 'Material de oficina';
@@ -73,6 +77,16 @@ class TipoProducto extends Model
             ->pluck('id_tpr')
             ->map(fn ($id) => (int) $id)
             ->all();
+    }
+
+    public static function idPorNombre(string $nombre): ?int
+    {
+        $id = DB::table('tipo_producto')
+            ->whereNull('deleted_at')
+            ->where(DB::raw('LOWER(nombre_tpr)'), mb_strtolower($nombre))
+            ->value('id_tpr');
+
+        return $id === null ? null : (int) $id;
     }
 
     public static function productoEsDeTipo(int $productoId, string $nombre): bool

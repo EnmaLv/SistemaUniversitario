@@ -259,7 +259,7 @@ class MedicamentoController extends Controller
         $tasa = ExchangeRates::orderByDesc('fecha_vigencia_tca')->first();
 
         if (!$tasa) {
-            throw new \Exception('No existe una tasa registrada');
+            return;
         }
 
         $query = Producto::with('precioProducto');

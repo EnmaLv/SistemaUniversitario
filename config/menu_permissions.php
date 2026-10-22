@@ -38,6 +38,7 @@ return [
             'categorias'        => 'Categorías',
             'productos'         => 'Productos',
             'proveedores'       => 'Proveedores',
+            'material_oficina'  => 'Material de oficina',
             'pnf'               => 'PNF',
             'persona'           => 'Personas',
             'ubicaciones_estados'     => 'Estados',
@@ -78,7 +79,6 @@ return [
             'comedor_productos'        => 'Productos del comedor',
             'comedor_lotes'            => 'Lotes y vencimientos',
             'comedor_stock'            => 'Stock del comedor',
-            'comedor_compras'          => 'Compras',
             'comedor_movimientos'      => 'Historial de movimientos',
         ],
     ],
@@ -193,6 +193,7 @@ return [
             'deportes_sanciones'     => 'Sanciones deportivas',
             'deportes_solvencia'     => 'Solvencia',
             'deportes_entregas'      => 'Entregas de material',
+            'deportes_implementos'   => 'Implementos deportivos',
         ],
     ],
 ];

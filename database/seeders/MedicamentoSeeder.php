@@ -87,11 +87,27 @@ class MedicamentoSeeder extends Seeder
             ],
         ];
 
+        $costos = [
+            'ANT-ACE-001' => 2.00,
+            'ANT-LOR-006' => 1.80,
+            'ANT-IBU-008' => 2.50,
+            'ANA-ATA-001' => 1.90,
+            'ANT-BRU-002' => 2.20,
+        ];
+
         foreach ($productos as $p) {
             $p['created_at'] = now();
             $p['updated_at'] = now();
 
-            DB::table('producto')->insert($p);
+            $id = DB::table('producto')->insertGetId($p, 'id_pdt');
+
+            DB::table('precio_producto')->insert([
+                'pdt_id'        => $id,
+                'costo_usd_ppr' => $costos[$p['codigo_pdt']],
+                'margen_ppr'    => 20,
+                'created_at'    => now(),
+                'updated_at'    => now(),
+            ]);
         }
     }
 }

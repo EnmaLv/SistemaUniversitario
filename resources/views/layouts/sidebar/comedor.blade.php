@@ -7,11 +7,10 @@
     $kProductos    = ['comedor_productos', 'productos'];
     $kLotes        = ['comedor_lotes', 'lotes'];
     $kStock        = ['comedor_stock', 'inventario_sedes_lotes'];
-    $kCompras      = ['comedor_compras', 'compras'];
     $kMovimientos  = ['comedor_movimientos', 'movimientos'];
 
     $comedorKeys    = array_merge($kRecetas, $kIngredientes, $kRegComida, $kRegDiario);
-    $inventarioKeys = array_merge($kCategorias, $kProductos, $kLotes, $kStock, $kCompras, $kMovimientos);
+    $inventarioKeys = array_merge($kCategorias, $kProductos, $kLotes, $kStock, $kMovimientos);
 @endphp
 
 @canMenu($comedorKeys)
@@ -183,18 +182,6 @@
             @endcanMenu
         </div>
     </div>
-    @endcanMenu
-
-    @canMenu($kCompras)
-    <a href="{{ url('admin/movimientos/compras') }}"
-       class="w-full flex items-center h-10 rounded-lg px-3 gap-2.5 text-white/90 hover:bg-[#623739] hover:text-white transition-all min-w-0"
-       :class="sidebarOpen ? 'px-3' : 'justify-center px-0'"
-       title="Compras">
-        <i class="fas fa-shopping-cart text-base w-5 text-center flex-shrink-0 text-white"></i>
-        <span class="text-sm font-medium truncate" :class="sidebarOpen ? 'block' : 'hidden'">
-            Compras
-        </span>
-    </a>
     @endcanMenu
 
     @canMenu($kMovimientos)

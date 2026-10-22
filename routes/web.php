@@ -129,6 +129,16 @@ Route::middleware(['auth'])->group(function () {
 
         Route::put('/maestros/productos/{producto}/activar', [ProductoController::class, 'activar'])->name('admin.maestros.productos.activar');
 
+        Route::prefix('/maestros/material-oficina')->name('admin.maestros.material_oficina.')->controller(\App\Http\Controllers\MaterialOficinaController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{producto}/edit', 'edit')->whereNumber('producto')->name('edit');
+            Route::put('/{producto}', 'update')->whereNumber('producto')->name('update');
+            Route::delete('/{producto}', 'destroy')->whereNumber('producto')->name('destroy');
+            Route::put('/{producto}/activar', 'activar')->whereNumber('producto')->name('activar');
+        });
+
         /* Proveedores */
 
         Route::get('/maestros/proveedores', [ProveedorController::class, 'index'])->name('admin.maestros.proveedores.index');

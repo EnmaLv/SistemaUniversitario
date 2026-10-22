@@ -87,3 +87,13 @@ Route::prefix('/deportes')->name('admin.deportes.')->group(function () {
     Route::post('/entregas', [\App\Http\Controllers\Deporte\EntregaMaterialController::class, 'store'])->name('entregas.store');
     Route::get('/entregas/{id}', [\App\Http\Controllers\Deporte\EntregaMaterialController::class, 'show'])->whereNumber('id')->name('entregas.show');
 });
+
+Route::prefix('/deportes/implementos')->name('admin.deportes.implementos.')->controller(\App\Http\Controllers\ImplementoDeportivoController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/create', 'create')->name('create');
+    Route::post('/', 'store')->name('store');
+    Route::get('/{producto}/edit', 'edit')->whereNumber('producto')->name('edit');
+    Route::put('/{producto}', 'update')->whereNumber('producto')->name('update');
+    Route::delete('/{producto}', 'destroy')->whereNumber('producto')->name('destroy');
+    Route::put('/{producto}/activar', 'activar')->whereNumber('producto')->name('activar');
+});

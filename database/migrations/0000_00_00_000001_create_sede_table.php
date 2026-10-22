@@ -35,6 +35,7 @@ return new class extends Migration
             $table->string('correo_sed')->nullable();
             $table->foreignId('uni_id')->nullable()->constrained('universidad', 'id_uni');
             $table->unsignedBigInteger('loc_id')->nullable();
+            $table->boolean('es_principal_sed')->default(false);
             $table->timestamps();
             $table->auditoria();
         });
