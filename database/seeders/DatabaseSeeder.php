@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             PerfilSeeder::class,
             PnfSeeder::class,
             PersonaSeeder::class,
+            DeporteRolSeeder::class,
+            DeporteSeeder::class,
             ProductoSeeder::class,
             RecetaIngredienteSeeder::class,
             PrecioProductoSeeder::class,
@@ -38,13 +40,13 @@ class DatabaseSeeder extends Seeder
             EstadoAnimoSeeder::class,
             PlantillaGlobalSeeder::class,
             PrioridadesSeeder::class,
+            UnidadDosisSeeder::class,
             MedicamentoSeeder::class,
             ConsultorioSeeder::class,
             HorarioConsultoriosSeeder::class,
             MarcaSeeder::class,
             TipoCombustibleSeeder::class,
             ModeloSeeder::class,
-            
             VehiculoSeeder::class,
             BusParadaSeeder::class,
         ]);

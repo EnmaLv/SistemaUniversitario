@@ -144,7 +144,7 @@
         @includeIf('layouts.sidebar.becas')
         @endcanModule
 
-        @canModule('deportes')
+        @canModule('deporte')
         @includeIf('layouts.sidebar.deportes')
         @endcanModule
 

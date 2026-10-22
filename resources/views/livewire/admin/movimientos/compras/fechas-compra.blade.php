@@ -68,6 +68,12 @@
                             </span>
                         </td>
                         <td class="px-4 py-4">
+                            @if (in_array((int) $detalle->pdt_id, $sinVencimiento, true))
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                                    <i class="fas fa-infinity text-[9px]"></i>
+                                    No aplica (producto sin vencimiento)
+                                </span>
+                            @else
                             <div class="max-w-xs">
                                 <div class="relative">
                                     <i
@@ -90,6 +96,7 @@
                                     </p>
                                 @enderror
                             </div>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -107,16 +114,18 @@
             </span>
         </div>
 
-        <button type="button" wire:click="guardar" wire:loading.attr="disabled"
-            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            <span wire:loading.remove wire:target="guardar">
-                <i class="fas fa-save text-xs mr-1"></i>
-                Guardar fechas
-            </span>
-            <span wire:loading wire:target="guardar">
-                <i class="fas fa-spinner fa-spin text-xs mr-1"></i>
-                Guardando...
-            </span>
-        </button>
+        @canAction(['compras', 'comedor_compras'], 'editar')
+            <button type="button" wire:click="guardar" wire:loading.attr="disabled"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <span wire:loading.remove wire:target="guardar">
+                    <i class="fas fa-save text-xs mr-1"></i>
+                    Guardar fechas
+                </span>
+                <span wire:loading wire:target="guardar">
+                    <i class="fas fa-spinner fa-spin text-xs mr-1"></i>
+                    Guardando...
+                </span>
+            </button>
+        @endcanAction
     </div>
 </div>

@@ -62,7 +62,7 @@
                 @endif
             @break
 
-            @case('deportes')
+            @case('deporte')
                 @include('components.deportes-home')
             @break
 

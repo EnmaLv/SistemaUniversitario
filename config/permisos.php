@@ -30,6 +30,7 @@ return [
         'psicologia'     => 'psicologia',
         'becas'          => 'beca',
         'transporte'     => 'transporte',
+        'deportes'       => 'deporte',
     ],
 
     'sufijos' => [
@@ -52,6 +53,7 @@ return [
         'notifications.readAll'                           => 'ver',
         'admin.configuracion.seguridad.bloqueos.desbloquear' => 'activar',
         'admin.becas.lapsos.avanzar'                      => 'editar',
+        'admin.transporte.maestros.bus_viajes.marcar_referencia' => 'editar',
     ],
 
     'rutas_libres' => [

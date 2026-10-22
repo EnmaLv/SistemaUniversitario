@@ -12,7 +12,7 @@
 @php
     use Carbon\Carbon;
 
-    $semanaInicio = old('semana_inicio', $semanaInicio ?? (isset($horario) && $horario->semana_inicio ? $horario->semana_inicio : Carbon::now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d')));
+    $semanaInicio = old('semana_inicio', $semanaInicio ?? (isset($horario) && $horario->semana_inicio_hde ? $horario->semana_inicio_hde->format('Y-m-d') : Carbon::now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d')));
 
     $BLOQUES = [
         'Matutino' => [
@@ -41,94 +41,112 @@
         ],
     ];
 
-    $tipoActual = old('tipo_horario', isset($horario) && $horario->fecha_especifica ? 'fecha_especifica' : 'recurrente');
+    $tipoActual = old('tipo_horario', isset($horario) && $horario->fecha_especifica_hde ? 'fecha_especifica' : 'recurrente');
     $seleccionInicial = old('bloques', $bloquesSeleccionadosIniciales ?? []);
     $seleccionInicialRecurrente = old('bloques_recurrente', $bloquesSeleccionadosInicialesRecurrente ?? []);
     $seleccionInicialFechaEspecifica = old('bloques_fecha_especifica', $bloquesSeleccionadosInicialesFechaEspecifica ?? []);
     $diasSemana = array_values($dias);
+    $claseCampo = 'w-full rounded-xl border px-3 py-2 text-sm';
+    $estiloCampo = 'background-color:var(--input-bg);border-color:var(--input-border);color:var(--text-main);';
 @endphp
 
-<form id="formHorarioDeporte" method="POST" action="{{ isset($horario) ? route('admin.deportes.maestros.horarios.update', $horario->id) : route('admin.deportes.maestros.horarios.store') }}" class="mx-auto w-full max-w-[1500px] space-y-4">
+<form id="formHorarioDeporte" method="POST" action="{{ isset($horario) ? route('admin.deportes.maestros.horarios.update', $horario->id_hde) : route('admin.deportes.maestros.horarios.store') }}" class="mx-auto w-full max-w-[1500px] space-y-4">
     @csrf
     @if(isset($horario))
         @method('PUT')
     @endif
 
-    <input type="hidden" name="semana_inicio" value="{{ old('semana_inicio', $semanaInicio) }}">
+    @include('admin.deportes.partials.errores')
 
     <div id="bloquesContainer"></div>
 
     <div class="grid w-full grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(680px,1fr)_240px] xl:items-stretch">
-        <div class="space-y-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm xl:min-h-[680px]">
+        <div class="space-y-2 rounded-2xl border p-3 shadow-sm xl:min-h-[680px]" style="background-color:var(--bg-card);border-color:var(--border-color);">
             <div>
-                <h3 class="text-lg font-bold text-gray-800">Datos generales</h3>
+                <h3 class="text-lg font-bold" style="color:var(--text-main);">Datos generales</h3>
             </div>
 
             @if(isset($horario))
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Calendario</label>
-                    <input type="text" value="{{ $horario->calendario ? $horario->calendario->nombre : 'Sin calendario' }}" readonly class="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 py-2 text-gray-700" />
-                    <input type="hidden" name="id_calendario" id="id_calendario_hidden" value="{{ old('id_calendario', $horario->id_calendario) }}" />
+                    <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Calendario</label>
+                    <input type="text" value="{{ $horario->calendario?->nombre_cld ?? 'Sin calendario' }}" readonly class="{{ $claseCampo }} opacity-70" style="{{ $estiloCampo }}" />
+                    <input type="hidden" name="cld_id" id="cld_id_hidden" value="{{ $horario->cld_id }}"
+                        data-inicio="{{ $horario->calendario?->fecha_inicio_cld?->format('Y-m-d') }}"
+                        data-fin="{{ $horario->calendario?->fecha_fin_cld?->format('Y-m-d') }}"
+                        data-sede="{{ $horario->calendario?->sed_id }}" />
                 </div>
             @else
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Calendario</label>
-                    <select name="id_calendario" id="id_calendario" required class="w-full rounded-xl border border-gray-300 px-3 py-2">
-                        <option value="" {{ old('id_calendario', $horario->id_calendario ?? '') === '' ? 'selected' : '' }}>Selecciona un calendario</option>
+                    <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Calendario</label>
+                    <select name="cld_id" id="cld_id" required class="{{ $claseCampo }}" style="{{ $estiloCampo }}">
+                        <option value="">Selecciona un calendario</option>
                         @foreach($calendarios as $c)
-                            <option value="{{ $c->id }}" {{ old('id_calendario', $horario->id_calendario ?? '') == $c->id ? 'selected' : '' }}>{{ $c->nombre }}</option>
+                            <option value="{{ $c->id_cld }}" data-inicio="{{ $c->fecha_inicio_cld->format('Y-m-d') }}" data-fin="{{ $c->fecha_fin_cld->format('Y-m-d') }}" data-sede="{{ $c->sed_id }}" @selected((string) old('cld_id') === (string) $c->id_cld)>
+                                {{ $c->nombre_cld }} ({{ $c->fecha_inicio_cld->format('d/m/Y') }} - {{ $c->fecha_fin_cld->format('d/m/Y') }}){{ $calendarios->pluck('sed_id')->unique()->count() > 1 ? ' · ' . ($c->sede?->nombre_sed ?? '') : '' }}
+                            </option>
                         @endforeach
                     </select>
+                    @if ($calendarios->isEmpty())
+                        <p class="mt-1 text-xs text-amber-600">No hay calendarios activos. Regístralo primero en Calendarios deportivos.</p>
+                    @endif
                 </div>
             @endif
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Actividad</label>
-                <select name="id_actividad" id="id_actividad" required class="w-full rounded-xl border border-gray-300 px-3 py-2">
-                    <option value="" {{ old('id_actividad', $horario->id_actividad ?? '') === '' ? 'selected' : '' }}>Selecciona una actividad</option>
+                <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Actividad</label>
+                <select name="acd_id" id="acd_id" required class="{{ $claseCampo }}" style="{{ $estiloCampo }}">
+                    <option value="">Selecciona una actividad</option>
                     @foreach($actividades as $a)
-                        <option value="{{ $a->id }}" {{ old('id_actividad', $horario->id_actividad ?? '') == $a->id ? 'selected' : '' }}>{{ $a->nombre }}</option>
+                        <option value="{{ $a->id_acd }}" @selected((string) old('acd_id', $horario->acd_id ?? '') === (string) $a->id_acd)>{{ $a->nombre_acd }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Espacio / Cancha</label>
-                <select name="id_espacio" id="id_espacio" required class="w-full rounded-xl border border-gray-300 px-3 py-2">
-                    <option value="" {{ old('id_espacio', $horario->id_espacio ?? '') === '' ? 'selected' : '' }}>Selecciona una cancha</option>
+                <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Espacio / Cancha</label>
+                <select name="epd_id" id="epd_id" required class="{{ $claseCampo }}" style="{{ $estiloCampo }}">
+                    <option value="">Selecciona un espacio</option>
                     @foreach($espacios as $e)
-                        <option value="{{ $e->id }}" {{ old('id_espacio', $horario->id_espacio ?? '') == $e->id ? 'selected' : '' }}>{{ $e->nombre }}</option>
+                        <option value="{{ $e->id_epd }}" data-sede="{{ $e->sed_id }}" @selected((string) old('epd_id', $horario->epd_id ?? '') === (string) $e->id_epd)>
+                            {{ $e->nombre_epd }}{{ $espacios->pluck('sed_id')->unique()->count() > 1 ? ' · ' . ($e->sede?->nombre_sed ?? '') : '' }}
+                        </option>
                     @endforeach
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Tipo de horario</label>
-                <div class="mt-2 flex gap-6">
+                <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Tipo de horario</label>
+                <div class="mt-2 flex gap-6 text-sm" style="color:var(--text-main);">
                     <label class="inline-flex items-center gap-2">
-                        <input type="radio" name="tipo_horario" value="recurrente" {{ old('tipo_horario', $tipoActual) == 'recurrente' ? 'checked' : '' }} {{ isset($horario) ? 'disabled' : '' }}>
-                        <span>Recurrente</span>
+                        <input type="radio" name="tipo_horario" value="recurrente" {{ $tipoActual == 'recurrente' ? 'checked' : '' }} {{ isset($horario) ? 'disabled' : '' }}>
+                        <span>Semanal</span>
                     </label>
                     <label class="inline-flex items-center gap-2">
-                        <input type="radio" name="tipo_horario" value="fecha_especifica" {{ old('tipo_horario', $tipoActual) == 'fecha_especifica' ? 'checked' : '' }} {{ isset($horario) ? 'disabled' : '' }}>
+                        <input type="radio" name="tipo_horario" value="fecha_especifica" {{ $tipoActual == 'fecha_especifica' ? 'checked' : '' }} {{ isset($horario) ? 'disabled' : '' }}>
                         <span>Fecha específica</span>
                     </label>
                 </div>
             </div>
 
-            <div id="campo-fecha-especifica" class="{{ old('tipo_horario', $tipoActual) == 'recurrente' ? 'hidden' : '' }}">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Fecha específica</label>
-                <input id="fecha_especifica" type="date" name="fecha_especifica" value="{{ old('fecha_especifica', isset($horario->fecha_especifica) ? $horario->fecha_especifica->format('Y-m-d') : '') }}" min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}" class="w-full rounded-xl border border-gray-300 px-3 py-2" {{ isset($horario) ? 'disabled' : '' }} />
+            <div id="campo-semana-inicio" class="{{ $tipoActual == 'fecha_especifica' ? 'hidden' : '' }}">
+                <label for="semana_inicio" class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Vigente desde la semana del</label>
+                <input id="semana_inicio" type="date" name="semana_inicio" value="{{ $semanaInicio }}" class="{{ $claseCampo }}" style="{{ $estiloCampo }}" />
+                <p class="mt-1 text-[11px]" style="color:var(--text-muted);">Se repite cada semana hasta el cierre del calendario.</p>
+            </div>
+
+            <div id="campo-fecha-especifica" class="{{ $tipoActual == 'recurrente' ? 'hidden' : '' }}">
+                <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Fecha específica</label>
+                <input id="fecha_especifica" type="date" name="fecha_especifica" value="{{ old('fecha_especifica', isset($horario) && $horario->fecha_especifica_hde ? $horario->fecha_especifica_hde->format('Y-m-d') : '') }}" min="{{ Carbon::today()->format('Y-m-d') }}" class="{{ $claseCampo }}" style="{{ $estiloCampo }}" {{ isset($horario) ? 'disabled' : '' }} />
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Cupo máximo</label>
-                <input type="number" name="cupo_maximo" min="1" value="{{ old('cupo_maximo', $horario->cupo_maximo ?? '') }}" class="w-full rounded-xl border border-gray-300 px-3 py-2" />
+                <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Cupo máximo</label>
+                <input type="number" name="cupo_maximo_hde" min="1" value="{{ old('cupo_maximo_hde', $horario->cupo_maximo_hde ?? '') }}" class="{{ $claseCampo }}" style="{{ $estiloCampo }}" placeholder="Sin límite" />
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
-                <textarea name="observaciones" rows="4" class="w-full rounded-xl border border-gray-300 px-3 py-2">{{ old('observaciones', $horario->observaciones ?? '') }}</textarea>
+                <label class="block text-sm font-semibold mb-1" style="color:var(--text-main);">Observaciones</label>
+                <textarea name="observaciones_hde" rows="4" class="{{ $claseCampo }}" style="{{ $estiloCampo }}">{{ old('observaciones_hde', $horario->observaciones_hde ?? '') }}</textarea>
             </div>
         </div>
 
@@ -198,13 +216,11 @@
         </aside>
     </div>
 
-    @error('bloques')
-        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{{ $message }}</div>
-    @enderror
-
     <div class="flex justify-end gap-3">
         <a href="{{ route('admin.deportes.maestros.horarios.index') }}" class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700">Cancelar</a>
-        <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">Guardar</button>
+        @canRoute(isset($horario) ? 'admin.deportes.maestros.horarios.update' : 'admin.deportes.maestros.horarios.store')
+        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg hover:bg-red-900"><i class="fas fa-save text-xs"></i> Guardar</button>
+        @endcanRoute
     </div>
 </form>
 
@@ -249,7 +265,7 @@
         const recurrenteKeys = new Set();
         const fechaEspecificaKeys = new Set();
         const activeRows = @json($horariosActivos ?? []);
-        const horarioActualId = {{ isset($horario) ? $horario->id : 'null' }};
+        const horarioActualId = {{ isset($horario) ? $horario->id_hde : 'null' }};
         const isEditMode = {{ isset($horario) ? 'true' : 'false' }};
         const modalSinBloques = document.getElementById('modalSinBloques');
         const cerrarModalSinBloques = document.getElementById('cerrarModalSinBloques');
@@ -499,9 +515,9 @@
         }
 
         function getSelectionGateState() {
-            const calendario = getNamedFieldValue('id_calendario');
-            const actividad = getNamedFieldValue('id_actividad');
-            const espacio = getNamedFieldValue('id_espacio');
+            const calendario = getNamedFieldValue('cld_id');
+            const actividad = getNamedFieldValue('acd_id');
+            const espacio = getNamedFieldValue('epd_id');
             const tipoSeleccionado = getSelectedTipoHorario();
             const fechaSeleccionada = String(fechaInput?.value || '').trim();
             const missing = [];
@@ -540,6 +556,10 @@
             if (campoFechaEspecifica) {
                 campoFechaEspecifica.classList.toggle('hidden', tipoSeleccionado !== 'fecha_especifica');
             }
+            const campoSemanaInicio = document.getElementById('campo-semana-inicio');
+            if (campoSemanaInicio) {
+                campoSemanaInicio.classList.toggle('hidden', tipoSeleccionado === 'fecha_especifica');
+            }
         }
 
         function setSelectionMessageState() {
@@ -560,79 +580,115 @@
             message.classList.add('hidden');
         }
 
+        function getCalendarioSeleccionado() {
+            const scope = form || document;
+            const campo = scope.querySelector('[name="cld_id"]');
+
+            if (!campo) {
+                return null;
+            }
+
+            const origen = campo.tagName === 'SELECT' ? campo.options[campo.selectedIndex] : campo;
+
+            if (!origen || !origen.value || !origen.dataset.inicio || !origen.dataset.fin) {
+                return null;
+            }
+
+            return { inicio: origen.dataset.inicio, fin: origen.dataset.fin, sede: origen.dataset.sede || '' };
+        }
+
+        function filtrarEspaciosPorSede() {
+            const scope = form || document;
+            const selectEspacio = scope.querySelector('select[name="epd_id"]');
+            const calendario = getCalendarioSeleccionado();
+
+            if (!selectEspacio) {
+                return;
+            }
+
+            Array.from(selectEspacio.options).forEach((opcion) => {
+                if (!opcion.value) {
+                    return;
+                }
+
+                const visible = !calendario || !calendario.sede || opcion.dataset.sede === calendario.sede;
+                opcion.hidden = !visible;
+                opcion.disabled = !visible;
+
+                if (!visible && opcion.selected) {
+                    selectEspacio.value = '';
+                }
+            });
+        }
+
+        function getRangoCandidato() {
+            const tipo = getSelectedTipoHorario();
+
+            if (tipo === 'fecha_especifica') {
+                const fecha = normalizeDateValue(fechaInput?.value);
+                return fecha ? { desde: fecha, hasta: fecha } : null;
+            }
+
+            const calendario = getCalendarioSeleccionado();
+            if (!calendario) {
+                return null;
+            }
+
+            const semanaCampo = document.getElementById('semana_inicio');
+            const semana = getWeekStartDate(semanaCampo?.value || new Date().toISOString().slice(0, 10));
+            const desde = semana && semana > calendario.inicio ? semana : calendario.inicio;
+
+            return { desde, hasta: calendario.fin };
+        }
+
+        function hayDiaEnRango(dia, desde, hasta) {
+            const inicio = parseSafeDate(desde);
+            const fin = parseSafeDate(hasta);
+            const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+
+            if (!inicio || !fin) {
+                return false;
+            }
+
+            for (let i = 0; i < 7 && inicio <= fin; i++) {
+                if (dias[inicio.getDay()] === normalizeText(dia)) {
+                    return true;
+                }
+                inicio.setDate(inicio.getDate() + 1);
+            }
+
+            return false;
+        }
+
         function isBlockedByExisting(dia, inicio, fin) {
-            const selectedType = document.querySelector('input[name="tipo_horario"]:checked')?.value || 'recurrente';
-            const selectedDate = fechaInput?.value;
+            const espacio = getNamedFieldValue('epd_id');
+            const rango = getRangoCandidato();
+            const tipo = getSelectedTipoHorario();
+            const diaClave = tipo === 'fecha_especifica' ? getDayFromDate(fechaInput?.value) : normalizeText(dia);
             const blockStart = parseTime(inicio);
             const blockEnd = parseTime(fin);
-            const selectedWeek = selectedType === 'fecha_especifica' && selectedDate
-                ? getWeekStartDate(selectedDate)
-                : (document.querySelector('input[name="semana_inicio"]')?.value
-                    ? getWeekStartDate(document.querySelector('input[name="semana_inicio"]').value)
-                    : getWeekStartDate(new Date().toISOString().slice(0, 10)));
+
+            if (!espacio || !rango || !diaClave) {
+                return false;
+            }
 
             for (const row of activeRows) {
-                if (isCurrentHorarioRow(row)) {
+                if (isCurrentHorarioRow(row) || String(row.epd_id) !== String(espacio)) {
                     continue;
                 }
 
-                if (String(row.estado || '').toLowerCase() !== 'activo') {
+                if (normalizeText(row.dia) !== normalizeText(diaClave)) {
                     continue;
                 }
 
-                if (row.semana_inicio && selectedType !== 'fecha_especifica') {
-                    const rowWeek = getWeekStartDate(row.semana_inicio);
-                    if (selectedWeek && rowWeek && rowWeek !== selectedWeek) {
-                        continue;
-                    }
-                }
-
-                const recordStart = parseTime(row.hora_inicio);
-                const recordEnd = parseTime(row.hora_fin);
-
-                let sameDayEffective = false;
-
-                if (selectedType === 'fecha_especifica' && selectedDate) {
-                    const normalizedSelectedDate = normalizeDateValue(selectedDate);
-                    const dayOfSelectedDate = getDayFromDate(normalizedSelectedDate);
-                    const selectedWeekDate = getWeekStartDate(normalizedSelectedDate);
-
-                    if (row.fecha_especifica && normalizeDateValue(row.fecha_especifica) === normalizedSelectedDate) {
-                        sameDayEffective = true;
-                    }
-
-                    if (!row.fecha_especifica && row.dia_semana) {
-                        if (normalizeText(row.dia_semana) === normalizeText(dayOfSelectedDate)) {
-                            if (row.semana_inicio && selectedWeekDate && getWeekStartDate(normalizeDateValue(row.semana_inicio)) !== selectedWeekDate) {
-                                continue;
-                            }
-                            sameDayEffective = true;
-                        }
-                    }
-                } else {
-                    if (!row.fecha_especifica && row.dia_semana) {
-                        if (normalizeText(row.dia_semana) === normalizeText(dia)) {
-                            sameDayEffective = true;
-                        }
-                    }
-
-                    if (row.fecha_especifica) {
-                        const existingDay = getDayFromDate(row.fecha_especifica);
-                        if (normalizeText(existingDay) === normalizeText(dia)) {
-                            const rowWeek = row.semana_inicio ? getWeekStartDate(row.semana_inicio) : getWeekStartDate(row.fecha_especifica);
-                            if (selectedWeek && rowWeek && rowWeek !== selectedWeek) {
-                                continue;
-                            }
-                            sameDayEffective = true;
-                        }
-                    }
-                }
-
-                if (!sameDayEffective) {
+                if (!(blockStart < parseTime(row.hora_fin) && blockEnd > parseTime(row.hora_inicio))) {
                     continue;
                 }
 
-                if (blockStart < recordEnd && blockEnd > recordStart) {
+                const desde = rango.desde > row.desde ? rango.desde : row.desde;
+                const hasta = rango.hasta < row.hasta ? rango.hasta : row.hasta;
+
+                if (desde <= hasta && hayDiaEnRango(diaClave, desde, hasta)) {
                     return true;
                 }
             }
@@ -825,11 +881,15 @@
                     return;
                 }
 
-                if (name === 'id_espacio') {
+                if (name === 'epd_id') {
                     resetSelectionForSpaceChange();
                 }
 
-                if (['id_calendario', 'id_actividad', 'id_espacio', 'tipo_horario', 'fecha_especifica'].includes(name)) {
+                if (name === 'cld_id') {
+                    filtrarEspaciosPorSede();
+                }
+
+                if (['cld_id', 'acd_id', 'epd_id', 'tipo_horario', 'fecha_especifica', 'semana_inicio'].includes(name)) {
                     refreshBlockStates();
                 }
             });
@@ -939,6 +999,7 @@
             });
         }
 
+        filtrarEspaciosPorSede();
         hydrateSelectionState();
         updateTipoHorarioUI();
         updateJornadaView();

@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Movimientos\Compras;
 use Livewire\Component;
 use App\Models\Compra;
 use App\Models\Lote;
+use App\Models\TipoProducto;
 use Illuminate\Support\Facades\DB;
 
 class FechasCompra extends Component
@@ -12,11 +13,20 @@ class FechasCompra extends Component
     public $compra;
     public $fechas = [];
 
+    public array $sinVencimiento = [];
+
     public function mount(Compra $compra)
     {
         $this->compra = $compra;
+        $this->sinVencimiento = TipoProducto::idsProductosSinVencimiento(
+            $compra->detalleCompras->pluck('pdt_id')->map(fn ($id) => (int) $id)->unique()->values()->all()
+        );
 
         foreach ($compra->detalleCompras as $detalle) {
+            if (in_array((int) $detalle->pdt_id, $this->sinVencimiento, true)) {
+                continue;
+            }
+
             $this->fechas[$detalle->id_dcm] = [
                 'fecha_vencimiento_lot' => optional($detalle->lote)->fecha_vencimiento_lot,
                 'lote_id' => $detalle->lot_id,

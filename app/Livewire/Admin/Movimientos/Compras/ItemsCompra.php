@@ -6,6 +6,7 @@ use App\Models\Compra;
 use App\Models\DetalleCompra;
 use App\Models\Lote;
 use App\Models\Producto;
+use App\Models\TipoProducto;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
@@ -38,11 +39,11 @@ class ItemsCompra extends Component
 
     public function obtenerProductosPorModulo()
     {
-        $moduloId = $this->compra->mod_id;
+        $tipos = TipoProducto::idsParaModulo($this->compra->mod_id === null ? null : (int) $this->compra->mod_id);
 
         $this->productos = Producto::where('status_id', Producto::STATUS_ACTIVO)
-            ->whereHas('categoria.tipoProducto', function ($q) use ($moduloId) {
-                $q->where('mod_id', $moduloId);
+            ->whereHas('categoria', function ($q) use ($tipos) {
+                $q->whereIn('tpr_id', $tipos);
             })
             ->orderBy('nombre_pdt')
             ->get();
@@ -121,6 +122,7 @@ class ItemsCompra extends Component
             $factor = $producto->enp_id
                 ? ($producto->unidades_presentacion_pdt ?? 1)
                 : ($producto->peso_contenido_pdt ?? 1);
+            $factor = (float) $factor > 0 ? (float) $factor : 1.0;
 
             $cantidadConvertida = $this->cantidad * $factor;
 

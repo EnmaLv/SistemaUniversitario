@@ -26,7 +26,7 @@
         'psicologia' => ['icon' => 'fas fa-brain'],
         'beca' => ['icon' => 'fas fa-graduation-cap'],
         'transporte' => ['icon' => 'fas fa-bus'],
-        'deportes' => ['icon' => 'fas fa-futbol'],
+        'deporte' => ['icon' => 'fas fa-futbol'],
     ];
     $fallback = ['icon' => 'fas fa-cubes'];
 @endphp

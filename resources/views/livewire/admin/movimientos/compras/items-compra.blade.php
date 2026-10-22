@@ -10,12 +10,14 @@
                     <label class="block titulos">
                         Producto
                     </label>
-                    <a href="{{ route('admin.maestros.productos.create', [
-                        'from' => url()->current(),
-                    ]) }}"
-                        class="text-[10px] font-bold text-red-800 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors">
-                        + Nuevo producto
-                    </a>
+                    @canRoute('admin.maestros.productos.create')
+                        <a href="{{ route('admin.maestros.productos.create', [
+                            'from' => url()->current(),
+                        ]) }}"
+                            class="text-[10px] font-bold text-red-800 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors">
+                            + Nuevo producto
+                        </a>
+                    @endcanRoute
                 </div>
 
                 <div class="relative">
@@ -133,16 +135,18 @@
                     Acción
                 </label>
                 @if ($compra->estado_compra_cmp != 'Enviado al proveedor')
-                    <button type="button" wire:click="agregarItems" wire:loading.attr="disabled"
-                        class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-plus text-xs"></i>
-                        <span wire:loading.remove wire:target="agregarItems">
-                            Agregar
-                        </span>
-                        <span wire:loading wire:target="agregarItems">
-                            Agregando...
-                        </span>
-                    </button>
+                    @canAction(['compras', 'comedor_compras'], 'editar')
+                        <button type="button" wire:click="agregarItems" wire:loading.attr="disabled"
+                            class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span wire:loading.remove wire:target="agregarItems">
+                                Agregar
+                            </span>
+                            <span wire:loading wire:target="agregarItems">
+                                Agregando...
+                            </span>
+                        </button>
+                    @endcanAction
                 @else
                     <div class="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl border text-sm font-bold opacity-50"
                         style="
@@ -281,12 +285,14 @@
                                     {{ number_format($detalle->subtotal_dcm, 2, ',', '.') }} .BS
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <button @disabled($compra->estado_compra_cmp == 'Enviado al proveedor') type="button"
-                                        wire:click="eliminarItem({{ $detalle->id_dcm }})" wire:loading.attr="disabled"
-                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border text-rose-500 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                                        style="border-color: var(--border-color);">
-                                        <i class="fas fa-trash text-[10px]"></i>
-                                    </button>
+                                    @canAction(['compras', 'comedor_compras'], 'editar')
+                                        <button @disabled($compra->estado_compra_cmp == 'Enviado al proveedor') type="button"
+                                            wire:click="eliminarItem({{ $detalle->id_dcm }})" wire:loading.attr="disabled"
+                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border text-rose-500 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                            style="border-color: var(--border-color);">
+                                            <i class="fas fa-trash text-[10px]"></i>
+                                        </button>
+                                    @endcanAction
                                 </td>
                             </tr>
                         @endforeach
@@ -334,11 +340,13 @@
                 El pedido ya fue enviado a compras.
             </div>
         @else
-            <button type="button" wire:click="confirmarEnvio"
-                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all">
-                <i class="fas fa-paper-plane text-xs"></i>
-                Enviar a compras
-            </button>
+            @canRoute('admin.movimientos.compras.enviarCorreo')
+                <button type="button" wire:click="confirmarEnvio"
+                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                    Enviar a compras
+                </button>
+            @endcanRoute
         @endif
     </div>
 </div>

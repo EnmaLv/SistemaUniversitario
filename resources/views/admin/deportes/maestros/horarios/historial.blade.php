@@ -1,64 +1,62 @@
 <x-app-layout>
-    <div class="min-h-[calc(100vh-4rem)] bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
+    @include('components.alert')
+
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 class="text-2xl font-black tracking-tight text-gray-800">Historial de horarios</h1>
-                    <p class="mt-1 text-sm text-gray-500">Registros cancelados y no activos del módulo de deportes.</p>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color:var(--text-main);">Historial de horarios</h1>
+                    <p class="mt-1 text-sm" style="color:var(--text-muted);">Horarios cancelados del módulo de deportes.</p>
                 </div>
 
-                <a href="{{ route('admin.deportes.maestros.horarios.index') }}" class="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Volver al calendario
+                <a href="{{ route('admin.deportes.maestros.horarios.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold" style="border-color:var(--border-color);color:var(--text-main);">
+                    <i class="fas fa-arrow-left text-xs"></i> Volver al calendario
                 </a>
             </div>
 
+            @include('admin.deportes.partials.errores')
+
             @if($horarios->isEmpty())
-                <div class="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
+                <div class="rounded-2xl border border-dashed p-8 text-center" style="border-color:var(--border-color);color:var(--text-muted);background-color:var(--bg-card);">
                     No hay horarios cancelados.
                 </div>
             @else
-                <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <div class="overflow-hidden rounded-2xl border shadow-sm" style="background-color:var(--bg-card);border-color:var(--border-color);">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-gray-700">
-                            <thead class="bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-600">
-                                <tr>
+                        <table class="min-w-full text-left text-sm" style="color:var(--text-main);">
+                            <thead class="text-xs font-black uppercase tracking-wider">
+                                <tr class="border-b" style="border-color:var(--border-color);">
                                     <th class="px-4 py-3">Actividad</th>
                                     <th class="px-4 py-3">Espacio</th>
                                     <th class="px-4 py-3">Tipo</th>
                                     <th class="px-4 py-3">Día / Fecha</th>
                                     <th class="px-4 py-3">Horario</th>
-                                    <th class="px-4 py-3">Estado</th>
                                     <th class="px-4 py-3">Motivo</th>
                                     <th class="px-4 py-3">Cancelado</th>
+                                    <th class="px-4 py-3 text-center">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white">
+                            <tbody>
                                 @foreach($horarios as $horario)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-3 font-medium text-gray-800">{{ $horario->actividad?->nombre ?? '-' }}</td>
-                                        <td class="px-4 py-3">{{ $horario->espacio?->nombre ?? '-' }}</td>
-                                        <td class="px-4 py-3">
-                                            {{ $horario->fecha_especifica ? 'Fecha específica' : 'Recurrente' }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            {{ $horario->fecha_especifica ? 
-                                                \Carbon\Carbon::parse($horario->fecha_especifica)->translatedFormat('d/m/Y') : 
-                                                ucfirst($horario->dia_semana ?? '-') }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($horario->hora_fin)->format('H:i') }}
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">
-                                                {{ $horario->estado ?? 'cancelado' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-600">
-                                            {{ $horario->motivo_cancelacion ?: 'No especificado' }}
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-500">
-                                            {{ $horario->updated_at ? $horario->updated_at->format('d/m/Y H:i') : '-' }}
+                                    <tr class="border-b" style="border-color:var(--border-color);">
+                                        <td class="px-4 py-3 font-semibold">{{ $horario->actividad?->nombre_acd ?? '-' }}</td>
+                                        <td class="px-4 py-3">{{ $horario->espacio?->nombre_epd ?? '-' }}</td>
+                                        <td class="px-4 py-3">{{ $horario->esFechaEspecifica() ? 'Fecha específica' : 'Semanal' }}</td>
+                                        <td class="px-4 py-3">{{ $horario->esFechaEspecifica() ? $horario->fecha_especifica_hde->format('d/m/Y') : $horario->diaLegible() }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap">{{ $horario->horaInicio() }} - {{ $horario->horaFin() }}</td>
+                                        <td class="px-4 py-3" style="color:var(--text-muted);">{{ $horario->motivo_cancelacion_hde ?: 'No especificado' }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap" style="color:var(--text-muted);">{{ $horario->updated_at?->format('d/m/Y H:i') ?? '-' }}</td>
+                                        <td class="px-4 py-3 text-center">
+                                            @canRoute('admin.deportes.maestros.horarios.activate')
+                                            <form method="POST" action="{{ route('admin.deportes.maestros.horarios.activate', $horario->id_hde) }}" class="inline"
+                                                data-confirmar="¿Reactivar el horario?" data-confirmar-texto="Se verificará que el espacio siga libre." data-confirmar-boton="Sí, reactivar">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100" title="Reactivar">
+                                                    <i class="fas fa-undo text-[10px]"></i> Reactivar
+                                                </button>
+                                            </form>
+                                            @endcanRoute
                                         </td>
                                     </tr>
                                 @endforeach
@@ -69,4 +67,5 @@
             @endif
         </div>
     </div>
+    @include('admin.deportes.partials.confirmar')
 </x-app-layout>

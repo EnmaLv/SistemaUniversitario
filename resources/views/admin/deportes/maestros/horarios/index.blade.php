@@ -37,27 +37,13 @@
     ];
 
     $totalJornadas = count($BLOQUES);
-
-    function _normalize_day($str) {
-        $map = ['Á'=>'A','É'=>'E','Í'=>'I','Ó'=>'O','Ú'=>'U','á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','Ñ'=>'N','ñ'=>'n'];
-        $s = strtr($str, $map);
-        $s = mb_strtolower($s, 'UTF-8');
-        return trim($s);
-    }
-
-    function _resolve_day_key($item) {
-        if (!is_null($item->fecha_especifica)) {
-            return _normalize_day(Carbon::parse($item->fecha_especifica)->locale('es')->translatedFormat('l'));
-        }
-
-        return _normalize_day($item->dia_semana ?? $item->dia ?? '');
-    }
 @endphp
 
 <x-app-layout>
     <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @include('components.alert')
+            @include('admin.deportes.partials.errores')
 
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
@@ -70,11 +56,13 @@
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap">
-                    <a href="{{ route('admin.deportes.maestros.horarios.create') }}"
-                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-{{ $themeColor }}-600 hover:bg-{{ $themeColor }}-700 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
+                    @canRoute('admin.deportes.maestros.horarios.create')
+                    <a href="{{ route('admin.deportes.maestros.horarios.create', ['semana' => $semanaInicioActual->format('Y-m-d')]) }}"
+                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-calendar-plus text-xs"></i>
                         <span>Crear Horario</span>
                     </a>
+                    @endcanRoute
 
                     <a href="{{ route('admin.deportes.maestros.horarios.historial') }}"
                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all">
@@ -82,11 +70,13 @@
                         <span>Historial</span>
                     </a>
 
-                    <a href="{{ route('admin.deportes.maestros.horarios.exportarPdf') }}"
+                    @canRoute('admin.deportes.maestros.horarios.exportarPdf')
+                    <a href="{{ route('admin.deportes.maestros.horarios.exportarPdf', ['semana' => $semanaInicioActual->format('Y-m-d')]) }}" target="_blank"
                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all">
                         <i class="fas fa-file-pdf text-xs"></i>
                         <span>Exportar PDF</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -165,9 +155,20 @@
                 <button type="button" id="cerrarDetalleHorario" class="text-gray-500 hover:text-gray-800">✕</button>
             </div>
             <div id="detalleHorarioContent" class="space-y-3 px-5 py-4 text-sm text-gray-700"></div>
-            <div class="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-4">
-                <a id="detalleEditarLink" href="#" class="rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700">Editar</a>
-                <button type="button" id="detalleDeleteTrigger" class="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700">Eliminar</button>
+            <div class="flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 px-5 py-4">
+                <a id="detalleVerLink" href="#" class="rounded-xl border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">Ver</a>
+                @canRoute('admin.deportes.maestros.horarios.cartel_pdf')
+                <a id="detalleCartelLink" href="#" target="_blank" class="rounded-xl border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50"><i class="fas fa-file-pdf mr-1"></i>Cartel</a>
+                @endcanRoute
+                @canRoute('admin.deportes.inscripciones.index')
+                <a id="detalleInscritosLink" href="#" class="rounded-xl border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50"><i class="fas fa-user-plus mr-1"></i>Inscritos</a>
+                @endcanRoute
+                @canRoute('admin.deportes.maestros.horarios.edit')
+                <a id="detalleEditarLink" href="#" class="rounded-xl bg-red-800 px-4 py-2 font-extrabold text-white hover:bg-red-900">Editar</a>
+                @endcanRoute
+                @canRoute('admin.deportes.maestros.horarios.destroy')
+                <button type="button" id="detalleDeleteTrigger" class="rounded-xl border border-red-300 px-4 py-2 font-semibold text-red-700 hover:bg-red-50">Cancelar horario</button>
+                @endcanRoute
                 <button type="button" id="cerrarDetalleHorarioFooter" class="rounded-xl border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">Cerrar</button>
             </div>
         </div>
@@ -214,6 +215,9 @@
             const confirmModal = document.getElementById('confirmCancelModal');
             const content = document.getElementById('detalleHorarioContent');
             const editarLink = document.getElementById('detalleEditarLink');
+            const verLink = document.getElementById('detalleVerLink');
+            const cartelLink = document.getElementById('detalleCartelLink');
+            const inscritosLink = document.getElementById('detalleInscritosLink');
             const deleteTrigger = document.getElementById('detalleDeleteTrigger');
             const confirmCancelForm = document.getElementById('confirmCancelForm');
             const motivoCancelacion = document.getElementById('motivoCancelacion');
@@ -238,12 +242,16 @@
                         <div><strong>Horario:</strong><br>${data.horaInicio} - ${data.horaFin}</div>
                         <div><strong>Cupo máximo:</strong><br>${data.cupo}</div>
                         <div><strong>Tipo:</strong><br>${data.tipo}</div>
-                        <div class="md:col-span-2"><strong>Fecha específica:</strong><br>${data.fecha || '-'}</div>
+                        <div><strong>Inscritos:</strong><br>${data.inscritos}</div>
+                        <div class="md:col-span-2"><strong>Vigencia:</strong><br>${data.vigencia || '-'}</div>
                         <div class="md:col-span-2"><strong>Observaciones:</strong><br>${data.observaciones || '-'}</div>
                     </div>
                 `;
 
-                editarLink.href = data.editUrl;
+                if (editarLink) editarLink.href = data.editUrl;
+                if (verLink) verLink.href = data.showUrl;
+                if (cartelLink) cartelLink.href = data.cartelUrl;
+                if (inscritosLink) inscritosLink.href = data.inscritosUrl;
                 currentDeleteUrl = data.deleteUrl;
                 confirmCancelForm.action = data.deleteUrl;
                 modal.classList.remove('hidden');
@@ -268,7 +276,7 @@
                 motivoCancelacion.value = '';
             }
 
-            deleteTrigger.addEventListener('click', function () {
+            deleteTrigger?.addEventListener('click', function () {
                 if (!currentDeleteUrl) return;
                 closeModal();
                 openConfirmCancelModal();
@@ -299,7 +307,11 @@
                         cupo: button.dataset.cupo,
                         tipo: button.dataset.tipo,
                         estado: button.dataset.estado,
-                        fecha: button.dataset.fecha || '-',
+                        inscritos: button.dataset.inscritos || '-',
+                        vigencia: button.dataset.vigencia || '-',
+                        showUrl: button.dataset.showUrl,
+                        cartelUrl: button.dataset.cartelUrl,
+                        inscritosUrl: button.dataset.inscritosUrl,
                         observaciones: button.dataset.observaciones || '-',
                         editUrl: button.dataset.editUrl,
                         deleteUrl: button.dataset.deleteUrl,

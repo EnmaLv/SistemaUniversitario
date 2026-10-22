@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::call(function () {
     BusGpsLog::withTrashed()->where('created_at', '<', now()->subDays(30))->forceDelete();
 })->daily();
+
+Schedule::command('deportes:marcar-vencidos')->hourly()->withoutOverlapping();

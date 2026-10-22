@@ -1,20 +1,6 @@
 @php
     use Carbon\Carbon;
 
-    $normalizarDia = function ($valor) {
-        $map = ['Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'Ñ' => 'N', 'ñ' => 'n'];
-        $texto = strtr((string) $valor, $map);
-        return strtolower(trim($texto));
-    };
-
-    $diasSemana = [
-        'lunes' => 'Lunes',
-        'martes' => 'Martes',
-        'miercoles' => 'Miércoles',
-        'jueves' => 'Jueves',
-        'viernes' => 'Viernes',
-    ];
-
     $turnos = [
         'MATUTINO' => [
             ['inicio' => '07:30', 'fin' => '08:15'],
@@ -42,80 +28,52 @@
         ],
     ];
 
-    $slotMap = [];
-    foreach ($turnos as $turnoNombre => $bloquesTurno) {
-        foreach ($bloquesTurno as $bloque) {
-            $slotKey = Carbon::parse($bloque['inicio'])->format('H:i:s') . '|' . Carbon::parse($bloque['fin'])->format('H:i:s');
-            $slotMap[$turnoNombre][$slotKey] = $bloque;
-        }
-    }
-
     $actividadPorTurnoDiaBloque = [];
+
     foreach ($turnos as $turnoNombre => $bloquesTurno) {
-        foreach ($diasSemana as $diaClave => $diaLabel) {
-            $actividadPorTurnoDiaBloque[$turnoNombre][$diaClave] = [];
+        foreach ($diasSemana as $diaInfo) {
             foreach ($bloquesTurno as $bloque) {
-                $slotKey = Carbon::parse($bloque['inicio'])->format('H:i:s') . '|' . Carbon::parse($bloque['fin'])->format('H:i:s');
-                $actividadPorTurnoDiaBloque[$turnoNombre][$diaClave][$slotKey] = [];
+                $actividadPorTurnoDiaBloque[$turnoNombre][$diaInfo['fecha']][$bloque['inicio']] = [];
             }
         }
     }
 
-    $horariosSinBloqueExacto = [];
-
     foreach ($horarios as $horario) {
-        if (($horario->estado ?? null) !== 'activo') {
-            continue;
+        foreach ($diasSemana as $diaInfo) {
+            if (! $horario->aplicaEnFecha($diaInfo['fecha'])) {
+                continue;
+            }
+
+            $inicioReal = $horario->horaInicio();
+
+            foreach ($turnos as $turnoNombre => $bloquesTurno) {
+                foreach ($bloquesTurno as $bloque) {
+                    if ($inicioReal >= $bloque['inicio'] && $inicioReal < $bloque['fin']) {
+                        $actividadPorTurnoDiaBloque[$turnoNombre][$diaInfo['fecha']][$bloque['inicio']][] = [
+                            'nombre' => $horario->actividad?->nombre_acd ?? 'Sin actividad',
+                            'hora_inicio_label' => $horario->horaInicio('g:i A'),
+                            'hora_fin_label' => $horario->horaFin('g:i A'),
+                            'espacio' => $horario->espacio?->nombre_epd ?? '',
+                        ];
+
+                        continue 3;
+                    }
+                }
+            }
         }
+    }
 
-        $dia = null;
-        if (!empty($horario->fecha_especifica)) {
-            $fecha = Carbon::parse($horario->fecha_especifica);
-            $dia = $normalizarDia($fecha->locale('es')->translatedFormat('l'));
-        } elseif (!empty($horario->dia_semana)) {
-            $dia = $normalizarDia($horario->dia_semana);
-        }
-
-        if (!$dia || !isset($diasSemana[$dia])) {
-            continue;
-        }
-
-        $inicioReal = Carbon::parse($horario->hora_inicio)->format('H:i:s');
-        $finReal = Carbon::parse($horario->hora_fin)->format('H:i:s');
-        $actividad = [
-            'nombre' => $horario->actividad->nombre ?? 'Sin actividad',
-            'inicio' => $inicioReal,
-            'fin' => $finReal,
-            'hora_inicio_label' => Carbon::parse($horario->hora_inicio)->format('g:i A'),
-            'hora_fin_label' => Carbon::parse($horario->hora_fin)->format('g:i A'),
-            'espacio' => $horario->espacio->nombre ?? '',
-        ];
-
-        $asignada = false;
-        foreach ($turnos as $turnoNombre => $bloquesTurno) {
-            foreach ($bloquesTurno as $bloque) {
-                $slotKey = Carbon::parse($bloque['inicio'])->format('H:i:s') . '|' . Carbon::parse($bloque['fin'])->format('H:i:s');
-                $bloqueInicio = Carbon::parse($bloque['inicio'])->format('H:i:s');
-                $bloqueFin = Carbon::parse($bloque['fin'])->format('H:i:s');
-
-                if ($inicioReal === $bloqueInicio && $finReal === $bloqueFin) {
-                    $actividadPorTurnoDiaBloque[$turnoNombre][$dia][$slotKey][] = $actividad;
-                    $asignada = true;
-                    break 2;
+    $turnos = array_filter($turnos, function ($bloquesTurno, $turnoNombre) use ($actividadPorTurnoDiaBloque) {
+        foreach ($actividadPorTurnoDiaBloque[$turnoNombre] as $porBloque) {
+            foreach ($porBloque as $actividades) {
+                if (! empty($actividades)) {
+                    return true;
                 }
             }
         }
 
-        if (!$asignada) {
-            $horariosSinBloqueExacto[] = [
-                'actividad' => $actividad['nombre'],
-                'dia' => $dia,
-                'inicio' => $inicioReal,
-                'fin' => $finReal,
-                'espacio' => $actividad['espacio'],
-            ];
-        }
-    }
+        return false;
+    }, ARRAY_FILTER_USE_BOTH);
 @endphp
 
 <!doctype html>
@@ -206,8 +164,11 @@
             padding: 3px;
         }
 
-        .ocultar-fin-de-semana {
-            display: none;
+        .semana {
+            text-align: center;
+            margin: -6px 0 12px;
+            font-size: 11px;
+            color: #374151;
         }
 
         .actividad-card {
@@ -244,6 +205,11 @@
 </head>
 <body>
     <h1>HORARIO DE DEPORTES</h1>
+    <p class="semana">Semana del {{ $semanaInicio->format('d/m/Y') }} al {{ $semanaInicio->copy()->addDays(4)->format('d/m/Y') }}</p>
+
+    @if (empty($turnos))
+        <p class="semana">No hay actividades programadas en esta semana.</p>
+    @endif
 
     @foreach ($turnos as $turnoNombre => $bloquesTurno)
         <div class="turno">
@@ -252,18 +218,13 @@
                 <thead>
                     <tr>
                         <th>Bloque</th>
-                        @foreach ($diasSemana as $diaClave => $diaLabel)
-                            <th>{{ $diaLabel }}</th>
+                        @foreach ($diasSemana as $diaInfo)
+                            <th>{{ $diaInfo['nombre'] }} {{ Carbon::parse($diaInfo['fecha'])->format('d/m') }}</th>
                         @endforeach
-                        <th class="ocultar-fin-de-semana">Sábado</th>
-                        <th class="ocultar-fin-de-semana">Domingo</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($bloquesTurno as $bloque)
-                        @php
-                            $bloqueKey = Carbon::parse($bloque['inicio'])->format('H:i:s') . '|' . Carbon::parse($bloque['fin'])->format('H:i:s');
-                        @endphp
                         <tr>
                             <td class="bloque-label">
                                 {{ Carbon::parse($bloque['inicio'])->format('g:i A') }}<br>
@@ -271,9 +232,9 @@
                                 {{ Carbon::parse($bloque['fin'])->format('g:i A') }}
                             </td>
 
-                            @foreach ($diasSemana as $diaClave => $diaLabel)
+                            @foreach ($diasSemana as $diaInfo)
                                 <td class="celda">
-                                    @foreach (($actividadPorTurnoDiaBloque[$turnoNombre][$diaClave][$bloqueKey] ?? []) as $actividad)
+                                    @foreach (($actividadPorTurnoDiaBloque[$turnoNombre][$diaInfo['fecha']][$bloque['inicio']] ?? []) as $actividad)
                                         <div class="actividad-card">
                                             <span class="actividad-name">{{ $actividad['nombre'] }}</span>
                                             <span class="actividad-meta">{{ $actividad['hora_inicio_label'] }} - {{ $actividad['hora_fin_label'] }}</span>
@@ -284,8 +245,6 @@
                                     @endforeach
                                 </td>
                             @endforeach
-                            <td class="celda ocultar-fin-de-semana"></td>
-                            <td class="celda ocultar-fin-de-semana"></td>
                         </tr>
                     @endforeach
                 </tbody>

@@ -647,7 +647,7 @@ return [
         [
             'text' => 'Horarios',
             'key' => 'deportes_horarios',
-            'module' => 'deportes',
+            'module' => 'deporte',
             'url' => 'admin/deportes/maestros/horarios',
             'icon' => 'fas fa-calendar-check',
             'active' => ['admin/deportes/maestros/horarios*'],

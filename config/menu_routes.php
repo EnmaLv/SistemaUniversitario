@@ -116,4 +116,16 @@ return [
     'bus_viajes'             => ['admin.transporte.maestros.bus_viajes.*', 'admin.transporte.viajes.estadisticas'],
     'bus_mantenimientos'     => ['admin.transporte.maestros.bus_mantenimientos.*'],
     'bus_carga_combustibles' => ['admin.transporte.maestros.bus_carga_combustibles.*'],
+
+    'deportes_espacios'      => ['admin.deportes.espacios.*'],
+    'deportes_actividades'   => ['admin.deportes.actividades.*'],
+    'deportes_calendarios'   => ['admin.deportes.calendarios.*'],
+    'deportes_horarios'      => ['admin.deportes.maestros.horarios.*'],
+    'deportes_torneos'       => ['admin.deportes.torneos.*'],
+    'deportes_inscripciones' => ['admin.deportes.inscripciones.*'],
+    'deportes_asistencia'    => ['admin.deportes.asistencia.*'],
+    'deportes_prestamos'     => ['admin.deportes.prestamos.*'],
+    'deportes_sanciones'     => ['admin.deportes.sanciones.*'],
+    'deportes_solvencia'     => ['admin.deportes.solvencia.*'],
+    'deportes_entregas'      => ['admin.deportes.entregas.*'],
 ];

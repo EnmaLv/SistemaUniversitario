@@ -176,4 +176,23 @@ return [
             'bus_carga_combustibles' => 'Cargas de combustible',
         ],
     ],
+
+    'deportes' => [
+        'label'       => 'Deportes',
+        'icon'        => 'fas fa-futbol',
+        'description' => 'Espacios, horarios, torneos, préstamos de implementos y solvencia.',
+        'items' => [
+            'deportes_espacios'      => 'Espacios deportivos',
+            'deportes_actividades'   => 'Actividades deportivas',
+            'deportes_calendarios'   => 'Calendarios deportivos',
+            'deportes_horarios'      => 'Horarios deportivos',
+            'deportes_torneos'       => 'Torneos',
+            'deportes_inscripciones' => 'Inscripciones deportivas',
+            'deportes_asistencia'    => 'Asistencia deportiva',
+            'deportes_prestamos'     => 'Préstamos de implementos',
+            'deportes_sanciones'     => 'Sanciones deportivas',
+            'deportes_solvencia'     => 'Solvencia',
+            'deportes_entregas'      => 'Entregas de material',
+        ],
+    ],
 ];

@@ -84,10 +84,15 @@ class CompraController extends Controller
 
     public function finalizarCompra(Request $request, Compra $compra)
     {
+        $sinVencimiento = \App\Models\TipoProducto::idsProductosSinVencimiento(
+            $compra->detalleCompras->pluck('pdt_id')->map(fn ($id) => (int) $id)->unique()->values()->all()
+        );
+
         $lotesSinFecha = Lote::whereIn(
             'id_lot',
             $compra->detalleCompras->pluck('lot_id')
         )
+            ->whereNotIn('pdt_id', $sinVencimiento)
             ->whereNull('fecha_vencimiento_lot')
             ->exists();
 
