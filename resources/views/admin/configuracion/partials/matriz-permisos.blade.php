@@ -98,7 +98,7 @@
                         </thead>
                         <tbody class="divide-y" style="border-color: var(--border-color);">
                             @foreach ($vistas as $vista)
-                                @php $porAccion = $vista->permisos->keyBy('accion'); @endphp
+                                @php $porAccion = $vista->permisos->keyBy('accion_pmi'); @endphp
                                 <tr data-fila="{{ $vista->id_vis }}"
                                     data-buscar="{{ mb_strtolower($vista->nombre_vis . ' ' . $vista->key_vis) }}"
                                     class="hover:bg-red-50/30 dark:hover:bg-red-950/10 transition-colors">

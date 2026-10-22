@@ -327,7 +327,7 @@
                                     {{ Auth::user()?->persona?->nombres_per ?? (Auth::user()?->nombres ?? (Auth::user()?->name ?? 'Usuario')) }}
                                 </div>
                                 <div class="text-xs text-gray-300 leading-tight">
-                                    {{ Auth::user()?->roles?->pluck('nombre')->filter()->join(', ') ?: 'Usuario' }}
+                                    {{ Auth::user()?->roles?->pluck('nombre_rol')->filter()->join(', ') ?: 'Usuario' }}
                                 </div>
                             </div>
 
