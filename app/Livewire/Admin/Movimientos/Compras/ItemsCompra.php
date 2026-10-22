@@ -167,7 +167,7 @@ class ItemsCompra extends Component
             'productoId.required'   => 'Elige el producto que vas a comprar.',
             'cantidad.required'     => 'Escribe cuánto vas a comprar.',
             'cantidad.numeric'      => 'La cantidad debe ser un número, por ejemplo 7.5.',
-            'cantidad.integer'      => 'Este producto se compra por ' . $unidad->unidadPlural . ' completos: escribe un número entero, sin decimales.',
+            'cantidad.integer'      => 'Este producto se compra por ' . $unidad->unidadPlural . ': escribe un número entero, sin decimales.',
             'cantidad.min'          => $unidad->fraccionable() ? 'La cantidad debe ser mayor que cero.' : 'Compra al menos 1 ' . $unidad->unidad . '.',
             'cantidad.regex'        => 'Usa como máximo dos decimales, por ejemplo 7.25.',
             'precioCompra.required' => 'Escribe el precio ' . $unidad->precioPor() . ' en bolívares.',

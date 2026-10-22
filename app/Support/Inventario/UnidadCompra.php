@@ -134,6 +134,11 @@ class UnidadCompra
         );
     }
 
+    public function inventarioEnUnidades(): bool
+    {
+        return TipoProducto::cuentaPorUnidad($this->tipo);
+    }
+
     public function fraccionable(): bool
     {
         return $this->modo === self::MODO_PESO;

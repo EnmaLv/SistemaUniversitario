@@ -147,7 +147,7 @@ class Producto extends Model
         return [
             'categorias' => $query->get(),
             'unidades'   => DB::table('unidad_medida')->select('id_unm', 'nombre_unm', 'abreviatura_unm')->whereNull('deleted_at')->orderBy('nombre_unm', 'asc')->get(),
-            'envases'    => DB::table('envase_primario')->select('id_enp', 'nombre_enp')->where('status_id', self::STATUS_ACTIVO)->whereNull('deleted_at')->orderBy('nombre_enp', 'asc')->get(),
+            'envases'    => $tipoProductoId === null ? collect() : EnvasePrimario::deTipos([$tipoProductoId])->get(),
         ];
     }
 

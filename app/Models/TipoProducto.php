@@ -23,6 +23,10 @@ class TipoProducto extends Model
 
     public const SIN_VENCIMIENTO = [self::IMPLEMENTO_DEPORTIVO, self::MATERIAL_OFICINA];
 
+    public const CUENTAN_POR_UNIDAD = [self::IMPLEMENTO_DEPORTIVO, self::MATERIAL_OFICINA];
+
+    public const UNIDAD_DEL_AREA = 'Unidad';
+
     public const ADICIONALES_POR_MODULO = [
         'deporte' => [self::IMPLEMENTO_DEPORTIVO, self::MATERIAL_OFICINA],
     ];
@@ -85,6 +89,21 @@ class TipoProducto extends Model
             ->whereNull('deleted_at')
             ->where(DB::raw('LOWER(nombre_tpr)'), mb_strtolower($nombre))
             ->value('id_tpr');
+
+        return $id === null ? null : (int) $id;
+    }
+
+    public static function cuentaPorUnidad(?string $nombre): bool
+    {
+        return $nombre !== null && in_array(mb_strtolower($nombre), array_map('mb_strtolower', self::CUENTAN_POR_UNIDAD), true);
+    }
+
+    public static function idUnidadDelArea(): ?int
+    {
+        $id = DB::table('unidad_medida')
+            ->whereNull('deleted_at')
+            ->where(DB::raw('LOWER(nombre_unm)'), mb_strtolower(self::UNIDAD_DEL_AREA))
+            ->value('id_unm');
 
         return $id === null ? null : (int) $id;
     }

@@ -43,12 +43,6 @@ class MedicamentoController extends Controller
     {
         $datos = Producto::getDatosFormulario($this->tipoId());
 
-        $datos['envases'] = DB::table('envase_primario')
-            ->select('id_enp', 'nombre_enp')
-            ->whereNull('deleted_at')
-            ->orderBy('nombre_enp', 'asc')
-            ->get();
-
         return view('admin.salud.maestros.medicamentos.create', $datos);
     }
 
@@ -190,12 +184,6 @@ class MedicamentoController extends Controller
         $medicamento = $this->buscarMedicamento($id);
 
         $datos = Producto::getDatosFormulario($this->tipoId());
-
-        $datos['envases'] = DB::table('envase_primario')
-            ->select('id_enp', 'nombre_enp')
-            ->whereNull('deleted_at')
-            ->orderBy('nombre_enp', 'asc')
-            ->get();
 
         return view('admin.salud.maestros.medicamentos.edit', array_merge($datos, [
             'medicamento' => $medicamento

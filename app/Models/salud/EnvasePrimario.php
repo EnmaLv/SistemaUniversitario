@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 
 class EnvasePrimario extends Model
 {
@@ -26,11 +28,58 @@ class EnvasePrimario extends Model
         'status_id',
     ];
 
-    public static function listar($buscar = null, $estado = null)
+    public static function deTipos(array $tipoIds)
+    {
+        return DB::table('envase_primario')
+            ->select('envase_primario.id_enp', 'envase_primario.nombre_enp')
+            ->where('envase_primario.status_id', self::STATUS_ACTIVO)
+            ->whereNull('envase_primario.deleted_at')
+            ->whereIn('envase_primario.id_enp', fn ($consulta) => $consulta->select('enp_id')
+                ->from('envase_tipo_producto')
+                ->whereIn('tpr_id', array_map('intval', $tipoIds))
+                ->whereNull('deleted_at'))
+            ->orderBy('envase_primario.nombre_enp');
+    }
+
+    public static function reglaDeTipos(array $tipoIds): Exists
+    {
+        return Rule::exists('envase_tipo_producto', 'enp_id')
+            ->whereIn('tpr_id', array_map('intval', $tipoIds))
+            ->whereNull('deleted_at');
+    }
+
+    public static function vincular(int $envaseId, int $tipoId): void
+    {
+        $existe = DB::table('envase_tipo_producto')->where('enp_id', $envaseId)->where('tpr_id', $tipoId)->first();
+
+        if ($existe && $existe->deleted_at === null) {
+            return;
+        }
+
+        if ($existe) {
+            DB::table('envase_tipo_producto')->where('id_etp', $existe->id_etp)->update(['deleted_at' => null, 'updated_id' => Auth::id(), 'updated_at' => now()]);
+
+            return;
+        }
+
+        DB::table('envase_tipo_producto')->insert([
+            'enp_id'     => $envaseId,
+            'tpr_id'     => $tipoId,
+            'created_id' => Auth::id(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    public static function listar($buscar = null, $estado = null, ?int $tipoId = null)
     {
         $query = DB::table('envase_primario')
             ->select('envase_primario.*')
-            ->whereNull('deleted_at');
+            ->whereNull('deleted_at')
+            ->when($tipoId !== null, fn ($consulta) => $consulta->whereIn('id_enp', fn ($sub) => $sub->select('enp_id')
+                ->from('envase_tipo_producto')
+                ->where('tpr_id', $tipoId)
+                ->whereNull('deleted_at')));
 
         if ($buscar) {
             $query->where('nombre_enp', 'like', "%{$buscar}%");

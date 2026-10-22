@@ -32,14 +32,16 @@
                             <p class="font-bold">{{ $linea['producto'] }}</p>
                             <p class="text-[10px]" style="color: var(--text-muted);">
                                 Lote {{ $linea['lote'] ?? '—' }} ·
-                                {{ $linea['fraccionable'] ? 'se reparte con decimales' : 'se reparte en ' . $linea['unidad_plural'] . ' completos' }}
+                                {{ $linea['nota'] ?? ($linea['fraccionable'] ? 'se reparte con decimales' : 'se reparte sin decimales, en ' . $linea['unidad_plural']) }}
                             </p>
                         </td>
                         <td class="px-4 py-3 text-center text-xs font-extrabold whitespace-nowrap" style="color: var(--text-main);">
                             {{ $formato($linea['cantidad']) }} {{ $linea['fraccionable'] ? $linea['unidad'] : $linea['unidad_plural'] }}
-                            <span class="block text-[10px] font-normal" style="color: var(--text-muted);">
-                                {{ $formato($linea['convertida']) }} {{ $linea['unidad_base'] }}
-                            </span>
+                            @if ($linea['unidad_base'] !== $linea['unidad_plural'])
+                                <span class="block text-[10px] font-normal" style="color: var(--text-muted);">
+                                    {{ $formato($linea['convertida']) }} {{ $linea['unidad_base'] }}
+                                </span>
+                            @endif
                         </td>
                         @foreach ($sedesReparto as $sede)
                             @php $parte = $linea['partes'][$sede->id] ?? ['cantidad' => 0, 'convertida' => 0]; @endphp
@@ -47,9 +49,11 @@
                                 style="color: var(--text-main);">
                                 @if ((float) $parte['cantidad'] > 0)
                                     {{ $formato($parte['cantidad']) }} {{ $linea['fraccionable'] ? $linea['unidad'] : ((float) $parte['cantidad'] == 1 ? $linea['unidad'] : $linea['unidad_plural']) }}
-                                    <span class="block text-[10px] font-normal" style="color: var(--text-muted);">
-                                        {{ $formato($parte['convertida']) }} {{ $linea['unidad_base'] }}
-                                    </span>
+                                    @if ($linea['unidad_base'] !== $linea['unidad_plural'])
+                                        <span class="block text-[10px] font-normal" style="color: var(--text-muted);">
+                                            {{ $formato($parte['convertida']) }} {{ $linea['unidad_base'] }}
+                                        </span>
+                                    @endif
                                 @else
                                     <span style="color: var(--text-muted);">—</span>
                                 @endif

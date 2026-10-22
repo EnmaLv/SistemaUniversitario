@@ -38,15 +38,12 @@
             </div>
 
             <div>
-                <label for="unidad_id" class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Unidad de medida</label>
-                <select id="unidad_id" name="unidad_id" class="{{ $claseCampo }}" style="{{ $estiloCampo }}" required>
-                    <option value="">Seleccione...</option>
-                    @foreach ($unidades as $unidad)
-                        <option value="{{ $unidad->id_unm }}" @selected(old('unidad_id', $producto?->unm_id) == $unidad->id_unm)>{{ $unidad->nombre_unm }}</option>
-                    @endforeach
-                </select>
-                <p class="mt-1 text-[11px]" style="color:var(--text-muted);">Normalmente "Unidad": se cuentan por piezas.</p>
-                @error('unidad_id') <p class="mt-1 text-xs font-semibold text-rose-500">{{ $message }}</p> @enderror
+                <span class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Unidad de medida</span>
+                <div class="{{ $claseCampo }} flex items-center gap-2" style="{{ $estiloCampo }}">
+                    <i class="fas fa-cube text-xs" style="color:var(--text-muted);"></i>
+                    <span>{{ \App\Models\TipoProducto::UNIDAD_DEL_AREA }}</span>
+                </div>
+                <p class="mt-1 text-[11px]" style="color:var(--text-muted);">Aquí todo se cuenta por unidad, aunque se compre por caja o paquete.</p>
             </div>
 
             <div>
@@ -71,14 +68,18 @@
                                 <option value="{{ $envase->id_enp }}" @selected($envaseElegido == $envase->id_enp)>{{ $envase->nombre_enp }}</option>
                             @endforeach
                         </select>
+                        @if ($envases->isEmpty())
+                            <p class="mt-1 text-xs font-semibold text-amber-600">No hay cajas ni paquetes registrados para este tipo. Pide al administrador que los cargue.</p>
+                        @endif
                         @error('presentacion_id') <p class="mt-1 text-xs font-semibold text-rose-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label for="unidades_presentacion_pdt" class="{{ $claseEtiqueta }}" style="color:var(--text-main);">Unidades por caja</label>
-                        <input type="number" id="unidades_presentacion_pdt" name="unidades_presentacion_pdt" value="{{ $porCaja }}" min="1" step="1" placeholder="Ej: 12"
+                        <input type="number" id="unidades_presentacion_pdt" name="unidades_presentacion_pdt" value="{{ $porCaja }}" min="2" step="1" placeholder="Ej: 12"
                             class="{{ $claseCampo }}" style="{{ $estiloCampo }}" x-bind:disabled="!conCaja">
                         @error('unidades_presentacion_pdt') <p class="mt-1 text-xs font-semibold text-rose-500">{{ $message }}</p> @enderror
                     </div>
+                    <p class="sm:col-span-2 text-[11px]" style="color:var(--text-muted);">En Compras escribes cuántas cajas llegan; al inventario entran como unidades sueltas (3 cajas de 12 = 36 unidades).</p>
                 </div>
                 <p class="mt-2 text-[11px]" style="color:var(--text-muted);" x-show="!conCaja">Si no lo marcas, se compra y se cuenta por unidad.</p>
             </div>

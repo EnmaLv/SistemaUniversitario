@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\TipoProducto;
+use App\Models\salud\EnvasePrimario;
 use Illuminate\Foundation\Http\FormRequest;
 
 class MedicamentoRequest extends FormRequest
@@ -17,7 +18,7 @@ class MedicamentoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'categoria_id' => ['required', Categoria::reglaDeTipos(array_filter([TipoProducto::idPorNombre(TipoProducto::MEDICAMENTO)]))],
+            'categoria_id' => ['required', Categoria::reglaDeTipos($this->tiposMedicamento())],
             'codigo' => 'nullable|string|max:255',
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -26,8 +27,8 @@ class MedicamentoRequest extends FormRequest
             'stock_minimo_pdt' => 'required|numeric',
             'stock_maximo_pdt' => 'required|numeric',
             'unidad_id' => 'required|exists:unidad_medida,id_unm',
-            'envase_primario_id' => 'nullable|exists:envase_primario,id_enp',
-            'presentacion_id' => 'nullable|exists:envase_primario,id_enp',
+            'envase_primario_id' => ['nullable', EnvasePrimario::reglaDeTipos($this->tiposMedicamento())],
+            'presentacion_id' => ['nullable', EnvasePrimario::reglaDeTipos($this->tiposMedicamento())],
             'unidades_presentacion_pdt' => 'nullable|numeric|min:0.001',
             'presentacion_dispensacion_pdt' => 'nullable|string|max:50',
             'estado' => 'nullable|boolean',
@@ -42,8 +43,15 @@ class MedicamentoRequest extends FormRequest
             'nombre.unique' => 'Ya existe un producto con este nombre',
             'categoria_id.required' => 'La categoría es obligatoria.',
             'categoria_id.exists' => 'Elige una categoría de medicamentos de la lista.',
+            'presentacion_id.exists' => 'Elige un envase de medicamentos de la lista.',
+            'envase_primario_id.exists' => 'Elige un envase de medicamentos de la lista.',
             'costo_usd_ppr.required' => 'El costo en USD es obligatorio.'
         ];
+    }
+
+    private function tiposMedicamento(): array
+    {
+        return array_filter([TipoProducto::idPorNombre(TipoProducto::MEDICAMENTO)]);
     }
 
     public function withValidator($validator)

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Categoria;
 use App\Models\TipoProducto;
+use App\Models\salud\EnvasePrimario;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -37,7 +38,7 @@ class ProductoRequest extends FormRequest
             'peso_contenido_pdt'             => ['nullable', 'required_without:presentacion_id', 'numeric', 'min:0'],
             'unidades_presentacion_pdt'  => ['nullable', 'required_with:presentacion_id', 'numeric', 'min:0.001'],
             'unidad_id' => 'required|exists:unidad_medida,id_unm',
-            'presentacion_id' => 'nullable|exists:envase_primario,id_enp',
+            'presentacion_id' => ['nullable', EnvasePrimario::reglaDeTipos(array_filter([$this->tipoEsperado($productoId)]))],
             'estado' => 'nullable|boolean',
             'costo_usd_ppr' => 'sometimes|required|numeric|min:0',
             'presentacion_dispensacion_pdt' => ['nullable', 'string', 'max:50'],
@@ -50,6 +51,7 @@ class ProductoRequest extends FormRequest
             'nombre.unique' => 'Ya existe un producto con este nombre',
             'categoria_id.required' => 'Elige una categoría.',
             'categoria_id.exists' => 'Elige una categoría de la lista: solo se aceptan las de este tipo de producto.',
+            'presentacion_id.exists' => 'Elige una presentación de la lista: solo se aceptan las de este tipo de producto.',
         ];
     }
 

@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\TipoProducto;
+use App\Models\salud\EnvasePrimario;
 use App\Support\Inventario\PrecioVigente;
 use App\Support\Sedes\SedeActiva;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 abstract class ProductoPorTipoController extends Controller
 {
@@ -145,13 +147,25 @@ abstract class ProductoPorTipoController extends Controller
             ->firstOrFail();
     }
 
+    protected function unidadId(): int
+    {
+        $id = TipoProducto::idUnidadDelArea();
+
+        if ($id === null) {
+            throw ValidationException::withMessages([
+                'nombre' => 'Falta la unidad de medida "' . TipoProducto::UNIDAD_DEL_AREA . '". Pide al administrador que la registre.',
+            ]);
+        }
+
+        return $id;
+    }
+
     protected function datosFormulario(): array
     {
         $datos = Producto::getDatosFormulario($this->tipoId());
 
         return [
             'categorias' => $datos['categorias'],
-            'unidades'   => $datos['unidades'],
             'envases'    => $datos['envases'],
         ];
     }
@@ -161,9 +175,8 @@ abstract class ProductoPorTipoController extends Controller
         $datos = $request->validate([
             'nombre'                    => ['required', 'string', 'max:255', Rule::unique('producto', 'nombre_pdt')->ignore($productoId, 'id_pdt')],
             'categoria_id'              => ['required', Categoria::reglaDeTipos([$this->tipoId()])],
-            'unidad_id'                 => 'required|exists:unidad_medida,id_unm',
-            'presentacion_id'           => 'nullable|exists:envase_primario,id_enp',
-            'unidades_presentacion_pdt' => 'nullable|required_with:presentacion_id|integer|min:1',
+            'presentacion_id'           => ['nullable', EnvasePrimario::reglaDeTipos([$this->tipoId()])],
+            'unidades_presentacion_pdt' => 'nullable|required_with:presentacion_id|integer|min:2',
             'costo_usd_ppr'             => 'required|numeric|min:0',
             'stock_minimo_pdt'          => 'required|integer|min:0',
             'stock_maximo_pdt'          => 'required|integer|min:0|gte:stock_minimo_pdt',
@@ -174,9 +187,10 @@ abstract class ProductoPorTipoController extends Controller
             'nombre.unique'                           => 'Ya existe un producto con ese nombre.',
             'categoria_id.required'                   => 'Elige una categoría.',
             'categoria_id.exists'                     => 'Elige una categoría de la lista: solo se aceptan las de ' . mb_strtolower($this->config()['plural']) . '.',
-            'unidad_id.required'                      => 'Elige la unidad de medida.',
+            'presentacion_id.exists'                  => 'Elige un tipo de caja o paquete de la lista.',
             'unidades_presentacion_pdt.required_with' => 'Indica cuántas unidades trae cada caja o paquete.',
             'unidades_presentacion_pdt.integer'       => 'Las unidades por caja deben ser un número entero.',
+            'unidades_presentacion_pdt.min'           => 'Una caja o paquete debe traer al menos 2 unidades. Si viene suelto, desmarca "Se compra por caja o paquete".',
             'costo_usd_ppr.required'                  => 'Escribe el precio de compra en dólares.',
             'stock_minimo_pdt.required'               => 'Escribe el stock mínimo (puede ser 0).',
             'stock_maximo_pdt.required'               => 'Escribe el stock máximo (puede ser 0).',
@@ -188,6 +202,7 @@ abstract class ProductoPorTipoController extends Controller
             $datos['unidades_presentacion_pdt'] = 1;
         }
 
+        $datos['unidad_id'] = $this->unidadId();
         $datos['peso_contenido_pdt'] = 0;
         $datos['presentacion_dispensacion_pdt'] = null;
         $datos['estado'] = 1;

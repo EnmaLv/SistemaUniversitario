@@ -87,10 +87,9 @@ class RepartoCompra
 
         $lineas = $this->detalles($compraId)->map(function ($detalle) use ($ids, $principal) {
             $unidad = UnidadCompra::de((int) $detalle->pdt_id);
-            $cantidad = (float) $detalle->cantidad_dcm;
-            $convertida = (float) $detalle->cantidad_convertida_dcm;
+            [$cantidad, $convertida] = $this->cantidades($detalle, $unidad);
 
-            return $this->linea($detalle, $unidad, $cantidad, $convertida, $this->repartir($cantidad, $convertida, $ids, $principal, $unidad->fraccionable()));
+            return $this->linea($detalle, $unidad, $this->repartir($cantidad, $convertida, $ids, $principal, $unidad->fraccionable()));
         })->values()->all();
 
         return ['sedes' => $sedes->all(), 'principal' => $principal, 'lineas' => $lineas];
@@ -184,7 +183,7 @@ class RepartoCompra
                 ];
             }
 
-            return $this->linea($detalle, UnidadCompra::de((int) $detalle->pdt_id), (float) $detalle->cantidad_dcm, (float) $detalle->cantidad_convertida_dcm, $partes);
+            return $this->linea($detalle, UnidadCompra::de((int) $detalle->pdt_id), $partes);
         })->values()->all();
 
         $principal = $sedes->firstWhere('principal', true);
@@ -213,8 +212,21 @@ class RepartoCompra
             ]);
     }
 
-    private function linea(object $detalle, UnidadCompra $unidad, float $cantidad, float $convertida, array $partes): array
+    private function cantidades(object $detalle, UnidadCompra $unidad): array
     {
+        $convertida = (float) $detalle->cantidad_convertida_dcm;
+
+        return $unidad->inventarioEnUnidades()
+            ? [$convertida, $convertida]
+            : [(float) $detalle->cantidad_dcm, $convertida];
+    }
+
+    private function linea(object $detalle, UnidadCompra $unidad, array $partes): array
+    {
+        [$cantidad, $convertida] = $this->cantidades($detalle, $unidad);
+        $enUnidades = $unidad->inventarioEnUnidades();
+        $comprada = (float) $detalle->cantidad_dcm;
+
         return [
             'detalle_id'   => (int) $detalle->id_dcm,
             'lote_id'      => (int) $detalle->lot_id,
@@ -222,12 +234,15 @@ class RepartoCompra
             'producto_id'  => (int) $detalle->pdt_id,
             'producto'     => $detalle->nombre_pdt,
             'unm_id'       => $detalle->unm_id === null ? null : (int) $detalle->unm_id,
-            'unidad'       => $unidad->unidad,
-            'unidad_plural' => $unidad->unidadPlural,
-            'unidad_base'  => $unidad->unidadBase,
+            'unidad'       => $enUnidades ? 'unidad' : $unidad->unidad,
+            'unidad_plural' => $enUnidades ? 'unidades' : $unidad->unidadPlural,
+            'unidad_base'  => $enUnidades ? 'unidades' : $unidad->unidadBase,
             'fraccionable' => $unidad->fraccionable(),
             'cantidad'     => $cantidad,
             'convertida'   => $convertida,
+            'nota'         => $enUnidades && $unidad->modo === UnidadCompra::MODO_ENVASE
+                ? 'Se compró ' . $unidad->resumen($comprada) . '; se reparte en unidades sueltas'
+                : null,
             'partes'       => $partes,
         ];
     }
