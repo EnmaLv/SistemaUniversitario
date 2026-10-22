@@ -74,20 +74,24 @@
 
                 <div class="flex items-center gap-2 flex-wrap">
                     {{-- PDF --}}
+                    @canRoute('admin.psicologia.maestros.horarios.exportarPdf')
                     <a href="{{ route('admin.psicologia.maestros.horarios.exportarPdf', isset($grupoActivo) ? ['grupo' => $grupoActivo->id_gha] : []) }}"
                         target="_blank"
                         class="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center"
                         title="Descargar PDF">
                         <i class="fas fa-file-pdf text-sm"></i>
                     </a>
+                    @endcanRoute
 
                     {{-- Guardar como grupo --}}
+                    @canRoute('admin.psicologia.maestros.grupos_horarios.store_from_horarios')
                     <button id="openGroupModal" type="button"
                         {{ isset($grupoActivo) || !empty($tieneCitasPendientes) ? 'disabled' : '' }}
                         class="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                         title="Guardar como grupo de horarios">
                         <i class="fas fa-save text-sm"></i>
                     </button>
+                    @endcanRoute
 
                     {{-- Ver grupos --}}
                     <a href="{{ route('admin.psicologia.maestros.grupos_horarios.index') }}"
@@ -97,11 +101,13 @@
                     </a>
 
                     {{-- Gestionar Horarios (Crear / Editar) --}}
+                    @canRoute('admin.psicologia.maestros.horarios.create')
                     <a href="{{ route('admin.psicologia.maestros.horarios.create', isset($grupoSeleccionado) ? ['grupo' => $grupoSeleccionado->id_gha] : []) }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-calendar-plus text-xs"></i>
                         <span>Gestionar Horarios</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 

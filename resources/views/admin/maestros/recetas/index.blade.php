@@ -1,9 +1,4 @@
 <x-app-layout>
-    @php
-        $puedeGestionar = auth()->user()->puedeRuta('admin.maestros.recetas.edit')
-            || auth()->user()->puedeRuta('admin.maestros.recetas.activar')
-            || auth()->user()->puedeRuta('admin.maestros.recetas.destroy');
-    @endphp
     <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @include('components.alert')
@@ -89,17 +84,11 @@
                                             </span>
                                         @endif
                                     </td>
-                                    @if ($puedeGestionar)
-                                        <x-table-actions
-                                            :id="$receta->id_rct"
-                                            baseUrl="admin/maestros/recetas"
-                                            :status="$receta->status_id == 1"
-                                            :show="false" />
-                                    @else
-                                        <td class="px-6 py-4 text-center text-gray-300 dark:text-gray-600" title="Solo lectura">
-                                            <i class="fas fa-lock text-xs"></i>
-                                        </td>
-                                    @endif
+                                    <x-table-actions
+                                        :id="$receta->id_rct"
+                                        baseUrl="admin/maestros/recetas"
+                                        :status="$receta->status_id == 1"
+                                        :show="false" />
                                 </x-table-row>
                             @empty
                                 <tr>

@@ -14,11 +14,13 @@
         </div>
 
         <div class="flex items-center gap-3">
+            @canRoute('admin.transporte.maestros.bus_viajes.create')
             <a href="{{ route('admin.transporte.maestros.bus_viajes.create') }}"
                 class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
                 <i class="fas fa-bus text-xs"></i>
                 <span>Programar nuevo viaje</span>
             </a>
+            @endcanRoute
         </div>
     </div>
 
@@ -171,19 +173,23 @@
                                 :status="$viaje->estado_viaje_vjt !== 'inactivo'" :toggle="false" :edit="$viaje->estado_viaje_vjt === 'programado'" :show="false">
 
                                 @if (in_array($viaje->estado_viaje_vjt, ['programado', 'en_curso']))
+                                    @canRoute('admin.transporte.maestros.bus_viajes.cancelar')
                                     <button type="button" onclick="abrirModalCancelar({{ $viaje->id_vjt }})"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
                                         title="Cancelar Viaje">
                                         <i class="fas fa-ban text-xs"></i>
                                     </button>
+                                    @endcanRoute
                                 @endif
 
                                 @if (in_array($viaje->estado_viaje_vjt, ['programado', 'en_curso']))
+                                    @canRoute('admin.transporte.maestros.bus_viajes.destroy')
                                     <button type="button" onclick="confirmarEliminar({{ $viaje->id_vjt }})"
                                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors"
                                         title="Eliminar Viaje">
                                         <i class="fas fa-trash-alt text-xs"></i>
                                     </button>
+                                    @endcanRoute
                                 @endif
 
                                 <a href="{{ url('admin/transporte/maestros/bus_viajes/' . $viaje->id_vjt) }}"
@@ -193,12 +199,14 @@
                                     <i class="fas fa-map-marked-alt text-xs"></i>
                                 </a>
 
+                                @canRoute('admin.transporte.maestros.bus_viajes.destroy')
                                 <form id="form-eliminar-{{ $viaje->id_vjt }}"
                                     action="{{ route('admin.transporte.maestros.bus_viajes.destroy', $viaje->id_vjt) }}"
                                     method="POST" class="hidden">
                                     @csrf
                                     @method('DELETE')
                                 </form>
+                                @endcanRoute
 
                             </x-table-actions>
 

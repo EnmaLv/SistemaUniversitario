@@ -14,11 +14,13 @@
                     </div>
 
                     <div class="flex items-center gap-3">
+                        @canRoute('admin.psicologia.maestros.campos_evolucion.create')
                         <a href="{{ route('admin.psicologia.maestros.campos_evolucion.create') }}"
                             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-indigo-600 hover:bg-indigo-700' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>Nuevo Campo</span>
                         </a>
+                        @endcanRoute
                     </div>
                 </div>
 
@@ -82,12 +84,15 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-right">
                                             <div class="flex items-center justify-end gap-1">
                                                 @if (!is_null($campo->psicologo_use_id))
+                                                    @canRoute('admin.psicologia.maestros.campos_evolucion.edit')
                                                     <a href="{{ route('admin.psicologia.maestros.campos_evolucion.edit', $campo->id_cne) }}"
                                                         class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all"
                                                         title="Editar">
                                                         <i class="fas fa-pen-to-square text-sm"></i>
                                                     </a>
+                                                    @endcanRoute
 
+                                                    @canRoute('admin.psicologia.maestros.campos_evolucion.destroy')
                                                     <form
                                                         action="{{ route('admin.psicologia.maestros.campos_evolucion.destroy', $campo->id_cne) }}"
                                                         method="POST" class="inline">
@@ -100,6 +105,7 @@
                                                             <i class="fas fa-trash-can text-sm"></i>
                                                         </button>
                                                     </form>
+                                                    @endcanRoute
                                                 @else
                                                     <span
                                                         class="w-8 h-8 inline-flex items-center justify-center text-gray-300 dark:text-gray-600 cursor-not-allowed"

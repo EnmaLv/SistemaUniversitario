@@ -23,11 +23,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.psicologia.maestros.estado_animos.create')
                     <a href="{{ route('admin.psicologia.maestros.estado_animos.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nuevo Estado de Ánimo</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -82,11 +84,14 @@
 
                         <div class="flex items-center justify-end gap-2 pt-4 border-t border-gray-100 dark:border-gray-800/80 mt-auto">
                             @if (!$enUso)
+                                @canRoute('admin.psicologia.maestros.estado_animos.edit')
                                 <a href="{{ route('admin.psicologia.maestros.estado_animos.edit', $estado->id_esa) }}"
                                     class="p-2.5 bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 rounded-xl hover:bg-sky-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
                                     title="Editar Estado de Ánimo">
                                     <i class="fas fa-pen"></i>
                                 </a>
+                                @endcanRoute
+                                @canRoute('admin.psicologia.maestros.estado_animos.destroy')
                                 <form action="{{ route('admin.psicologia.maestros.estado_animos.destroy', $estado->id_esa) }}"
                                     method="POST" class="inline-block"
                                     onsubmit="event.preventDefault(); AppModal.confirm('Confirmar', '¿Estás seguro de eliminar este estado de ánimo? El valor quedará libre.').then(c => { if(c) this.submit(); });">
@@ -98,6 +103,7 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
+                                @endcanRoute
                             @else
                                 <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-2.5 py-1 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center gap-1.5"
                                     title="Este estado está siendo usado en la última nota de evolución de un paciente y no puede editarse ni eliminarse.">

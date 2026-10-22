@@ -106,7 +106,7 @@
                                         </td>
                                     @else
                                         <x-table-actions :id="$usuario->id_use" :show="false" :edit="false" :toggle="false">
-                                            @canAction('seguridad_bloqueos', 'activar')
+                                            @canRoute('admin.configuracion.seguridad.bloqueos.desbloquear')
                                                 <form action="{{ route('admin.configuracion.seguridad.bloqueos.desbloquear', $usuario->id_use) }}" method="POST" class="inline form-desbloquear" data-usuario="{{ $usuario->username_use }}">
                                                     @csrf
                                                     @method('PUT')
@@ -114,7 +114,7 @@
                                                         <i class="fas fa-unlock text-xs"></i>
                                                     </button>
                                                 </form>
-                                            @endcanAction
+                                            @endcanRoute
                                         </x-table-actions>
                                     @endif
                                 </x-table-row>

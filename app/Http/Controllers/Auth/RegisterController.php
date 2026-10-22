@@ -83,8 +83,8 @@ class RegisterController extends Controller
         try {
             return $user->roles()
                 ->where(function ($query) {
-                    $query->whereRaw('LOWER(nombre) = ?', ['administrador'])
-                        ->orWhereRaw('LOWER(slug) = ?', ['administrador']);
+                    $query->whereRaw('LOWER(nombre_rol) = ?', ['administrador'])
+                        ->orWhereRaw('LOWER(slug_rol) = ?', ['administrador']);
                 })
                 ->exists();
         } catch (\Throwable $e) {

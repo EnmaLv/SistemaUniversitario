@@ -15,6 +15,7 @@
                         class="flex flex-col sm:flex-row sm:items-center gap-3 w-full" id="search-form">
                         
                         <div class="flex items-center gap-2 w-full sm:w-auto">
+                            @if (auth()->user()->puedeRuta('admin.psicologia.maestros.historias.exportar.pdf') || auth()->user()->puedeRuta('admin.psicologia.maestros.historias.exportar.excel'))
                             <div x-data="{ open: false }" class="relative flex-1 sm:flex-initial">
                                 <button @click="open = !open" @click.away="open = false" type="button"
                                     class="w-full sm:w-auto justify-center group flex items-center gap-2 px-4 h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-bold shadow-md shadow-indigo-200 dark:shadow-indigo-900/30 transition-all">
@@ -31,6 +32,7 @@
                                 <div x-show="open" x-transition x-cloak
                                     style="background-color: var(--bg-card); border-color: var(--border-color);"
                                     class="absolute left-0 sm:right-0 sm:left-auto mt-2 w-48 rounded-2xl shadow-xl border overflow-hidden z-20">
+                                    @canRoute('admin.psicologia.maestros.historias.exportar.pdf')
                                     <a href="{{ route('admin.psicologia.maestros.historias.exportar.pdf', ['search' => request('search'), 'pnf' => request('pnf'), 'edad' => request('edad'), 'fecha_desde' => request('fecha_desde'), 'fecha_hasta' => request('fecha_hasta'), 'enfermedad_id' => request('enfermedad_id'), 'prioridad' => request('prioridad'), 'avance_id' => request('avance_id'), 'esa_id' => request('esa_id')]) }}"
                                         target="_blank"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -43,6 +45,8 @@
                                         </div>
                                         <span class="text-sm font-bold" style="color: var(--text-main);">PDF</span>
                                     </a>
+                                    @endcanRoute
+                                    @canRoute('admin.psicologia.maestros.historias.exportar.excel')
                                     <a href="{{ route('admin.psicologia.maestros.historias.exportar.excel', ['search' => request('search'), 'pnf' => request('pnf'), 'edad' => request('edad'), 'fecha_desde' => request('fecha_desde'), 'fecha_hasta' => request('fecha_hasta'), 'enfermedad_id' => request('enfermedad_id'), 'prioridad' => request('prioridad'), 'avance_id' => request('avance_id'), 'esa_id' => request('esa_id')]) }}"
                                         class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                         <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
@@ -54,8 +58,10 @@
                                         </div>
                                         <span class="text-sm font-bold" style="color: var(--text-main);">Excel</span>
                                     </a>
+                                    @endcanRoute
                                 </div>
                             </div>
+                            @endif
 
                             <button type="button" @click="openModal = true"
                                 class="flex-1 sm:flex-initial justify-center px-4 h-11 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 font-bold text-sm rounded-2xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-2">

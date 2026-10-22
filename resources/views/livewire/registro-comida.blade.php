@@ -291,11 +291,13 @@
                                     Añadir otro registro
                                 </button>
 
-                                <button type="submit"
-                                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-6 py-3 shadow-md active:scale-[0.98] transition-all">
-                                    <i class="fas fa-save text-xs"></i>
-                                    Guardar {{ $tipoComidaLabel }}
-                                </button>
+                                @canAction(['registro_comida', 'comedor_registro_comida'], 'crear')
+                                    <button type="submit"
+                                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 hover:bg-red-900 text-white text-sm font-extrabold px-6 py-3 shadow-md active:scale-[0.98] transition-all">
+                                        <i class="fas fa-save text-xs"></i>
+                                        Guardar {{ $tipoComidaLabel }}
+                                    </button>
+                                @endcanAction
                             </div>
                         @else
                             <div class="mt-6 p-4 rounded-xl border flex items-center gap-3"

@@ -14,11 +14,13 @@
                     </p>
                 </div>
 
-                <a href="{{ route('admin.maestros.proveedores.create') }}"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                    <i class="fas fa-plus text-xs"></i>
-                    <span>Nuevo proveedor</span>
-                </a>
+                @canRoute('admin.maestros.proveedores.create')
+                    <a href="{{ route('admin.maestros.proveedores.create') }}"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span>Nuevo proveedor</span>
+                    </a>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"

@@ -11,9 +11,11 @@
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
+                @canRoute('admin.transporte.maestros.bus_marcas.store')
                 <button type="button" onclick="openModal('modalCrear')" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                     <i class="fas fa-plus text-xs"></i> Nueva marca
                 </button>
+                @endcanRoute
             </div>
 
             <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center" style="background-color:var(--bg-card);border-color:var(--border-color);">
@@ -74,6 +76,7 @@
                                 :on-edit="'abrirModalEditarMarca(' . json_encode(['id' => $marca->id_mav, 'nombre' => $marca->nombre_mav, 'descripcion' => $marca->descripcion_mav], JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'"
                             >
                                 @if ($marca->estaActivo())
+                                    @canRoute('admin.transporte.maestros.bus_marcas.destroy')
                                     <form action="{{ route('admin.transporte.maestros.bus_marcas.destroy', $marca) }}" method="POST" class="inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" onclick="event.stopPropagation(); confirmAccion(event, this, 'inactivar', 'marca')"
@@ -81,7 +84,9 @@
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </form>
+                                    @endcanRoute
                                 @else
+                                    @canRoute('admin.transporte.maestros.bus_marcas.activar')
                                     <form action="{{ route('admin.transporte.maestros.bus_marcas.activar', $marca) }}" method="POST" class="inline">
                                         @csrf @method('PUT')
                                         <button type="submit" onclick="event.stopPropagation(); confirmAccion(event, this, 'activar', 'marca')"
@@ -89,6 +94,7 @@
                                             <i class="fas fa-check text-xs"></i>
                                         </button>
                                     </form>
+                                    @endcanRoute
                                 @endif
                             </x-table-actions>
                         </x-table-row>
@@ -201,6 +207,8 @@
 
 @push('js')
     <script>
+    const puedeEditarFila = @json(auth()->user()->puedeRuta('admin.transporte.maestros.bus_marcas.update'));
+    const puedeInactivarFila = @json(auth()->user()->puedeRuta('admin.transporte.maestros.bus_marcas.destroy'));
     function openModal(id) {
         const modal = document.getElementById(id);
         if (!modal) {
@@ -404,6 +412,7 @@
                             <i class="fas fa-ellipsis-vertical text-xs"></i>
                         </div>
                         <div class="acciones-panel">
+                            ${puedeEditarFila ? `
                             <button type="button" onclick="event.stopPropagation()" class="btn-abrir-editar flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50"
                             data-id="${marca.id}"
                             data-nombre="${marca.nombre}"
@@ -411,6 +420,8 @@
                             title="Editar">
                                 <i class="fas fa-edit text-xs"></i>
                             </button>
+                            ` : ''}
+                        ${puedeInactivarFila ? `
                         <form action="/admin/transporte/maestros/bus_marcas/${marca.id}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
@@ -419,6 +430,7 @@
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                         </form>
+                        ` : ''}
                         </div>
                     </div>
                 </td>
@@ -426,7 +438,7 @@
         tbody.insertAdjacentHTML('beforeend', fila);
         // Re-bindear el nuevo botÃ³n de editar
         tbody.querySelector(`tr[data-id="${marca.id}"] .btn-abrir-editar`)
-            .addEventListener('click', function() {
+            ?.addEventListener('click', function() {
                 document.getElementById('editNombre').value      = this.dataset.nombre;
                 document.getElementById('editDescripcion').value = this.dataset.descripcion === 'Ninguna' ? '' : this.dataset.descripcion;
                 document.getElementById('formEditar').action     = `/admin/transporte/maestros/bus_marcas/${this.dataset.id}`;

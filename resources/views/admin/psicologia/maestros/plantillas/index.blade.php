@@ -24,11 +24,13 @@
                                 placeholder="Buscar por título...">
                         </div>
 
+                        @canRoute('admin.psicologia.maestros.plantillas.create')
                         <a href="{{ route('admin.psicologia.maestros.plantillas.create') }}"
                             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-indigo-600 hover:bg-indigo-700' }} text-white font-bold text-xs shadow-md transition-all active:scale-95 whitespace-nowrap">
                             <i class="fas fa-plus text-xs"></i>
                             <span>Nuevo Anexo</span>
                         </a>
+                        @endcanRoute
                     </div>
                 </div>
 
@@ -66,11 +68,14 @@
 
                                 <div class="flex items-center gap-2">
                                     @if(!$plantilla->esta_en_uso)
+                                        @canRoute('admin.psicologia.maestros.plantillas.edit')
                                         <a href="{{ route('admin.psicologia.maestros.plantillas.edit', $plantilla->id_sph) }}"
                                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-{{ $themeColor ?? 'indigo' }}-50 dark:bg-{{ $themeColor ?? 'indigo' }}-950/50 text-{{ $themeColor ?? 'indigo' }}-600 dark:text-{{ $themeColor ?? 'indigo' }}-400 hover:bg-{{ $themeColor ?? 'indigo' }}-600 hover:text-white transition-all text-xs"
                                             title="Editar Plantilla">
                                             <i class="fas fa-pen"></i>
                                         </a>
+                                        @endcanRoute
+                                        @canRoute('admin.psicologia.maestros.plantillas.destroy')
                                         <form action="{{ route('admin.psicologia.maestros.plantillas.destroy', $plantilla->id_sph) }}" method="POST" class="inline-block"
                                               onsubmit="event.preventDefault(); window.AppModal.confirm('Confirmar eliminación', '¿Estás seguro de eliminar esta plantilla?').then(c => { if(c) this.submit(); });">
                                             @csrf
@@ -81,6 +86,7 @@
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
+                                        @endcanRoute
                                     @endif
                                 </div>
                             </div>

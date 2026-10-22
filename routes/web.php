@@ -99,7 +99,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/maestros/categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('admin.maestros.categorias.destroy');
 
         //Activar una categoria especifica
-        Route::put('/maestros/categorias/{categoria}/activar', [CategoriaController::class, 'activar'])->name('admin.maestros.productos.activar');
+        Route::put('/maestros/categorias/{categoria}/activar', [CategoriaController::class, 'activar'])->name('admin.maestros.categorias.activar');
 
         /* Sedes */
         Route::get('/maestros/sedes', [SedeController::class, 'index'])->name('admin.maestros.sedes.index');

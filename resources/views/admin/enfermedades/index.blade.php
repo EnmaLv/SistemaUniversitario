@@ -17,11 +17,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button type="button" onclick="abrirModalCrearEnfermedad('modal-create-edit')"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                        <i class="fas fa-plus text-xs"></i>
-                        <span>Nueva Enfermedad</span>
-                    </button>
+                    @canRoute('admin.enfermedades.store')
+                        <button type="button" onclick="abrirModalCrearEnfermedad('modal-create-edit')"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span>Nueva Enfermedad</span>
+                        </button>
+                    @endcanRoute
                 </div>
             </div>
 

@@ -11,10 +11,12 @@
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
+                @canRoute('admin.transporte.maestros.bus_rutas.create')
                 <a href="{{ route('admin.transporte.maestros.bus_rutas.create') }}"
                     class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                     <i class="fas fa-plus text-xs"></i> Nueva ruta
                 </a>
+                @endcanRoute
             </div>
 
             <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center"

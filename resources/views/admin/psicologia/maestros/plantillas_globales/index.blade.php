@@ -110,7 +110,7 @@
             <div style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
                 class="rounded-2xl border shadow-sm p-6 sm:p-8 pb-24" x-data="{
                     secciones: @js($seccionesAlpine),
-                    isEditing: {{ ($plantilla?->estado_phc ?? 2) == 2 ? 'true' : 'false' }},
+                    isEditing: {{ ($plantilla?->estado_phc ?? 2) == 2 && auth()->user()->puedeRuta('admin.psicologia.maestros.plantillas_globales.update') ? 'true' : 'false' }},
                     showModal: false,
                     search: '',
                 
@@ -415,6 +415,7 @@
                     </div>
 
                     {{-- Floating Action Buttons --}}
+                    @canRoute('admin.psicologia.maestros.plantillas_globales.update')
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                         class="fixed bottom-8 right-8 z-30 flex items-center gap-3 p-2 rounded-full shadow-2xl border">
                         <template x-if="isEditing">
@@ -446,6 +447,7 @@
                             </button>
                         </template>
                     </div>
+                    @endcanRoute
 
                 </form>
             </div>

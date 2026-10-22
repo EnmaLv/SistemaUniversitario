@@ -42,6 +42,7 @@
                     </div>
 
                     <div class="flex sm:flex-row flex-col justify-center gap-3 mt-8">
+                        @canRoute('admin.psicologia.maestros.citas.update.prioridad')
                         <form method="POST" action="{{ route('admin.psicologia.maestros.citas.update.prioridad', $citaAviso->id_cps) }}"
                             class="w-full sm:w-1/2">
                             @csrf
@@ -52,6 +53,7 @@
                                 Sí, cambiar a Alta
                             </button>
                         </form>
+                        @endcanRoute
 
                         <button type="button"
                             onclick="document.getElementById('avisoAtencionModal').style.display='none'"

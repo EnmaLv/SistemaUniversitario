@@ -5,6 +5,7 @@
                 {{ __('Grupo: ') . $grupoHorario->nombre_gha }}
             </h2>
             <div class="flex space-x-2">
+                @canRoute('admin.psicologia.maestros.grupos_horarios.edit')
                 @if(!empty($tieneCitasPendientes))
                     <button type="button" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed" title="No puedes editar mientras tengas citas pendientes">
                         Editar Grupo
@@ -14,6 +15,7 @@
                         Editar Grupo
                     </a>
                 @endif
+                @endcanRoute
                 <a href="{{ route('admin.psicologia.maestros.grupos_horarios.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition">
                     ← Volver
                 </a>
@@ -61,6 +63,7 @@
                     {{-- ================================Acciones================================== --}}
                     <div class="mt-6 flex space-x-4">
                         @if($grupoHorario->status_id != \App\Models\salud\GrupoHorario::STATUS_ACTIVE)
+                            @canRoute('admin.psicologia.maestros.grupos_horarios.activate')
                             @if(!empty($tieneCitasPendientes))
                                 <button type="button" disabled class="bg-green-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed" title="No puedes activar mientras tengas citas pendientes">
                                     Activar Grupo
@@ -74,7 +77,9 @@
                                     </button>
                                 </form>
                             @endif
+                            @endcanRoute
                         @else
+                            @canRoute('admin.psicologia.maestros.grupos_horarios.deactivate')
                             @if(!empty($tieneCitasPendientes))
                                 <button type="button" disabled class="bg-yellow-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed" title="No puedes desactivar mientras tengas citas pendientes">
                                     Desactivar Grupo
@@ -88,8 +93,10 @@
                                     </button>
                                 </form>
                             @endif
+                            @endcanRoute
                         @endif
 
+                        @canRoute('admin.psicologia.maestros.grupos_horarios.destroy')
                         @if(!empty($tieneCitasPendientes))
                             <button type="button" disabled class="bg-red-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed" title="No puedes eliminar mientras tengas citas pendientes">
                                 Eliminar Grupo
@@ -103,6 +110,7 @@
                                 </button>
                             </form>
                         @endif
+                        @endcanRoute
                     </div>
                 </div>
             </div>

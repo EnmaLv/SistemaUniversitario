@@ -91,6 +91,7 @@
                             class="flex items-center justify-between gap-2 pt-4 border-t border-gray-100 dark:border-gray-800/80 mt-4">
                             <div>
                                 @if (!$esActivo)
+                                    @canRoute('admin.psicologia.maestros.grupos_horarios.activate')
                                     @if (!empty($tieneCitasPendientes))
                                         <button type="button" disabled title="Bloqueado por citas pendientes"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 cursor-not-allowed">
@@ -108,7 +109,9 @@
                                             </button>
                                         </form>
                                     @endif
+                                    @endcanRoute
                                 @else
+                                    @canRoute('admin.psicologia.maestros.grupos_horarios.deactivate')
                                     @if (!empty($tieneCitasPendientes))
                                         <button type="button" disabled title="Bloqueado por citas pendientes"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 cursor-not-allowed">
@@ -126,6 +129,7 @@
                                             </button>
                                         </form>
                                     @endif
+                                    @endcanRoute
                                 @endif
                             </div>
 
@@ -154,6 +158,7 @@
                                 @endif
 
                                 <!-- Eliminar -->
+                                @canRoute('admin.psicologia.maestros.grupos_horarios.destroy')
                                 @if (!empty($tieneCitasPendientes))
                                     <span
                                         class="p-2.5 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 rounded-xl text-xs font-bold flex items-center justify-center cursor-not-allowed"
@@ -175,6 +180,7 @@
                                         </button>
                                     </form>
                                 @endif
+                                @endcanRoute
                             </div>
                         </div>
 

@@ -268,6 +268,7 @@
                 <span>Cancelar</span>
             </a>
 
+            @canRoute('admin.psicologia.maestros.horarios.store')
             <div class="h-5 w-[1px] bg-gray-200 dark:bg-[#222744] mx-1"></div>
 
             <button type="submit" title="Confirmar y Guardar"
@@ -275,6 +276,7 @@
                 class="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white dark:bg-[#0a2720] dark:hover:bg-[#0f3d32] border border-emerald-600 dark:border-[#135343] dark:text-[#34d399] flex items-center justify-center transition-all active:scale-90 shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
                 <i class="fas fa-check text-[16px]"></i>
             </button>
+            @endcanRoute
         </div>
     </div>
 </form>

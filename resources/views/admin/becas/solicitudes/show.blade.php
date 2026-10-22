@@ -244,6 +244,7 @@
 
                 <div class="p-6">
                     @if ($solicitud->estado_solicitud_sob === 0)
+                        @canRoute('admin.becas.solicitudes.verificar')
                         <form action="{{ route('admin.becas.solicitudes.verificar', $solicitud->id_sob) }}" method="POST"
                             id="form-verificar">
                             @csrf
@@ -312,6 +313,11 @@
                                 </button>
                             </div>
                         </form>
+                        @else
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Solicitud pendiente de verificación.
+                        </p>
+                        @endcanRoute
                     @else
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-sm">
                             <div>
@@ -348,12 +354,14 @@
                             @endif
 
                             @if ($solicitud->estado_solicitud_sob === 1)
+                                @canRoute('admin.becas.solicitudes.verificar')
                                 <div class="mt-6 flex justify-end border-t pt-4" style="border-color: var(--border-color);">
                                     <button type="button" onclick="document.getElementById('modalRevocar').classList.replace('hidden', 'flex')"
                                         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/40 text-sm font-bold shadow-sm transition-all">
                                         <i class="fas fa-ban text-xs"></i> Revocar Beca
                                     </button>
                                 </div>
+                                @endcanRoute
                             @endif
                         </div>
                     @endif

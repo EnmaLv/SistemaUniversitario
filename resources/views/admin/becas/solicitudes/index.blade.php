@@ -14,6 +14,7 @@
                     </p>
                 </div>
 
+                @canRoute('admin.becas.solicitudes.create')
                 <div class="flex items-center gap-3">
                     <a href="{{ route('admin.becas.solicitudes.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
@@ -21,6 +22,7 @@
                         <span>Registrar Solicitud</span>
                     </a>
                 </div>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"

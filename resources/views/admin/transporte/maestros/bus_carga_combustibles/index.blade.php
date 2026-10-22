@@ -10,9 +10,11 @@
             </p>
         </div>
         <div>
+            @canRoute('admin.transporte.maestros.bus_carga_combustibles.create')
             <a href="{{ route('admin.transporte.maestros.bus_carga_combustibles.create') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                 <i class="fas fa-plus"></i> Nueva Carga
             </a>
+            @endcanRoute
         </div>
     </div>
 
@@ -82,10 +84,13 @@
                             <td class="text-center">{{ number_format($c->km_al_cargar_ccb, 1) }} km</td>
                             <td class="text-center">
                                 <div class="rd-action-group">
+                                    @canRoute('admin.transporte.maestros.bus_carga_combustibles.edit')
                                     <a href="{{ route('admin.transporte.maestros.bus_carga_combustibles.edit', $c) }}"
                                         class="rd-action" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcanRoute
+                                    @canRoute('admin.transporte.maestros.bus_carga_combustibles.destroy')
                                     <form action="{{ route('admin.transporte.maestros.bus_carga_combustibles.destroy', $c) }}"
                                         method="POST" style="display:inline;">
                                         @csrf @method('DELETE')
@@ -94,6 +99,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endcanRoute
                                 </div>
                             </td>
                         </x-table-row>

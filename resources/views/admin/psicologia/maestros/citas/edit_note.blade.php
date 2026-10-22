@@ -233,12 +233,14 @@
                                         </template>
                                     </div>
 
+                                    @canRoute('admin.enfermedades.store')
                                     <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                                         <a onclick="abrirModalCrearEnfermedad('modal-create-edit')"
                                             class="block text-center text-[9px] font-black text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 uppercase tracking-widest">
                                             ¿No aparece? Crear nueva
                                         </a>
                                     </div>
+                                    @endcanRoute
 
                                 </div>
                             </div>
@@ -338,10 +340,12 @@
                         <i class="fas fa-arrow-left text-lg"></i>
                     </a>
 
+                    @canRoute('admin.psicologia.maestros.citas.campos.store.ajax')
                     <button type="button" @click="showModalCampos = true" title="Añadir Campo"
                         class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-600 hover:text-white text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center transition-all active:scale-95 border border-indigo-100 dark:border-indigo-800/50">
                         <i class="fas fa-plus text-lg"></i>
                     </button>
+                    @endcanRoute
 
                     <button type="submit" @click="syncStructured($event)" title="Guardar Nota"
                         class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center transition-all active:scale-95 border border-emerald-100 dark:border-emerald-800/50">

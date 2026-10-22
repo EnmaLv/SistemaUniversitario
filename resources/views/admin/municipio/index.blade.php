@@ -10,10 +10,12 @@
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
-                <button type="button" onclick="window.abrirCrearMunicipio()"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
-                    <i class="fas fa-plus text-xs"></i><span>Nuevo municipio</span>
-                </button>
+                @canAction('ubicaciones_municipios', 'crear')
+                    <button type="button" onclick="window.abrirCrearMunicipio()"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
+                        <i class="fas fa-plus text-xs"></i><span>Nuevo municipio</span>
+                    </button>
+                @endcanAction
             </div>
             @livewire('admin.municipio-index')
         </div>

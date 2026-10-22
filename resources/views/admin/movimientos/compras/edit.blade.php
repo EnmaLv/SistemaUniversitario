@@ -59,24 +59,26 @@
 
                 @if ($compra->estado_compra_cmp == 'Pendiente')
 
-                    <form
-                        action="{{ route('admin.movimientos.compras.cancelar', $compra) }}"
-                        method="POST">
+                    @canRoute('admin.movimientos.compras.cancelar')
+                        <form
+                            action="{{ route('admin.movimientos.compras.cancelar', $compra) }}"
+                            method="POST">
 
-                        @csrf
-                        <button
-                            type="submit"
-                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all hover:bg-red-50 dark:hover:bg-red-950/20"
-                            style="
-                                border-color: var(--border-color);
-                                color: var(--text-main);
-                            "
-                            onclick="confirmDelete(event, this)">
+                            @csrf
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold transition-all hover:bg-red-50 dark:hover:bg-red-950/20"
+                                style="
+                                    border-color: var(--border-color);
+                                    color: var(--text-main);
+                                "
+                                onclick="confirmDelete(event, this)">
 
-                            <i class="fas fa-arrow-left text-[10px]"></i>
-                            Cancelar y volver
-                        </button>
-                    </form>
+                                <i class="fas fa-arrow-left text-[10px]"></i>
+                                Cancelar y volver
+                            </button>
+                        </form>
+                    @endcanRoute
                 @elseif ($compra->estado_compra_cmp == 'Enviado al proveedor')
                     <a
                         href="{{ url('admin/movimientos/compras') }}"
@@ -362,14 +364,16 @@
                                         Verifica las fechas antes de finalizar la requisición.
                                     </span>
                                 </div>
-                                <button
-                                    type="submit"
-                                    class="rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all">
+                                @canRoute('admin.movimientos.compras.finalizarCompra')
+                                    <button
+                                        type="submit"
+                                        class="rd-submit-btn inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md shadow-red-800/20 active:scale-95 transition-all">
 
-                                    <i class="fas fa-check text-xs"></i>
+                                        <i class="fas fa-check text-xs"></i>
 
-                                    Finalizar requisición
-                                </button>
+                                        Finalizar requisición
+                                    </button>
+                                @endcanRoute
                             </div>
                         </form>
                     </div>

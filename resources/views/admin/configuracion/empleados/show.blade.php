@@ -11,9 +11,11 @@
             </p>
         </div>
         <div class="d-flex gap-2">
+            @canRoute('admin.configuracion.empleados.edit')
             <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_use) }}" class="inline-flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800">
                 <i class="fas fa-edit"></i> Editar
             </a>
+            @endcanRoute
             <a href="{{ route('admin.configuracion.empleados.index') }}" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>

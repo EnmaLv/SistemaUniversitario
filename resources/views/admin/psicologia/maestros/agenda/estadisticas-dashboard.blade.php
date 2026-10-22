@@ -71,6 +71,7 @@
                 </div>
             </div>
 
+            @canAction(['agenda', 'agenda_estadisticas'], 'exportar')
             <div x-data="{ openExport: false }" class="relative z-20">
                 <button @click="openExport = !openExport" @click.away="openExport = false"
                     style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);"
@@ -132,6 +133,7 @@
                     </button>
                 </div>
             </div>
+            @endcanAction
         </div>
     </div>
 

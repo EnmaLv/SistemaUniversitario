@@ -10,9 +10,11 @@
             </p>
         </div>
         <div>
+            @canRoute('admin.transporte.maestros.bus_mantenimientos.create')
             <a href="{{ route('admin.transporte.maestros.bus_mantenimientos.create') }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                 <i class="fas fa-plus"></i> Nuevo Mantenimiento
             </a>
+            @endcanRoute
         </div>
     </div>
 
@@ -80,10 +82,13 @@
                             <td class="text-center">{!! $m->estado_badge !!}</td>
                             <td class="text-center">
                                 <div class="rd-action-group">
+                                    @canRoute('admin.transporte.maestros.bus_mantenimientos.edit')
                                     <a href="{{ route('admin.transporte.maestros.bus_mantenimientos.edit', $m) }}"
                                         class="rd-action" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcanRoute
+                                    @canRoute('admin.transporte.maestros.bus_mantenimientos.destroy')
                                     <form action="{{ route('admin.transporte.maestros.bus_mantenimientos.destroy', $m) }}"
                                         method="POST" style="display:inline;">
                                         @csrf @method('DELETE')
@@ -92,6 +97,7 @@
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
+                                    @endcanRoute
                                 </div>
                             </td>
                         </x-table-row>

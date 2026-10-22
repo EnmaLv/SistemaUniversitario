@@ -90,11 +90,13 @@
                     <i class="fa-solid fa-calendar-days text-xs w-4 text-center flex-shrink-0"></i>
                     <span class="truncate">Mis Citas Activas</span>
                 </a>
+                @canRoute('admin.psicologia.maestros.citas.create')
                 <a href="{{ route('admin.psicologia.maestros.citas.create') }}"
                     class="flex items-center gap-2.5 h-8 rounded-lg px-3 text-xs font-medium transition-all {{ request()->routeIs('admin.psicologia.maestros.agenda.estadisticas') ? 'bg-[#623739] text-white font-semibold' : 'text-white/80 hover:bg-[#623739]/60 hover:text-white' }}">
                     <i class="fa-solid fa-calendar-plus text-xs w-4 text-center flex-shrink-0"></i>
                     <span class="truncate">Solicitar Cita</span>
                 </a>
+                @endcanRoute
             </div>
         </div>
     @endcanMenu

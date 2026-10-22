@@ -13,11 +13,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.psicologia.maestros.prioridades.create')
                     <a href="{{ route('admin.psicologia.maestros.prioridades.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-sky-600 hover:bg-sky-700' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nueva Prioridad</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -85,6 +87,7 @@
                                                     <i class="fas fa-lock text-xs"></i>
                                                 </span>
                                             @else
+                                                @canRoute('admin.psicologia.maestros.prioridades.destroy')
                                                 <form id="form-delete-{{ $prioridad->id_pat }}"
                                                     action="{{ route('admin.psicologia.maestros.prioridades.destroy', $prioridad->id_pat) }}"
                                                     method="POST" class="inline">
@@ -97,6 +100,7 @@
                                                         <i class="fas fa-trash-alt text-xs"></i>
                                                     </button>
                                                 </form>
+                                                @endcanRoute
                                             @endif
                                         </div>
                                     </td>

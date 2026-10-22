@@ -27,9 +27,11 @@
                                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                     </button>
+                                    @canRoute('admin.psicologia.maestros.citas.create')
                                     <a href="{{ route('admin.psicologia.maestros.citas.create') }}"
                                         class="inline-flex shrink-0 whitespace-nowrap items-center px-4 py-2 sm:px-5 sm:py-2.5 bg-blue-800 hover:bg-blue-700 text-white text-sm font-bold rounded-2xl transition-all shadow-md shadow-blue-100 dark:shadow-blue-900/30">+
                                         Solicitar cita</a>
+                                    @endcanRoute
                                 </div>
                             @endif
                         </div>
@@ -208,12 +210,14 @@
                                                                 }
                                                             @endphp
                                                             @if ($puedeCancelar)
+                                                                @canRoute('admin.psicologia.maestros.citas.cancel')
                                                                 <button type="button"
                                                                     onclick="openPatientCancelModal('{{ route('admin.psicologia.maestros.citas.cancel', $cita->id_cps) }}', '{{ $cita->id_cps }}')"
                                                                     class="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700/60 dark:hover:border-red-700/60 text-gray-400 hover:text-rose-600 hover:bg-rose-600/10 hover:border-rose-300 inline-flex items-center justify-center transition-all active:scale-95"
                                                                     title="Cancelar cita">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
+                                                                @endcanRoute
                                                             @else
                                                                 <span
                                                                     class="text-[10px] text-slate-400 bg-slate-100 dark:bg-gray-700 px-2 py-1 rounded-lg font-bold uppercase tracking-wide whitespace-nowrap">Cita
@@ -398,6 +402,7 @@
                                                                                 rows="2" placeholder="Explique por qué no puede asistir en estos horarios..."></textarea>
                                                                         </div>
 
+                                                                        @canRoute('admin.psicologia.maestros.citas.responder_propuesta')
                                                                         <div
                                                                             class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-gray-700/50">
                                                                             <button type="submit"
@@ -406,6 +411,7 @@
                                                                                 Selecciona una opción
                                                                             </button>
                                                                         </div>
+                                                                        @endcanRoute
                                                                     </form>
                                                                 </div>
                                                             </div>

@@ -21,16 +21,18 @@
                         Registro inmutable de la actividad del sistema · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
-                @canAction('bitacora', 'exportar')
-                    <div class="flex gap-2">
-                        <a href="{{ route('admin.configuracion.bitacora.exportar_csv', $consultaExportar) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
-                            <i class="fas fa-file-csv text-xs"></i> Exportar CSV
-                        </a>
-                        <a href="{{ route('admin.configuracion.bitacora.exportar_pdf', $consultaExportar) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-extrabold shadow-sm transition-all active:scale-95" style="border-color:var(--border-color);color:var(--text-main);background-color:var(--bg-card);">
-                            <i class="fas fa-file-pdf text-xs" style="color:var(--color-primary)"></i> Exportar PDF
-                        </a>
-                    </div>
-                @endcanAction
+                <div class="flex gap-2">
+                    @canRoute('admin.configuracion.bitacora.exportar_csv')
+                    <a href="{{ route('admin.configuracion.bitacora.exportar_csv', $consultaExportar) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
+                        <i class="fas fa-file-csv text-xs"></i> Exportar CSV
+                    </a>
+                    @endcanRoute
+                    @canRoute('admin.configuracion.bitacora.exportar_pdf')
+                    <a href="{{ route('admin.configuracion.bitacora.exportar_pdf', $consultaExportar) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-extrabold shadow-sm transition-all active:scale-95" style="border-color:var(--border-color);color:var(--text-main);background-color:var(--bg-card);">
+                        <i class="fas fa-file-pdf text-xs" style="color:var(--color-primary)"></i> Exportar PDF
+                    </a>
+                    @endcanRoute
+                </div>
             </div>
 
             <div class="rounded-2xl border shadow-sm overflow-hidden" style="background-color:var(--bg-card);border-color:var(--border-color);">

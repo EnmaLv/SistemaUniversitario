@@ -13,10 +13,12 @@
                         {{ \Carbon\Carbon::now()->format('d/m/Y') }}
                     </p>
                 </div>
+                @canRoute('admin.transporte.maestros.bus_tipo_combustibles.store')
                 <button type="button" onclick="openModal('modalCrear')"
                     class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-800 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg transition-all hover:bg-red-900 active:scale-95">
                     <i class="fas fa-plus text-xs"></i> Nuevo tipo
                 </button>
+                @endcanRoute
             </div>
 
             <div class="mb-3 flex flex-col gap-4 rounded-2xl border p-2.5 shadow-sm lg:flex-row lg:items-center"
@@ -91,6 +93,7 @@
                                         baseUrl="admin/transporte/maestros/bus_tipo_combustibles" :show="false"
                                         :toggle="false" :on-edit="'abrirModalEditarTipo(' . json_encode(['id' => $tipo->id_tcb, 'nombre' => $tipo->nombre_tcb, 'descripcion' => $tipo->descripcion_tcb], JSON_HEX_APOS | JSON_HEX_TAG | JSON_HEX_AMP) . ')'">
                                         @if ($tipo->estaActivo())
+                                            @canRoute('admin.transporte.maestros.bus_tipo_combustibles.destroy')
                                             <form
                                                 action="{{ route('admin.transporte.maestros.bus_tipo_combustibles.destroy', $tipo) }}"
                                                 method="POST" class="inline">
@@ -102,7 +105,9 @@
                                                     <i class="fas fa-trash-alt text-xs"></i>
                                                 </button>
                                             </form>
+                                            @endcanRoute
                                         @else
+                                            @canRoute('admin.transporte.maestros.bus_tipo_combustibles.activar')
                                             <form
                                                 action="{{ route('admin.transporte.maestros.bus_tipo_combustibles.activar', $tipo) }}"
                                                 method="POST" class="inline">
@@ -114,6 +119,7 @@
                                                     <i class="fas fa-check text-xs"></i>
                                                 </button>
                                             </form>
+                                            @endcanRoute
                                         @endif
                                     </x-table-actions>
                                 </x-table-row>
@@ -252,6 +258,8 @@
     <script>
         const BASE_URL = "{{ url('admin/transporte/maestros/bus_tipo_combustibles') }}";
         const CSRF = '{{ csrf_token() }}';
+        const puedeEditarFila = @json(auth()->user()->puedeRuta('admin.transporte.maestros.bus_tipo_combustibles.update'));
+        const puedeInactivarFila = @json(auth()->user()->puedeRuta('admin.transporte.maestros.bus_tipo_combustibles.destroy'));
 
         function openModal(id) {
             const modal = document.getElementById(id);
@@ -441,6 +449,7 @@
                             <i class="fas fa-ellipsis-vertical text-xs"></i>
                         </div>
                         <div class="acciones-panel">
+                            ${puedeEditarFila ? `
                             <button type="button" onclick="event.stopPropagation()"
                                 class="btn-abrir-editar flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50"
                                 data-id="${tipo.id}"
@@ -449,6 +458,8 @@
                                 title="Editar">
                                 <i class="fas fa-edit text-xs"></i>
                             </button>
+                            ` : ''}
+                            ${puedeInactivarFila ? `
                             <form action="${BASE_URL}/${tipo.id}" method="POST" style="display:inline;">
                                 <input type="hidden" name="_token" value="${CSRF}">
                                 <input type="hidden" name="_method" value="DELETE">
@@ -459,6 +470,7 @@
                                     <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </form>
+                            ` : ''}
                         </div>
                     </div>
                 </td>
@@ -467,7 +479,7 @@
 
             // Bindear el botón editar de la fila recién creada
             tbody.querySelector(`tr[data-id="${tipo.id}"] .btn-abrir-editar`)
-                .addEventListener('click', function() {
+                ?.addEventListener('click', function() {
                     document.getElementById('editNombre').value = this.dataset.nombre;
                     document.getElementById('editDescripcion').value = this.dataset.descripcion === 'Ninguna' ? '' :
                         this.dataset.descripcion;

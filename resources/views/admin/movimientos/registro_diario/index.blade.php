@@ -23,10 +23,12 @@
                             <p class="rd-blur-text">
                                 Selecciona primero la comida del día y la cantidad servida para poder registrar a los estudiantes.
                             </p>
-                            <a href="{{ route('admin.movimientos.registro_comida.index') }}"
-                                class="rd-btn rd-btn-primary rd-blur-btn">
-                                Ir a la sección de comida
-                            </a>
+                            @canRoute('admin.movimientos.registro_comida.index')
+                                <a href="{{ route('admin.movimientos.registro_comida.index') }}"
+                                    class="rd-btn rd-btn-primary rd-blur-btn">
+                                    Ir a la sección de comida
+                                </a>
+                            @endcanRoute
                         </div>
                     </div>
                 @endif

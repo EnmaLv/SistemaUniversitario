@@ -23,11 +23,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.psicologia.maestros.publicaciones.create')
                     <a href="{{ route('admin.psicologia.maestros.publicaciones.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nuevo Anuncio</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
             <div class="space-y-6">
@@ -67,6 +69,7 @@
                                 </div>
                             </div>
 
+                            @if (auth()->user()->puedeRuta('admin.psicologia.maestros.publicaciones.edit') || auth()->user()->puedeRuta('admin.psicologia.maestros.publicaciones.destroy'))
                             <div class="relative" x-data="{ open: false }" @click.away="open = false">
                                 <button @click="open = !open"
                                     class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
@@ -82,6 +85,7 @@
                                     style="background-color: var(--bg-card); border-color: var(--border-color);"
                                     class="absolute right-0 mt-2 w-44 rounded-xl shadow-xl border divide-y divide-gray-100 dark:divide-gray-800 z-50 overflow-hidden"
                                     style="display: none;">
+                                    @canRoute('admin.psicologia.maestros.publicaciones.edit')
                                     <div class="py-1">
                                         <a href="{{ route('admin.psicologia.maestros.publicaciones.edit', $pub->id) }}"
                                             class="group flex items-center px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition">
@@ -90,6 +94,8 @@
                                             Editar
                                         </a>
                                     </div>
+                                    @endcanRoute
+                                    @canRoute('admin.psicologia.maestros.publicaciones.destroy')
                                     <div class="py-1">
                                         <form
                                             action="{{ route('admin.psicologia.maestros.publicaciones.destroy', $pub->id) }}"
@@ -105,8 +111,10 @@
                                             </button>
                                         </form>
                                     </div>
+                                    @endcanRoute
                                 </div>
                             </div>
+                            @endif
                         </div>
 
                         <div class="p-4 sm:p-6">
@@ -163,11 +171,13 @@
                             No has creado ninguna publicación aún. Haz clic en "Nuevo Anuncio" para realizar tu primer
                             comunicado.
                         </p>
+                        @canRoute('admin.psicologia.maestros.publicaciones.create')
                         <a href="{{ route('admin.psicologia.maestros.publicaciones.create') }}"
                             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white text-xs font-bold shadow-md transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             <span>Nuevo Anuncio</span>
                         </a>
+                        @endcanRoute
                     </div>
                 @endforelse
             </div>

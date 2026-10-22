@@ -91,11 +91,17 @@
                                 @endif
                             </td>
                             <x-table-actions :id="$datos->id_esd" baseUrl="admin/estado" :status="(int) $datos->status_id === 1" :show="false" :edit="false" :toggle="false">
-                                <button wire:click="edit({{ $datos->id_esd }})" @click="abrirEditar = true" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors" title="Editar"><i class="fas fa-edit text-xs"></i></button>
+                                @canAction('ubicaciones_estados', 'editar')
+                                    <button wire:click="edit({{ $datos->id_esd }})" @click="abrirEditar = true" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors" title="Editar"><i class="fas fa-edit text-xs"></i></button>
+                                @endcanAction
                                 @if((int) $datos->status_id === 1)
-                                    <button wire:click="confirmDestroy({{ $datos->id_esd }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>
+                                    @canAction('ubicaciones_estados', 'eliminar')
+                                        <button wire:click="confirmDestroy({{ $datos->id_esd }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>
+                                    @endcanAction
                                 @else
-                                    <button wire:click="confirmActivate({{ $datos->id_esd }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors" title="Reactivar"><i class="fas fa-undo text-xs"></i></button>
+                                    @canAction('ubicaciones_estados', 'activar')
+                                        <button wire:click="confirmActivate({{ $datos->id_esd }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors" title="Reactivar"><i class="fas fa-undo text-xs"></i></button>
+                                    @endcanAction
                                 @endif
                             </x-table-actions>
                         </x-table-row>

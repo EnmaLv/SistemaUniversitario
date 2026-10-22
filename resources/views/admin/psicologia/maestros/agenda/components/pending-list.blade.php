@@ -120,12 +120,14 @@
                                 <span
                                     class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{{ $shortName }}</span>
                             </div>
+                            @canRoute('admin.psicologia.maestros.agenda.crear_cita_manual')
                             <button type="button"
                                 class="ml-2 shrink-0 agregar-manual-btn text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 rounded-xl px-2.5 py-1 border border-amber-200 dark:border-amber-800/80 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all active:scale-95 shadow-2xs"
                                 data-paciente-id="{{ $pacienteSinCita->id_use ?? ($pacienteSinCita->id ?? $pacienteSinCita->getKey()) }}"
                                 data-paciente-name="{{ trim($pacienteSinCita->name ?? '') ?: $shortName }}">
                                 Agregar
                             </button>
+                            @endcanRoute
                         </li>
                     @endforeach
                 </ul>

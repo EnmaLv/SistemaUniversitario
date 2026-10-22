@@ -14,11 +14,13 @@
         </div>
 
         <div class="flex items-center gap-3">
+            @canRoute('admin.transporte.maestros.bus_vehiculos.create')
             <a href="{{ route('admin.transporte.maestros.bus_vehiculos.create') }}"
                 class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-extrabold text-sm shadow-lg active:scale-95 transition-all">
                 <i class="fas fa-bus text-xs"></i>
                 <span>Nuevo Vehiculo</span>
             </a>
+            @endcanRoute
         </div>
     </div>
 

@@ -54,10 +54,12 @@
                         <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400">
                             Modelo
                         </label>
+                        @canRoute('admin.transporte.maestros.bus_modelos.store')
                         <button type="button" data-toggle="modal" data-target="#modalAddModelo"
                             class="text-[10px] font-bold text-rose-700 hover:text-rose-800 transition-colors flex items-center gap-1">
                             <i class="fas fa-plus-circle"></i> Añadir
                         </button>
+                        @endcanRoute
                     </div>
                     <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                         style="border-color: var(--border-color);">
@@ -211,10 +213,12 @@
                         <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400">
                             Tipo de Combustible
                         </label>
+                        @canRoute('admin.transporte.maestros.bus_tipo_combustibles.store')
                         <button type="button" data-toggle="modal" data-target="#modalAddCombustible"
                             class="text-[10px] font-bold text-rose-700 hover:text-rose-800 transition-colors flex items-center gap-1">
                             <i class="fas fa-plus-circle"></i> Añadir
                         </button>
+                        @endcanRoute
                     </div>
                     <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                         style="border-color: var(--border-color);">

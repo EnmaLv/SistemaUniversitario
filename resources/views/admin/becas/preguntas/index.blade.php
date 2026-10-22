@@ -15,6 +15,7 @@
                     </p>
                 </div>
 
+                @canRoute('admin.becas.preguntas.create')
                 <div class="flex items-center gap-3">
                     <a href="{{ route('admin.becas.preguntas.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass ?? 'bg-red-800 hover:bg-red-900 hover:text-white' }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
@@ -22,6 +23,7 @@
                         <span>Crear Pregunta</span>
                     </a>
                 </div>
+                @endcanRoute
             </div>
 
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"

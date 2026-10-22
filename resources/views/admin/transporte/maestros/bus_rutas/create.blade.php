@@ -368,6 +368,7 @@
 
             <script>
                 const paradasDisponibles = @json($paradas);
+                const puedeCrearParada = @json(auth()->user()->puedeRuta('admin.transporte.maestros.bus_paradas.create'));
                 let secuenciaRuta = [];
                 let map;
                 let polyline;
@@ -381,6 +382,7 @@
                     }).addTo(map);
 
                     map.on('click', function(evento) {
+                        if (!puedeCrearParada) return;
                         const lat = evento.latlng.lat.toFixed(7);
                         const lng = evento.latlng.lng.toFixed(7);
                         const urlCrearParada = @json(route('admin.transporte.maestros.bus_paradas.create')) +

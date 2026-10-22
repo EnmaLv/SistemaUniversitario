@@ -1,3 +1,4 @@
+@canRoute('productos.actualizar.tasa')
 @if (session()->has('tasa_pendiente') || session()->has('tasa_obligatoria'))
 
 <script>
@@ -114,3 +115,4 @@
 </script>
 
 @endif
+@endcanRoute

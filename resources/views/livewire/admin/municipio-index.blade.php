@@ -38,7 +38,20 @@
                         <td class="px-6 py-4 text-center whitespace-nowrap font-bold" style="color:var(--text-main);">{{ $datos->nombre_mun }}</td>
                         <td class="px-6 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">{{ $datos->estado->nombre_esd ?? 'Sin estado' }}</td>
                         <td class="px-6 py-4 text-center whitespace-nowrap">@if((int) $datos->status_id === 1)<span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900"><i class="fas fa-check-circle"></i> Activo</span>@else<span class="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-black rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900"><i class="fas fa-times-circle"></i> Inactivo</span>@endif</td>
-                        <x-table-actions :id="$datos->id_mun" baseUrl="admin/municipio" :status="(int) $datos->status_id === 1" :show="false" :edit="false" :toggle="false"><button wire:click="edit({{ $datos->id_mun }})" @click="abrirEditar=true" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50" title="Editar"><i class="fas fa-edit text-xs"></i></button>@if((int) $datos->status_id === 1)<button wire:click="confirmDestroy({{ $datos->id_mun }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>@else<button wire:click="confirmActivate({{ $datos->id_mun }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50" title="Reactivar"><i class="fas fa-undo text-xs"></i></button>@endif</x-table-actions>
+                        <x-table-actions :id="$datos->id_mun" baseUrl="admin/municipio" :status="(int) $datos->status_id === 1" :show="false" :edit="false" :toggle="false">
+                            @canAction('ubicaciones_municipios', 'editar')
+                                <button wire:click="edit({{ $datos->id_mun }})" @click="abrirEditar=true" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50" title="Editar"><i class="fas fa-edit text-xs"></i></button>
+                            @endcanAction
+                            @if((int) $datos->status_id === 1)
+                                @canAction('ubicaciones_municipios', 'eliminar')
+                                    <button wire:click="confirmDestroy({{ $datos->id_mun }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50" title="Inactivar"><i class="fas fa-trash-alt text-xs"></i></button>
+                                @endcanAction
+                            @else
+                                @canAction('ubicaciones_municipios', 'activar')
+                                    <button wire:click="confirmActivate({{ $datos->id_mun }})" type="button" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-950/50" title="Reactivar"><i class="fas fa-undo text-xs"></i></button>
+                                @endcanAction
+                            @endif
+                        </x-table-actions>
                     </x-table-row>
                 @empty<tr><td colspan="5" class="px-6 py-12 text-center text-xs font-bold uppercase tracking-wider text-gray-400">No hay municipios registrados</td></tr>@endforelse
             </tbody></table></div>

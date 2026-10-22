@@ -18,7 +18,7 @@
                             'nombres_per'  => auth()->user()->persona?->nombres_per,
                             'nombres_attr'    => auth()->user()->nombres ?? null,
                             'name_attr'       => auth()->user()->name ?? null,
-                            'roles'           => auth()->user()->roles->pluck('nombre', 'slug')->toArray(),
+                            'roles'           => auth()->user()->roles->pluck('nombre_rol', 'slug_rol')->toArray(),
                             'tieneRol_pac'    => auth()->user()->tieneRol('paciente'),
                             'tieneRol_Pac'    => auth()->user()->tieneRol('Paciente'),
                         ]);
@@ -50,11 +50,13 @@
             </div>
 
             <div class="z-10 pt-2">
+                @canRoute('admin.psicologia.maestros.citas.create')
                 <a href="{{ route('admin.psicologia.maestros.citas.create') }}"
                     class="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-2xl shadow-md active:scale-95 transition-all text-sm">
                     <span>Agendar Nueva Cita</span>
                     <i class="fas fa-calendar-plus text-xs"></i>
                 </a>
+                @endcanRoute
             </div>
         </div>
 
@@ -235,6 +237,7 @@
                                 </script>
                             </div>
                         @else
+                            @canRoute('admin.psicologia.maestros.estado_animo_diario.store')
                             <p class="text-xs text-gray-500 font-medium text-center mb-3">
                                 ¿Cómo te sientes hoy? (1 al 10)
                             </p>
@@ -280,6 +283,7 @@
                                     Guardar Ánimo
                                 </button>
                             </form>
+                            @endcanRoute
                         @endif
                     </div>
                 </div>

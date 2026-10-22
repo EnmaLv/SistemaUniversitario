@@ -38,10 +38,12 @@
                                 <label class="block text-[16px] font-black uppercase tracking-wider dark:text-gray-400">
                                     Proveedor
                                 </label>
-                                <a href="{{ route('admin.maestros.proveedores.create', ['from' => url()->current()]) }}"
-                                    class="text-[10px] font-bold text-rose-700 hover:text-rose-800 transition-colors">
-                                    + Nuevo
-                                </a>
+                                @canRoute('admin.maestros.proveedores.create')
+                                    <a href="{{ route('admin.maestros.proveedores.create', ['from' => url()->current()]) }}"
+                                        class="text-[10px] font-bold text-rose-700 hover:text-rose-800 transition-colors">
+                                        + Nuevo
+                                    </a>
+                                @endcanRoute
                             </div>
                             <div class="flex items-stretch rounded-xl border overflow-hidden focus-within:ring-2 focus-within:ring-sky-500 transition-all"
                                 style="border-color: var(--border-color);">

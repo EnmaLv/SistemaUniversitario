@@ -47,9 +47,11 @@
                             <div class="mt-4 rounded-xl border border-gray-200 bg-slate-50 p-3 text-sm text-slate-600">
                                 <p>
                                     ¿No encuentras lo que buscas?
-                                    <a href="{{ route('admin.maestros.recetas.create', ['from' => url()->current()]) }}" class="font-bold text-red-700 hover:text-red-800">
-                                        Créala aquí
-                                    </a>
+                                    @canRoute('admin.maestros.recetas.create')
+                                        <a href="{{ route('admin.maestros.recetas.create', ['from' => url()->current()]) }}" class="font-bold text-red-700 hover:text-red-800">
+                                            Créala aquí
+                                        </a>
+                                    @endcanRoute
                                 </p>
                             </div>
                         </div>

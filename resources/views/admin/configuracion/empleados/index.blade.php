@@ -118,10 +118,13 @@
                                             onclick="event.stopPropagation()"
                                             class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-sky-100 hover:text-sky-500 dark:hover:bg-sky-950/50"
                                             title="Ver perfil"><i class="fas fa-eye text-xs"></i></a>
+                                        @canRoute('admin.configuracion.empleados.edit')
                                         <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_use) }}"
                                             onclick="event.stopPropagation()"
                                             class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-amber-100 hover:text-amber-500 dark:hover:bg-amber-950/50"
                                             title="Editar"><i class="fas fa-edit text-xs"></i></a>
+                                        @endcanRoute
+                                        @canRoute('admin.configuracion.empleados.destroy')
                                             @if (!$isSelf)
                                                 <form action="{{ route('admin.configuracion.empleados.destroy', $usuario->id_use) }}"
                                                     method="POST" class="inline" onclick="event.stopPropagation()">
@@ -137,6 +140,7 @@
                                                     <i class="fas fa-ban text-xs"></i>
                                                 </span>
                                             @endif
+                                        @endcanRoute
                                     </x-table-actions>
                                 </x-table-row>
                             @empty

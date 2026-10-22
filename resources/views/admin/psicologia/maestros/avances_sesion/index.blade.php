@@ -31,11 +31,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.psicologia.maestros.avances_sesion.create')
                     <a href="{{ route('admin.psicologia.maestros.avances_sesion.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl {{ $btnClass }} text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Nuevo Avance</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 
@@ -117,11 +119,14 @@
                                     <i class="fas fa-lock text-[10px]"></i> En Uso (Bloqueado)
                                 </span>
                             @else
+                                @canRoute('admin.psicologia.maestros.avances_sesion.edit')
                                 <a href="{{ route('admin.psicologia.maestros.avances_sesion.edit', $avance->id_avs) }}"
                                     class="p-2.5 bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 rounded-xl hover:bg-sky-600 hover:text-white transition-all text-xs font-bold flex items-center justify-center"
                                     title="Editar Avance">
                                     <i class="fas fa-pen"></i>
                                 </a>
+                                @endcanRoute
+                                @canRoute('admin.psicologia.maestros.avances_sesion.destroy')
                                 <form action="{{ route('admin.psicologia.maestros.avances_sesion.destroy', $avance->id_avs) }}"
                                     method="POST" class="inline-block"
                                     onsubmit="event.preventDefault(); AppModal.confirm('Confirmar', '¿Estás seguro de eliminar este avance? Se realizará un borrado lógico.').then(c => { if(c) this.submit(); });">
@@ -133,6 +138,7 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
+                                @endcanRoute
                             @endif
                         </div>
                     </div>

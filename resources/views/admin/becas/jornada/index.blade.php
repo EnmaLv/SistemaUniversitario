@@ -16,16 +16,20 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @canRoute('admin.becas.lapsos.avanzar')
                     <button type="button" @click.prevent="$dispatch('open-avanzar-lapso')"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-forward text-xs"></i>
                         <span>Avanzar Lapso</span>
                     </button>
+                    @endcanRoute
+                    @canRoute('admin.becas.jornada.create')
                     <a href="{{ route('admin.becas.jornada.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
                         <i class="fas fa-plus text-xs"></i>
                         <span>Crear Jornada</span>
                     </a>
+                    @endcanRoute
                 </div>
             </div>
 

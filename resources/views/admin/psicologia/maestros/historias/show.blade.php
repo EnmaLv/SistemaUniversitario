@@ -20,7 +20,7 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('historiaShow', () => ({
                 showStats: false,
-                isEditing: true,
+                isEditing: @json(auth()->user()->puedeRuta('admin.psicologia.maestros.historias.update')),
                 hasUnsavedChanges: false,
                 showUnsavedModal: false,
                 pendingUrl: null,
@@ -293,6 +293,7 @@
                             </div>
                         </div>
                     </div>
+                    @if (auth()->user()->puedeRuta('admin.psicologia.maestros.historias.expedienteCompletoPdf') || auth()->user()->puedeRuta('admin.psicologia.maestros.historias.expedienteCompletoWord'))
                     <div x-data="{ openTopExport: false }" class="relative flex gap-3 self-start md:self-center">
                         <button @click="openTopExport = !openTopExport" @click.away="openTopExport = false"
                             type="button" title="Exportar Expediente Completo"
@@ -306,6 +307,7 @@
                         </style>
                         <div x-show="openTopExport" x-transition x-cloak
                             class="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden z-30">
+                            @canRoute('admin.psicologia.maestros.historias.expedienteCompletoPdf')
                             <a href="{{ route('admin.psicologia.maestros.historias.expedienteCompletoPdf', $paciente->id_use) }}"
                                 target="_blank"
                                 class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
@@ -319,6 +321,8 @@
                                         completo</span>
                                 </div>
                             </a>
+                            @endcanRoute
+                            @canRoute('admin.psicologia.maestros.historias.expedienteCompletoWord')
                             <a href="{{ route('admin.psicologia.maestros.historias.expedienteCompletoWord', $paciente->id_use) }}"
                                 target="_blank"
                                 class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
@@ -332,8 +336,10 @@
                                         Completo</span>
                                 </div>
                             </a>
+                            @endcanRoute
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
 
@@ -352,6 +358,7 @@
 
                 @if ($tab === 'expediente')
                     <div class="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                        @if (auth()->user()->puedeRuta('admin.psicologia.maestros.historias.reportePdf') || auth()->user()->puedeRuta('admin.psicologia.maestros.historias.reporteWord'))
                         <div x-data="{ openExport: false }" class="relative z-10 w-full md:w-auto">
                             <button @click="openExport = !openExport" @click.away="openExport = false" type="button"
                                 class="w-full md:w-auto group flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white rounded-xl text-xs font-bold transition-all border border-indigo-100 dark:border-indigo-900/50 shadow-sm active:scale-95 whitespace-nowrap">
@@ -368,6 +375,7 @@
 
                             <div x-show="openExport" x-transition x-cloak
                                 class="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                @canRoute('admin.psicologia.maestros.historias.reportePdf')
                                 <a href="{{ route('admin.psicologia.maestros.historias.reportePdf', $paciente->id_use) }}"
                                     target="_blank"
                                     class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
@@ -382,6 +390,8 @@
                                     </div>
                                     <span class="text-xs font-bold text-gray-800 dark:text-gray-200">PDF</span>
                                 </a>
+                                @endcanRoute
+                                @canRoute('admin.psicologia.maestros.historias.reporteWord')
                                 <a href="{{ route('admin.psicologia.maestros.historias.reporteWord', $paciente->id_use) }}"
                                     target="_blank"
                                     class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
@@ -396,8 +406,10 @@
                                     </div>
                                     <span class="text-xs font-bold text-gray-800 dark:text-gray-200">Word</span>
                                 </a>
+                                @endcanRoute
                             </div>
                         </div>
+                        @endif
 
                         <div class="relative w-full md:w-80">
                             <span
@@ -450,6 +462,7 @@
                                                 {{ $seccion->descripcion_general_hsp ?? 'Sección Personalizada' }}</p>
                                         </div>
                                         <div x-show="isEditing" class="flex items-center gap-1">
+                                            @canRoute('admin.psicologia.maestros.historias.secciones.reorder')
                                             <button type="button"
                                                 @click.stop.prevent="reorderSection({{ $seccion->id_hsp }}, 'up')"
                                                 class="btn-subir p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition-all active:scale-95"
@@ -470,6 +483,8 @@
                                                         stroke-width="3" d="M19 9l-7 7-7-7"></path>
                                                 </svg>
                                             </button>
+                                            @endcanRoute
+                                            @canRoute('admin.psicologia.maestros.historias.secciones.destroy')
                                             <button type="button"
                                                 @click.stop.prevent="deleteSection({{ $seccion->id_hsp }})"
                                                 class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-all active:scale-95"
@@ -482,6 +497,7 @@
                                                     </path>
                                                 </svg>
                                             </button>
+                                            @endcanRoute
                                         </div>
                                     </div>
 
@@ -511,6 +527,7 @@
                                                         <span
                                                             class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold tracking-wider rounded-xl border border-indigo-100 dark:border-indigo-900/50 group/tag">
                                                             <span x-text="vinculo.nombre"></span>
+                                                            @canRoute('admin.psicologia.maestros.historias.enfermedad.desvincular')
                                                             <button type="button"
                                                                 @click="desvincular(vinculo.link_id)"
                                                                 x-show="isEditing"
@@ -522,6 +539,7 @@
                                                                         d="M6 18L18 6M6 6l12 12"></path>
                                                                 </svg>
                                                             </button>
+                                                            @endcanRoute
                                                         </span>
                                                     </template>
                                                 </div>
@@ -533,6 +551,7 @@
                                                         'border-transparent pointer-events-none opacity-90'"
                                                     class="w-full border rounded-xl p-4 text-xs font-medium transition-all focus:outline-none placeholder-gray-400 dark:placeholder-gray-500">{{ $segmento->contenido_hsm }}</textarea>
 
+                                                @canRoute('admin.psicologia.maestros.historias.enfermedad.vincular')
                                                 <div class="flex justify-end -mt-1 pr-1" x-show="isEditing"
                                                     x-transition x-data="{
                                                         isOpen: false,
@@ -594,6 +613,7 @@
                                                                             No hay resultados</div>
                                                                     </template>
                                                                 </div>
+                                                                @canRoute('admin.enfermedades.store')
                                                                 <div
                                                                     class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                                                                     <a onclick="abrirModalCrearEnfermedad('modal-create-edit')"
@@ -601,6 +621,7 @@
                                                                         ¿No aparece? Crear nueva
                                                                     </a>
                                                                 </div>
+                                                                @endcanRoute
                                                             </div>
                                                         </div>
 
@@ -618,6 +639,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
+                                                @endcanRoute
                                             </div>
                                         @endforeach
                                     </div>
@@ -636,6 +658,7 @@
 
                         <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                             class="fixed bottom-6 right-6 z-30 flex items-center gap-3 p-2.5 rounded-2xl shadow-xl border backdrop-blur-md">
+                            @canRoute('admin.psicologia.maestros.historias.secciones.store')
                             <button type="button" x-show="isEditing" x-transition
                                 @click="$dispatch('open-modal-seccion')"
                                 class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-600 text-emerald-600 dark:text-emerald-400 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-sm border border-emerald-100 dark:border-emerald-900/50 active:scale-95 focus:outline-none"
@@ -645,7 +668,9 @@
                                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
                             </button>
+                            @endcanRoute
 
+                            @canRoute('admin.psicologia.maestros.historias.update')
                             <button type="submit" x-show="isEditing" x-transition
                                 class="w-12 h-12 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white rounded-xl flex items-center justify-center transition-all shadow-sm border border-indigo-100 dark:border-indigo-900/50 active:scale-95 focus:outline-none"
                                 title="Actualizar Expediente">
@@ -655,6 +680,7 @@
                                     </path>
                                 </svg>
                             </button>
+                            @endcanRoute
                         </div>
                     </form>
                 </div>
@@ -702,6 +728,7 @@
                 }">
                     <div class="mb-6 flex items-center justify-end gap-3">
                         @if (!$citasPaciente->isEmpty())
+                            @if (auth()->user()->puedeRuta('admin.psicologia.maestros.historias.evolucion.pdf') || auth()->user()->puedeRuta('admin.psicologia.maestros.historias.evolucion.word'))
                             <div class="relative group" x-data="{ dropOpen: false }" @mouseenter="dropOpen = true"
                                 @mouseleave="dropOpen = false">
                                 <button type="button"
@@ -732,6 +759,7 @@
                                         <p
                                             class="px-3 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider">
                                             Tipo de archivo</p>
+                                        @canRoute('admin.psicologia.maestros.historias.evolucion.pdf')
                                         <button type="button" @click="openExport('pdf'); dropOpen = false"
                                             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
                                             <div
@@ -752,6 +780,8 @@
                                                     portable</span>
                                             </div>
                                         </button>
+                                        @endcanRoute
+                                        @canRoute('admin.psicologia.maestros.historias.evolucion.word')
                                         <button type="button" @click="openExport('word'); dropOpen = false"
                                             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
                                             <div
@@ -772,11 +802,14 @@
                                                     editable (.docx)</span>
                                             </div>
                                         </button>
+                                        @endcanRoute
                                     </div>
                                 </div>
                             </div>
+                            @endif
                         @endif
 
+                        @canRoute('admin.psicologia.maestros.historias.evolucion.store')
                         <form
                             action="{{ route('admin.psicologia.maestros.historias.evolucion.store', $paciente->id_use) }}"
                             method="POST">
@@ -790,6 +823,7 @@
                                 </svg>
                             </button>
                         </form>
+                        @endcanRoute
                     </div>
 
                     @if ($citasPaciente->isEmpty())
@@ -837,6 +871,7 @@
                                             </p>
                                             <div
                                                 class="flex {{ $index % 2 == 0 ? 'md:flex-row-reverse' : '' }} flex-wrap gap-2">
+                                                @canRoute('admin.psicologia.maestros.citas.edit.note')
                                                 <a href="{{ route('admin.psicologia.maestros.citas.edit.note', $cita->id_cps) }}"
                                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-600 hover:text-white transition-all active:scale-95"
                                                     title="Editar Nota">
@@ -849,7 +884,9 @@
                                                     </svg>
                                                     Editar
                                                 </a>
+                                                @endcanRoute
                                                 @if (!$cita->is_manual)
+                                                    @canRoute('admin.psicologia.maestros.citas.constancia.pdf')
                                                     <a href="{{ route('admin.psicologia.maestros.citas.constancia.pdf', $cita->id_cps) }}"
                                                         target="_blank"
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-emerald-100 dark:border-emerald-900/50 hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
@@ -863,8 +900,10 @@
                                                         </svg>
                                                         Constancia
                                                     </a>
+                                                    @endcanRoute
                                                 @endif
                                                 @if ($cita->is_manual)
+                                                    @canRoute('admin.psicologia.maestros.citas.destroy')
                                                     <button type="button"
                                                         @click="deleteTarget = {{ $cita->id_cps }}; showDeleteModal = true"
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50/70 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-red-100 dark:border-red-900/50 hover:bg-red-600 hover:text-white transition-all active:scale-95"
@@ -878,6 +917,7 @@
                                                         </svg>
                                                         Eliminar
                                                     </button>
+                                                    @endcanRoute
                                                 @endif
                                             </div>
                                         </div>
@@ -1146,7 +1186,7 @@
                                     class="flex-1 px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all active:scale-95">
                                     Cancelar
                                 </button>
-                                <form :action="'/citas/' + deleteTarget" method="POST" class="flex-1">
+                                <form :action="'{{ url('admin/psicologia/maestros/citas') }}/' + deleteTarget" method="POST" class="flex-1">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"

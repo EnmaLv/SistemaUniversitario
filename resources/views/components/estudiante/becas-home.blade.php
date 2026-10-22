@@ -64,11 +64,13 @@
                         </button>
                     @endforeach
                 @endif
+                @canRoute('admin.becas.solicitar')
                 <a href="{{ route('admin.becas.solicitar') }}"
                     class="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-2xl shadow-md hover:shadow-lg active:scale-95 transition-all text-sm">
                     <span>Nueva Solicitud de Beca</span>
                     <i class="fas fa-arrow-right text-[11px] opacity-70"></i>
                 </a>
+                @endcanRoute
             </div>
         </div>
 

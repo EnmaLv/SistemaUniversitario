@@ -135,6 +135,7 @@
                                     </svg>
                                 </a>
 
+                                @canRoute('admin.psicologia.maestros.agenda.exportarPdf')
                                 <a href="{{ route('admin.psicologia.maestros.agenda.exportarPdf', ['view' => $view, 'date' => $currentDate->toDateString(), 'psicologo_id' => $psicologoId]) }}"
                                     target="_blank"
                                     class="px-3 h-9 flex items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all font-black tracking-wider gap-1.5 flex-shrink-0"
@@ -144,6 +145,7 @@
                                             d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </a>
+                                @endcanRoute
                             </div>
                         </div>
                     </div>
@@ -783,9 +785,11 @@
                                                                                                 class="text-[10px] font-extrabold leading-tight truncate text-gray-400 dark:text-gray-500 line-through">
                                                                                                 {{ $canceladaCita->paciente->persona->nombres_per }}
                                                                                             </p>
+                                                                                            @canRoute('admin.psicologia.maestros.citas.dismiss_cancel')
                                                                                             <div onclick="dismissCancelMessage(event, {{ $canceladaCita->id_cps }})"
                                                                                                 class="ml-1 text-[10px] font-black text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0 cursor-pointer"
                                                                                                 title="Ocultar">✕</div>
+                                                                                            @endcanRoute
                                                                                         </div>
                                                                                     @endif
                                                                                 @endif
@@ -911,7 +915,20 @@
         </div>
     </div>
 
+    @php
+        $permisosAgenda = collect([
+            'accept' => 'admin.psicologia.maestros.citas.accept',
+            'reject' => 'admin.psicologia.maestros.citas.reject',
+            'remove_proposal' => 'admin.psicologia.maestros.citas.quitar_propuesta',
+            'propose' => 'admin.psicologia.maestros.citas.proponer',
+            'realizar' => 'admin.psicologia.maestros.citas.realizar',
+            'no_asistio' => 'admin.psicologia.maestros.citas.no_asistio',
+            'posponer' => 'admin.psicologia.maestros.citas.posponer',
+            'cancelar' => 'admin.psicologia.maestros.citas.cancel.psicologo',
+        ])->map(fn ($ruta) => auth()->user()->puedeRuta($ruta))->all();
+    @endphp
     <script>
+        const PERMISOS_AGENDA = @json($permisosAgenda);
         document.addEventListener('DOMContentLoaded', function() {
             const CONFIG = {
                 endpoints: {
@@ -1311,13 +1328,18 @@
 
                     let actionButtons = '';
                     if (assignedEstado === 'confirmada') {
-                        actionButtons = `
+                        const botonesAsignado = [
+                            PERMISOS_AGENDA.realizar ? `<button type="button" id="btn-realizar-${assignedId}" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Realizada</button>` : '',
+                            PERMISOS_AGENDA.no_asistio ? `<button type="button" id="btn-no-asistio-${assignedId}" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Ausente</button>` : '',
+                            PERMISOS_AGENDA.posponer ? `<button type="button" id="btn-posponer-${assignedId}" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Reagendar</button>` : '',
+                            PERMISOS_AGENDA.cancelar ? `<button type="button" id="btn-cancelar-${assignedId}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-2xl font-black text-xs transition-all uppercase tracking-wider active:scale-95">Cancelar</button>` : '',
+                        ].join('');
+                        if (botonesAsignado) {
+                            actionButtons = `
                             <div class="flex flex-wrap justify-center gap-3 mt-6">
-                                <button type="button" id="btn-realizar-${assignedId}" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Realizada</button>
-                                <button type="button" id="btn-no-asistio-${assignedId}" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Ausente</button>
-                                <button type="button" id="btn-posponer-${assignedId}" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-black text-xs shadow-sm transition-all uppercase tracking-wider active:scale-95">Reagendar</button>
-                                <button type="button" id="btn-cancelar-${assignedId}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-2xl font-black text-xs transition-all uppercase tracking-wider active:scale-95">Cancelar</button>
+                                ${botonesAsignado}
                             </div>`;
+                        }
                     }
 
                     assignedList.innerHTML = `
@@ -1382,15 +1404,15 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-2">
-                                        <button title="Aceptar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-emerald-200 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white transition-colors" data-action="accept" data-cita-id="${can.citaId}">
+                                        ${PERMISOS_AGENDA.accept ? `<button title="Aceptar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-emerald-200 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white transition-colors" data-action="accept" data-cita-id="${can.citaId}">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                        </button>
-                                        <button title="Rechazar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 dark:hover:text-white transition-colors" data-action="reject" data-cita-id="${can.citaId}">
+                                        </button>` : ''}
+                                        ${PERMISOS_AGENDA.reject ? `<button title="Rechazar" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 dark:hover:text-white transition-colors" data-action="reject" data-cita-id="${can.citaId}">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                        <button title="Quitar sugerencia" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:bg-gray-600 hover:text-white dark:hover:bg-gray-600 dark:hover:text-white transition-colors" data-action="remove_proposal" data-cita-id="${can.citaId}">
+                                        </button>` : ''}
+                                        ${PERMISOS_AGENDA.remove_proposal ? `<button title="Quitar sugerencia" class="block-request-action-btn h-9 w-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700/60 text-gray-500 dark:text-gray-400 hover:bg-gray-600 hover:text-white dark:hover:bg-gray-600 dark:hover:text-white transition-colors" data-action="remove_proposal" data-cita-id="${can.citaId}">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        </button>
+                                        </button>` : ''}
                                     </div>
                                 </div>`;
                             list.appendChild(li);
@@ -2132,6 +2154,12 @@
                     return;
                 }
 
+                const accionSoltar = (isManual || (draggedEl && !draggedEl.dataset.bloquesSugeridos)) ? 'accept' : 'propose';
+                if (!PERMISOS_AGENDA[accionSoltar]) {
+                    AppModal.alert('Acción no permitida', 'No tienes permiso para agendar citas.');
+                    return;
+                }
+
                 if (isManual) {
                     window.showConfirmManualCita(() => handleAction('accept', currentDraggedId));
                 } else if (draggedEl && !draggedEl.dataset.bloquesSugeridos) {
@@ -2505,7 +2533,7 @@
                             action: 'cancelar'
                         },
                     ];
-                    actions.forEach(({
+                    actions.filter(({ action }) => PERMISOS_AGENDA[action]).forEach(({
                         label,
                         cls,
                         action
@@ -2541,7 +2569,7 @@
 
         function dismissCancelMessage(event, citaId) {
             event.stopPropagation();
-            fetch(`admin/psicologia/maestros/citas/${citaId}/dismiss-cancel`, {
+            fetch(`{{ url('admin/psicologia/maestros/citas') }}/${citaId}/dismiss-cancel`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2565,7 +2593,7 @@
                 btn.innerText = 'Enviando...';
             }
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            fetch(`admin/psicologia/maestros/citas/${citaId}/enviar-propuesta`, {
+            fetch(`{{ url('admin/psicologia/maestros/citas') }}/${citaId}/enviar-propuesta`, {
                     method: 'PATCH',
                     headers: {
                         'Accept': 'application/json',
