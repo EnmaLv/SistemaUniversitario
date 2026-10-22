@@ -82,6 +82,7 @@ Route::get('/transporte/maestros/bus_viajes/{busViaje}/posicion', [BusViajeContr
 Route::put('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::class, 'update'])->name('admin.transporte.maestros.bus_viajes.update');
 Route::delete('/transporte/maestros/bus_viajes/{busViaje}', [BusViajeController::class, 'destroy'])->name('admin.transporte.maestros.bus_viajes.destroy');
 Route::post('/transporte/maestros/bus_viajes/{busViaje}/cancelar', [BusViajeController::class, 'cancelar'])->name('admin.transporte.maestros.bus_viajes.cancelar');
+Route::post('/transporte/maestros/bus_viajes/{busViaje}/marcar-referencia', [BusViajeController::class, 'marcarReferencia'])->name('admin.transporte.maestros.bus_viajes.marcar_referencia');
 Route::get('/viajes/estadisticas', [\App\Http\Controllers\HomeController::class, 'transporteEstadisticas'])
     ->name('admin.transporte.viajes.estadisticas');
     

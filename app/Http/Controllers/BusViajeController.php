@@ -6,6 +6,8 @@ use App\Models\BusRuta;
 use App\Models\BusVehiculo;
 use App\Models\BusViaje;
 use App\Models\Usuario;
+use App\Services\Transporte\TrazadoRutaService;
+use App\Support\Auditoria\Bitacora;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -215,7 +217,49 @@ class BusViajeController extends Controller
             'conductor.persona'
         ]);
 
-        return view('admin.transporte.maestros.bus_viajes.show', compact('busViaje'));
+        $trazado = app(TrazadoRutaService::class);
+        $rutaId = (int) $busViaje->rtr_id;
+        $trazadoReferencia = $trazado->puntosVigentes($rutaId);
+        $versionReferencia = $trazado->versionVigente($rutaId);
+        $tramosDesvio = $trazado->tramosDesvio((int) $busViaje->id_vjt);
+
+        return view('admin.transporte.maestros.bus_viajes.show', compact(
+            'busViaje',
+            'trazadoReferencia',
+            'versionReferencia',
+            'tramosDesvio'
+        ));
+    }
+
+    public function marcarReferencia(BusViaje $busViaje, TrazadoRutaService $trazado)
+    {
+        if ($busViaje->estado_viaje_vjt !== 'finalizado') {
+            return redirect()->route('admin.transporte.maestros.bus_viajes.show', $busViaje)
+                ->with('error', 'Solo el recorrido de un viaje finalizado puede marcarse como referencia.');
+        }
+
+        try {
+            $resultado = $trazado->marcarComoReferencia($busViaje);
+        } catch (\RuntimeException $e) {
+            return redirect()->route('admin.transporte.maestros.bus_viajes.show', $busViaje)
+                ->with('error', $e->getMessage());
+        }
+
+        Bitacora::registrar(
+            accion: 'trazado_referencia_marcado',
+            modulo: 'transporte',
+            tablaAfectada: 'ruta_transporte',
+            registroId: (int) $busViaje->rtr_id,
+            datosAnteriores: ['version_vigente' => $resultado['version_anterior']],
+            datosModificados: [
+                'version_vigente' => $resultado['version'],
+                'vjt_id'          => (int) $busViaje->id_vjt,
+                'puntos'          => $resultado['puntos'],
+            ],
+        );
+
+        return redirect()->route('admin.transporte.maestros.bus_viajes.show', $busViaje)
+            ->with('success', "El recorrido del viaje es ahora la referencia de la ruta (versión {$resultado['version']}).");
     }
 
     public function destroy(BusViaje $busViaje)
@@ -247,12 +291,13 @@ class BusViajeController extends Controller
     {
         $logs = $busViaje->gpsLogs()
             ->orderBy('id_lgt')
-            ->get(['lat_lgt', 'lng_lgt', 'velocidad_lgt', 'heading_lgt', 'created_at'])
+            ->get(['lat_lgt', 'lng_lgt', 'velocidad_lgt', 'heading_lgt', 'es_desvio_lgt', 'created_at'])
             ->map(fn ($log) => [
                 'lat'        => $log->lat_lgt,
                 'lng'        => $log->lng_lgt,
                 'velocidad'  => $log->velocidad_lgt,
                 'heading'    => $log->heading_lgt,
+                'desvio'     => (bool) $log->es_desvio_lgt,
                 'created_at' => $log->created_at,
             ]);
 

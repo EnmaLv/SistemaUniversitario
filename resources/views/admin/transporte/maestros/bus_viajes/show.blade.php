@@ -104,6 +104,12 @@
                             </small>
                         </div>
                         <div id="mapaGPS" style="height: 480px; width: 100%; z-index:1; background:#e5e7eb;"></div>
+                        <div class="px-4 py-2 flex flex-wrap items-center gap-4 text-[11px] font-semibold text-gray-400"
+                            style="border-top: 1px solid var(--border-color);">
+                            <span class="inline-flex items-center gap-1.5"><span class="inline-block w-5 h-1 rounded-full" style="background:#2563eb;"></span> Ruta de referencia</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="inline-block w-5 h-1 rounded-full" style="background:#f97316;"></span> Desvíos</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="inline-block w-5 h-1 rounded-full" style="background:#22c55e;"></span> Recorrido en vivo</span>
+                        </div>
                     </div>
 
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
@@ -131,6 +137,46 @@
                 </div>
 
                 <div class="lg:col-span-1">
+                    <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                        class="rounded-2xl border shadow-sm p-4 mb-4">
+                        <h3 class="text-sm font-bold mb-3" style="color: var(--text-main);">
+                            <i class="fas fa-route text-sky-500 mr-1"></i> Ruta de referencia
+                        </h3>
+                        <div class="rounded-xl p-3 text-xs space-y-2"
+                            style="background-color: rgba(0,0,0,0.02); border: 1px solid var(--border-color);">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Versión vigente:</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ $versionReferencia ?? 'Sin trazado' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Puntos recibidos:</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ (int) $busViaje->puntos_recibidos_vjt }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Tramos de desvío:</span>
+                                <span class="font-bold" style="color: var(--text-main);">{{ count($tramosDesvio) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400 font-semibold">Velocidad máx. / prom.:</span>
+                                <span class="font-bold" style="color: var(--text-main);">
+                                    {{ number_format((float) $busViaje->velocidad_max_vjt, 1) }} / {{ number_format((float) $busViaje->velocidad_promedio_vjt, 1) }} km/h
+                                </span>
+                            </div>
+                        </div>
+                        @if ($busViaje->estado_viaje_vjt === 'finalizado')
+                            @canRoute('admin.transporte.maestros.bus_viajes.marcar_referencia')
+                            <form id="formMarcarReferencia" method="POST"
+                                action="{{ route('admin.transporte.maestros.bus_viajes.marcar_referencia', $busViaje) }}" class="mt-3">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-800 hover:bg-red-900 text-white rounded-xl font-extrabold text-xs transition-all">
+                                    <i class="fas fa-flag"></i> Marcar como ruta de referencia
+                                </button>
+                            </form>
+                            @endcanRoute
+                        @endif
+                    </div>
+
                     <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                         class="rounded-2xl border shadow-sm p-4 mb-4">
                         <h3 class="text-sm font-bold mb-3" style="color: var(--text-main);">
@@ -242,7 +288,23 @@
 
         @php($paradasData = ($busViaje->ruta?->paradas ?? collect())->map(fn ($parada) => ['id' => $parada->id_ptr, 'nombre' => $parada->nombre_ptr, 'lat' => $parada->lat_ptr, 'lng' => $parada->lng_ptr])->values())
         const paradasData = @json($paradasData);
+        const trazadoReferencia = @json($trazadoReferencia);
+        const tramosDesvio = @json($tramosDesvio);
         const routePoints = [];
+
+        if (trazadoReferencia.length >= 2) {
+            const referenciaPolyline = L.polyline(trazadoReferencia, { color: '#2563eb', weight: 5, opacity: 0.7 }).addTo(map);
+            map.fitBounds(referenciaPolyline.getBounds(), { padding: [50, 50] });
+        }
+
+        tramosDesvio.forEach((tramo, idx) => {
+            const etiqueta = `<b>Desvío ${idx + 1}</b><br>${tramo.length} punto(s) fuera de la ruta`;
+            if (tramo.length >= 2) {
+                L.polyline(tramo, { color: '#f97316', weight: 5, opacity: 0.95 }).addTo(map).bindPopup(etiqueta);
+            } else if (tramo.length === 1) {
+                L.circleMarker(tramo[0], { radius: 6, color: '#f97316', fillColor: '#f97316', fillOpacity: 0.9 }).addTo(map).bindPopup(etiqueta);
+            }
+        });
 
         if (Array.isArray(paradasData) && paradasData.length > 0) {
             paradasData.forEach((parada, idx) => {
@@ -262,7 +324,7 @@
                 }
             });
 
-            if (routePoints.length >= 2) {
+            if (routePoints.length >= 2 && trazadoReferencia.length < 2) {
                 const osrmCoords = routePoints.map(p => `${p[1]},${p[0]}`).join(';');
                 fetch(`https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`)
                     .then(r => r.json())
@@ -406,7 +468,10 @@
                     document.getElementById('playbackPuntos').textContent = `${logs.length} puntos registrados`;
 
                     const latLngs = logs.map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
-                    L.polyline(latLngs, { color: '#b91c1c', weight: 4, opacity: 0.5, dashArray: '6,6' }).addTo(map);
+                    const recorrido = logs.filter(l => !l.desvio).map(l => [parseFloat(l.lat), parseFloat(l.lng)]);
+                    if (recorrido.length >= 2) {
+                        L.polyline(recorrido, { color: '#b91c1c', weight: 4, opacity: 0.5, dashArray: '6,6' }).addTo(map);
+                    }
 
                     if (playbackMarker) map.removeLayer(playbackMarker);
                     playbackMarker = L.marker(latLngs[0], { icon: busIcon }).addTo(map);
@@ -462,6 +527,35 @@
                 irAPunto(playbackIndex);
             }, 200);
         });
+
+        const formReferencia = document.getElementById('formMarcarReferencia');
+        if (formReferencia) {
+            formReferencia.addEventListener('submit', (evento) => {
+                evento.preventDefault();
+                const mensaje = 'El recorrido de este viaje reemplazará la ruta de referencia vigente (se crea una versión nueva).';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '¿Marcar como ruta de referencia?',
+                        text: mensaje,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#991b1b',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Sí, marcar',
+                        cancelButtonText: 'Cancelar',
+                        customClass: {
+                            popup: 'rounded-2xl dark:bg-gray-800 dark:text-white',
+                            confirmButton: 'rounded-xl',
+                            cancelButton: 'rounded-xl'
+                        }
+                    }).then((resultado) => {
+                        if (resultado.isConfirmed) formReferencia.submit();
+                    });
+                } else if (confirm(mensaje)) {
+                    formReferencia.submit();
+                }
+            });
+        }
     })();
     </script>
 </x-app-layout>

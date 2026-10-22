@@ -17,9 +17,12 @@ return new class extends Migration
             $table->decimal('heading_lgt', 6, 2)->nullable();
             $table->timestamp('registrado_en_lgt')->nullable();
             $table->string('origen_lgt', 50)->default('app_conductor');
+            $table->boolean('es_desvio_lgt')->default(false);
+            $table->unsignedSmallInteger('tramo_desvio_lgt')->nullable();
             $table->foreignId('vjt_id')->constrained('viaje_transporte', 'id_vjt')->cascadeOnDelete();
             $table->timestamps();
             $table->auditoria();
+            $table->index(['vjt_id', 'es_desvio_lgt'], 'log_gps_viaje_desvio_idx');
         });
     }
 

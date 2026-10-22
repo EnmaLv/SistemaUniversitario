@@ -24,11 +24,15 @@ class BusGpsLog extends Model
         'heading_lgt',
         'registrado_en_lgt',
         'origen_lgt',
+        'es_desvio_lgt',
+        'tramo_desvio_lgt',
         'status_id',
     ];
 
     protected $casts = [
         'registrado_en_lgt' => 'datetime',
+        'es_desvio_lgt'     => 'boolean',
+        'tramo_desvio_lgt'  => 'integer',
     ];
 
     public function viaje()

@@ -5,20 +5,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BusViaje;
 use App\Services\Transporte\CalculoCombustibleService;
+use App\Services\Transporte\TrazadoRutaService;
 use App\Support\Transporte\FormatoApiTransporte;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BusViajeApiController extends Controller
 {
     protected CalculoCombustibleService $calculoCombustible;
 
-    public function __construct(CalculoCombustibleService $calculoCombustible)
+    protected TrazadoRutaService $trazado;
+
+    public function __construct(CalculoCombustibleService $calculoCombustible, TrazadoRutaService $trazado)
     {
         $this->calculoCombustible = $calculoCombustible;
+        $this->trazado = $trazado;
     }
 
     public function registrarGps(Request $request, BusViaje $viaje): JsonResponse
@@ -46,26 +49,12 @@ class BusViajeApiController extends Controller
             'timestamp' => ['required', 'date'],
         ]);
 
-        $existente = DB::table('log_gps_transporte')
-            ->where('local_id_lgt', $validated['local_id'])
-            ->exists();
-
-        if ($existente) {
+        if ($this->trazado->procesarPunto($viaje, $validated)) {
             return response()->json([
                 'success' => true,
                 'duplicate' => true,
             ]);
         }
-
-        $viaje->gpsLogs()->create([
-            'local_id_lgt' => $validated['local_id'],
-            'lat_lgt' => $validated['lat'],
-            'lng_lgt' => $validated['lng'],
-            'velocidad_lgt' => $validated['velocidad'] ?? 0,
-            'heading_lgt' => $validated['heading'] ?? null,
-            'registrado_en_lgt' => Carbon::parse($validated['timestamp']),
-            'origen_lgt' => 'app_conductor',
-        ]);
 
         return response()->json([
             'success' => true,
@@ -78,18 +67,34 @@ class BusViajeApiController extends Controller
             ->latest('id_lgt')
             ->first();
 
+        $recepcion = $viaje->ultima_recepcion_en_vjt;
+        $usarViaje = $viaje->ultima_lat_vjt !== null && $viaje->ultima_lng_vjt !== null && $recepcion !== null
+            && (! $ultimoLog || ! $ultimoLog->created_at || $recepcion->greaterThanOrEqualTo($ultimoLog->created_at));
+
+        if ($usarViaje) {
+            $latitud = (float) $viaje->ultima_lat_vjt;
+            $longitud = (float) $viaje->ultima_lng_vjt;
+            $velocidad = (float) ($viaje->ultima_velocidad_vjt ?? 0);
+            $fecha = $recepcion;
+        } else {
+            $latitud = $ultimoLog ? (float) $ultimoLog->lat_lgt : null;
+            $longitud = $ultimoLog ? (float) $ultimoLog->lng_lgt : null;
+            $velocidad = $ultimoLog ? (float) $ultimoLog->velocidad_lgt : 0;
+            $fecha = $ultimoLog?->created_at;
+        }
+
         return response()->json([
             'success' => true,
-            'latitud' => $ultimoLog ? (float) $ultimoLog->lat_lgt : null,
-            'longitud' => $ultimoLog ? (float) $ultimoLog->lng_lgt : null,
-            'velocidad' => $ultimoLog ? (float) $ultimoLog->velocidad_lgt : 0,
+            'latitud' => $latitud,
+            'longitud' => $longitud,
+            'velocidad' => $velocidad,
             'pasajeros' => (int) $viaje->total_pasajeros_vjt,
             'distancia_km' => FormatoApiTransporte::decimal($viaje->getAttributes()['distancia_km_vjt'] ?? null, 2),
             'litros_gastados' => FormatoApiTransporte::decimal($viaje->getAttributes()['litros_gastados_vjt'] ?? null, 2),
             'estado' => $viaje->estado_viaje_vjt,
-            'fecha_registro' => $ultimoLog?->created_at?->toISOString(),
-            'actualizado_hace' => $ultimoLog
-                ? $ultimoLog->created_at->diffForHumans()
+            'fecha_registro' => $fecha?->toISOString(),
+            'actualizado_hace' => $fecha
+                ? $fecha->diffForHumans()
                 : 'Sin registros',
         ]);
     }
@@ -236,6 +241,12 @@ class BusViajeApiController extends Controller
         $viaje->vehiculo->update([
             'estado_operativo_vtr' => 'disponible',
         ]);
+
+        try {
+            $this->trazado->generarReferenciaSiFalta($viaje);
+        } catch (\Throwable $e) {
+            Log::error("Error generando el trazado de referencia del viaje {$viaje->id_vjt}: {$e->getMessage()}");
+        }
 
         $this->eliminarBusDeFirebase((string) $viaje->id_vjt);
 

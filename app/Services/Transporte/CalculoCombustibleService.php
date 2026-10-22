@@ -2,7 +2,6 @@
 
 namespace App\Services\Transporte;
 
-use App\Models\BusGpsLog;
 use App\Models\BusViaje;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -20,6 +19,10 @@ class CalculoCombustibleService
         'puntos_gps_usados'      => 0,
     ];
 
+    public function __construct(private TrazadoRutaService $trazado)
+    {
+    }
+
     public function calcularParaViaje(BusViaje $viaje): array
     {
         $vehiculo = $viaje->vehiculo;
@@ -33,11 +36,23 @@ class CalculoCombustibleService
             ->orderBy('id_lgt')
             ->get(['lat_lgt', 'lng_lgt', 'velocidad_lgt', 'registrado_en_lgt']);
 
-        if ($puntos->count() < 2) {
-            return $this->calcularConRutaPlanificada($viaje, $vehiculo);
-        }
+        $puntosRecibidos = (int) $viaje->puntos_recibidos_vjt;
 
-        [$distanciaUrbana, $distanciaCarretera, $tiempoRalentiHoras] = $this->analizarTramos($puntos);
+        if ($puntosRecibidos > $puntos->count()) {
+            $distanciaUrbana = (float) $viaje->distancia_urbana_km_vjt;
+            $distanciaCarretera = (float) $viaje->distancia_carretera_km_vjt;
+            $tiempoRalentiHoras = (float) $viaje->ralenti_horas_vjt;
+            $puntosUsados = $puntosRecibidos;
+
+            if ($distanciaUrbana + $distanciaCarretera + $tiempoRalentiHoras <= 0) {
+                return $this->calcularConRutaPlanificada($viaje, $vehiculo);
+            }
+        } elseif ($puntos->count() < 2) {
+            return $this->calcularConRutaPlanificada($viaje, $vehiculo);
+        } else {
+            [$distanciaUrbana, $distanciaCarretera, $tiempoRalentiHoras] = $this->analizarTramos($puntos);
+            $puntosUsados = $puntos->count();
+        }
 
         $distanciaTotal = $distanciaUrbana + $distanciaCarretera;
 
@@ -58,13 +73,16 @@ class CalculoCombustibleService
             'litros_gastados'        => round($litrosGastados, 2),
             'factor_carga'           => round($factorCarga, 4),
             'fuente'                 => 'gps',
-            'puntos_gps_usados'      => $puntos->count(),
+            'puntos_gps_usados'      => $puntosUsados,
         ];
     }
 
     private function calcularConRutaPlanificada(BusViaje $viaje, $vehiculo): array
     {
-        $distanciaPlanificada = (float) ($viaje->ruta->distancia_km_rtr ?? 0);
+        $distanciaReferencia = $this->trazado->longitudReferenciaKm((int) $viaje->rtr_id);
+        $distanciaPlanificada = $distanciaReferencia > 0
+            ? $distanciaReferencia
+            : (float) ($viaje->ruta->distancia_km_rtr ?? 0);
 
         $factorCarga = $this->calcularFactorCarga($vehiculo, (int) $viaje->total_pasajeros_vjt);
 

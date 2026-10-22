@@ -35,6 +35,20 @@ class BusViaje extends Model
         'hubo_desvio_vjt',
         'motivo_desvio_vjt',
         'estado_viaje_vjt',
+        'ultima_lat_vjt',
+        'ultima_lng_vjt',
+        'ultima_velocidad_vjt',
+        'ultima_posicion_en_vjt',
+        'ultima_recepcion_en_vjt',
+        'ultimo_local_id_vjt',
+        'puntos_recibidos_vjt',
+        'velocidad_max_vjt',
+        'velocidad_promedio_vjt',
+        'distancia_urbana_km_vjt',
+        'distancia_carretera_km_vjt',
+        'ralenti_horas_vjt',
+        'en_desvio_vjt',
+        'tramos_desvio_vjt',
         'status_id',
     ];
 
@@ -46,6 +60,11 @@ class BusViaje extends Model
         'distancia_km_vjt'    => 'decimal:2',
         'litros_gastados_vjt' => 'decimal:2',
         'total_pasajeros_vjt' => 'integer',
+        'ultima_posicion_en_vjt'  => 'datetime',
+        'ultima_recepcion_en_vjt' => 'datetime',
+        'puntos_recibidos_vjt'    => 'integer',
+        'en_desvio_vjt'           => 'boolean',
+        'tramos_desvio_vjt'       => 'integer',
     ];
 
     public function gpsLogs()

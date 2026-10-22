@@ -104,6 +104,7 @@ return [
 
     'modelos_excluidos' => [
         App\Models\Bitacora::class,
+        App\Models\BusGpsLog::class,
     ],
 
     'cabeceras' => [

@@ -65,4 +65,10 @@ return [
     */
     'origen_gps_por_defecto' => 'app_movil',
 
+    'tolerancia_desvio_metros' => (float) env('TRANSPORTE_TOLERANCIA_DESVIO', 50),
+
+    'tolerancia_simplificacion_metros' => (float) env('TRANSPORTE_TOLERANCIA_SIMPLIFICACION', 10),
+
+    'cache_trazado_minutos' => 10,
+
 ];

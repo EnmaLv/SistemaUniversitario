@@ -56,6 +56,11 @@ class BusRuta extends Model
         return $this->hasMany(BusViaje::class, 'rtr_id', 'id_rtr');
     }
 
+    public function trazados()
+    {
+        return $this->hasMany(BusTrazadoRuta::class, 'rtr_id', 'id_rtr');
+    }
+
     public function getDescripcionRtrAttribute($value): string
     {
         return $value ?? 'Ninguna';
