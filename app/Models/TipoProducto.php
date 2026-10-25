@@ -42,6 +42,33 @@ class TipoProducto extends Model
         'status_id',
     ];
 
+    public static function idsProductosQueCuentanPorUnidad(array $productoIds): array
+    {
+        if ($productoIds === []) {
+            return [];
+        }
+
+        return static::productosDeTipos(self::CUENTAN_POR_UNIDAD)
+            ->whereIn('producto.id_pdt', $productoIds)
+            ->pluck('producto.id_pdt')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    public static function noVence(?string $nombre): bool
+    {
+        return $nombre !== null
+            && in_array(mb_strtolower($nombre), array_map('mb_strtolower', self::SIN_VENCIMIENTO), true);
+    }
+
+    public static function idsTiposSinVencimiento(): array
+    {
+        return array_values(array_filter(array_map(
+            fn ($nombre) => static::idPorNombre($nombre),
+            self::SIN_VENCIMIENTO
+        )));
+    }
+
     public function modulo()
     {
         return $this->belongsTo(Modulo::class, 'mod_id', 'id_mod');
@@ -59,6 +86,14 @@ class TipoProducto extends Model
             ->join('tipo_producto', 'tipo_producto.id_tpr', '=', 'categoria_producto.tpr_id')
             ->whereIn(DB::raw('LOWER(tipo_producto.nombre_tpr)'), array_map('mb_strtolower', $nombres))
             ->whereNull('producto.deleted_at');
+    }
+
+    public static function idsProductosDeTipo(string $nombre): array
+    {
+        return static::productosDeTipos([$nombre])
+            ->pluck('producto.id_pdt')
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     public static function idsParaModulo(?int $moduloId): array

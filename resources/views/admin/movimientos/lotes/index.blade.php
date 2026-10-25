@@ -76,7 +76,13 @@
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:ml-auto">
 
-                            <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" form="lotesSearchForm" :etiqueta="false" />
+                            @if ($tiposProducto->count() > 1)
+                                <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto"
+                                    form="lotesSearchForm" :etiqueta="false" />
+                            @else
+                                <input type="hidden" name="tipo" form="lotesSearchForm"
+                                    value="{{ \App\Support\Inventario\FiltroTipoProducto::valorUrl($tipoProducto) }}">
+                            @endif
 
                             <div class="relative flex-1 sm:w-64">
                                 <i class="fas fa-search absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 pointer-events-none text-sm"></i>
@@ -232,16 +238,24 @@
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($lote->fecha_vencimiento_lot)->format('d/m/Y') }}
+                                        @if ($lote->no_aplica_vencimiento)
+                                            <span class="italic text-gray-400">—</span>
+                                        @else
+                                            <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
+                                            {{ \Carbon\Carbon::parse($lote->fecha_vencimiento_lot)->format('d/m/Y') }}
+                                        @endif
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-md border"
-                                            style="border-color: var(--border-color); color: var(--text-main);">
-                                            <i class="fas fa-hourglass-half text-[10px] opacity-60"></i>
-                                            {{ round($lote->days_to_expire) }} días
-                                        </span>
+                                        @if ($lote->no_aplica_vencimiento)
+                                            <span class="italic text-gray-400">—</span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-md border"
+                                                style="border-color: var(--border-color); color: var(--text-main);">
+                                                <i class="fas fa-hourglass-half text-[10px] opacity-60"></i>
+                                                {{ round($lote->days_to_expire) }} días
+                                            </span>
+                                        @endif
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap" style="color: var(--text-main);">
@@ -253,7 +267,12 @@
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap">
-                                        @if ($isOut)
+                                        @if ($lote->no_aplica_vencimiento)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                                                <i class="fas fa-minus-circle"></i>
+                                                No aplica
+                                            </span>
+                                        @elseif ($isOut)
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                                                 <i class="fas fa-circle text-[6px]"></i>
                                                 Agotado

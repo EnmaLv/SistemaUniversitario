@@ -17,6 +17,9 @@
         'bitacora',
         'seguridad_bloqueos',
     ];
+
+    $kMovimientos  = ['comedor_movimientos', 'movimientos'];
+    $kStock        = ['comedor_stock', 'inventario_sedes_lotes'];
 @endphp
 
 @canMenu($adminKeys)
@@ -31,6 +34,28 @@
     <i class="fas fa-shopping-cart text-base w-5 text-center flex-shrink-0 text-white"></i>
     <span class="text-sm font-medium truncate" :class="sidebarOpen ? 'block' : 'hidden'">
         Compras y Requisiciones
+    </span>
+</a>
+@endcanMenu
+
+@canMenu($kStock)
+    <a href="{{ url('admin/movimientos/sedes_lotes') }}"
+        class="w-full flex items-center h-10 rounded-lg px-3 gap-2.5 text-white/90 hover:bg-[#623739] hover:text-white transition-all min-w-0"
+        :class="sidebarOpen ? 'px-3' : 'justify-center px-0'"
+        title="Existencias por Sede">
+        <i class="fas fa-clipboard-list text-base w-5 text-center flex-shrink-0 text-white"></i>
+        <span class="text-sm font-medium truncate" :class="sidebarOpen ? 'block' : 'hidden'">Existencias por Sede</span>
+    </a>
+@endcanMenu
+
+@canMenu($kMovimientos)
+<a href="{{ url('admin/movimientos/historial_movimientos') }}"
+    class="w-full flex items-center h-10 rounded-lg px-3 gap-2.5 text-white/90 hover:bg-[#623739] hover:text-white transition-all min-w-0"
+    :class="sidebarOpen ? 'px-3' : 'justify-center px-0'"
+    title="Historial de Movimientos">
+    <i class="fas fa-clipboard-list text-base w-5 text-center flex-shrink-0 text-white"></i>
+    <span class="text-sm font-medium truncate" :class="sidebarOpen ? 'block' : 'hidden'">
+        Historial de Movimientos
     </span>
 </a>
 @endcanMenu

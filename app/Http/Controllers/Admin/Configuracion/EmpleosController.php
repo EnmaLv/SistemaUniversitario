@@ -25,9 +25,29 @@ class EmpleosController extends Controller
     public function index(Request $request)
     {
         $perfiles = Perfil::pluck('nombre_perfil', 'id_perfil')->toArray();
-        $roles = Rol::orderBy('nombre_rol')->get();
+        $roles    = Rol::orderBy('nombre_rol')->get();
+        $perfilesEmpleado = array_values(array_filter([
+            Perfil::idPorNombre(Perfil::USUARIO),
+            Perfil::idPorNombre(Perfil::DOCENTE),
+            Perfil::idPorNombre(Perfil::OBRERO),
+            Perfil::idPorNombre(Perfil::ADMINISTRATIVO),
+        ]));
 
-        $query = Usuario::with(['persona', 'perfil', 'roles']);
+        $query = Usuario::with(['persona', 'perfil', 'roles'])
+            ->whereIn('id_perfil', $perfilesEmpleado);
+
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+
+            $query->where(function ($q) use ($search) {
+                $q->where('username_use', 'like', "%{$search}%")
+                ->orWhereHas('persona', function ($q2) use ($search) {
+                    $q2->where('nombres_per', 'like', "%{$search}%")
+                        ->orWhere('apellidos_per', 'like', "%{$search}%")
+                        ->orWhere('cedula_per', 'like', "%{$search}%");
+                });
+            });
+        }
 
         if ($request->filled('perfil')) {
             $query->where('id_perfil', $request->input('perfil'));
@@ -41,7 +61,9 @@ class EmpleosController extends Controller
             });
         }
 
-        $usuarios = $query->orderBy('id_use', 'asc')->paginate(10)->withQueryString();
+        $usuarios = $query->orderBy('id_use', 'asc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.configuracion.empleados.index', compact('usuarios', 'perfiles', 'roles'));
     }

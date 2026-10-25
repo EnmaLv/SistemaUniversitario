@@ -91,11 +91,13 @@
 
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:ml-auto">
 
-                            <form action="{{ route('admin.movimientos.sedes_lotes.show', $sedeId) }}" method="GET">
-                                <input type="hidden" name="estado" value="{{ $activo }}">
-                                <input type="hidden" name="buscar" value="{{ $buscar ?? '' }}">
-                                <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" :etiqueta="false" />
-                            </form>
+                            @if ($tiposProducto->count() > 1)
+                                <form action="{{ route('admin.movimientos.sedes_lotes.show', $sedeId) }}" method="GET">
+                                    <input type="hidden" name="estado" value="{{ $activo }}">
+                                    <input type="hidden" name="buscar" value="{{ $buscar ?? '' }}">
+                                    <x-filtro-tipo-producto :tipos="$tiposProducto" :seleccionado="$tipoProducto" :etiqueta="false" />
+                                </form>
+                            @endif
 
                             <form action="{{ route('admin.movimientos.sedes_lotes.show', $sedeId) }}"
                                 method="GET" class="relative flex-1 sm:w-64">
@@ -194,8 +196,12 @@
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        <span class="tabular-nums">{{ number_format($loteSede->cantidad_convertida_isl, 0) }}</span>
-                                        <span class="text-[10px] font-black uppercase tracking-wider opacity-60 ml-1">g</span>
+                                        @if ($loteSede->no_aplica_gramos)
+                                            <span class="italic text-gray-400">—</span>
+                                        @else
+                                            <span class="tabular-nums">{{ number_format($loteSede->cantidad_convertida_isl, 0) }}</span>
+                                            <span class="text-[10px] font-black uppercase tracking-wider opacity-60 ml-1">g</span>
+                                        @endif
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
@@ -204,8 +210,12 @@
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                        <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
-                                        {{ \Carbon\Carbon::parse($loteSede->lote->fecha_vencimiento_lot)->format('d/m/Y') }}
+                                        @if ($loteSede->no_aplica_vencimiento)
+                                            <span class="italic text-gray-400">—</span>
+                                        @else
+                                            <i class="far fa-calendar-times mr-1.5 opacity-60"></i>
+                                            {{ \Carbon\Carbon::parse($loteSede->lote->fecha_vencimiento_lot)->format('d/m/Y') }}
+                                        @endif
                                     </td>
 
                                     <td class="px-4 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
@@ -213,7 +223,12 @@
                                     </td>
 
                                     <td class="px-4 py-4 text-center whitespace-nowrap">
-                                        @if ($agotado)
+                                        @if ($loteSede->no_aplica_vencimiento)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                                                <i class="fas fa-minus-circle"></i>
+                                                No aplica
+                                            </span>
+                                        @elseif ($agotado)
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                                                 <i class="fas fa-circle text-[6px]"></i>
                                                 Agotado
