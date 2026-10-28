@@ -95,12 +95,11 @@ class AuthApiController extends Controller
 
     private function getModulosPermitidos(int $userId): array
     {
-        $t = Schema::hasTable('modulo') ? 'modulos' : 'modulo';
-
-        // Tablas prefijadas en cada columna para evitar ambigüedad
         $roleIds = DB::table('usuario_rol')
-            ->where('usuario_rol.use_id', $userId)
-            ->pluck('usuario_rol.rol_id')
+            ->where('use_id', $userId)
+            ->where('status_id', 1)
+            ->whereNull('deleted_at')
+            ->pluck('rol_id')
             ->toArray();
 
         if (empty($roleIds)) {
@@ -108,26 +107,41 @@ class AuthApiController extends Controller
         }
 
         $esAdmin = DB::table('rol')
-            ->whereIn('rol.id_rol', $roleIds)
+            ->whereIn('id_rol', $roleIds)
             ->where(function ($q) {
-                $q->where('rol.slug_rol', 'administrador')
-                    ->orWhere('rol.nombre_rol', 'Administrador');
+                $q->where('slug_rol', 'administrador')
+                    ->orWhere('nombre_rol', 'Administrador');
             })
+            ->where('status_id', 1)
+            ->whereNull('deleted_at')
             ->exists();
 
+        $columnas = [
+            'modulo.id_mod as id',
+            'modulo.key_mod as key',
+            'modulo.nombre_mod as nombre',
+            'modulo.descripcion_mod as descripcion',
+        ];
+
         if ($esAdmin) {
-            return DB::table($t)
-                ->where("$t.activo", 1)
-                ->select("$t.id", "$t.key", "$t.nombre", "$t.descripcion")
-                ->get()->toArray();
+            return DB::table('modulo')
+                ->where('status_id', 1)
+                ->whereNull('deleted_at')
+                ->select($columnas)
+                ->get()
+                ->toArray();
         }
 
         return DB::table('rol_modulo')
-            ->join($t, "$t.id", '=', 'rol_modulo.mod_id')
+            ->join('modulo', 'modulo.id_mod', '=', 'rol_modulo.mod_id')
             ->whereIn('rol_modulo.rol_id', $roleIds)
-            ->where("$t.activo", 1)
+            ->where('rol_modulo.status_id', 1)
+            ->whereNull('rol_modulo.deleted_at')
+            ->where('modulo.status_id', 1)
+            ->whereNull('modulo.deleted_at')
             ->distinct()
-            ->select("$t.id", "$t.key", "$t.nombre", "$t.descripcion")
-            ->get()->toArray();
+            ->select($columnas)
+            ->get()
+            ->toArray();
     }
 }
