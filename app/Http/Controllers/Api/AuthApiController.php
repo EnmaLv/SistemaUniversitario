@@ -41,7 +41,16 @@ class AuthApiController extends Controller
         $usuario->tokens()->where('name', 'flutter-app')->delete();
         $token   = $usuario->createToken('flutter-app')->plainTextToken;
         $persona = $usuario->persona()->first();
-        $roles   = $usuario->roles()->select('rol.id_rol', 'rol.nombre_rol', 'rol.slug_rol')->get();
+
+        // ✔ FIX: alias para que Flutter reciba id / nombre / slug
+        $roles = $usuario->roles()
+            ->select(
+                'rol.id_rol as id',
+                'rol.nombre_rol as nombre',
+                'rol.slug_rol as slug'
+            )
+            ->get();
+
         $modulos = $this->getModulosPermitidos($usuario->id_use);
 
         return response()->json([
@@ -69,7 +78,16 @@ class AuthApiController extends Controller
     {
         $usuario = $request->user();
         $persona = $usuario->persona()->first();
-        $roles   = $usuario->roles()->select('rol.id_rol', 'rol.nombre_rol', 'rol.slug_rol')->get();
+
+        // ✔ FIX: mismo alias que en login()
+        $roles = $usuario->roles()
+            ->select(
+                'rol.id_rol as id',
+                'rol.nombre_rol as nombre',
+                'rol.slug_rol as slug'
+            )
+            ->get();
+
         $modulos = $this->getModulosPermitidos($usuario->id_use);
 
         return response()->json([
