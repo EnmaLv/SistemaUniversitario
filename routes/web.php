@@ -56,11 +56,11 @@ Route::get('/admin/psicologia/estadisticas-generales', [HomeController::class, '
     ->name('admin.psicologia.estadisticas.generales');
 
 Route::middleware('auth')->prefix('mensajes')->group(function () {
-Route::get('/contactos/lista', [ChatController::class, 'fetchContacts'])->name('chat.contactos');
-Route::get('/buscar-usuarios',  [ChatController::class, 'buscarUsuarios'])->name('chat.buscarUsuarios');
-Route::post('/ping',            [ChatController::class, 'ping'])->name('chat.ping');
-Route::get('/{targetUserId}',   [ChatController::class, 'fetchMessages'])->name('chat.mensajes');
-Route::post('/{targetUserId}',  [ChatController::class, 'sendMessage'])->name('chat.enviar');
+    Route::get('/contactos/lista', [ChatController::class, 'fetchContacts'])->name('chat.contactos');
+    Route::get('/buscar-usuarios',  [ChatController::class, 'buscarUsuarios'])->name('chat.buscarUsuarios');
+    Route::post('/ping',            [ChatController::class, 'ping'])->name('chat.ping');
+    Route::get('/{targetUserId}',   [ChatController::class, 'fetchMessages'])->name('chat.mensajes');
+    Route::post('/{targetUserId}',  [ChatController::class, 'sendMessage'])->name('chat.enviar');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -271,7 +271,7 @@ Route::middleware(['auth'])->group(function () {
 
         //Rutas para Consultas
         Route::get('consultas/reportes', [ReporteController::class, 'index'])->name('admin.consultas.reportes.index');
-        
+
         /* Rutas de direcciones */
 
         Route::get('/estado', function () {
@@ -364,6 +364,9 @@ Route::middleware(['auth'])->group(function () {
                 // Generar Recipe
                 Route::get('/{consulta}/recipe', [ConsultaController::class, 'generarRecipePdf'])->name('recipe_pdf');
 
+                // Generar Constancia
+                Route::get('/{consulta}/constancia', [ConsultaController::class, 'constancia'])->name('constancia');
+
                 // Ver detalle
                 Route::get('/{consulta}', [ConsultaController::class, 'show'])->name('show');
             });
@@ -451,8 +454,7 @@ Route::middleware('auth')->prefix('seguridad/sesion')->group(function () {
     Route::post('/mantener', [App\Http\Controllers\SesionController::class, 'mantener'])->name('seguridad.sesion.mantener');
 });
 
-Route::middleware('auth')->group(function () {
-});
+Route::middleware('auth')->group(function () {});
 
 Route::get('admin/master-key', [AdminMasterKeyController::class, 'showForm'])->name('admin.master_key.form');
 Route::post('admin/master-key/verify', [AdminMasterKeyController::class, 'verify'])->name('admin.master_key.verify');

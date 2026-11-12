@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class EstadisticasRequest extends FormRequest
 {
-    public const FORMATOS = ['json', 'pdf', 'word'];
+    public const FORMATOS = ['json', 'pdf', 'word', 'excel'];
 
     public function authorize(): bool
     {

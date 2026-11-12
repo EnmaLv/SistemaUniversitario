@@ -386,4 +386,29 @@ class Consulta extends Model
             }
         });
     }
+
+    public const CARGA_CONSTANCIA = ['paciente', 'medico', 'consultorio'];
+
+    public function numeroConstancia(): string
+    {
+        return sprintf(
+            'CS-%s-%06d',
+            $this->fecha_cme?->format('Y') ?? now()->format('Y'),
+            $this->id_cme
+        );
+    }
+
+    /**
+     * PNF del paciente, o null si no es estudiante.
+     */
+    public function programaDelPaciente(): ?string
+    {
+        $personaPnf = $this->paciente?->personaPnf;
+
+        if ($personaPnf instanceof \Illuminate\Support\Collection) {
+            $personaPnf = $personaPnf->first();
+        }
+
+        return $personaPnf?->pnf?->nombre_prg;
+    }
 }

@@ -70,6 +70,38 @@ class EstadisticasExportService
             ->deleteFileAfterSend(true);
     }
 
+     public function excel(array $data, string $periodo, string $tipoReporte, array $filtros): BinaryFileResponse
+    {
+        // 1. Llamamos al método 'construir' de tu ListadoSaludService
+        $listadoService = app(\App\Services\Salud\ListadoSaludService::class);
+        $reporte = $listadoService->construir($tipoReporte, $data['consultas']);
+
+        // 2. Armar la metadata de los filtros
+        $filtrosPares = [];
+        foreach ($this->etiquetasFiltros($filtros) as $llave => $valor) {
+            if (filled($valor)) {
+                $filtrosPares[] = [
+                    ucfirst(str_replace('_', ' ', $llave)),
+                    is_array($valor) ? implode(', ', $valor) : $valor
+                ];
+            }
+        }
+
+        $meta = [
+            'periodo'  => $periodo,
+            'generado' => now()->format('d/m/Y g:i A'),
+            'filtros'  => $filtrosPares
+        ];
+
+        // 3. Generar el archivo temporal
+        $rutaArchivo = \App\Exports\Salud\SaludListadoExcelExport::generate($reporte, $meta);
+
+        // 4. Retornar la descarga
+        return response()
+            ->download($rutaArchivo, $reporte['archivo'] . '_' . now()->format('Ymd_His') . '.xlsx')
+            ->deleteFileAfterSend(true);
+    }
+
     private function nombreConsultorio($consultorioId): ?string
     {
         return $consultorioId ? Consultorio::find($consultorioId)?->nombre_csr : null;

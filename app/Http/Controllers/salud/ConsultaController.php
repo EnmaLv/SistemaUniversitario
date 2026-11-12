@@ -102,8 +102,10 @@ class ConsultaController extends Controller
             $request->enfermedadesIds()
         );
 
-        if ($anteriores['fecha_cme'] !== optional($consulta->fecha_cme)->toDateString()
-            || $anteriores['motivo_registro_tardio_cme'] !== $consulta->motivo_registro_tardio_cme) {
+        if (
+            $anteriores['fecha_cme'] !== optional($consulta->fecha_cme)->toDateString()
+            || $anteriores['motivo_registro_tardio_cme'] !== $consulta->motivo_registro_tardio_cme
+        ) {
             $this->registrarAtencionTardia($consulta, $anteriores);
         }
 
@@ -219,6 +221,26 @@ class ConsultaController extends Controller
             ->stream($nombreArchivo);
     }
 
+    public function constancia(Consulta $consulta)
+    {
+        $consulta->load(Consulta::CARGA_CONSTANCIA);
+
+        $numero   = $consulta->numeroConstancia();
+        $programa = $consulta->programaDelPaciente();
+        $emision  = now();
+
+        $nombreArchivo = sprintf('constancia-%s.pdf', $numero);
+
+        return Pdf::loadView(self::VISTA . '.constancia', [
+            'consulta' => $consulta,
+            'numero'   => $numero,
+            'programa' => $programa,
+            'emision'  => $emision,
+        ])
+            ->setPaper('letter', 'portrait')
+            ->stream($nombreArchivo);
+    }
+
     public function buscarEnfermedades(BusquedaRequest $request)
     {
         if (!$request->terminoValido()) {
@@ -276,14 +298,17 @@ class ConsultaController extends Controller
         $filtros = $request->validated();
 
         return match ($request->formato()) {
-            'json' => response()->json([
+            'json'  => response()->json([
                 'consultas'   => $data['consultas'],
                 'resumen'     => $data['resumen'],
                 'fechaInicio' => $data['fechaInicio'],
                 'fechaFin'    => $data['fechaFin'],
             ]),
-            'pdf'  => $exportador->pdf($data, $request->periodo(), $request->tipoReporte(), $filtros),
-            'word' => $exportador->word($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            'pdf'   => $exportador->pdf($data, $request->periodo(), $request->tipoReporte(), $filtros),
+            'word'  => $exportador->word($data, $request->periodo(), $request->tipoReporte(), $filtros),
+
+            // Agregar esta línea:
+            'excel' => $exportador->excel($data, $request->periodo(), $request->tipoReporte(), $filtros),
         };
     }
 
