@@ -21,11 +21,7 @@
             @break
 
             @case('salud')
-                @if (auth()->user()->tieneRol('paciente'))
-                    @include('components.estudiante.salud-home')
-                @else
                     @include('components.salud-home')
-                @endif
             @break
 
             @case('administracion')
