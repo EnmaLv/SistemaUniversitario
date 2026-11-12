@@ -563,9 +563,9 @@
         <div class="filters">
             <div class="title">Filtros aplicados</div>
             <div>
-               @foreach ($filtrosAplicados as [$label, $valor])
-                <span class="tag"><b>{{ $label }}: </b>{{ $valor }}</span>
-            @endforeach
+                @foreach ($filtrosAplicados as [$label, $valor])
+                    <span class="tag"><b>{{ $label }}: </b>{{ $valor }}</span>
+                @endforeach
             </div>
         </div>
     @endif
@@ -789,7 +789,8 @@
                                     <td class="bar-cell">
                                         <div class="bar-bg">
                                             <div class="bar-fill"
-                                                style="width: {{ round(($cantidad / $maxProd) * 100, 1) }}%;"></div>
+                                                style="width: {{ $maxProd > 0 ? round(($cantidad / $maxProd) * 100, 1) : 0 }}%;">
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="value">{{ number_format($cantidad, 1) }}</td>
@@ -1076,7 +1077,8 @@
                             <td>
                                 {{ \Carbon\Carbon::parse($c->fecha_cme)->format('d/m/Y') }}
                                 @if ($c->created_at && $c->created_at->toDateString() !== \Carbon\Carbon::parse($c->fecha_cme)->toDateString())
-                                    <br><span style="font-size: 7px; color: #6b7280;">Reg. {{ $c->created_at->format('d/m/Y') }}</span>
+                                    <br><span style="font-size: 7px; color: #6b7280;">Reg.
+                                        {{ $c->created_at->format('d/m/Y') }}</span>
                                 @endif
                             </td>
                             <td class="strong">
@@ -1093,7 +1095,8 @@
                             </td>
                             <td>
                                 @if ($c->receta)
-                                    <span class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
+                                    <span
+                                        class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
                                         {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso' }}
                                     </span>
                                 @else
@@ -1136,7 +1139,8 @@
                                 </td>
                                 <td class="center">{{ $c->receta->detalles->count() }}</td>
                                 <td>
-                                    <span class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
+                                    <span
+                                        class="estado {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? '' : 'incompleto' }}">
                                         {{ (int) $c->receta->estado_rme === \App\Models\salud\Consulta::RECETA_CERRADA ? 'Completada' : 'En proceso' }}
                                     </span>
                                 </td>
@@ -1173,7 +1177,8 @@
                                 @foreach ($det->dispensaciones as $disp)
                                     @php $totalItems++; @endphp
                                     <tr>
-                                        <td>{{ \Carbon\Carbon::parse($disp->fecha_dispensacion_dsm)->format('d/m/Y') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($disp->fecha_dispensacion_dsm)->format('d/m/Y') }}
+                                        </td>
                                         <td>{{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) }}
                                         </td>
                                         <td>{{ $det->producto->nombre_pdt ?? '—' }}</td>
