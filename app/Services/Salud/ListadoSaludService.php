@@ -75,13 +75,29 @@ class ListadoSaludService
                 $enfermedades[] = $enfermedad->nombre_efm ?? 'Sin nombre';
             }
 
+            // Calcular edad
+            $edad = null;
+            if ($c->paciente?->fecha_nacimiento_per) {
+                $fechaNac = \Carbon\Carbon::parse($c->paciente->fecha_nacimiento_per);
+                $fechaRef = $c->fecha_cme ? \Carbon\Carbon::parse($c->fecha_cme) : now();
+                $edad = (int) $fechaNac->diffInYears($fechaRef);
+            }
+
+            // Obtener PNF (usando el nuevo método)
+            $pnf = $c->paciente?->pnfActual() ?? '—';
+
             $filas[] = [
                 'fecha'        => $this->fecha($c->fecha_cme),
                 'cedula'       => $c->paciente->cedula_per ?? null,
                 'paciente'     => $this->nombre($c->paciente),
+                'edad'         => $edad,
+                'genero'       => $c->paciente->genero_per ?? null,
+                'pnf'          => $pnf,
                 'perfil'       => $c->paciente?->perfil?->nombre_perfil,
                 'medico'       => $this->nombre($c->medico),
                 'consultorio'  => $c->consultorio->nombre_csr ?? null,
+                'motivo'       => $c->motivo_cme,
+                'diagnostico'  => $c->diagnostico_cme,
                 'enfermedades' => implode(', ', $enfermedades) ?: null,
                 'estado'       => $estado,
             ];
@@ -95,14 +111,19 @@ class ListadoSaludService
             'hoja'        => 'Consultas',
             'vacio'       => 'No hay consultas en el período con los filtros aplicados.',
             'columnas'    => [
-                $this->columna('fecha', 'Fecha', 'fecha', 8, 12),
-                $this->columna('cedula', 'Cédula', 'texto', 9, 14),
-                $this->columna('paciente', 'Paciente', 'texto', 18, 32, true),
-                $this->columna('perfil', 'Perfil', 'texto', 10, 16),
-                $this->columna('medico', 'Médico', 'texto', 16, 30),
-                $this->columna('consultorio', 'Consultorio', 'texto', 13, 26),
-                $this->columna('enfermedades', 'Enfermedades', 'texto', 17, 44),
-                $this->columna('estado', 'Estado', 'estado', 9, 14),
+                $this->columna('fecha', 'Fecha', 'fecha', 6, 12),
+                $this->columna('cedula', 'Cédula', 'texto', 6, 14),
+                $this->columna('paciente', 'Paciente', 'texto', 12, 30, true),
+                $this->columna('edad', 'Edad', 'entero', 4, 8),
+                $this->columna('genero', 'Género', 'texto', 5, 12),
+                $this->columna('pnf', 'PNF', 'texto', 9, 25),
+                $this->columna('perfil', 'Perfil', 'texto', 7, 18),
+                $this->columna('medico', 'Médico', 'texto', 10, 28),
+                $this->columna('consultorio', 'Consultorio', 'texto', 8, 22),
+                $this->columna('motivo', 'Motivo', 'texto', 11, 32),
+                $this->columna('diagnostico', 'Diagnóstico', 'texto', 11, 32),
+                $this->columna('enfermedades', 'Enfermedades', 'texto', 10, 32),
+                $this->columna('estado', 'Estado', 'estado', 6, 14),
             ],
             'filas'   => $filas,
             'resumen' => [

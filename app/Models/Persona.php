@@ -155,8 +155,7 @@ class Persona extends Model
 
             DB::commit();
             return true;
-        } 
-        catch (Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             report($e);
             return false;
@@ -277,5 +276,24 @@ class Persona extends Model
     public function esEstudiante(): bool
     {
         return Perfil::esEstudiante($this->id_perfil);
+    }
+
+    /**
+     * Obtiene el nombre del PNF actual del paciente.
+     * Itera sobre los registros por si el primero está vacío.
+     */
+    public function pnfActual(): ?string
+    {
+        if (!$this->relationLoaded('personaPnf')) {
+            $this->load('personaPnf.pnf');
+        }
+
+        foreach ($this->personaPnf as $pp) {
+            if ($pp->pnf && filled($pp->pnf->nombre_prg)) {
+                return $pp->pnf->nombre_prg;
+            }
+        }
+
+        return null;
     }
 }

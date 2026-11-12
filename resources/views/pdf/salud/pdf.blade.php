@@ -1062,17 +1062,34 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="width: 10%;">Fecha</th>
-                        <th style="width: 22%;">Paciente</th>
-                        <th style="width: 10%;">Cédula</th>
-                        <th style="width: 20%;">Médico</th>
-                        <th style="width: 13%;">Consultorio</th>
-                        <th style="width: 15%;">Enfermedades</th>
-                        <th style="width: 10%;">Estado</th>
+                        <th style="width: 7%;">Fecha</th>
+                        <th style="width: 13%;">Paciente</th>
+                        <th style="width: 7%;">Cédula</th>
+                        <th style="width: 4%;">Edad</th>
+                        <th style="width: 6%;">Género</th>
+                        <th style="width: 8%;">PNF</th>
+                        <th style="width: 10%;">Médico</th>
+                        <th style="width: 8%;">Consultorio</th>
+                        <th style="width: 11%;">Motivo</th>
+                        <th style="width: 11%;">Diagnóstico</th>
+                        <th style="width: 8%;">Enfermedades</th>
+                        <th style="width: 7%;">Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($consultas as $c)
+                        @php
+                            // Calcular edad a la fecha de la consulta
+                            $edad = '—';
+                            if ($c->paciente?->fecha_nacimiento_per) {
+                                $fechaNac = \Carbon\Carbon::parse($c->paciente->fecha_nacimiento_per);
+                                $fechaRef = $c->fecha_cme ? \Carbon\Carbon::parse($c->fecha_cme) : now();
+                                $edad = (int) $fechaNac->diffInYears($fechaRef) . ' años';
+                            }
+
+                            // Obtener PNF (usando el nuevo método)
+                            $pnf = $c->paciente?->pnfActual() ?? '—';
+                        @endphp
                         <tr>
                             <td>
                                 {{ \Carbon\Carbon::parse($c->fecha_cme)->format('d/m/Y') }}
@@ -1085,13 +1102,20 @@
                                 {{ trim(($c->paciente->nombres_per ?? '') . ' ' . ($c->paciente->apellidos_per ?? '')) ?: '—' }}
                             </td>
                             <td>{{ $c->paciente->cedula_per ?? '—' }}</td>
+                            <td class="center">{{ $edad }}</td>
+                            <td>{{ $c->paciente->genero_per ?? '—' }}</td>
+                            <td>{{ $pnf }}</td>
                             <td>{{ trim(($c->medico->nombres_per ?? '') . ' ' . ($c->medico->apellidos_per ?? '')) ?: '—' }}
                             </td>
                             <td>{{ $c->consultorio->nombre_csr ?? '—' }}</td>
+                            <td>{{ $c->motivo_cme ?? '—' }}</td>
+                            <td>{{ $c->diagnostico_cme ?? '—' }}</td>
                             <td>
-                                @foreach ($c->enfermedades as $enf)
+                                @forelse ($c->enfermedades as $enf)
                                     <div>{{ $enf->nombre_efm }}</div>
-                                @endforeach
+                                @empty
+                                    —
+                                @endforelse
                             </td>
                             <td>
                                 @if ($c->receta)

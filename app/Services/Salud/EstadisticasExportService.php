@@ -43,7 +43,7 @@ class EstadisticasExportService
             'reportType'  => $tipoReporte,
         ], $this->etiquetasFiltros($filtros)));
 
-        $pdf->setPaper('A4', 'portrait');
+        $pdf->setPaper('A4', 'landscape');
         $pdf->setOptions([
             'isRemoteEnabled'      => true,
             'isHtml5ParserEnabled' => true,
