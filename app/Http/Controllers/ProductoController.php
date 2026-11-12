@@ -10,11 +10,79 @@ use App\Models\ExchangeRates;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\ProductoRequest;
+use App\Models\Modulo;
 use App\Support\Inventario\FiltroTipoProducto;
 use Illuminate\Support\Facades\Log;
 
 class ProductoController extends Controller
 {
+
+    protected function tiposDelModulo(): array
+    {
+        $modulo = $this->moduloActual();
+
+        if ($modulo !== null) {
+            $tipos = TipoProducto::idsParaModulo((int) $modulo->id_mod);
+
+            if ($tipos !== []) {
+                return $tipos;
+            }
+        }
+
+        return array_values(array_filter([
+            TipoProducto::idPorNombre(TipoProducto::ALIMENTO),
+            TipoProducto::idPorNombre(TipoProducto::MEDICAMENTO),
+        ]));
+    }
+
+    protected function moduloActual(): ?Modulo
+    {
+        if ($id = session('modulo_actual_id')) {
+            $modulo = Modulo::whereKey((int) $id)->first();
+            if ($modulo) {
+                return $modulo;
+            }
+        }
+
+        $param = request()->route('modulo') ?? request()->input('modulo');
+        if ($param !== null && $param !== '') {
+            $modulo = is_numeric($param)
+                ? Modulo::whereKey((int) $param)->first()
+                : Modulo::where('key_mod', $param)->whereNull('deleted_at')->first();
+
+            if ($modulo) {
+                return $modulo;
+            }
+        }
+
+        $routeName = (string) (request()->route()?->getName() ?? '');
+        if ($routeName !== '') {
+            $partes = explode('.', $routeName);
+            if (($partes[0] ?? null) === 'admin' && ! empty($partes[1])) {
+                $modulo = Modulo::where('key_mod', $partes[1])
+                    ->whereNull('deleted_at')
+                    ->first();
+
+                if ($modulo) {
+                    return $modulo;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function tiposPermitidosParaIndex(): array
+    {
+        $porPermiso = $this->tiposPermitidos();
+        $delModulo  = $this->tiposDelModulo();
+
+        if ($porPermiso === null) {
+            return $delModulo;
+        }
+
+        return array_values(array_intersect($porPermiso, $delModulo));
+    }
 
     private const PANTALLA_POR_TIPO = [
         TipoProducto::IMPLEMENTO_DEPORTIVO => 'admin.deportes.implementos.edit',
@@ -23,33 +91,42 @@ class ProductoController extends Controller
 
     public function index(Request $request)
     {
-        $activo = $request->input('activo', 1);
+        $activo    = $request->input('activo', 1);
         $categoria = $request->input('categoria', null);
+
+        $permitidos = $this->tiposPermitidosParaIndex();
+
+        abort_if(
+            $permitidos === [],
+            404,
+            'No hay tipos de producto disponibles para este módulo.'
+        );
+
         $tipoProducto = FiltroTipoProducto::resolver($request);
-        $tiposProducto = FiltroTipoProducto::opciones();
-        $permitidos = $this->tiposPermitidos();
-
-        if ($permitidos !== null) {
-            $tiposProducto = $tiposProducto->filter(fn ($tipo) => in_array((int) $tipo->id_tpr, $permitidos, true))->values();
-
-            if (! in_array($tipoProducto, $permitidos, true)) {
-                $tipoProducto = $permitidos[0];
-            }
+        if (! in_array($tipoProducto, $permitidos, true)) {
+            $tipoProducto = $permitidos[0];
         }
+
+        $tiposProducto = FiltroTipoProducto::opciones()
+            ->filter(fn ($tipo) => in_array((int) $tipo->id_tpr, $permitidos, true))
+            ->values();
 
         $categorias = Categoria::select('id_cap', 'nombre_cap')
             ->where('status_id', Categoria::STATUS_ACTIVO)
-            ->when($tipoProducto !== null, fn ($consulta) => $consulta->where('tpr_id', $tipoProducto))
+            ->when($tipoProducto !== null, fn ($q) => $q->where('tpr_id', $tipoProducto))
             ->get();
 
         if ($categoria !== null && $categoria !== '' && ! $categorias->contains('id_cap', (int) $categoria)) {
             $categoria = null;
         }
 
-        $productos = Producto::listarProductos($request->buscar, $activo, $categoria, 10, null, null, $tipoProducto)
+        $productos = Producto::listarProductos(
+                $request->buscar, $activo, $categoria, 10, null, null, $tipoProducto
+            )
             ->appends(FiltroTipoProducto::PARAMETRO, FiltroTipoProducto::valorUrl($tipoProducto));
 
-        return view('admin.maestros.productos.index', compact('productos', 'categorias', 'tipoProducto', 'tiposProducto'));
+        return view('admin.maestros.productos.index',
+            compact('productos', 'categorias', 'tipoProducto', 'tiposProducto'));
     }
 
     public function create(Request $request)

@@ -1,107 +1,193 @@
-﻿@extends('layouts.app')
+﻿<x-app-layout>
+    <div class="pt-6 pb-12 min-h-[calc(100vh-4rem)]">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            @include('components.alert')
 
-@section('content_header')
-    <div class="rounded-2xl border p-5 shadow-sm mb-6 d-flex justify-content-between align-items-center"
-        style="background-color: var(--bg-card); border-color: var(--border-color);">
-        <div>
-            <h1 class="m-0 text-2xl font-extrabold" style="color:var(--text-main);">Datos del empleado</h1>
-            <p class="mt-1 mb-0" style="font-size:0.95rem; color:#475569;">
-                <i class="fas fa-id-card mr-1" style="color: var(--color-secondary)"></i> 
-                Perfil de: <strong>{{ $usuario->username_use }}</strong> · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
-            </p>
-        </div>
-        <div class="d-flex gap-2">
-            @canRoute('admin.configuracion.empleados.edit')
-            <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_use) }}" class="inline-flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800">
-                <i class="fas fa-edit"></i> Editar
-            </a>
-            @endcanRoute
-            <a href="{{ route('admin.configuracion.empleados.index') }}" class="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold hover:border-red-600 hover:text-red-600" style="border-color:var(--border-color);color:var(--text-main);">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
-        </div>
-    </div>
-@stop
-
-@section('content')
-    @include('components.alert')
-
-    <div class="row fade-in">
-        <div class="col-md-4 align-self-center">
-            <div class="rd-card text-center p-4 mb-4 shadow-sm border-0">
-                <div class="mb-3">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle" 
-                         style="width: 100px; height: 100px; border: 3px solid var(--color-secondary);">
-                        <i class="fas fa-user fa-3x" style="color: var(--color-secondary)"></i>
-                    </div>
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" style="color: var(--text-main);">
+                        Datos del empleado
+                    </h1>
+                    <p class="mt-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Perfil de: <span class="font-bold">{{ $usuario->username_use }}</span>
+                        · {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                    </p>
                 </div>
-                <h4 class="font-weight-bold mb-1">{{ optional($usuario->persona)->nombres_per }}</h4>
-                <p class="text-muted mb-3">{{ $usuario->username_use }}</p>
-                <hr class="my-4">
-                <div class="text-left">
-                    <label class="rd-label small text-uppercase">Rol Asignado</label>
-                    <div class="p-2 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                        <i class="fas fa-shield-alt mr-2" style="color: var(--color-secondary)"></i>
-                        {{ $usuario->roles->pluck('nombre_rol')->join(', ') ?: 'Sin rol asignado' }}
-                    </div>
+
+                <div class="flex items-center gap-3">
+                    @canRoute('admin.configuracion.empleados.edit')
+                        <a href="{{ route('admin.configuracion.empleados.edit', $usuario->id_use) }}"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-800 hover:bg-red-900 text-white font-bold text-sm shadow-md active:scale-95 transition-all">
+                            <i class="fas fa-edit text-xs"></i>
+                            <span>Editar</span>
+                        </a>
+                    @endcanRoute
+                    <a href="{{ route('admin.configuracion.empleados.index') }}"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border text-sm font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                        style="border-color: var(--border-color); color: var(--text-main);">
+                        <i class="fas fa-arrow-left text-xs"></i> Volver
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-8">
-            <div class="rd-card shadow-sm border-0 overflow-hidden">
-                <div class="rd-card-body border-bottom bg-light py-3">
-                    <h3 class="rd-title-sm">
-                        <i class="fas fa-info-circle mr-2" style="color: var(--color-secondary)"></i>Información Personal
-                    </h3>
-                </div>
-                
-                <div class="rd-card-body p-0">
-                    <div class="row p-4">
-                        <div class="col-sm-6 mb-4">
-                            <label class="rd-label text-muted small">Cédula de Identidad</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->cedula_per ?? '”' }}</div>
-                        </div>
-
-                        <div class="col-sm-6 mb-4">
-                            <label class="rd-label text-muted small">Teléfono de Contacto</label>
-                            <div class="h6 font-weight-bold">
-                                <i class="fas fa-phone mr-1 text-success small"></i>
-                                {{ optional($usuario->persona)->telefono_per ?? '”' }}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4">
+                    <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                        class="rounded-2xl border shadow-sm p-6 text-center">
+                        <div class="flex items-center justify-center mb-4">
+                            <div class="w-24 h-24 rounded-full flex items-center justify-center"
+                                style="border: 3px solid var(--color-secondary);">
+                                <i class="fas fa-user text-4xl" style="color: var(--color-secondary);"></i>
                             </div>
                         </div>
+                        <h4 class="text-lg font-extrabold mb-1" style="color: var(--text-main);">
+                            {{ optional($usuario->persona)->nombres_per }}
+                        </h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            {{ $usuario->username_use }}
+                        </p>
 
-                        <div class="col-sm-6 mb-4">
-                            <label class="rd-label text-muted small">Nombres</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->nombres_per ?? '”' }}</div>
-                        </div>
-
-                        <div class="col-sm-6 mb-4">
-                            <label class="rd-label text-muted small">Apellidos</label>
-                            <div class="h6 font-weight-bold">{{ optional($usuario->persona)->apellidos_per ?? '”' }}</div>
-                        </div>
-                    </div>
-
-                    <div class="bg-light p-4 border-top">
-                        <h3 class="rd-title-sm mb-3" style="font-size: 0.9rem;">Datos de Acceso</h3>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <label class="rd-label text-muted small">Nombre de Usuario (Login)</label>
-                                <div class="p-2 bg-white border rounded" style="font-family: sans-serif; color: var(--color-secondary);">
-                                    {{ $usuario->username_use }}
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="rd-label text-muted small">Fecha de Registro</label>
-                                <div class="p-2 text-muted">
-                                    <i class="far fa-calendar-alt mr-1"></i>
-                                    {{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '”' }}
+                        <div class="border-t pt-4" style="border-color: var(--border-color);">
+                            <label class="block text-[13px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 text-left mb-2">
+                                Rol asignado
+                            </label>
+                            <div class="flex items-stretch rounded-xl border overflow-hidden text-left"
+                                style="border-color: var(--border-color);">
+                                <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                    style="border-color: var(--border-color);">
+                                    <i class="fas fa-shield-alt text-sm"></i>
+                                </span>
+                                <div class="w-full px-3 py-2.5 text-sm font-medium"
+                                    style="background-color: rgba(0,0,0,0.02); color: var(--text-main);">
+                                    {{ $usuario->roles->pluck('nombre_rol')->join(', ') ?: 'Sin rol asignado' }}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="lg:col-span-8">
+                    <div style="background-color: var(--bg-card); border-color: var(--border-color);"
+                        class="rounded-2xl border shadow-sm overflow-hidden">
+                        <div class="border-b px-6 py-4" style="border-color: var(--border-color);">
+                            <h3 class="text-sm font-black uppercase tracking-wider flex items-center gap-2"
+                                style="color: var(--text-main);">
+                                <i class="fas fa-info-circle" style="color: var(--color-secondary);"></i>
+                                Información personal
+                            </h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+                            <div>
+                                <label class="block text-[13px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                    Cédula de identidad
+                                </label>
+                                <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
+                                    style="border-color: var(--border-color);">
+                                    <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                        style="border-color: var(--border-color);">
+                                        <i class="fas fa-id-card text-sm"></i>
+                                    </span>
+                                    <input type="text" value="{{ optional($usuario->persona)->cedula_per ?? '—' }}" disabled
+                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                        class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                    Teléfono de contacto
+                                </label>
+                                <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
+                                    style="border-color: var(--border-color);">
+                                    <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                        style="border-color: var(--border-color);">
+                                        <i class="fas fa-phone text-sm"></i>
+                                    </span>
+                                    <input type="text" value="{{ optional($usuario->persona)->telefono_per ?? '—' }}" disabled
+                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                        class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                    Nombres
+                                </label>
+                                <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
+                                    style="border-color: var(--border-color);">
+                                    <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                        style="border-color: var(--border-color);">
+                                        <i class="fas fa-user text-sm"></i>
+                                    </span>
+                                    <input type="text" value="{{ optional($usuario->persona)->nombres_per ?? '—' }}" disabled
+                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                        class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                    Apellidos
+                                </label>
+                                <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
+                                    style="border-color: var(--border-color);">
+                                    <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                        style="border-color: var(--border-color);">
+                                        <i class="fas fa-user text-sm"></i>
+                                    </span>
+                                    <input type="text" value="{{ optional($usuario->persona)->apellidos_per ?? '—' }}" disabled
+                                        style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                        class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t p-6"
+                            style="border-color: var(--border-color); background-color: rgba(0,0,0,0.02);">
+                            <h3 class="text-sm font-black uppercase tracking-wider mb-4"
+                                style="color: var(--text-main);">
+                                Datos de acceso
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[13px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                        Nombre de usuario (login)
+                                    </label>
+                                    <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
+                                        style="border-color: var(--border-color);">
+                                        <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                            style="border-color: var(--border-color);">
+                                            <i class="fas fa-at text-sm"></i>
+                                        </span>
+                                        <input type="text" value="{{ $usuario->username_use }}" disabled
+                                            style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                            class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[13px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
+                                        Fecha de registro
+                                    </label>
+                                    <div class="flex items-stretch rounded-xl border overflow-hidden opacity-70"
+                                        style="border-color: var(--border-color);">
+                                        <span class="flex items-center justify-center px-3.5 bg-gray-50 dark:bg-black/20 text-gray-400 border-r"
+                                            style="border-color: var(--border-color);">
+                                            <i class="fas fa-calendar-alt text-sm"></i>
+                                        </span>
+                                        <input type="text"
+                                            value="{{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '—' }}"
+                                            disabled
+                                            style="background-color: rgba(0,0,0,0.02); color: var(--text-main);"
+                                            class="w-full px-3 py-2.5 text-sm font-medium border-none focus:ring-0 focus:outline-none">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-@stop
+</x-app-layout>

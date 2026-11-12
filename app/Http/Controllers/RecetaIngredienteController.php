@@ -7,7 +7,9 @@ use App\Models\Receta;
 use App\Models\Producto;
 use App\Models\Unidad;
 use App\Models\RecetaIngrediente;
+use App\Models\TipoProducto;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class RecetaIngredienteController extends Controller
 {
@@ -35,22 +37,35 @@ class RecetaIngredienteController extends Controller
         return view('admin.maestros.receta_ingredientes.index', compact('recetas', 'buscar', 'estado'));
     }
 
+    private function productosAlimento()
+    {
+        return Producto::activos()
+            ->whereIn('id_pdt', TipoProducto::idsProductosDeTipo(TipoProducto::ALIMENTO))
+            ->get();
+    }
+
     public function create()
     {
         $recetas = Receta::activos()->get();
-        $productos = Producto::activos()->get();
+        $productos = $this->productosAlimento();
         $unidades = Unidad::all();
         return view('admin.maestros.receta_ingredientes.create', compact('recetas', 'productos', 'unidades'));
     }
 
     public function store(Request $request)
     {
+        $idsAlimento = TipoProducto::idsProductosDeTipo(TipoProducto::ALIMENTO);
         $validated = $request->validate([
             'rct_id' => 'required|exists:receta,id_rct',
 
             // arrays
             'producto_id' => 'required|array|min:1',
-            'producto_id.*' => 'required|exists:producto,id_pdt',
+                'producto_id.*' => [
+                    'required',
+                    Rule::exists('producto', 'id_pdt')
+                        ->whereIn('id_pdt', $idsAlimento)
+                        ->whereNull('deleted_at'),
+                ],
 
             'cantidad_porcion_rci' => 'nullable|array',
             'cantidad_porcion_rci.*' => 'nullable|numeric',
@@ -95,7 +110,7 @@ class RecetaIngredienteController extends Controller
         $receta = Receta::with('recetaIngredientes.producto', 'recetaIngredientes.unidad')
             ->findOrFail($recetaId);
 
-        $productos = Producto::activos()->get();
+        $productos = $this->productosAlimento();
         $unidades = Unidad::all();
 
         return view('admin.maestros.receta_ingredientes.edit', compact(
@@ -107,10 +122,16 @@ class RecetaIngredienteController extends Controller
 
     public function update(Request $request, $recetaId)
     {
+        $idsAlimento = TipoProducto::idsProductosDeTipo(TipoProducto::ALIMENTO);
         $validated = $request->validate([
             'rct_id' => 'required|exists:receta,id_rct',
             'producto_id' => 'nullable|array',
-            'producto_id.*' => 'required|exists:producto,id_pdt',
+                'producto_id.*' => [
+                'required',
+                Rule::exists('producto', 'id_pdt')
+                    ->whereIn('id_pdt', $idsAlimento)
+                    ->whereNull('deleted_at'),
+            ],
             'cantidad_porcion_rci' => 'nullable|array',
             'cantidad_porcion_rci.*' => 'required|numeric|min:0.0001',
             'unidad_id' => 'nullable|array',

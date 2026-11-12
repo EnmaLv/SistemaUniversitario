@@ -6,11 +6,9 @@
     $kCategorias   = ['comedor_categorias', 'categorias'];
     $kProductos    = ['comedor_productos', 'productos'];
     $kLotes        = ['comedor_lotes', 'lotes'];
-    $kStock        = ['comedor_stock', 'inventario_sedes_lotes'];
-    $kMovimientos  = ['comedor_movimientos', 'movimientos'];
 
-    $comedorKeys    = array_merge($kRecetas, $kIngredientes, $kRegComida, $kRegDiario);
-    $inventarioKeys = array_merge($kCategorias, $kProductos, $kLotes, $kStock, $kMovimientos);
+    $comedorKeys    = array_merge($kRecetas, $kIngredientes, $kRegComida);
+    $inventarioKeys = array_merge($kCategorias, $kProductos, $kLotes, $kStock);
 @endphp
 
 @canMenu($comedorKeys)
@@ -145,7 +143,7 @@
     </div>
     @endcanMenu
 
-    @canMenu(array_merge($kLotes, $kStock))
+    @canMenu(array_merge($kLotes))
     <div class="flex flex-col">
         <button @click="activeSection = (activeSection === 'control_stock' ? '' : 'control_stock')"
             class="w-full flex items-center justify-between h-10 rounded-lg px-3 gap-2 text-white/90 hover:bg-[#623739] hover:text-white transition-all"
@@ -172,27 +170,7 @@
                     <span class="truncate">Lotes</span>
                 </a>
             @endcanMenu
-            @canMenu($kStock)
-                <a href="{{ url('admin/movimientos/sedes_lotes') }}"
-                   class="flex items-center gap-2 py-1.5 px-2 text-xs rounded-lg text-white/80 hover:text-white hover:bg-[#623739] truncate"
-                   title="Existencias por Sede">
-                    <i class="fas fa-store-alt w-4 text-center flex-shrink-0"></i>
-                    <span class="truncate">Existencias por Sede</span>
-                </a>
-            @endcanMenu
         </div>
     </div>
-    @endcanMenu
-
-    @canMenu($kMovimientos)
-    <a href="{{ url('admin/movimientos/historial_movimientos') }}"
-       class="w-full flex items-center h-10 rounded-lg px-3 gap-2.5 text-white/90 hover:bg-[#623739] hover:text-white transition-all min-w-0"
-       :class="sidebarOpen ? 'px-3' : 'justify-center px-0'"
-       title="Historial de Movimientos">
-        <i class="fas fa-clipboard-list text-base w-5 text-center flex-shrink-0 text-white"></i>
-        <span class="text-sm font-medium truncate" :class="sidebarOpen ? 'block' : 'hidden'">
-            Historial de Movimientos
-        </span>
-    </a>
     @endcanMenu
 @endcanMenu

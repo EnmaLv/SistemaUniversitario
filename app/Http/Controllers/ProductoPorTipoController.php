@@ -20,6 +20,14 @@ abstract class ProductoPorTipoController extends Controller
 
     abstract protected function config(): array;
 
+    protected function tiposDelModulo(): array
+    {
+        return array_values(array_filter(array_map(
+            fn ($cfg) => TipoProducto::idPorNombre($cfg['nombre']),
+            $this->tipos()
+        )));
+    }
+
     protected function tiposRegistrados(): array
     {
         $tipos = [];
