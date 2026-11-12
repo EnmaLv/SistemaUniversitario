@@ -62,6 +62,7 @@ return [
     'consultorios'            => ['admin.salud.maestros.consultorios.*'],
     'horarios'                => ['admin.salud.movimientos.horarios.*'],
     'consultas'               => ['admin.salud.movimientos.consultas.*'],
+    'persona_salud'           => ['admin.configuracion.persona.*'],
 
     /* ═══════════════════ PSICOLOGÍA ═══════════════════ */
     'agenda' => [
@@ -94,6 +95,7 @@ return [
     'mural'               => ['admin.psicologia.maestros.publicaciones.mural'],
     'estado_animo_diario' => ['admin.psicologia.maestros.estado_animo_diario.*'],
     'admin_users'         => ['admin.configuracion.empleados.*'],
+    'persona_psicologia'  => ['admin.configuracion.persona.*'],
 
     /* ═══════════════════ BECAS ═══════════════════ */
     'beneficios'        => ['admin.becas.beneficios.*'],

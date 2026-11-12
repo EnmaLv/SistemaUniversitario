@@ -71,6 +71,30 @@ class Persona extends Model
         return $numero;
     }
 
+    public static function esContextoSaludPsicologia(?Usuario $usuario = null): bool
+    {
+        $usuario ??= auth()->user();
+
+        if (! $usuario) {
+            return false;
+        }
+
+        $moduloActivo = session('modulo_activo');
+
+        if (in_array($moduloActivo, ['salud', 'psicologia'], true)) {
+            return true;
+        }
+
+        if (! $usuario->esSuperAdmin()) {
+            $modulosPermitidos = session('modulos_permitidos', []);
+            if (! in_array('administracion', $modulosPermitidos, true) && ! $usuario->puede('persona', 'crear')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function crearPersona($data)
     {
         $telefono = self::formatearTelefono($data['telefono']);
@@ -79,10 +103,21 @@ class Persona extends Model
 
         $data = $helper->convertirCamposAMayusculas($data, ['nombre', 'segundo_nombre', 'apellido', 'segundo_apellido', 'sector', 'calle']);
 
+        $esSaludPsico = self::esContextoSaludPsicologia();
+
         DB::beginTransaction();
 
         try {
-            $perfilId = (int) ($data['perfilId'] ?? Perfil::idEstudiante());
+            $perfilDefault = $esSaludPsico
+                ? (Perfil::idPorNombre(Perfil::COMUNIDAD) ?? Perfil::idPorNombre(Perfil::OBRERO))
+                : Perfil::idEstudiante();
+
+            $perfilId = (int) ($data['perfilId'] ?? $perfilDefault);
+
+            if ($esSaludPsico && Perfil::esPerfilProhibidoSaludPsicologia($perfilId)) {
+                throw new Exception('No está permitido registrar estudiantes, docentes o administrativos desde este módulo.');
+            }
+
             $esEstudiante = Perfil::esEstudiante($perfilId);
 
             $personaId = DB::table('persona')->insertGetId([
@@ -138,6 +173,16 @@ class Persona extends Model
 
         try {
             $persona = self::query()->findOrFail($personaId);
+
+            if (self::esContextoSaludPsicologia()) {
+                if (Perfil::esPerfilProhibidoSaludPsicologia($persona->id_perfil)) {
+                    throw new Exception('No tiene permiso para editar estudiantes, docentes o administrativos desde este módulo.');
+                }
+                if (isset($data['perfilId']) && Perfil::esPerfilProhibidoSaludPsicologia((int) $data['perfilId'])) {
+                    throw new Exception('No está permitido asignar perfil de estudiante, docente o administrativo desde este módulo.');
+                }
+            }
+
             $perfilId = (int) ($data['perfilId'] ?? $persona->id_perfil);
             $esEstudiante = Perfil::esEstudiante($perfilId);
 

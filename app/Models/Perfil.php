@@ -32,6 +32,17 @@ class Perfil extends Model
 
     public const INTERNOS = [self::USUARIO, self::ADMINISTRADOR];
 
+    public const PROHIBIDOS_SALUD_PSICOLOGIA = [
+        self::ESTUDIANTE,
+        self::DOCENTE,
+        self::ADMINISTRATIVO,
+    ];
+
+    public const PERMITIDOS_SALUD_PSICOLOGIA = [
+        self::COMUNIDAD,
+        self::OBRERO,
+    ];
+
     protected $table = 'perfil';
     protected $primaryKey = 'id_perfil';
     public $timestamps = true;
@@ -74,6 +85,35 @@ class Perfil extends Model
         return array_values(array_filter(array_map(fn ($nombre) => self::idPorNombre($nombre), self::INTERNOS)));
     }
 
+    public static function idsPermitidosSaludPsicologia(): array
+    {
+        return array_values(array_filter(array_map(fn ($nombre) => self::idPorNombre($nombre), self::PERMITIDOS_SALUD_PSICOLOGIA)));
+    }
+
+    public static function idsProhibidosSaludPsicologia(): array
+    {
+        return array_values(array_filter(array_map(fn ($nombre) => self::idPorNombre($nombre), self::PROHIBIDOS_SALUD_PSICOLOGIA)));
+    }
+
+    public static function esPerfilPermitidoSaludPsicologia(int|string|null $idPerfil): bool
+    {
+        if ($idPerfil === null || $idPerfil === '') {
+            return false;
+        }
+
+        return in_array((int) $idPerfil, self::idsPermitidosSaludPsicologia(), true);
+    }
+
+    public static function esPerfilProhibidoSaludPsicologia(int|string|null $idPerfil): bool
+    {
+        if ($idPerfil === null || $idPerfil === '') {
+            return false;
+        }
+
+        return in_array((int) $idPerfil, self::idsProhibidosSaludPsicologia(), true)
+            || in_array((int) $idPerfil, self::idsInternos(), true);
+    }
+
     public static function limpiarCache(): void
     {
         self::$cacheIds = null;
@@ -87,5 +127,10 @@ class Perfil extends Model
     public function scopeComunidad($consulta)
     {
         return $consulta->where('status_id', 1)->whereNotIn('id_perfil', self::idsInternos());
+    }
+
+    public function scopeSaludPsicologia($consulta)
+    {
+        return $consulta->where('status_id', 1)->whereIn('id_perfil', self::idsPermitidosSaludPsicologia());
     }
 }

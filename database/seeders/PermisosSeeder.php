@@ -16,9 +16,9 @@ class PermisosSeeder extends Seeder
      */
     private const POR_DEFECTO = [
         'Obrero'                 => ['registro_comida', 'registro_diario', 'persona'],
-        'Administrador de Salud' => ['envases_primarios', 'categorias_medicamentos', 'medicamentos', 'enfermedades_salud', 'horarios', 'consultorios', 'consultas'],
-        'Doctor(a)'              => ['horarios', 'consultas', 'medicamentos' => ['ver']],
-        'Enfermero(a)'           => ['horarios', 'consultas', 'medicamentos' => ['ver']],
+        'Administrador de Salud' => ['envases_primarios', 'categorias_medicamentos', 'medicamentos', 'enfermedades_salud', 'horarios', 'consultorios', 'consultas', 'persona_salud'],
+        'Doctor(a)'              => ['horarios', 'consultas', 'medicamentos' => ['ver'], 'persona_salud'],
+        'Enfermero(a)'           => ['horarios', 'consultas', 'medicamentos' => ['ver'], 'persona_salud'],
         'Administrador de Beca'  => ['becas', 'solicitudes_becas', 'beneficios_becas'],
         'Paciente'               => ['citas', 'mural', 'notificaciones', 'publicaciones', 'estado_animo_diario'],
         'Becario'                => ['solicitar'],
@@ -26,7 +26,7 @@ class PermisosSeeder extends Seeder
             'agenda', 'agenda_historial', 'agenda_estadisticas', 'agenda_prioridades',
             'horarios_psi', 'horarios_crear', 'grupo_horarios',
             'historias', 'plantillas_globales', 'plantillas', 'campos_evolucion', 'avances_sesion', 'estado_animos',
-            'publicaciones', 'publicaciones_crear', 'mural', 'enfermedades', 'notificaciones',
+            'publicaciones', 'publicaciones_crear', 'mural', 'enfermedades', 'notificaciones', 'persona_psicologia',
         ],
         'Coordinador de Deportes' => [
             'deportes_espacios', 'deportes_actividades', 'deportes_calendarios', 'deportes_horarios',

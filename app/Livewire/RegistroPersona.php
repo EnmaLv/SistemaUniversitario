@@ -17,6 +17,7 @@ class RegistroPersona extends Component
 
     public $isEdit = false;
     public $onlyShow = false;
+    public $esSaludPsico = false;
     public $cedula;
     public $estadosVeId;
     public $municipiosId;
@@ -79,7 +80,12 @@ class RegistroPersona extends Component
             'municipiosId' => 'required|numeric',
             'parroquiaId' => 'required|numeric',
             'sedeId' => 'required|numeric',
-            'perfilId' => ['required', 'integer', Rule::in(array_column($this->perfiles, 'id'))],
+            'perfilId' => array_values(array_filter([
+                'required',
+                'integer',
+                Rule::in(array_column($this->perfiles, 'id')),
+                $this->esSaludPsico ? Rule::notIn(Perfil::idsProhibidosSaludPsicologia()) : null,
+            ])),
             'pnfId' => $this->esEstudiante ? 'required|numeric' : 'nullable',
             'semestreId' => $this->esEstudiante ? 'required' : 'nullable',
         ];
@@ -109,6 +115,7 @@ class RegistroPersona extends Component
         'semestreId.required' => 'El Semestre es obligatorio',
         'perfilId.required' => 'Debe seleccionar un perfil',
         'perfilId.in' => 'El perfil seleccionado no es válido',
+        'perfilId.not_in' => 'No está permitido registrar personas con perfil Estudiante, Docente o Administrativo en este módulo.',
     ];
 
     public function getEsEstudianteProperty(): bool
@@ -125,17 +132,23 @@ class RegistroPersona extends Component
 
     private function cargarPerfiles(?int $perfilActual = null): void
     {
-        $this->perfiles = Perfil::comunidad()
+        $consulta = $this->esSaludPsico
+            ? Perfil::saludPsicologia()
+            : Perfil::comunidad();
+
+        $this->perfiles = $consulta
             ->orderBy('id_perfil')
             ->get(['id_perfil', 'nombre_perfil'])
             ->map(fn ($perfil) => ['id' => (int) $perfil->id_perfil, 'nombre' => $perfil->nombre_perfil])
             ->all();
 
         if ($perfilActual && ! in_array($perfilActual, array_column($this->perfiles, 'id'), true)) {
-            $nombre = DB::table('perfil')->where('id_perfil', $perfilActual)->value('nombre_perfil');
+            if (! $this->esSaludPsico || Perfil::esPerfilPermitidoSaludPsicologia($perfilActual)) {
+                $nombre = DB::table('perfil')->where('id_perfil', $perfilActual)->value('nombre_perfil');
 
-            if ($nombre) {
-                $this->perfiles[] = ['id' => $perfilActual, 'nombre' => $nombre];
+                if ($nombre) {
+                    $this->perfiles[] = ['id' => $perfilActual, 'nombre' => $nombre];
+                }
             }
         }
     }
@@ -151,6 +164,17 @@ class RegistroPersona extends Component
         $persona = Persona::where('cedula_per', $value)->first();
 
         if ($persona) {
+            if ($this->esSaludPsico && Perfil::esPerfilProhibidoSaludPsicologia($persona->id_perfil)) {
+                $this->formHabilitado = false;
+                $this->dispatch(
+                    'alert',
+                    type: 'warning',
+                    title: 'Perfil restringido',
+                    text: 'Esta persona está registrada como Estudiante, Docente o Administrativo. No tiene permisos para modificar o gestionar este registro desde este módulo.'
+                );
+                return;
+            }
+
             if ((int) $persona->status_id === 2) {
                 // Disparamos el evento con Livewire 3
                 $this->dispatch('confirm-reactivate', cedula: $value);
@@ -212,6 +236,16 @@ class RegistroPersona extends Component
                     type: 'error',
                     title: 'Error',
                     text: 'Persona no encontrada.'
+                );
+                return;
+            }
+
+            if ($this->esSaludPsico && Perfil::esPerfilProhibidoSaludPsicologia($persona->id_perfil)) {
+                $this->dispatch(
+                    'alert',
+                    type: 'error',
+                    title: 'Acción no permitida',
+                    text: 'No tiene permiso para reactivar estudiantes, docentes o administrativos desde este módulo.'
                 );
                 return;
             }
@@ -305,9 +339,30 @@ class RegistroPersona extends Component
     public function create()
     {
         $data = $this->validate();
+
+        if ($this->esSaludPsico && Perfil::esPerfilProhibidoSaludPsicologia($data['perfilId'])) {
+            $this->dispatch(
+                'alert',
+                type: 'error',
+                title: 'Acción no permitida',
+                text: 'No está permitido registrar estudiantes, docentes o administrativos desde este módulo.'
+            );
+            return;
+        }
+
         $persona = Persona::where('cedula_per', $data['cedula'])->first();
 
         if ($persona) {
+            if ($this->esSaludPsico && Perfil::esPerfilProhibidoSaludPsicologia($persona->id_perfil)) {
+                $this->dispatch(
+                    'alert',
+                    type: 'error',
+                    title: 'Acción no permitida',
+                    text: 'No tiene permiso para gestionar estudiantes, docentes o administrativos desde este módulo.'
+                );
+                return;
+            }
+
             if ((int) $persona->status_id === 2) {
                 $persona->update([
                     'status_id' => 1,
@@ -364,6 +419,29 @@ class RegistroPersona extends Component
         try {
             $data = $this->validate();
 
+            if ($this->esSaludPsico && Perfil::esPerfilProhibidoSaludPsicologia($data['perfilId'])) {
+                $this->dispatch(
+                    'alert',
+                    type: 'error',
+                    title: 'Acción no permitida',
+                    text: 'No está permitido asignar perfil de estudiante, docente o administrativo.'
+                );
+                return;
+            }
+
+            if ($this->esSaludPsico) {
+                $personaActual = Persona::findOrFail($this->personaId);
+                if (Perfil::esPerfilProhibidoSaludPsicologia($personaActual->id_perfil)) {
+                    $this->dispatch(
+                        'alert',
+                        type: 'error',
+                        title: 'Acción no permitida',
+                        text: 'No tiene permiso para modificar estudiantes, docentes o administrativos.'
+                    );
+                    return;
+                }
+            }
+
             [$finish, $error] = Persona::actualizarPersona($data, $this->personaId);
 
             if ($finish) {
@@ -394,14 +472,25 @@ class RegistroPersona extends Component
 
     public function mount()
     {
+        $this->esSaludPsico = Persona::esContextoSaludPsicologia();
+
         if ($this->isEdit) {
             $this->formHabilitado = true;
             $this->enabledMunicipio = true;
             $this->enabledParroquia = true;
 
-            $id = request("id");
+            $id = request("id") ?? $this->personaId;
             $this->personaId = $id;
             $persona = Persona::where('id_per', $id)->where('status_id', 1)->first();
+
+            if (! $persona) {
+                abort(404, 'Persona no encontrada.');
+            }
+
+            if ($this->esSaludPsico && Perfil::esPerfilProhibidoSaludPsicologia($persona->id_perfil)) {
+                abort(403, 'No tiene permiso para gestionar estudiantes, docentes o administrativos desde este módulo.');
+            }
+
             $personaPnf = PersonaPnf::with('pnf')->where('per_id', $id)->first();
             $direccion = DB::table('direccion')
                 ->join('parroquia', 'direccion.par_id', '=', 'parroquia.id_par')
@@ -459,7 +548,9 @@ class RegistroPersona extends Component
         }
 
         if (! $this->isEdit) {
-            $this->perfilId = Perfil::idEstudiante();
+            $this->perfilId = $this->esSaludPsico
+                ? (Perfil::idPorNombre(Perfil::COMUNIDAD) ?? Perfil::idPorNombre(Perfil::OBRERO))
+                : Perfil::idEstudiante();
             $this->cargarPerfiles();
         }
 

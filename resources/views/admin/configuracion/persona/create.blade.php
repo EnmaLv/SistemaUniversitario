@@ -13,6 +13,17 @@
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>
+            @if (\App\Models\Persona::esContextoSaludPsicologia())
+                <div class="mb-5 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-semibold text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400">
+                        <i class="fas fa-info-circle text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold">Restricción de perfil</p>
+                        <p class="text-[11px] opacity-90">Desde este módulo solo está permitido registrar personas con perfil de <strong>Comunidad universitaria</strong> u <strong>Obrero</strong>. El registro de Estudiantes, Docentes y Administrativos está restringido.</p>
+                    </div>
+                </div>
+            @endif
             <div class="overflow-hidden rounded-2xl border shadow-sm" style="background-color: var(--bg-card); border-color: var(--border-color);">
                 <div class="border-b px-6 py-5" style="border-color: var(--border-color);">
                     <h2 class="text-lg font-extrabold" style="color: var(--text-main);">Datos de la persona</h2>

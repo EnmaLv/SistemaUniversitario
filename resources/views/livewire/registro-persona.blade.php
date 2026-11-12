@@ -273,6 +273,11 @@
                         @error('perfilId')
                             <p class="mt-1.5 text-xs font-semibold text-rose-500">{{ $message }}</p>
                         @enderror
+                        @if ($esSaludPsico)
+                            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-info-circle text-sky-500 mr-1"></i> Perfiles autorizados: Comunidad universitaria y Obrero.
+                            </p>
+                        @endif
                     </div>
 
                     <div>

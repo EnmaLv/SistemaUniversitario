@@ -245,26 +245,26 @@ Breadcrumbs::for('admin.consultas.reportes.index', function (Trail $trail) {
 
 Breadcrumbs::for('admin.configuracion.persona.index', function (Trail $trail) {
     $trail->parent('home');
-    $trail->push('Estudiante', route('admin.configuracion.persona.index'));
+    $trail->push('Personas', route('admin.configuracion.persona.index'));
 });
 
 
 Breadcrumbs::for('admin.configuracion.persona.create', function (Trail $trail) {
     $trail->parent('admin.configuracion.persona.index');
-    $trail->push('Crear Estudiante', route('admin.configuracion.persona.create'));
+    $trail->push('Registrar Persona', route('admin.configuracion.persona.create'));
 });
 
 
 // Configuración > Ver Persona
 Breadcrumbs::for('admin.configuracion.persona.show', function (Trail $trail, $id) {
     $trail->parent('admin.configuracion.persona.index');
-    $trail->push('Ver Mas', route('admin.configuracion.persona.show', $id));
+    $trail->push('Ver Persona', route('admin.configuracion.persona.show', $id));
 });
 
 // Configuración > Editar Persona
 Breadcrumbs::for('admin.configuracion.persona.edit', function (Trail $trail, $id) {
     $trail->parent('admin.configuracion.persona.index');
-    $trail->push('Editar Estudiante', route('admin.configuracion.persona.edit', $id));
+    $trail->push('Editar Persona', route('admin.configuracion.persona.edit', $id));
 });
 
 // Configuración > Indexar

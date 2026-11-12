@@ -94,6 +94,7 @@ return [
             'consultorios'             => 'Consultorios',
             'horarios'                 => 'Horarios de atención',
             'consultas'                => 'Consultas médicas',
+            'persona_salud'            => 'Personas',
         ],
     ],
 
@@ -135,6 +136,7 @@ return [
             'mural'                 => 'Mural de avisos',
             'estado_animo_diario'   => 'Estado de ánimo diario',
             'admin_users'           => 'Administración de usuarios clínicos',
+            'persona_psicologia'    => 'Personas',
         ],
     ],
 

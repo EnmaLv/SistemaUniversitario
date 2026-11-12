@@ -23,6 +23,18 @@
                 @endcanRoute
             </div>
 
+            @if ($esSaludPsico ?? false)
+                <div class="mb-5 flex items-center gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-xs font-semibold text-sky-800 dark:border-sky-800/60 dark:bg-sky-950/30 dark:text-sky-300">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-900/50 dark:text-sky-400">
+                        <i class="fas fa-shield-alt text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold">Módulo de atención institucional</p>
+                        <p class="text-[11px] opacity-90">En este módulo solo se gestionan y registran personas pertenecientes a la <strong>Comunidad universitaria</strong> y <strong>Obreros</strong>. El registro de Estudiantes, Docentes y Administrativos corresponde exclusivamente al módulo de Administración.</p>
+                    </div>
+                </div>
+            @endif
+
             <div style="background-color: var(--bg-card); border-color: var(--border-color);"
                 class="p-2.5 rounded-2xl border shadow-sm mb-3 flex flex-col lg:flex-row lg:items-center gap-4">
                 <form action="{{ route('admin.configuracion.persona.index') }}" method="GET" class="flex w-full flex-col gap-2 sm:flex-row">
